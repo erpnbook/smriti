@@ -9,14 +9,15 @@
 # SPDX-License-Identifier: GPL-3.0-only
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe.model.document import Document
 from frappe import _
+from smriti_retail_os import smriti
 
 class SMRITIAttributeLayout(Document):
     def validate(self):
         # Layer 1 Uniqueness Enforcement: Ensure only one layout entry per company + attribute_id
-        duplicate = frappe.db.exists(
+        duplicate = smriti.db.exists(
             "SMRITI Attribute Layout",
             {
                 "company": self.company,

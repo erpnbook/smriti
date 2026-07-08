@@ -14,13 +14,14 @@
 # For license information, please see license.txt
 
 import json
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from frappe.model.document import Document
 
 class SMRITIBusinessTerm(Document):
     def validate(self):
         # 1. Uniqueness of term_id + term_version
-        duplicate = frappe.db.exists(
+        duplicate = smriti.db.exists(
             "SMRITI Business Term",
             {
                 "term_id": self.term_id,

@@ -6,6 +6,7 @@ All reads are via frappe.db (ERPNext as read-only backend).
 Author: Jawahar R. Mallah <jawahar.mallah@gmail.com>
 """
 import frappe
+from smriti_retail_os import smriti
 
 
 @frappe.whitelist()
@@ -25,7 +26,7 @@ def global_search(query, limit=12):
 
     # ── Items ──────────────────────────────────────────────────────────────
     try:
-        results["items"] = frappe.db.sql("""
+        results["items"] = smriti.db.sql("""
             SELECT item_code, item_name, item_group,
                    standard_rate, stock_uom
             FROM `tabItem`
@@ -42,7 +43,7 @@ def global_search(query, limit=12):
 
     # ── Customers ─────────────────────────────────────────────────────────
     try:
-        results["customers"] = frappe.db.sql("""
+        results["customers"] = smriti.db.sql("""
             SELECT name, customer_name, customer_group,
                    mobile_no, email_id
             FROM `tabCustomer`
@@ -56,7 +57,7 @@ def global_search(query, limit=12):
 
     # ── Suppliers ─────────────────────────────────────────────────────────
     try:
-        results["suppliers"] = frappe.db.sql("""
+        results["suppliers"] = smriti.db.sql("""
             SELECT name, supplier_name, supplier_group,
                    mobile_no, email_id
             FROM `tabSupplier`
@@ -70,7 +71,7 @@ def global_search(query, limit=12):
 
     # ── Purchase Orders ───────────────────────────────────────────────────
     try:
-        results["orders"] = frappe.db.sql("""
+        results["orders"] = smriti.db.sql("""
             SELECT name, supplier, supplier_name,
                    transaction_date, grand_total, status
             FROM `tabPurchase Order`
@@ -86,7 +87,7 @@ def global_search(query, limit=12):
 
     # ── Sales Invoices ────────────────────────────────────────────────────
     try:
-        results["invoices"] = frappe.db.sql("""
+        results["invoices"] = smriti.db.sql("""
             SELECT name, customer, customer_name,
                    posting_date, grand_total, status
             FROM `tabSales Invoice`
@@ -102,7 +103,7 @@ def global_search(query, limit=12):
 
     # ── Purchase Receipts (GRN) ───────────────────────────────────────────
     try:
-        results["grns"] = frappe.db.sql("""
+        results["grns"] = smriti.db.sql("""
             SELECT name, supplier, supplier_name,
                    posting_date, total, status
             FROM `tabPurchase Receipt`
@@ -146,7 +147,7 @@ def get_recent_docs():
     """Returns recently visited documents for the search palette recent section."""
     user = frappe.session.user
     try:
-        recent = frappe.db.sql("""
+        recent = smriti.db.sql("""
             SELECT reference_doctype as doctype, reference_name as name,
                    creation
             FROM `tabActivity Log`

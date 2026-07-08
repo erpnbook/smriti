@@ -6,6 +6,7 @@
 #
 
 import frappe
+from smriti_retail_os import smriti
 import unittest
 from smriti_retail_os.item_studio.repository.product_repository import ProductRepository
 from smriti_retail_os.item_studio.service.product_service import ProductService
@@ -16,15 +17,15 @@ class TestProductStudioAPI(unittest.TestCase):
     def setUp(self):
         self.test_barcode = "TESTBARCODE999"
         # Cleanup if exists
-        if frappe.db.exists("Item", self.test_barcode):
+        if smriti.db.exists("Item", self.test_barcode):
             frappe.delete_doc("Item", self.test_barcode, force=1)
-            frappe.db.commit()
+            smriti.db.commit()
 
     def tearDown(self):
         # Cleanup
-        if frappe.db.exists("Item", self.test_barcode):
+        if smriti.db.exists("Item", self.test_barcode):
             frappe.delete_doc("Item", self.test_barcode, force=1)
-            frappe.db.commit()
+            smriti.db.commit()
 
     def test_create_and_read_product(self):
         # Test creation validation (Cost Price > MRP)
@@ -77,4 +78,4 @@ class TestProductStudioAPI(unittest.TestCase):
 
         # Soft Delete (Disable)
         ProductService.delete_product(self.test_barcode)
-        self.assertEqual(frappe.db.get_value("Item", self.test_barcode, "disabled"), 1)
+        self.assertEqual(smriti.db.get("Item", self.test_barcode, "disabled"), 1)

@@ -12,7 +12,8 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 
 # ─── REDIS CACHE CONFIGURATION ───────────────────────────────────────────────
 # Balance cache TTL in seconds. 60s is conservative: if Redis invalidation works
@@ -99,7 +100,7 @@ def get_party_balance(party_stock_account: str, item_code: str,
 def _query_single_balance(party_stock_account: str, item_code: str,
                            posting_datetime=None) -> float:
     """Direct DB query — no caching. Used by get_party_balance and historical lookups."""
-    use_new = frappe.db.exists("PSV Ledger Entry", {"channel_partner": party_stock_account})
+    use_new = smriti.db.exists("PSV Ledger Entry", {"channel_partner": party_stock_account})
     if use_new:
         query = """
             SELECT SUM(qty)
@@ -118,7 +119,7 @@ def _query_single_balance(party_stock_account: str, item_code: str,
         query += " AND posting_datetime <= %s"
         params.append(posting_datetime)
 
-    result = frappe.db.sql(query, params)
+    result = smriti.db.sql(query, params)
     return float(result[0][0]) if result and result[0][0] is not None else 0.0
 
 
@@ -158,7 +159,7 @@ def get_bulk_party_balances(party_stock_account: str, item_codes=None) -> dict:
 
 def _query_bulk_balance(party_stock_account: str, item_codes=None) -> dict:
     """Direct DB query for bulk balances — no caching."""
-    use_new = frappe.db.exists("PSV Ledger Entry", {"channel_partner": party_stock_account})
+    use_new = smriti.db.exists("PSV Ledger Entry", {"channel_partner": party_stock_account})
     if use_new:
         query = """
             SELECT item_variant, SUM(qty)
@@ -185,7 +186,7 @@ def _query_bulk_balance(party_stock_account: str, item_codes=None) -> dict:
     else:
         query += " GROUP BY item_code"
 
-    result = frappe.db.sql(query, params, as_dict=False)
+    result = smriti.db.sql(query, params, as_dict=False)
     return {r[0]: float(r[1]) for r in result}
 
 
@@ -194,9 +195,9 @@ def get_all_party_balances(company: str) -> list:
     Returns a list of dicts with all non-zero balances across all PSAs for a company.
     Cross-PSA queries are NOT cached (scope too broad for safe TTL-based cache).
     """
-    use_new = frappe.db.exists("PSV Ledger Entry", {"company": company})
+    use_new = smriti.db.exists("PSV Ledger Entry", {"company": company})
     if use_new:
-        results = frappe.db.sql("""
+        results = smriti.db.sql("""
             SELECT
                 psa.name as party_stock_account,
                 psa.location_name,
@@ -210,7 +211,7 @@ def get_all_party_balances(company: str) -> list:
             HAVING SUM(ple.qty) != 0
         """, (company,), as_dict=True)
     else:
-        results = frappe.db.sql("""
+        results = smriti.db.sql("""
             SELECT
                 psa.name as party_stock_account,
                 psa.location_name,
@@ -267,7 +268,7 @@ def get_reorder_recommendation(company: str, party_stock_account: str,
     avg_weeks = _get_avg_weeks_lookback()
     cutoff_date = add_days(today(), -(avg_weeks * 7))
 
-    weekly_sales_data = frappe.db.sql("""
+    weekly_sales_data = smriti.db.sql("""
         SELECT COALESCE(SUM(ABS(qty)), 0)
         FROM `tabSMRITI Party Stock Ledger Entry`
         WHERE party_stock_account = %s
@@ -279,7 +280,7 @@ def get_reorder_recommendation(company: str, party_stock_account: str,
     total_sold = float(weekly_sales_data[0][0]) if weekly_sales_data and weekly_sales_data[0][0] else 0.0
 
     # Count actual weeks of data available (minimum 1 to avoid division by zero)
-    first_sale = frappe.db.sql("""
+    first_sale = smriti.db.sql("""
         SELECT MIN(posting_datetime)
         FROM `tabSMRITI Party Stock Ledger Entry`
         WHERE party_stock_account = %s
@@ -345,7 +346,7 @@ def _get_reorder_params(company: str, party_stock_account: str,
     3. Global defaults from PSV Settings (fallback)
     """
     # Priority 1: Variant-specific rule
-    variant_rule = frappe.db.get_value(
+    variant_rule = smriti.db.get(
         "SMRITI PSV Reorder Rule",
         {"company": company, "party_stock_account": party_stock_account,
          "item_variant": item_code, "active": 1},
@@ -360,9 +361,9 @@ def _get_reorder_params(company: str, party_stock_account: str,
         }
 
     # Priority 2: Item Group-level rule
-    item_group = frappe.db.get_value("Item", item_code, "item_group")
+    item_group = smriti.db.get("Item", item_code, "item_group")
     if item_group:
-        group_rule = frappe.db.get_value(
+        group_rule = smriti.db.get(
             "SMRITI PSV Reorder Rule",
             {"company": company, "party_stock_account": party_stock_account,
              "item_group": item_group, "item_variant": ["is", "not set"], "active": 1},
@@ -394,8 +395,8 @@ def _get_avg_weeks_lookback() -> int:
 def _get_psv_settings() -> dict:
     """Safely retrieves PSV Settings (single doctype). Returns empty dict if not configured."""
     try:
-        if frappe.db.exists("DocType", "SMRITI PSV Settings"):
-            return frappe.get_cached_doc("SMRITI PSV Settings").as_dict()
+        if smriti.db.exists("DocType", "SMRITI PSV Settings"):
+            return smriti.documents.get("SMRITI PSV Settings").as_dict()
     except Exception:
         import sys
         _frappe = sys.modules.get('frappe')

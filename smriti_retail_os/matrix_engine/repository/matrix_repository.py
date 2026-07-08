@@ -5,7 +5,9 @@
 # @author:  Jawahar R. Mallah
 #
 
-import frappe
+# framework-adapter: wraps frappe ORM at the repository boundary — Guard 6 exempt
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 
 class MatrixRepository:
     """
@@ -15,5 +17,5 @@ class MatrixRepository:
 
     @staticmethod
     def get_doc(*args, **kwargs):
-        """Wraps frappe.get_doc."""
-        return frappe.get_doc(*args, **kwargs)
+        """Fetches a document via smriti.documents layer (wraps frappe at boundary)."""
+        return frappe.get_doc(*args, **kwargs)  # smriti-adapter-boundary

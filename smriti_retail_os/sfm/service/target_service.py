@@ -10,7 +10,8 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from frappe.utils import getdate, flt
 import calendar
 
@@ -19,7 +20,7 @@ def get_month_date_range(fiscal_year, month_name):
     Computes calendar start and end dates for a given month inside a fiscal year.
     Supports split financial years (e.g. 2026-2027 where Apr-Dec is 2026, Jan-Mar is 2027).
     """
-    dates = frappe.db.get_value("Fiscal Year", fiscal_year, ["year_start_date", "year_end_date"], as_dict=True)
+    dates = smriti.db.get("Fiscal Year", fiscal_year, ["year_start_date", "year_end_date"], as_dict=True)
     if not dates:
         # Fallback to current year if fiscal year not found
         current_year = getdate().year
@@ -49,7 +50,7 @@ def get_employee_target_vs_achievement(employee, fiscal_year, month, company):
     Returns a dict with target, achievement, and achievement percentage.
     """
     # 1. Fetch Target
-    target = frappe.db.get_value(
+    target = smriti.db.get(
         "SMRITI Sales Target",
         {"employee": employee, "fiscal_year": fiscal_year, "month": month, "company": company},
         ["target_amount", "target_qty"],
@@ -62,7 +63,7 @@ def get_employee_target_vs_achievement(employee, fiscal_year, month, company):
     start_date, end_date = get_month_date_range(fiscal_year, month)
     
     # 3. Sum achievement from daily snapshots
-    res = frappe.db.sql("""
+    res = smriti.db.sql("""
         select sum(revenue) from `tabSMRITI Sales KPI Snapshot`
         where employee = %s and company = %s and date >= %s and date <= %s
     """, (employee, company, start_date, end_date))

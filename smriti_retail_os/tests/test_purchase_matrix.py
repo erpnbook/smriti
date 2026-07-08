@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # SMRITI Matrix Platform Subsystem Unit Tests
 import frappe
+from smriti_retail_os import smriti
 import unittest
 from smriti_retail_os.item_studio.service.variant_lifecycle_service import VariantLifecycleService
 from smriti_retail_os.matrix_engine.service.matrix_service import MatrixService
@@ -12,16 +13,16 @@ class TestPurchaseMatrix(unittest.TestCase):
         self.variant_code = "TST-SHIRT-TMP-RED-M"
         
         # Ensure valid HSN code
-        self.hsn_code = frappe.db.get_value("GST HSN Code", {}, "name")
+        self.hsn_code = smriti.db.get("GST HSN Code", {}, "name")
         if not self.hsn_code:
             self.hsn_code = "99990000"
-            if not frappe.db.exists("GST HSN Code", self.hsn_code):
-                hsn = frappe.new_doc("GST HSN Code")
+            if not smriti.db.exists("GST HSN Code", self.hsn_code):
+                hsn = smriti.documents.new("GST HSN Code")
                 hsn.name = self.hsn_code
                 hsn.hsn_code = self.hsn_code
                 hsn.description = "Test HSN Code"
                 hsn.insert(ignore_permissions=True)
-                frappe.db.commit()
+                smriti.db.commit()
 
         # Cleanup
         self.cleanup()
@@ -32,11 +33,11 @@ class TestPurchaseMatrix(unittest.TestCase):
     def cleanup(self):
         # Delete prices, barcodes, and items
         for item in [self.variant_code, self.article_code]:
-            if frappe.db.exists("Item", item):
-                frappe.db.delete("Item Price", {"item_code": item})
-                frappe.db.delete("Item Barcode", {"parent": item})
+            if smriti.db.exists("Item", item):
+                smriti.db.delete("Item Price", {"item_code": item})
+                smriti.db.delete("Item Barcode", {"parent": item})
                 frappe.delete_doc("Item", item, force=1)
-        frappe.db.commit()
+        smriti.db.commit()
 
     def test_matrix_subsystem_flow(self):
         # 1. Create Article template
@@ -47,15 +48,15 @@ class TestPurchaseMatrix(unittest.TestCase):
             attributes=["Color", "Size"]
         )
         self.assertEqual(article_name, self.article_code)
-        self.assertTrue(frappe.db.get_value("Item", self.article_code, "has_variants"))
+        self.assertTrue(smriti.db.get("Item", self.article_code, "has_variants"))
 
         # 2. Resolve or Create Variant
         attributes = {"Color": "Red", "Size": "M"}
         variant_code = VariantLifecycleService.resolve_or_create_variant(self.article_code, attributes)
-        self.assertTrue(frappe.db.exists("Item", variant_code))
+        self.assertTrue(smriti.db.exists("Item", variant_code))
 
         # Check barcode assignment
-        barcode = frappe.db.get_value("Item Barcode", {"parent": variant_code, "custom_is_primary": 1}, "barcode")
+        barcode = smriti.db.get("Item Barcode", {"parent": variant_code, "custom_is_primary": 1}, "barcode")
         self.assertTrue(barcode)
 
         # 3. Test Build Session DTO
@@ -96,8 +97,8 @@ class TestPurchaseMatrix(unittest.TestCase):
             attributes=["Color", "Size"]
         )
         # Set standard rate (MRP)
-        frappe.db.set_value("Item", self.article_code, "standard_rate", 1299.0)
-        frappe.db.commit()
+        smriti.db.set_value("Item", self.article_code, "standard_rate", 1299.0)
+        smriti.db.commit()
 
         # Clear cache first to ensure cache miss
         MatrixService.clear_cache(self.article_code)
@@ -137,17 +138,17 @@ class TestPurchaseMatrix(unittest.TestCase):
     def test_analytics_and_performance(self):
         # Ensure Item Groups exist
         for group in ["Footwear", "SANDAL"]:
-            if not frappe.db.exists("Item Group", group):
-                doc = frappe.new_doc("Item Group")
+            if not smriti.db.exists("Item Group", group):
+                doc = smriti.documents.new("Item Group")
                 doc.item_group_name = group
                 doc.parent_item_group = "All Item Groups"
                 doc.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # 1. Clear any existing POs for company
-        frappe.db.delete("SMRITI Purchase Order Item")
-        frappe.db.delete("SMRITI Purchase Order")
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Purchase Order Item")
+        smriti.db.delete("SMRITI Purchase Order")
+        smriti.db.commit()
 
         # 2. Create standard items with distinct item groups
         from smriti_retail_os.item_studio.service.variant_lifecycle_service import VariantLifecycleService
@@ -163,9 +164,9 @@ class TestPurchaseMatrix(unittest.TestCase):
             hsn_code=hsn,
             attributes=["Color", "Size"]
         )
-        frappe.db.set_value("Item", fw_art, "item_group", "Footwear")
+        smriti.db.set_value("Item", fw_art, "item_group", "Footwear")
         fw_var = VariantLifecycleService.resolve_or_create_variant(fw_art, {"Color": "Red", "Size": "M"})
-        frappe.db.set_value("Item", fw_var, "item_group", "Footwear")
+        smriti.db.set_value("Item", fw_var, "item_group", "Footwear")
 
         # Create Sandal item
         app_art = "ART-SANDAL-002"
@@ -175,29 +176,29 @@ class TestPurchaseMatrix(unittest.TestCase):
             hsn_code=hsn,
             attributes=["Color", "Size"]
         )
-        frappe.db.set_value("Item", app_art, "item_group", "SANDAL")
+        smriti.db.set_value("Item", app_art, "item_group", "SANDAL")
         app_var = VariantLifecycleService.resolve_or_create_variant(app_art, {"Color": "Red", "Size": "M"})
-        frappe.db.set_value("Item", app_var, "item_group", "SANDAL")
+        smriti.db.set_value("Item", app_var, "item_group", "SANDAL")
         
-        frappe.db.commit()
+        smriti.db.commit()
 
         # 3. Resolve suppliers and warehouse dynamically to prevent LinkValidationError
-        suppliers_list = frappe.db.get_all("SMRITI Supplier", limit=2, pluck="name")
+        suppliers_list = smriti.db.get_list("SMRITI Supplier", limit=2, pluck="name")
         supplier_a = suppliers_list[0] if len(suppliers_list) > 0 else "TEST-SUPP-A"
         supplier_b = suppliers_list[1] if len(suppliers_list) > 1 else "TEST-SUPP-B"
         
         for s in [supplier_a, supplier_b]:
-            if not frappe.db.exists("SMRITI Supplier", s):
-                sup = frappe.new_doc("SMRITI Supplier")
+            if not smriti.db.exists("SMRITI Supplier", s):
+                sup = smriti.documents.new("SMRITI Supplier")
                 sup.name = s
                 sup.supplier_name = s
                 sup.insert(ignore_permissions=True)
         
-        warehouse = frappe.db.get_value("Warehouse", {"is_group": 0}, "name") or "Stores - _SC"
+        warehouse = smriti.db.get("Warehouse", {"is_group": 0}, "name") or "Stores - _SC"
 
         # 4. Create test Purchase Orders
         # PO 1: Submitted, on time, fully received
-        po1 = frappe.new_doc("SMRITI Purchase Order")
+        po1 = smriti.documents.new("SMRITI Purchase Order")
         po1.supplier = supplier_a
         po1.supplier_name = supplier_a
         po1.company = "_Test Company"
@@ -219,7 +220,7 @@ class TestPurchaseMatrix(unittest.TestCase):
         po1.insert(ignore_permissions=True)
 
         # PO 2: Submitted, overdue (schedule_date is in the past), not received (0% received)
-        po2 = frappe.new_doc("SMRITI Purchase Order")
+        po2 = smriti.documents.new("SMRITI Purchase Order")
         po2.supplier = supplier_b
         po2.supplier_name = supplier_b
         po2.company = "_Test Company"
@@ -239,7 +240,7 @@ class TestPurchaseMatrix(unittest.TestCase):
             "warehouse": warehouse
         })
         po2.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # 4. Call get_purchase_analytics and assert correct aggregations
         from smriti_retail_os.purchase_studio.service.purchase_service import get_purchase_analytics
@@ -283,7 +284,7 @@ class TestPurchaseMatrix(unittest.TestCase):
         
         # Create a size variant
         var_code = VariantLifecycleService.resolve_or_create_variant(art_code, {"Size": "S"})
-        frappe.db.commit()
+        smriti.db.commit()
         
         # 2. Build matrix session
         session = MatrixService.build_session(art_code)
@@ -308,9 +309,9 @@ def seed_test_data():
     import frappe
     from smriti_retail_os.item_studio.service.variant_lifecycle_service import VariantLifecycleService
     
-    hsn = frappe.db.get_value("GST HSN Code", {}, "name")
+    hsn = smriti.db.get("GST HSN Code", {}, "name")
     if not hsn:
-        doc = frappe.new_doc("GST HSN Code")
+        doc = smriti.documents.new("GST HSN Code")
         doc.name = "99990000"
         doc.hsn_code = "99990000"
         doc.description = "Test HSN Code"
@@ -331,7 +332,7 @@ def seed_test_data():
         attributes=["Color", "Size"]
     )
     
-    frappe.db.commit()
+    smriti.db.commit()
     print("Success: ART-JEANS-001 created!")
 
 

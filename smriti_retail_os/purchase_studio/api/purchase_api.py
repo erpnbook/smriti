@@ -12,6 +12,7 @@
 #
 
 import frappe
+from smriti_retail_os import smriti
 from smriti_retail_os.purchase_studio.service import purchase_service as svc
 from smriti_retail_os.purchase_studio.service import purchase_settings_service as settings_svc
 
@@ -293,7 +294,7 @@ def get_warehouses(company=None):
     filters = {"is_group": 0}
     if company:
         filters["company"] = company
-    rows = frappe.get_all(
+    rows = smriti.db.get_list(
         "Warehouse",
         filters=filters,
         fields=["name", "warehouse_name"],

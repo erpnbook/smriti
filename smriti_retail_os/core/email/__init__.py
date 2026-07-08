@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # @file:    smriti_retail_os/core/email/__init__.py
 # @desc:    SMRITI Core Framework — email layer.
 #           Reserved for Phase 3/4 implementation.

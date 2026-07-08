@@ -10,6 +10,7 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 
 import frappe
+from smriti_retail_os import smriti
 from frappe.tests.utils import FrappeTestCase
 from frappe.utils import now_datetime, add_days
 from smriti_retail_os.psv_service import get_inventory_productivity_metrics
@@ -17,33 +18,33 @@ from smriti_retail_os.psv_service import get_inventory_productivity_metrics
 class TestPSVPhase1_2(FrappeTestCase):
     def setUp(self):
         # Clear database records to ensure clean slate
-        frappe.db.delete("PSV Ledger Entry")
-        frappe.db.delete("SMRITI Party Stock Ledger Entry")
-        frappe.db.delete("Sales Invoice Item")
-        frappe.db.delete("Sales Invoice")
-        frappe.db.delete("Item Price")
-        frappe.db.delete("Item")
-        frappe.db.commit()
+        smriti.db.delete("PSV Ledger Entry")
+        smriti.db.delete("SMRITI Party Stock Ledger Entry")
+        smriti.db.delete("Sales Invoice Item")
+        smriti.db.delete("Sales Invoice")
+        smriti.db.delete("Item Price")
+        smriti.db.delete("Item")
+        smriti.db.commit()
 
         # Create basic UOM, Item Group, and Company if they don't exist
-        self.uom = frappe.db.exists("UOM", "Nos") or frappe.db.get_value("UOM", {}, "name")
+        self.uom = smriti.db.exists("UOM", "Nos") or smriti.db.get("UOM", {}, "name")
         if not self.uom:
-            uom_doc = frappe.new_doc("UOM")
+            uom_doc = smriti.documents.new("UOM")
             uom_doc.uom_name = "Nos"
             uom_doc.insert(ignore_permissions=True)
             self.uom = uom_doc.name
 
-        self.item_group = frappe.db.exists("Item Group", "All Item Groups") or frappe.db.get_value("Item Group", {}, "name")
+        self.item_group = smriti.db.exists("Item Group", "All Item Groups") or smriti.db.get("Item Group", {}, "name")
         if not self.item_group:
-            ig = frappe.new_doc("Item Group")
+            ig = smriti.documents.new("Item Group")
             ig.item_group_name = "All Item Groups"
             ig.is_group = 0
             ig.insert(ignore_permissions=True)
             self.item_group = ig.name
 
         self.company = "Test PSV Company 1.2"
-        if not frappe.db.exists("Company", self.company):
-            comp = frappe.new_doc("Company")
+        if not smriti.db.exists("Company", self.company):
+            comp = smriti.documents.new("Company")
             comp.company_name = self.company
             comp.abbr = "TPC2"
             comp.country = "India"
@@ -51,16 +52,16 @@ class TestPSVPhase1_2(FrappeTestCase):
             comp.insert(ignore_permissions=True)
 
         self.customer = "Test Customer 1.2"
-        if not frappe.db.exists("Customer", self.customer):
-            cust = frappe.new_doc("Customer")
+        if not smriti.db.exists("Customer", self.customer):
+            cust = smriti.documents.new("Customer")
             cust.customer_name = self.customer
             cust.customer_type = "Individual"
             cust.insert(ignore_permissions=True)
 
         # Create valid GST HSN Code record for India Compliance
-        self.hsn_code = frappe.db.exists("GST HSN Code", "998311") or frappe.db.get_value("GST HSN Code", {}, "name")
+        self.hsn_code = smriti.db.exists("GST HSN Code", "998311") or smriti.db.get("GST HSN Code", {}, "name")
         if not self.hsn_code:
-            hsn = frappe.new_doc("GST HSN Code")
+            hsn = smriti.documents.new("GST HSN Code")
             hsn.hsn_code = "998311"
             hsn.description = "Test Services"
             hsn.insert(ignore_permissions=True)
@@ -70,15 +71,15 @@ class TestPSVPhase1_2(FrappeTestCase):
         settings = frappe.get_single("PSV System Settings")
         settings.star_velocity_threshold = 1.0
         settings.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
     def tearDown(self):
-        frappe.db.rollback()
+        smriti.db.rollback()
 
     def test_01_realized_price_calculation(self):
         # Create an Item
         item_code = "ITEM-REALIZED-PRICE"
-        item = frappe.new_doc("Item")
+        item = smriti.documents.new("Item")
         item.item_code = item_code
         item.item_name = item_code
         item.item_group = self.item_group
@@ -88,7 +89,7 @@ class TestPSVPhase1_2(FrappeTestCase):
         item.insert(ignore_permissions=True)
 
         # Create Sales Invoice 1
-        si1 = frappe.new_doc("Sales Invoice")
+        si1 = smriti.documents.new("Sales Invoice")
         si1.company = self.company
         si1.customer = self.customer
         si1.append("items", {
@@ -98,11 +99,11 @@ class TestPSVPhase1_2(FrappeTestCase):
             "base_amount": 750.0
         })
         si1.insert(ignore_permissions=True, ignore_mandatory=True, ignore_links=True)
-        frappe.db.set_value("Sales Invoice", si1.name, {"docstatus": 1})
-        frappe.db.sql("UPDATE `tabSales Invoice Item` SET docstatus = 1 WHERE parent = %s", (si1.name,))
+        smriti.db.set_value("Sales Invoice", si1.name, {"docstatus": 1})
+        smriti.db.sql("UPDATE `tabSales Invoice Item` SET docstatus = 1 WHERE parent = %s", (si1.name,))
 
         # Create Sales Invoice 2
-        si2 = frappe.new_doc("Sales Invoice")
+        si2 = smriti.documents.new("Sales Invoice")
         si2.company = self.company
         si2.customer = self.customer
         si2.append("items", {
@@ -112,12 +113,12 @@ class TestPSVPhase1_2(FrappeTestCase):
             "base_amount": 1250.0
         })
         si2.insert(ignore_permissions=True, ignore_mandatory=True, ignore_links=True)
-        frappe.db.set_value("Sales Invoice", si2.name, {"docstatus": 1})
-        frappe.db.sql("UPDATE `tabSales Invoice Item` SET docstatus = 1 WHERE parent = %s", (si2.name,))
+        smriti.db.set_value("Sales Invoice", si2.name, {"docstatus": 1})
+        smriti.db.sql("UPDATE `tabSales Invoice Item` SET docstatus = 1 WHERE parent = %s", (si2.name,))
 
         # Add some Party Stock Ledger entries
         # Qty sold: 10 units over last 14 days (velocity = 5.0 units/wk)
-        frappe.db.sql("""
+        smriti.db.sql("""
             INSERT INTO `tabSMRITI Party Stock Ledger Entry` 
             (name, company, item_code, qty, posting_datetime, voucher_type)
             VALUES 
@@ -127,7 +128,7 @@ class TestPSVPhase1_2(FrappeTestCase):
         # Current balance: 10 units (so inventory_value = 10 * 100 = 1000)
         # Gross Margin = sales_qty * (realized_price - cost) = 10 * (200 - 100) = 1000
         # GMROI = 1000 / 1000 = 1.0
-        frappe.db.sql("""
+        smriti.db.sql("""
             INSERT INTO `tabSMRITI Party Stock Ledger Entry` 
             (name, company, item_code, qty, posting_datetime, voucher_type)
             VALUES 
@@ -147,7 +148,7 @@ class TestPSVPhase1_2(FrappeTestCase):
     def test_02_star_sku_classification(self):
         # Star: velocity >= threshold (1.0) and GMROI >= 2.0
         item_code = "ITEM-STAR"
-        item = frappe.new_doc("Item")
+        item = smriti.documents.new("Item")
         item.item_code = item_code
         item.item_name = item_code
         item.item_group = self.item_group
@@ -157,7 +158,7 @@ class TestPSVPhase1_2(FrappeTestCase):
         item.insert(ignore_permissions=True)
 
         # Sales Invoice bypassing complex validations
-        si = frappe.new_doc("Sales Invoice")
+        si = smriti.documents.new("Sales Invoice")
         si.company = self.company
         si.customer = self.customer
         si.append("items", {
@@ -167,11 +168,11 @@ class TestPSVPhase1_2(FrappeTestCase):
             "base_amount": 3000.0
         })
         si.insert(ignore_permissions=True, ignore_mandatory=True, ignore_links=True)
-        frappe.db.set_value("Sales Invoice", si.name, {"docstatus": 1})
-        frappe.db.sql("UPDATE `tabSales Invoice Item` SET docstatus = 1 WHERE parent = %s", (si.name,))
+        smriti.db.set_value("Sales Invoice", si.name, {"docstatus": 1})
+        smriti.db.sql("UPDATE `tabSales Invoice Item` SET docstatus = 1 WHERE parent = %s", (si.name,))
 
         # Sales: 10 units over last 14 days (velocity = 5.0 units/wk >= 1.0 threshold)
-        frappe.db.sql("""
+        smriti.db.sql("""
             INSERT INTO `tabSMRITI Party Stock Ledger Entry` 
             (name, company, item_code, qty, posting_datetime, voucher_type)
             VALUES 
@@ -181,7 +182,7 @@ class TestPSVPhase1_2(FrappeTestCase):
         # Balance = 5 units (inventory_value = 5 * 100 = 500)
         # Gross margin = 10 * (300 - 100) = 2000
         # GMROI = 2000 / 500 = 4.0 >= 2.0
-        frappe.db.sql("""
+        smriti.db.sql("""
             INSERT INTO `tabSMRITI Party Stock Ledger Entry` 
             (name, company, item_code, qty, posting_datetime, voucher_type)
             VALUES 
@@ -197,7 +198,7 @@ class TestPSVPhase1_2(FrappeTestCase):
     def test_03_stockout_winner_classification(self):
         # Stockout Winner: stock <= 0 and sales > 0 (margin > 0)
         item_code = "ITEM-STOCKOUT"
-        item = frappe.new_doc("Item")
+        item = smriti.documents.new("Item")
         item.item_code = item_code
         item.item_name = item_code
         item.item_group = self.item_group
@@ -207,7 +208,7 @@ class TestPSVPhase1_2(FrappeTestCase):
         item.insert(ignore_permissions=True)
 
         # Sales price = 150.0 (margin = 50.0)
-        si = frappe.new_doc("Sales Invoice")
+        si = smriti.documents.new("Sales Invoice")
         si.company = self.company
         si.customer = self.customer
         si.append("items", {
@@ -217,11 +218,11 @@ class TestPSVPhase1_2(FrappeTestCase):
             "base_amount": 1500.0
         })
         si.insert(ignore_permissions=True, ignore_mandatory=True, ignore_links=True)
-        frappe.db.set_value("Sales Invoice", si.name, {"docstatus": 1})
-        frappe.db.sql("UPDATE `tabSales Invoice Item` SET docstatus = 1 WHERE parent = %s", (si.name,))
+        smriti.db.set_value("Sales Invoice", si.name, {"docstatus": 1})
+        smriti.db.sql("UPDATE `tabSales Invoice Item` SET docstatus = 1 WHERE parent = %s", (si.name,))
 
         # Sales: 10 units
-        frappe.db.sql("""
+        smriti.db.sql("""
             INSERT INTO `tabSMRITI Party Stock Ledger Entry` 
             (name, company, item_code, qty, posting_datetime, voucher_type)
             VALUES 
@@ -243,7 +244,7 @@ class TestPSVPhase1_2(FrappeTestCase):
         # Norm_Vel = min(Velocity / 5.0, 1.0) * 100
         # With huge GMROI and huge Velocity, verify score is capped at 100.
         item_code = "ITEM-MAX-SCORE"
-        item = frappe.new_doc("Item")
+        item = smriti.documents.new("Item")
         item.item_code = item_code
         item.item_name = item_code
         item.item_group = self.item_group
@@ -252,7 +253,7 @@ class TestPSVPhase1_2(FrappeTestCase):
         item.valuation_rate = 10.0
         item.insert(ignore_permissions=True)
 
-        si = frappe.new_doc("Sales Invoice")
+        si = smriti.documents.new("Sales Invoice")
         si.company = self.company
         si.customer = self.customer
         si.append("items", {
@@ -262,11 +263,11 @@ class TestPSVPhase1_2(FrappeTestCase):
             "base_amount": 100000.0
         })
         si.insert(ignore_permissions=True, ignore_mandatory=True, ignore_links=True)
-        frappe.db.set_value("Sales Invoice", si.name, {"docstatus": 1})
-        frappe.db.sql("UPDATE `tabSales Invoice Item` SET docstatus = 1 WHERE parent = %s", (si.name,))
+        smriti.db.set_value("Sales Invoice", si.name, {"docstatus": 1})
+        smriti.db.sql("UPDATE `tabSales Invoice Item` SET docstatus = 1 WHERE parent = %s", (si.name,))
 
         # Velocity = 100 / 1 week = 100 units/wk (Norm_Vel = min(100/5.0, 1.0) * 100 = 100)
-        frappe.db.sql("""
+        smriti.db.sql("""
             INSERT INTO `tabSMRITI Party Stock Ledger Entry` 
             (name, company, item_code, qty, posting_datetime, voucher_type)
             VALUES 
@@ -276,7 +277,7 @@ class TestPSVPhase1_2(FrappeTestCase):
         # Balance = 1 unit (inv_value = 10)
         # Margin = 100 * (1000 - 10) = 99000
         # GMROI = 99000 / 10 = 9900 (Norm_GMROI = min(9900/3.0, 1.0) * 100 = 100)
-        frappe.db.sql("""
+        smriti.db.sql("""
             INSERT INTO `tabSMRITI Party Stock Ledger Entry` 
             (name, company, item_code, qty, posting_datetime, voucher_type)
             VALUES 
@@ -292,8 +293,8 @@ class TestPSVPhase1_2(FrappeTestCase):
         # Create 10 dummy items
         for i in range(10):
             code = f"SCALE-ITEM-{i}"
-            if not frappe.db.exists("Item", code):
-                item = frappe.new_doc("Item")
+            if not smriti.db.exists("Item", code):
+                item = smriti.documents.new("Item")
                 item.item_code = code
                 item.item_name = code
                 item.item_group = self.item_group
@@ -338,7 +339,7 @@ class TestPSVPhase1_2(FrappeTestCase):
         
         # 2. Test metrics returns warnings, confidence, and txn_count
         item_code = "ITEM-METADATA-TEST"
-        item = frappe.new_doc("Item")
+        item = smriti.documents.new("Item")
         item.item_code = item_code
         item.item_name = item_code
         item.item_group = self.item_group
@@ -349,7 +350,7 @@ class TestPSVPhase1_2(FrappeTestCase):
 
         # Sales: 25 units in 5 separate transactions (Should trigger High confidence)
         for i in range(5):
-            frappe.db.sql("""
+            smriti.db.sql("""
                 INSERT INTO `tabSMRITI Party Stock Ledger Entry` 
                 (name, company, item_code, qty, posting_datetime, voucher_type, voucher_no)
                 VALUES 

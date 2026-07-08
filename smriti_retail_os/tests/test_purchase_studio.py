@@ -11,6 +11,7 @@
 #
 
 import frappe
+from smriti_retail_os import smriti
 import unittest
 from frappe.utils import nowdate
 
@@ -92,7 +93,7 @@ class TestAuditService(unittest.TestCase):
 
     def test_log_creates_audit_record(self):
         """log() must create a SMRITI Purchase Audit Log record."""
-        before_count = frappe.db.count("SMRITI Purchase Audit Log",
+        before_count = smriti.db.count("SMRITI Purchase Audit Log",
                                         {"event_type": "TEST_EVENT"})
         self.svc.log(
             event_type="TEST_EVENT",
@@ -101,7 +102,7 @@ class TestAuditService(unittest.TestCase):
             after={"status": "after"},
             reason="Unit test"
         )
-        after_count = frappe.db.count("SMRITI Purchase Audit Log",
+        after_count = smriti.db.count("SMRITI Purchase Audit Log",
                                        {"event_type": "TEST_EVENT"})
         self.assertEqual(after_count, before_count + 1)
 
@@ -440,14 +441,14 @@ class TestSmritiPurchaseStudioServices(unittest.TestCase):
     def setUp(self):
         # Clean up test suppliers to avoid duplicate key errors
         for sup in ["SMRITI Test Supplier A", "SMRITI Test Supplier B", "SMRITI Test Supplier Calculations"]:
-            frappe.db.delete("SMRITI Supplier", {"supplier_name": sup})
-            frappe.db.delete("SMRITI Supplier", {"name": sup})
+            smriti.db.delete("SMRITI Supplier", {"supplier_name": sup})
+            smriti.db.delete("SMRITI Supplier", {"name": sup})
 
         # Resolve a valid GST HSN Code for India Compliance module
-        hsn_code = frappe.db.get_value("GST HSN Code", {}, "name")
+        hsn_code = smriti.db.get("GST HSN Code", {}, "name")
         if not hsn_code:
             try:
-                hsn = frappe.new_doc("GST HSN Code")
+                hsn = smriti.documents.new("GST HSN Code")
                 hsn.name = "999999"
                 hsn.hsn_code = "999999"
                 hsn.insert(ignore_permissions=True)
@@ -457,8 +458,8 @@ class TestSmritiPurchaseStudioServices(unittest.TestCase):
 
         # Create test items if they don't exist
         for item_code in ["SMRITI-TEST-ITEM-1", "SMRITI-TEST-ITEM-2"]:
-            if not frappe.db.exists("Item", item_code):
-                item = frappe.new_doc("Item")
+            if not smriti.db.exists("Item", item_code):
+                item = smriti.documents.new("Item")
                 item.item_code = item_code
                 item.item_group = "All Item Groups"
                 item.stock_uom = "Nos"
@@ -475,7 +476,7 @@ class TestSmritiPurchaseStudioServices(unittest.TestCase):
             "supplier_name": "SMRITI Test Supplier A",
             "email_id": "test_sup@smriti.com"
         })
-        self.assertTrue(frappe.db.exists("SMRITI Supplier", sup_name))
+        self.assertTrue(smriti.db.exists("SMRITI Supplier", sup_name))
         
         # 2. Get detail
         detail = PurchaseOrderService.get_supplier_detail(sup_name)
@@ -495,7 +496,7 @@ class TestSmritiPurchaseStudioServices(unittest.TestCase):
 
         # Setup Supplier
         sup_name = "SMRITI Test Supplier Calculations"
-        sup_id = frappe.db.get_value("SMRITI Supplier", {"supplier_name": sup_name}, "name")
+        sup_id = smriti.db.get("SMRITI Supplier", {"supplier_name": sup_name}, "name")
         if not sup_id:
             sup_id = PurchaseOrderService.create_supplier({
                 "supplier_name": sup_name,
@@ -513,7 +514,7 @@ class TestSmritiPurchaseStudioServices(unittest.TestCase):
             remarks="Test calculations"
         )
         po_name = res["name"]
-        self.assertTrue(frappe.db.exists("SMRITI Purchase Order", po_name))
+        self.assertTrue(smriti.db.exists("SMRITI Purchase Order", po_name))
 
         # Check Calculations
         po_detail = PurchaseOrderService.get_purchase_order_detail(po_name)

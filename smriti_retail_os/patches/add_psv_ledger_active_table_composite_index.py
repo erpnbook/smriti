@@ -10,7 +10,8 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 
 def execute():
     doctype_name = "PSV Ledger Entry"
@@ -23,7 +24,7 @@ def execute():
         return
 
     # Check if the index already exists
-    existing = frappe.db.sql(
+    existing = smriti.db.sql(
         """
         SELECT COUNT(*) 
         FROM information_schema.statistics
@@ -44,7 +45,7 @@ def execute():
         f"[PSV Index Patch] Creating composite index `{index_name}` on `{table_name}`..."
     )
 
-    frappe.db.sql(
+    smriti.db.sql(
         f"""
         ALTER TABLE `{table_name}`
         ADD INDEX `{index_name}` (company, channel_partner, item_variant, posting_datetime)

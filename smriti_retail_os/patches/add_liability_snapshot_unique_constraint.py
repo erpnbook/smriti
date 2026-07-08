@@ -15,7 +15,8 @@
 # @date: 2026-06-19
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 
 def execute():
     table_name = "tabSMRITI Liability Snapshot"
@@ -25,7 +26,7 @@ def execute():
         return
 
     # Delete duplicates keeping the newest / highest name record to ensure index creation succeeds
-    frappe.db.sql(f"""
+    smriti.db.sql(f"""
         DELETE t1 FROM `{table_name}` t1
         INNER JOIN `{table_name}` t2 
         ON COALESCE(t1.company, '') = COALESCE(t2.company, '')
@@ -36,7 +37,7 @@ def execute():
     index_name = "unique_company_snapshot_date"
 
     # Check if the unique index already exists
-    existing = frappe.db.sql(
+    existing = smriti.db.sql(
         """
         SELECT COUNT(*) 
         FROM information_schema.statistics
@@ -48,7 +49,7 @@ def execute():
     )
 
     if not existing or existing[0][0] == 0:
-        frappe.db.sql(
+        smriti.db.sql(
             f"""
             ALTER TABLE `{table_name}`
             ADD UNIQUE INDEX `{index_name}` (company, snapshot_date)

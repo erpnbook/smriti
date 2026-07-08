@@ -10,9 +10,10 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe.utils import flt, cint, now_datetime, nowdate
 from frappe import _
+from smriti_retail_os import smriti
 from smriti_retail_os.utils.invoice_utils import get_barcode_candidates
 
 @frappe.whitelist()
@@ -27,30 +28,30 @@ def add_item_by_barcode(barcode, price_list="Standard Selling"):
     
     item_code = None
     for cand in candidates:
-        item_code = frappe.db.get_value("Item Barcode", {"barcode": cand}, "parent")
+        item_code = smriti.db.get("Item Barcode", {"barcode": cand}, "parent")
         if item_code:
             break
             
     if not item_code:
         for cand in candidates:
-            if frappe.db.exists("Item", cand):
+            if smriti.db.exists("Item", cand):
                 item_code = cand
                 break
 
     if not item_code:
         return None
 
-    item_doc = frappe.get_doc("Item", item_code)
+    item_doc = smriti.documents.get("Item", item_code)
     
     # Get standard selling price
-    rate = frappe.db.get_value(
+    rate = smriti.db.get(
         "Item Price", 
         {"item_code": item_code, "price_list": price_list}, 
         "price_list_rate"
     ) or item_doc.valuation_rate or 0.0
 
     # Get MRP
-    mrp = item_doc.custom_mrp or frappe.db.get_value(
+    mrp = item_doc.custom_mrp or smriti.db.get(
         "Item Price", 
         {"item_code": item_code, "price_list": "MRP"}, 
         "price_list_rate"
@@ -66,7 +67,7 @@ def add_item_by_barcode(barcode, price_list="Standard Selling"):
         tax_template = item_doc.taxes[0].item_tax_template
 
     # Fetch dynamic stock for the default warehouse using raw SQL to bypass strict SELECT sanitization
-    stock_res = frappe.db.sql(
+    stock_res = smriti.db.sql(
         "SELECT SUM(actual_qty) FROM `tabBin` WHERE item_code=%s",
         (item_code,)
     )
@@ -101,7 +102,7 @@ def search_customer(query=None):
             "mobile_no": ["like", f"%{query}%"]
         }
 
-    res = frappe.db.get_all(
+    res = smriti.db.get_list(
         "Customer",
         filters=filters,
         or_filters=or_filters,
@@ -139,7 +140,7 @@ def hold_bill(cashier, customer, items, remarks=None, sales_staff=None):
 
     items_list = frappe.parse_json(items)
     
-    pos_invoice = frappe.new_doc("POS Invoice")
+    pos_invoice = smriti.documents.new("POS Invoice")
     pos_invoice.owner = cashier
     pos_invoice.customer = customer or "Walk-In Customer"
     pos_invoice.posting_date = nowdate()
@@ -150,7 +151,7 @@ def hold_bill(cashier, customer, items, remarks=None, sales_staff=None):
     pos_invoice.custom_hold_time = now_datetime()
     
     # Set standard POS defaults
-    pos_invoice.company = frappe.defaults.get_user_default("company") or frappe.get_all("Company", limit=1)[0].name
+    pos_invoice.company = frappe.defaults.get_user_default("company") or smriti.db.get_list("Company", limit=1)[0].name
     pos_invoice.currency = "INR"
     pos_invoice.selling_price_list = "Standard Selling"
     
@@ -180,7 +181,7 @@ def hold_bill(cashier, customer, items, remarks=None, sales_staff=None):
     pos_invoice.flags.ignore_mandatory = True # Bypass standard database mandatory field checks!
     # reviewed-ignore-permissions: no role restriction — any authenticated user may hold transient bills, by design
     pos_invoice.save(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
 
     return {
         "invoice_name": pos_invoice.name,
@@ -202,7 +203,7 @@ def recall_bill(cashier):
     identification only; never use it for financial reconciliation.
     (GAP-B05 FIX)
     """
-    held_bills = frappe.db.get_all(
+    held_bills = smriti.db.get_list(
         "POS Invoice",
         filters={
             "docstatus": 0,
@@ -219,7 +220,7 @@ def recall_bill(cashier):
     # Batch-compute display_total from items child table (grand_total is 0 on held drafts)
     bill_names = [b.name for b in held_bills]
     placeholders = ", ".join(["%s"] * len(bill_names))
-    total_rows = frappe.db.sql(
+    total_rows = smriti.db.sql(
         f"SELECT parent, SUM(qty * rate) AS display_total FROM `tabPOS Invoice Item`"
         f" WHERE parent IN ({placeholders}) GROUP BY parent",
         tuple(bill_names),
@@ -241,12 +242,12 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
     """
     # 0. Idempotency Check
     if billing_session_id:
-        existing = frappe.db.get_value("POS Invoice", {"custom_billing_session_id": billing_session_id}, ["name", "grand_total"], as_dict=True)
+        existing = smriti.db.get("POS Invoice", {"custom_billing_session_id": billing_session_id}, ["name", "grand_total"], as_dict=True)
         if not existing:
-            existing = frappe.db.get_value("Sales Invoice", {"custom_billing_session_id": billing_session_id}, ["name", "grand_total"], as_dict=True)
+            existing = smriti.db.get("Sales Invoice", {"custom_billing_session_id": billing_session_id}, ["name", "grand_total"], as_dict=True)
         
         if existing:
-            dt = "POS Invoice" if frappe.db.exists("POS Invoice", existing.name) else "Sales Invoice"
+            dt = "POS Invoice" if smriti.db.exists("POS Invoice", existing.name) else "Sales Invoice"
             return {
                 "invoice": existing.name,
                 "grand_total": flt(existing.grand_total),
@@ -260,17 +261,17 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
     payments_list = frappe.parse_json(payments)
     on_credit = cint(on_credit)
     
-    company = frappe.defaults.get_user_default("company") or frappe.get_all("Company", limit=1)[0].name
+    company = frappe.defaults.get_user_default("company") or smriti.db.get_list("Company", limit=1)[0].name
     
     # Check if there is an active open shift for this cashier
-    has_open_shift = frappe.db.exists("POS Opening Entry", {
+    has_open_shift = smriti.db.exists("POS Opening Entry", {
         "user": cashier,
         "status": "Open",
         "docstatus": 1
     })
 
     # If overwriting a recalled held draft POS Invoice
-    is_recalled = bool(invoice_name and frappe.db.exists("POS Invoice", invoice_name))
+    is_recalled = bool(invoice_name and smriti.db.exists("POS Invoice", invoice_name))
     
     if on_credit:
         doctype = "Sales Invoice"
@@ -282,12 +283,12 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
         doctype = "POS Invoice" if use_pos else "Sales Invoice"
 
     if is_recalled:
-        invoice_doc = frappe.get_doc("POS Invoice", invoice_name)
+        invoice_doc = smriti.documents.get("POS Invoice", invoice_name)
         invoice_doc.custom_is_held = 0 # Release hold
         invoice_doc.items = []
         invoice_doc.payments = []
     else:
-        invoice_doc = frappe.new_doc(doctype)
+        invoice_doc = smriti.documents.new(doctype)
         invoice_doc.owner = cashier
         
     invoice_doc.customer = customer or "Walk-In Customer"
@@ -295,7 +296,7 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
     
     # Resolve and link Billing & Shipping Addresses (Bill To and Ship To)
     if invoice_doc.customer and invoice_doc.customer != "Walk-In Customer":
-        billing_addr_name = frappe.db.get_value(
+        billing_addr_name = smriti.db.get(
             "Address",
             {
                 "links.link_doctype": "Customer",
@@ -304,7 +305,7 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
             },
             "name"
         )
-        shipping_addr_name = frappe.db.get_value(
+        shipping_addr_name = smriti.db.get(
             "Address",
             {
                 "links.link_doctype": "Customer",
@@ -316,14 +317,14 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
         
         if billing_addr_name:
             invoice_doc.customer_address = billing_addr_name
-            invoice_doc.address_display = frappe.db.get_value("Address", billing_addr_name, "display")
+            invoice_doc.address_display = smriti.db.get("Address", billing_addr_name, "display")
         if shipping_addr_name:
             invoice_doc.shipping_address_name = shipping_addr_name
-            invoice_doc.shipping_address = frappe.db.get_value("Address", shipping_addr_name, "display")
+            invoice_doc.shipping_address = smriti.db.get("Address", shipping_addr_name, "display")
 
     # Resolve and link Company Address (mandatory for Indian GST transactions)
     if not invoice_doc.company_address:
-        company_addr_name = frappe.db.get_value(
+        company_addr_name = smriti.db.get(
             "Address",
             {
                 "links.link_doctype": "Company",
@@ -333,7 +334,7 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
             "name"
         )
         if not company_addr_name:
-            company_addr_name = frappe.db.get_value(
+            company_addr_name = smriti.db.get(
                 "Address",
                 {
                     "links.link_doctype": "Company",
@@ -346,8 +347,8 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
 
     # Resolve tax override from Customer doc if set to Default
     resolved_tax_override = tax_override
-    if resolved_tax_override == "Default" and invoice_doc.customer and invoice_doc.customer != "Walk-In Customer" and frappe.db.exists("Customer", invoice_doc.customer):
-        cust_override = frappe.db.get_value("Customer", invoice_doc.customer, "custom_tax_inclusive_override")
+    if resolved_tax_override == "Default" and invoice_doc.customer and invoice_doc.customer != "Walk-In Customer" and smriti.db.exists("Customer", invoice_doc.customer):
+        cust_override = smriti.db.get("Customer", invoice_doc.customer, "custom_tax_inclusive_override")
         if cust_override:
             resolved_tax_override = cust_override
 
@@ -370,17 +371,17 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
 
     # Pre-resolve a company-level fallback warehouse once (avoid repeated DB hits)
     _fallback_wh = frappe.defaults.get_user_default("warehouse")
-    if _fallback_wh and frappe.db.get_value("Warehouse", _fallback_wh, "company") != company:
+    if _fallback_wh and smriti.db.get("Warehouse", _fallback_wh, "company") != company:
         _fallback_wh = None
         
     if not _fallback_wh:
         _fallback_wh = (
-            frappe.db.get_value("Warehouse", {"warehouse_name": "Stores", "company": company}, "name")
-            or frappe.db.get_value("Warehouse", {"company": company, "is_group": 0}, "name")
+            smriti.db.get("Warehouse", {"warehouse_name": "Stores", "company": company}, "name")
+            or smriti.db.get("Warehouse", {"company": company, "is_group": 0}, "name")
         )
 
     # Resolve default taxes and charges template for the company if none set
-    default_tax_template = frappe.db.get_value(
+    default_tax_template = smriti.db.get(
         "Sales Taxes and Charges Template",
         {"company": company, "is_default": 1},
         "name"
@@ -393,7 +394,7 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
     item_codes = [it.get("item_code") for it in items_list]
 
     # Batch 1: Item Default warehouses — one query, not one per item
-    item_defaults_rows = frappe.db.get_all(
+    item_defaults_rows = smriti.db.get_list(
         "Item Default",
         filters={"parent": ["in", item_codes], "company": company},
         fields=["parent", "default_warehouse"]
@@ -401,7 +402,7 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
     item_wh_map = {r.parent: r.default_warehouse for r in item_defaults_rows}
 
     # Batch 2: Item Tax Template assignments for these items
-    item_tax_rows = frappe.db.get_all(
+    item_tax_rows = smriti.db.get_list(
         "Item Tax",
         filters={"parent": ["in", item_codes]},
         fields=["parent", "item_tax_template"]
@@ -415,7 +416,7 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
     # Batch 3: Item Tax Template company ownership (to validate they belong to this company)
     all_templates = list(set(item_tax_map.values()))
     if all_templates:
-        tmpl_rows = frappe.db.get_all(
+        tmpl_rows = smriti.db.get_list(
             "Item Tax Template",
             filters={"name": ["in", all_templates]},
             fields=["name", "company"]
@@ -425,7 +426,7 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
         tmpl_company_map = {}
 
     # Batch 4: GST percentage per item (for tax-inclusive rate calculation)
-    gst_rows = frappe.db.get_all(
+    gst_rows = smriti.db.get_list(
         "Item",
         filters={"name": ["in", item_codes]},
         fields=["name", "custom_gst_percentage"]
@@ -433,9 +434,9 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
     item_gst_map = {r.name: flt(r.custom_gst_percentage or 0.0) for r in gst_rows}
 
     # Resolve company cost_center once (used as fallback for all items)
-    company_cc = frappe.db.get_value("Company", company, "cost_center")
+    company_cc = smriti.db.get("Company", company, "cost_center")
     if not company_cc:
-        company_cc = frappe.db.get_value("Cost Center", {"company": company, "is_group": 0}, "name")
+        company_cc = smriti.db.get("Cost Center", {"company": company, "is_group": 0}, "name")
     # ─────────────────────────────────────────────────────────────────────────
 
     # Resolve context on items list
@@ -516,7 +517,7 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
     for p in payments_list:
         if flt(p.get("amount")) > 0:
             mop = p.get("mode_of_payment")
-            mop_account = frappe.db.get_value(
+            mop_account = smriti.db.get(
                 "Mode of Payment Account",
                 {"parent": mop, "company": company},
                 "default_account"
@@ -529,7 +530,7 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
 
     # 3. Loyalty Points Redemption
     if loyalty_points and int(loyalty_points) > 0:
-        loyalty_program = frappe.db.get_value("Customer", invoice_doc.customer, "loyalty_program")
+        loyalty_program = smriti.db.get("Customer", invoice_doc.customer, "loyalty_program")
         if loyalty_program:
             invoice_doc.redeem_loyalty_points = 1
             invoice_doc.loyalty_points = int(loyalty_points)
@@ -546,18 +547,18 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
 
         invoice_doc.submit()
     except Exception:
-        frappe.db.rollback()
+        smriti.db.rollback()
         raise
 
     # C-02 FIX: Delete the recalled POS Invoice AFTER the replacement SI is committed.
     # If we deleted it before (as before), any failure during SI creation would result
     # in zero invoices with no recovery. Now the POS Invoice survives until SI is safe.
-    if on_credit and invoice_name and frappe.db.exists("POS Invoice", invoice_name):
+    if on_credit and invoice_name and smriti.db.exists("POS Invoice", invoice_name):
         try:
             # reviewed-ignore-permissions: no role restriction for standard sales; gated by manager PIN only when discount override is requested
             frappe.delete_doc("POS Invoice", invoice_name, ignore_permissions=True)
         except Exception as del_ex:
-            frappe.log_error(f"[SMRITI] Could not delete recalled POS Invoice {invoice_name}: {del_ex}")
+            smriti.errors.log_error(f"[SMRITI] Could not delete recalled POS Invoice {invoice_name}: {del_ex}")
     
     # REL-02: Move non-critical post-billing tasks to background workers
     # This prevents UI blocking and DB lock contention
@@ -570,7 +571,7 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
         now=False
     )
     
-    frappe.db.commit()
+    smriti.db.commit()
     
     # 5. Return success details with standard printing URL
     print_url = f"/api/method/frappe.utils.print_format.download_pdf?doctype={doctype}&name={invoice_doc.name}&format=Standard"
@@ -595,7 +596,7 @@ def process_post_billing_tasks(invoice_name, doctype, payments_list, company):
                 # C-03 FIX: Idempotency check — do not create a PE if one already exists
                 # for this invoice. Background workers can retry on failure, so this
                 # prevents duplicate Payment Entries and double-payment in the ledger.
-                existing_pe = frappe.db.get_value(
+                existing_pe = smriti.db.get(
                     "Payment Entry Reference",
                     {"reference_name": invoice_name, "docstatus": 1},
                     "parent"
@@ -608,7 +609,7 @@ def process_post_billing_tasks(invoice_name, doctype, payments_list, company):
                 if payments_list:
                     first_p = payments_list[0]
                     pe.mode_of_payment = first_p.get("mode_of_payment")
-                    pe.paid_to = frappe.db.get_value(
+                    pe.paid_to = smriti.db.get(
                         "Mode of Payment Account",
                         {"parent": pe.mode_of_payment, "company": company},
                         "default_account"
@@ -616,10 +617,10 @@ def process_post_billing_tasks(invoice_name, doctype, payments_list, company):
                 pe.flags.ignore_permissions = True
                 pe.insert(ignore_permissions=True)
                 pe.submit()
-                frappe.db.commit()
+                smriti.db.commit()
                 frappe.logger().info(f"[SMRITI] Background Payment Entry created for {invoice_name}")
             except Exception as e:
-                frappe.log_error(f"Post-Billing Payment Entry Error for {invoice_name}: {frappe.get_traceback()}")
+                smriti.errors.log_error(f"Post-Billing Payment Entry Error for {invoice_name}: {frappe.get_traceback()}")
 
 
 
@@ -632,7 +633,7 @@ def load_item_context(item_names, price_list="Standard Selling"):
     Batch-loads all context needed to enrich a list of Items for POS display.
     Returns a dict of maps, each keyed by item_code.
 
-    Replaces per-item frappe.get_cached_doc calls — eliminates N+1 queries
+    Replaces per-item smriti.documents.get calls — eliminates N+1 queries
     regardless of catalog size. Reusable by search_items, add_item_by_barcode,
     Import Engine, Label Studio, and future APIs.
 
@@ -650,7 +651,7 @@ def load_item_context(item_names, price_list="Standard Selling"):
         }
 
     # Batch 1+2: Selling prices and MRP prices in one query
-    price_rows = frappe.db.get_all(
+    price_rows = smriti.db.get_list(
         "Item Price",
         filters={"item_code": ["in", item_names], "price_list": ["in", [price_list, "MRP"]]},
         fields=["item_code", "price_list", "price_list_rate"]
@@ -664,7 +665,7 @@ def load_item_context(item_names, price_list="Standard Selling"):
             mrp_price_map[pr.item_code] = flt(pr.price_list_rate)
 
     # Batch 3: First Item Tax Template per item (order by idx — first row wins)
-    tax_rows = frappe.db.get_all(
+    tax_rows = smriti.db.get_list(
         "Item Tax",
         filters={"parent": ["in", item_names]},
         fields=["parent", "item_tax_template"],
@@ -691,7 +692,7 @@ def search_items(query, price_list="Standard Selling"):
     if not query:
         return []
 
-    items = frappe.db.get_all(
+    items = smriti.db.get_list(
         "Item",
         filters={
             "disabled": 0,
@@ -746,16 +747,16 @@ def load_held_invoice(invoice_name):
     if not invoice_name:
         return None
     
-    inv = frappe.get_doc("POS Invoice", invoice_name)
+    inv = smriti.documents.get("POS Invoice", invoice_name)
     if inv.docstatus != 0 or not inv.custom_is_held:
         frappe.throw(_("Invoice {0} is not a held draft invoice.").format(invoice_name))
         
     items = []
     for it in inv.items:
-        item_doc = frappe.get_cached_doc("Item", it.item_code)
+        item_doc = smriti.documents.get("Item", it.item_code)
         
         # Get MRP
-        mrp = item_doc.custom_mrp or frappe.db.get_value(
+        mrp = item_doc.custom_mrp or smriti.db.get(
             "Item Price", 
             {"item_code": it.item_code, "price_list": "MRP"}, 
             "price_list_rate"
@@ -809,7 +810,7 @@ def validate_manager_override(pin, action_type, invoice_name=None):
     manager_roles = list(get_allowed_manager_roles())
 
     # Find users with manager roles
-    managers = frappe.db.get_all(
+    managers = smriti.db.get_list(
         "Has Role",
         filters={"role": ["in", manager_roles]},
         pluck="parent"
@@ -819,12 +820,12 @@ def validate_manager_override(pin, action_type, invoice_name=None):
     auth_manager = None
     for mgr in set(managers):
         # Only active users
-        if not frappe.db.get_value("User", mgr, "enabled"):
+        if not smriti.db.get("User", mgr, "enabled"):
             continue
 
         try:
             # Strictly use SMRITI Dedicated PIN
-            if frappe.db.get_value("User", mgr, "custom_smriti_pin"):
+            if smriti.db.get("User", mgr, "custom_smriti_pin"):
                 try:
                     check_smriti_pin(mgr, pin, fieldname="custom_smriti_pin")
                     # Verify manager role after auth
@@ -836,15 +837,14 @@ def validate_manager_override(pin, action_type, invoice_name=None):
                 except frappe.AuthenticationError:
                     pass
         except Exception:
-            frappe.log_error(title="SMRITI Manager Override Error", message=frappe.get_traceback())
+            smriti.errors.log_error(title="SMRITI Manager Override Error", message=frappe.get_traceback())
 
     if authenticated and auth_manager:
         # Clear attempts on success
         frappe.cache().delete(rate_limit_key)
         # Log override action using standard Comment
         if invoice_name:
-            frappe.get_doc({
-                "doctype": "Comment",
+            smriti.documents.new("Comment").update({
                 "comment_type": "Comment",
                 "reference_doctype": "POS Invoice",
                 "reference_name": invoice_name,
@@ -862,7 +862,7 @@ def validate_manager_override(pin, action_type, invoice_name=None):
         frappe.cache().set(rate_limit_key, 1, ex=600)
 
     # Log failed PIN attempt to Error Log
-    frappe.log_error(
+    smriti.errors.log_error(
         title="SMRITI Failed PIN Override Attempt",
         message=f"Failed PIN override attempt by user {frappe.session.user} for action {action_type}."
     )
@@ -878,7 +878,7 @@ def generate_mock_eway_bill(invoice_name, vehicle_no=None, distance=None, mode_o
         frappe.throw(_("Invoice name is required."))
         
     # Check if E-way bill already exists to support editing transport/vehicle details
-    existing_eway = frappe.db.get_value("Sales Invoice", invoice_name, "ewaybill")
+    existing_eway = smriti.db.get("Sales Invoice", invoice_name, "ewaybill")
     if existing_eway:
         mock_no = existing_eway
         msg = _("E-way Bill {0} details updated successfully!").format(mock_no)
@@ -904,8 +904,8 @@ def generate_mock_eway_bill(invoice_name, vehicle_no=None, distance=None, mode_o
     if transporter_name is not None:
         update_dict["transporter_name"] = transporter_name
         
-    frappe.db.set_value("Sales Invoice", invoice_name, update_dict)
-    frappe.db.commit()
+    smriti.db.set_value("Sales Invoice", invoice_name, update_dict)
+    smriti.db.commit()
 
     # Audit: db.set_value bypasses on_update hooks on submitted invoices — log explicitly
     try:
@@ -916,7 +916,7 @@ def generate_mock_eway_bill(invoice_name, vehicle_no=None, distance=None, mode_o
             f"{action_label}: Invoice={invoice_name}, EWB={mock_no}, User={frappe.session.user}, VehicleNo={vehicle_no or '-'}"
         )
     except Exception:
-        frappe.log_error("SMRITI E-way Bill Audit Log Error", frappe.get_traceback())
+        smriti.errors.log_error("SMRITI E-way Bill Audit Log Error", frappe.get_traceback())
 
     return {
         "ewaybill": mock_no,
@@ -929,9 +929,9 @@ def create_return_invoice(invoice_name):
     """
     Creates and submits a return invoice (Sales/POS Return) against the original invoice.
     """
-    docstatus = frappe.db.get_value("Sales Invoice", invoice_name, "docstatus")
+    docstatus = smriti.db.get("Sales Invoice", invoice_name, "docstatus")
     if docstatus is None:
-        docstatus = frappe.db.get_value("POS Invoice", invoice_name, "docstatus")
+        docstatus = smriti.db.get("POS Invoice", invoice_name, "docstatus")
         
     if docstatus is None:
         frappe.throw(_("Invoice {0} not found.").format(invoice_name))
@@ -947,9 +947,9 @@ def create_return_invoice(invoice_name):
         # reviewed-ignore-permissions: no role restriction — any authenticated user may create return invoices, by design
         return_doc.insert(ignore_permissions=True)
         return_doc.submit()
-        frappe.db.commit()
+        smriti.db.commit()
     except Exception:
-        frappe.db.rollback()
+        smriti.db.rollback()
         raise
 
     return {
@@ -971,7 +971,7 @@ def create_custom_sales_return(customer, items, return_against_invoice=None, rem
     draft = cint(draft)
     
     if not company:
-        company = frappe.defaults.get_user_default("company") or frappe.get_all("Company", limit=1)[0].name
+        company = frappe.defaults.get_user_default("company") or smriti.db.get_list("Company", limit=1)[0].name
 
     if return_against_invoice:
         # 1. Against single bill
@@ -999,7 +999,7 @@ def create_custom_sales_return(customer, items, return_against_invoice=None, rem
         return_doc.items = matched_items
     else:
         # 2. Standalone or Multiple bills
-        return_doc = frappe.new_doc("Sales Invoice")
+        return_doc = smriti.documents.new("Sales Invoice")
         return_doc.is_return = 1
         return_doc.update_stock = 1
         return_doc.customer = customer or "Walk-In Customer"
@@ -1010,16 +1010,16 @@ def create_custom_sales_return(customer, items, return_against_invoice=None, rem
         
         # Pre-resolve default warehouse
         _fallback_wh = frappe.defaults.get_user_default("warehouse")
-        if _fallback_wh and frappe.db.get_value("Warehouse", _fallback_wh, "company") != company:
+        if _fallback_wh and smriti.db.get("Warehouse", _fallback_wh, "company") != company:
             _fallback_wh = None
         if not _fallback_wh:
             _fallback_wh = (
-                frappe.db.get_value("Warehouse", {"warehouse_name": "Stores", "company": company}, "name")
-                or frappe.db.get_value("Warehouse", {"company": company, "is_group": 0}, "name")
+                smriti.db.get("Warehouse", {"warehouse_name": "Stores", "company": company}, "name")
+                or smriti.db.get("Warehouse", {"company": company, "is_group": 0}, "name")
             )
             
         # Resolve default taxes template
-        default_tax_template = frappe.db.get_value(
+        default_tax_template = smriti.db.get(
             "Sales Taxes and Charges Template",
             {"company": company, "is_default": 1},
             "name"
@@ -1028,9 +1028,9 @@ def create_custom_sales_return(customer, items, return_against_invoice=None, rem
             return_doc.taxes_and_charges = default_tax_template
             return_doc.run_method("set_taxes")
             
-        company_cc = frappe.db.get_value("Company", company, "cost_center")
+        company_cc = smriti.db.get("Company", company, "cost_center")
         if not company_cc:
-            company_cc = frappe.db.get_value("Cost Center", {"company": company, "is_group": 0}, "name")
+            company_cc = smriti.db.get("Cost Center", {"company": company, "is_group": 0}, "name")
             
         for it in items_list:
             item_code = it.get("item_code")
@@ -1067,10 +1067,10 @@ def create_custom_sales_return(customer, items, return_against_invoice=None, rem
         if not draft:
             return_doc.submit()
             
-        frappe.db.commit()
+        smriti.db.commit()
     except Exception:
-        frappe.db.rollback()
-        frappe.log_error(title="Create Custom Sales Return Failed")
+        smriti.db.rollback()
+        smriti.errors.log_error(title="Create Custom Sales Return Failed")
         raise
     
     return {
@@ -1090,10 +1090,10 @@ def update_sales_return(name, items, remarks=None, draft=0):
     Can also submit it if draft=0.
     """
     draft = cint(draft)
-    if not frappe.db.exists("Sales Invoice", name):
+    if not smriti.db.exists("Sales Invoice", name):
         frappe.throw(_("Sales Return {0} not found.").format(name))
         
-    doc = frappe.get_doc("Sales Invoice", name)
+    doc = smriti.documents.get("Sales Invoice", name)
     if doc.docstatus != 0:
         frappe.throw(_("Only Draft Sales Returns can be edited."))
         
@@ -1104,17 +1104,17 @@ def update_sales_return(name, items, remarks=None, draft=0):
     
     company = doc.company
     _fallback_wh = frappe.defaults.get_user_default("warehouse")
-    if _fallback_wh and frappe.db.get_value("Warehouse", _fallback_wh, "company") != company:
+    if _fallback_wh and smriti.db.get("Warehouse", _fallback_wh, "company") != company:
         _fallback_wh = None
     if not _fallback_wh:
         _fallback_wh = (
-            frappe.db.get_value("Warehouse", {"warehouse_name": "Stores", "company": company}, "name")
-            or frappe.db.get_value("Warehouse", {"company": company, "is_group": 0}, "name")
+            smriti.db.get("Warehouse", {"warehouse_name": "Stores", "company": company}, "name")
+            or smriti.db.get("Warehouse", {"company": company, "is_group": 0}, "name")
         )
         
-    company_cc = frappe.db.get_value("Company", company, "cost_center")
+    company_cc = smriti.db.get("Company", company, "cost_center")
     if not company_cc:
-        company_cc = frappe.db.get_value("Cost Center", {"company": company, "is_group": 0}, "name")
+        company_cc = smriti.db.get("Cost Center", {"company": company, "is_group": 0}, "name")
 
     doc.items = []
     for it in items_list:
@@ -1152,10 +1152,10 @@ def update_sales_return(name, items, remarks=None, draft=0):
         if not draft:
             doc.submit()
             
-        frappe.db.commit()
+        smriti.db.commit()
     except Exception:
-        frappe.db.rollback()
-        frappe.log_error(title="Update Sales Return Failed")
+        smriti.db.rollback()
+        smriti.errors.log_error(title="Update Sales Return Failed")
         raise
     
     return {
@@ -1173,10 +1173,10 @@ def delete_sales_return(name, manager_pin=None):
     If Submitted: cancels the document.
     Requires SMRITI Store Manager or System Manager role, or a valid manager PIN override.
     """
-    if not frappe.db.exists("Sales Invoice", name):
+    if not smriti.db.exists("Sales Invoice", name):
         frappe.throw(_("Sales Return {0} not found.").format(name))
         
-    doc = frappe.get_doc("Sales Invoice", name)
+    doc = smriti.documents.get("Sales Invoice", name)
     if not doc.is_return:
         frappe.throw(_("Invoice {0} is not a return invoice.").format(name))
         
@@ -1205,10 +1205,10 @@ def delete_sales_return(name, manager_pin=None):
         else:
             frappe.throw(_("Sales Return {0} is already cancelled.").format(name))
             
-        frappe.db.commit()
+        smriti.db.commit()
     except Exception:
-        frappe.db.rollback()
-        frappe.log_error(title="Delete Sales Return Failed")
+        smriti.db.rollback()
+        smriti.errors.log_error(title="Delete Sales Return Failed")
         raise
     return {
         "name": name,

@@ -1,5 +1,6 @@
 import unittest
 import frappe
+from smriti_retail_os import smriti
 from frappe.utils import nowdate
 import datetime
 from smriti_retail_os.services.udne.interfaces import GenerationContext
@@ -15,31 +16,31 @@ class TestUDNE(unittest.TestCase):
         super().setUpClass()
         from smriti_retail_os.setup import setup_smriti_retail_os
         setup_smriti_retail_os()
-        frappe.db.commit()
+        smriti.db.commit()
 
     def setUp(self):
-        frappe.db.delete("SMRITI Numbering Rule")
-        frappe.db.delete("SMRITI Numbering Counter")
-        frappe.db.delete("SMRITI Numbering Reserved Range")
-        frappe.db.delete("SMRITI Numbering Audit Log")
-        frappe.db.delete("POS Invoice")
-        frappe.db.delete("Sales Invoice")
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Numbering Rule")
+        smriti.db.delete("SMRITI Numbering Counter")
+        smriti.db.delete("SMRITI Numbering Reserved Range")
+        smriti.db.delete("SMRITI Numbering Audit Log")
+        smriti.db.delete("POS Invoice")
+        smriti.db.delete("Sales Invoice")
+        smriti.db.commit()
         clear_compiled_template_cache()
         
     def tearDown(self):
-        frappe.db.delete("SMRITI Numbering Rule")
-        frappe.db.delete("SMRITI Numbering Counter")
-        frappe.db.delete("SMRITI Numbering Reserved Range")
-        frappe.db.delete("SMRITI Numbering Audit Log")
-        frappe.db.delete("POS Invoice")
-        frappe.db.delete("Sales Invoice")
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Numbering Rule")
+        smriti.db.delete("SMRITI Numbering Counter")
+        smriti.db.delete("SMRITI Numbering Reserved Range")
+        smriti.db.delete("SMRITI Numbering Audit Log")
+        smriti.db.delete("POS Invoice")
+        smriti.db.delete("Sales Invoice")
+        smriti.db.commit()
         clear_compiled_template_cache()
         
     def test_facade_api(self):
-        rule = frappe.get_doc({
-            "doctype": "SMRITI Numbering Rule",
+        rule = smriti.documents.new("NumberingRule")
+        rule.update({
             "document_type": "POS Invoice",
             "priority": "Global",
             "template": "INV-{year}-{counter:6}",
@@ -47,7 +48,7 @@ class TestUDNE(unittest.TestCase):
             "reset_rule": "Never"
         })
         rule.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         
         context = GenerationContext(
             company="Test Company",
@@ -67,16 +68,14 @@ class TestUDNE(unittest.TestCase):
         self.assertEqual(result2.counter, 2)
         
     def test_priority_resolution(self):
-        frappe.get_doc({
-            "doctype": "SMRITI Numbering Rule",
+        smriti.documents.new("NumberingRule").update({
             "document_type": "POS Invoice",
             "priority": "Global",
             "template": "GLOBAL-{counter}",
             "is_active": 1
         }).insert(ignore_permissions=True)
         
-        frappe.get_doc({
-            "doctype": "SMRITI Numbering Rule",
+        smriti.documents.new("NumberingRule").update({
             "document_type": "POS Invoice",
             "priority": "Branch",
             "priority_value": "MUMBAI",
@@ -84,8 +83,7 @@ class TestUDNE(unittest.TestCase):
             "is_active": 1
         }).insert(ignore_permissions=True)
         
-        frappe.get_doc({
-            "doctype": "SMRITI Numbering Rule",
+        smriti.documents.new("NumberingRule").update({
             "document_type": "POS Invoice",
             "priority": "Store",
             "priority_value": "MUM-STORE",
@@ -93,7 +91,7 @@ class TestUDNE(unittest.TestCase):
             "is_active": 1
         }).insert(ignore_permissions=True)
         
-        frappe.db.commit()
+        smriti.db.commit()
         
         ctx_global = GenerationContext(company="Test Company")
         res_global = generate("POS Invoice", ctx_global)
@@ -108,15 +106,15 @@ class TestUDNE(unittest.TestCase):
         self.assertEqual(res_store.display_number, "STORE-1")
         
     def test_cache_invalidation(self):
-        rule = frappe.get_doc({
-            "doctype": "SMRITI Numbering Rule",
+        rule = smriti.documents.new("NumberingRule")
+        rule.update({
             "document_type": "POS Invoice",
             "priority": "Global",
             "template": "OLD-{counter}",
             "is_active": 1
         })
         rule.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         
         ctx = GenerationContext(company="Test Company")
         res1 = generate("POS Invoice", ctx)
@@ -124,14 +122,14 @@ class TestUDNE(unittest.TestCase):
         
         rule.template = "NEW-{counter}"
         rule.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         
         res2 = generate("POS Invoice", ctx)
         self.assertEqual(res2.display_number, "NEW-2")
         
     def test_financial_year_rollover(self):
-        rule = frappe.get_doc({
-            "doctype": "SMRITI Numbering Rule",
+        rule = smriti.documents.new("NumberingRule")
+        rule.update({
             "document_type": "POS Invoice",
             "priority": "Global",
             "template": "INV/{fy}/{counter:4}",
@@ -139,7 +137,7 @@ class TestUDNE(unittest.TestCase):
             "is_active": 1
         })
         rule.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         
         ctx1 = GenerationContext(company="Test Company", transaction_date=datetime.date(2026, 3, 15))
         res1 = generate("POS Invoice", ctx1)
@@ -150,15 +148,15 @@ class TestUDNE(unittest.TestCase):
         self.assertEqual(res2.display_number, "INV/26-27/0001")
         
     def test_reservation_lifecycle(self):
-        rule = frappe.get_doc({
-            "doctype": "SMRITI Numbering Rule",
+        rule = smriti.documents.new("NumberingRule")
+        rule.update({
             "document_type": "POS Invoice",
             "priority": "Global",
             "template": "INV-{counter}",
             "is_active": 1
         })
         rule.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         
         ctx = GenerationContext(company="Test Company")
         
@@ -178,26 +176,26 @@ class TestUDNE(unittest.TestCase):
         self.assertEqual(res_off1.display_number, "INV-1")
         
     def test_gap_scanner_classification(self):
-        rule = frappe.get_doc({
-            "doctype": "SMRITI Numbering Rule",
+        rule = smriti.documents.new("NumberingRule")
+        rule.update({
             "document_type": "POS Invoice",
             "priority": "Global",
             "template": "INV-{counter}",
             "is_active": 1
         })
         rule.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         
         ctx = GenerationContext(company="Test Company")
         
         res1 = generate("POS Invoice", ctx)
-        frappe.db.sql("insert into `tabPOS Invoice` (name, custom_business_display_number, company, docstatus) values (%s, %s, %s, 0)", (res1.identity, res1.display_number, "Test Company"))
+        smriti.db.sql("insert into `tabPOS Invoice` (name, custom_business_display_number, company, docstatus) values (%s, %s, %s, 0)", (res1.identity, res1.display_number, "Test Company"))
         
         reserve_range("POS Invoice", "TERM-02", 2, rule.name, "Never", ctx.as_dict())
         
         res4 = generate("POS Invoice", ctx)
-        frappe.db.sql("insert into `tabPOS Invoice` (name, custom_business_display_number, company, docstatus) values (%s, %s, %s, 0)", (res4.identity, res4.display_number, "Test Company"))
-        frappe.db.commit()
+        smriti.db.sql("insert into `tabPOS Invoice` (name, custom_business_display_number, company, docstatus) values (%s, %s, %s, 0)", (res4.identity, res4.display_number, "Test Company"))
+        smriti.db.commit()
         
         gaps = scan_gaps("POS Invoice", rule.name)
         self.assertEqual(len(gaps), 2)
@@ -206,15 +204,15 @@ class TestUDNE(unittest.TestCase):
         self.assertEqual(gaps[1]["number"], 3)
 
     def test_explain_generation(self):
-        rule = frappe.get_doc({
-            "doctype": "SMRITI Numbering Rule",
+        rule = smriti.documents.new("NumberingRule")
+        rule.update({
             "document_type": "POS Invoice",
             "priority": "Global",
             "template": "INV-{counter}",
             "is_active": 1
         })
         rule.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         
         ctx = GenerationContext(company="Test Company", branch="MUMBAI")
         res = generate("POS Invoice", ctx)
@@ -242,8 +240,8 @@ class TestUDNE(unittest.TestCase):
 
     def test_explain_invalid_json_context(self):
         # Create a mock audit log with malformed context details
-        log = frappe.get_doc({
-            "doctype": "SMRITI Numbering Audit Log",
+        log = smriti.documents.new("NumberingAuditLog")
+        log.update({
             "document_type": "POS Invoice",
             "document_name": "PI-MALFORMED",
             "generated_number": "INV-MALFORMED",
@@ -252,7 +250,7 @@ class TestUDNE(unittest.TestCase):
             "timestamp": datetime.datetime.now()
         })
         log.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         
         exp = explain("PI-MALFORMED")
         self.assertTrue(exp["success"])
@@ -260,24 +258,24 @@ class TestUDNE(unittest.TestCase):
         self.assertEqual(exp["confidence"], 60)  # Deducted for missing rule reference (20) & missing template (20)
 
     def test_dashboard_metrics_aggregation(self):
-        rule = frappe.get_doc({
-            "doctype": "SMRITI Numbering Rule",
+        rule = smriti.documents.new("NumberingRule")
+        rule.update({
             "document_type": "POS Invoice",
             "priority": "Global",
             "template": "INV-{counter}",
             "is_active": 1
         })
         rule.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         
         ctx = GenerationContext(company="Test Company")
         res1 = generate("POS Invoice", ctx)
         res2 = generate("POS Invoice", ctx)
         
         # Insert generated numbers into the table so gaps() returns 0 unexplained gaps
-        frappe.db.sql("insert into `tabPOS Invoice` (name, custom_business_display_number, company, docstatus) values (%s, %s, %s, 0)", (res1.identity, res1.display_number, "Test Company"))
-        frappe.db.sql("insert into `tabPOS Invoice` (name, custom_business_display_number, company, docstatus) values (%s, %s, %s, 0)", (res2.identity, res2.display_number, "Test Company"))
-        frappe.db.commit()
+        smriti.db.sql("insert into `tabPOS Invoice` (name, custom_business_display_number, company, docstatus) values (%s, %s, %s, 0)", (res1.identity, res1.display_number, "Test Company"))
+        smriti.db.sql("insert into `tabPOS Invoice` (name, custom_business_display_number, company, docstatus) values (%s, %s, %s, 0)", (res2.identity, res2.display_number, "Test Company"))
+        smriti.db.commit()
         
         m = metrics("Today")
         self.assertEqual(m["total_generations"], 2)
@@ -295,9 +293,9 @@ class TestUDNE(unittest.TestCase):
         self.assertEqual(len(g), 0)
 
     def test_before_print_document_hook(self):
-        doc = frappe.get_doc({
-            "doctype": "Sales Invoice",
-            "company": frappe.get_all("Company")[0].name,
+        doc = smriti.documents.new("SalesInvoice")
+        doc.update({
+            "company": smriti.db.get_list("Company")[0].name,
             "posting_date": nowdate(),
             "customer": "Walk-In Customer",
             "custom_business_display_number": "MUM/FY26/INV/000088"
@@ -314,9 +312,9 @@ class TestUDNE(unittest.TestCase):
         self.assertNotEqual(doc.name, "MUM/FY26/INV/000088")
 
     def test_search_by_partial_business_number(self):
-        comp = frappe.get_all("Company")[0].name
-        doc = frappe.get_doc({
-            "doctype": "Sales Invoice",
+        comp = smriti.db.get_list("Company")[0].name
+        doc = smriti.documents.new("SalesInvoice")
+        doc.update({
             "company": comp,
             "posting_date": nowdate(),
             "customer": "Walk-In Customer",
@@ -327,7 +325,7 @@ class TestUDNE(unittest.TestCase):
             "rounded_total": 0.0
         })
         doc.insert(ignore_permissions=True, ignore_mandatory=True)
-        frappe.db.commit()
+        smriti.db.commit()
         
         # Verify list query returns match by display number (partial lookups)
         res = frappe.get_list("Sales Invoice", filters={"custom_business_display_number": ["like", "%000099%"]})
@@ -335,9 +333,9 @@ class TestUDNE(unittest.TestCase):
         self.assertEqual(res[0].name, doc.name)
 
     def test_missing_business_number_fallback(self):
-        doc = frappe.get_doc({
-            "doctype": "Sales Invoice",
-            "company": frappe.get_all("Company")[0].name,
+        doc = smriti.documents.new("SalesInvoice")
+        doc.update({
+            "company": smriti.db.get_list("Company")[0].name,
             "posting_date": nowdate(),
             "customer": "Walk-In Customer"
         })
@@ -355,8 +353,8 @@ class TestUDNE(unittest.TestCase):
     def test_rule_loader_getdate(self):
         # Create a rule with validity period in the future
         future_from = frappe.utils.add_to_date(frappe.utils.nowdate(), days=5)
-        rule = frappe.get_doc({
-            "doctype": "SMRITI Numbering Rule",
+        rule = smriti.documents.new("NumberingRule")
+        rule.update({
             "document_type": "POS Invoice",
             "priority": "Global",
             "template": "FUTURE-{counter}",
@@ -364,7 +362,7 @@ class TestUDNE(unittest.TestCase):
             "effective_from": future_from
         })
         rule.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         
         from smriti_retail_os.services.udne.rule_loader import load_active_rule
         # Verify it raises UDNERuleNotFoundError because the future rule is not yet valid
@@ -373,27 +371,27 @@ class TestUDNE(unittest.TestCase):
 
     def test_autoname_transaction_date(self):
         # Verify that autoname hook resolves posting_date, transaction_date, and None safely
-        comp = frappe.get_all("Company")[0].name
+        comp = smriti.db.get_list("Company")[0].name
         
         # 1. Posting date present
-        doc1 = frappe.get_doc({
-            "doctype": "Sales Invoice",
+        doc1 = smriti.documents.new("SalesInvoice")
+        doc1.update({
             "company": comp,
             "posting_date": nowdate(),
             "customer": "Walk-In Customer"
         })
         
         # 2. Transaction date present (no posting date)
-        doc2 = frappe.get_doc({
-            "doctype": "Sales Invoice",
+        doc2 = smriti.documents.new("SalesInvoice")
+        doc2.update({
             "company": comp,
             "transaction_date": nowdate(),
             "customer": "Walk-In Customer"
         })
         
         # 3. Neither present
-        doc3 = frappe.get_doc({
-            "doctype": "Sales Invoice",
+        doc3 = smriti.documents.new("SalesInvoice")
+        doc3.update({
             "company": comp,
             "customer": "Walk-In Customer"
         })
@@ -401,15 +399,15 @@ class TestUDNE(unittest.TestCase):
         from smriti_retail_os.services.udne.hooks import autoname_document
         
         # Create a numbering rule first to trigger the hook logic
-        rule = frappe.get_doc({
-            "doctype": "SMRITI Numbering Rule",
+        rule = smriti.documents.new("NumberingRule")
+        rule.update({
             "document_type": "Sales Invoice",
             "priority": "Global",
             "template": "INV-{year}-{counter}",
             "is_active": 1
         })
         rule.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         
         # Test them, verifying that they all run autoname successfully without AttributeError
         autoname_document(doc1)

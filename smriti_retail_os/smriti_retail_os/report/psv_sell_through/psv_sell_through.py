@@ -5,7 +5,8 @@
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 
 def execute(filters=None):
     filters = filters or {}
@@ -20,7 +21,7 @@ def execute(filters=None):
         {"label": "Sell-Through %", "fieldname": "sell_through_pct",    "fieldtype": "Percent", "width": 120},
     ]
 
-    rows = frappe.db.sql("""
+    rows = smriti.db.sql("""
         SELECT 
             party_stock_account,
             item_code,

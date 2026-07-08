@@ -10,14 +10,15 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from frappe.model.document import Document
 
 class SMRITIKnowledgeAsset(Document):
     def validate(self):
         # Enforce uniqueness of asset_code and asset_uri
         if self.asset_code:
-            dup_code = frappe.db.exists(
+            dup_code = smriti.db.exists(
                 "SMRITI Knowledge Asset",
                 {"asset_code": self.asset_code, "name": ["!=", self.name]}
             )
@@ -25,7 +26,7 @@ class SMRITIKnowledgeAsset(Document):
                 frappe.throw(frappe._("Asset Code '{0}' is already registered in '{1}'.").format(self.asset_code, dup_code))
 
         if self.asset_uri:
-            dup_uri = frappe.db.exists(
+            dup_uri = smriti.db.exists(
                 "SMRITI Knowledge Asset",
                 {"asset_uri": self.asset_uri, "name": ["!=", self.name]}
             )

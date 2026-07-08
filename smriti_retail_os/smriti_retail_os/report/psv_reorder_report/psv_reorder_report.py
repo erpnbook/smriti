@@ -13,7 +13,8 @@
 # Copyright (c) 2026, SMRITI Retail OS and contributors
 # For license information, please see license.txt
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from smriti_retail_os.balance_engine import get_bulk_party_balances, get_reorder_recommendation
 
 def execute(filters=None):
@@ -97,7 +98,7 @@ def get_data(filters):
 	if zone:
 		psa_filters["zone"] = zone
 
-	psas = frappe.get_all("SMRITI Party Stock Account",
+	psas = smriti.db.get_list("SMRITI Party Stock Account",
 		filters=psa_filters,
 		fields=["name", "zone"]
 	)
@@ -119,7 +120,7 @@ def get_data(filters):
 		balances = get_bulk_party_balances(psa_name)
 		item_codes = set(balances.keys())
 
-		rule_items = frappe.get_all("SMRITI PSV Reorder Rule",
+		rule_items = smriti.db.get_list("SMRITI PSV Reorder Rule",
 			filters={
 				"company": company,
 				"party_stock_account": psa_name,

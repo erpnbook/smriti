@@ -14,6 +14,7 @@
 # For license information, please see license.txt
 
 import frappe
+from smriti_retail_os import smriti
 from smriti_retail_os.tests.test_psv import TestPSV
 from smriti_retail_os.balance_engine import get_party_balance
 from smriti_retail_os.psv_ledger_service import create_transaction, reverse_transaction
@@ -22,15 +23,15 @@ class TestPSVLedger(TestPSV):
     def setUp(self):
         super().setUp()
         for name in ["Material Receipt", "Material Issue", "Material Transfer"]:
-            if not frappe.db.exists("Stock Entry Type", name):
-                doc = frappe.new_doc("Stock Entry Type")
+            if not smriti.db.exists("Stock Entry Type", name):
+                doc = smriti.documents.new("Stock Entry Type")
                 doc.name = name
                 doc.purpose = name
                 doc.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
     def make_stock_receipt(self, item_code, qty):
-        se = frappe.new_doc("Stock Entry")
+        se = smriti.documents.new("Stock Entry")
         se.purpose = "Material Receipt"
         se.stock_entry_type = "Material Receipt"
         se.company = self.company
@@ -59,14 +60,14 @@ class TestPSVLedger(TestPSV):
         )
         
         # Assert that trying to edit a SMRITI PSV Transaction document raises ValidationError
-        tx = frappe.get_doc("SMRITI PSV Transaction", tx_name)
+        tx = smriti.documents.get("SMRITI PSV Transaction", tx_name)
         tx.remarks = "Edited"
         self.assertRaises(frappe.ValidationError, tx.save)
 
         # Assert that attempting to delete a SMRITI Party Stock Ledger Entry directly raises ValidationError
-        entries = frappe.get_all("SMRITI Party Stock Ledger Entry", filters={"voucher_no": tx_name}, fields=["name"])
+        entries = smriti.db.get_list("SMRITI Party Stock Ledger Entry", filters={"voucher_no": tx_name}, fields=["name"])
         self.assertTrue(entries)
-        entry_doc = frappe.get_doc("SMRITI Party Stock Ledger Entry", entries[0].name)
+        entry_doc = smriti.documents.get("SMRITI Party Stock Ledger Entry", entries[0].name)
         self.assertRaises(frappe.ValidationError, entry_doc.delete)
 
     def test_delivery_note_dispatch(self):
@@ -74,7 +75,7 @@ class TestPSVLedger(TestPSV):
         self.make_stock_receipt(self.item, 100.0)
 
         # 1. Create a Delivery Note referencing custom_party_stock_account
-        dn = frappe.new_doc("Delivery Note")
+        dn = smriti.documents.new("Delivery Note")
         dn.company = self.company
         dn.customer = self.customer
         dn.custom_party_stock_account = self.account_name
@@ -89,17 +90,17 @@ class TestPSVLedger(TestPSV):
         dn.submit()
 
         # 2. Assert that SMRITI PSV Transaction was created with type TRANSFER_OUT
-        tx_name = frappe.db.get_value("SMRITI PSV Transaction", {
+        tx_name = smriti.db.get("SMRITI PSV Transaction", {
             "reference_doctype": "Delivery Note",
             "reference_name": dn.name,
             "docstatus": 1
         })
         self.assertTrue(tx_name)
-        tx = frappe.get_doc("SMRITI PSV Transaction", tx_name)
+        tx = smriti.documents.get("SMRITI PSV Transaction", tx_name)
         self.assertEqual(tx.transaction_type, "TRANSFER_OUT")
 
         # 3. Assert that SMRITI Party Stock Ledger Entry was created with positive qty 50.0
-        ledger_entries = frappe.get_all("SMRITI Party Stock Ledger Entry", filters={
+        ledger_entries = smriti.db.get_list("SMRITI Party Stock Ledger Entry", filters={
             "voucher_no": tx_name,
             "item_code": self.item
         }, fields=["qty"])
@@ -115,7 +116,7 @@ class TestPSVLedger(TestPSV):
         self.make_stock_receipt(self.item, 100.0)
 
         # 1. Create and submit Delivery Note
-        dn = frappe.new_doc("Delivery Note")
+        dn = smriti.documents.new("Delivery Note")
         dn.company = self.company
         dn.customer = self.customer
         dn.custom_party_stock_account = self.account_name
@@ -137,15 +138,15 @@ class TestPSVLedger(TestPSV):
         dn.cancel()
 
         # 3. Assert SMRITI PSV Transaction is cancelled (docstatus = 2)
-        tx_name = frappe.db.get_value("SMRITI PSV Transaction", {
+        tx_name = smriti.db.get("SMRITI PSV Transaction", {
             "reference_doctype": "Delivery Note",
             "reference_name": dn.name
         })
-        tx = frappe.get_doc("SMRITI PSV Transaction", tx_name)
+        tx = smriti.documents.get("SMRITI PSV Transaction", tx_name)
         self.assertEqual(tx.docstatus, 2)
 
         # 4. Assert reversal entry is written to SMRITI Party Stock Ledger Entry (qty = -30.0)
-        reversal_entries = frappe.get_all("SMRITI Party Stock Ledger Entry", filters={
+        reversal_entries = smriti.db.get_list("SMRITI Party Stock Ledger Entry", filters={
             "voucher_no": f"VOID-{tx_name}",
             "item_code": self.item
         }, fields=["qty"])
@@ -161,7 +162,7 @@ class TestPSVLedger(TestPSV):
         self.make_stock_receipt(self.item, 100.0)
 
         # 1. Create and submit Delivery Note
-        dn = frappe.new_doc("Delivery Note")
+        dn = smriti.documents.new("Delivery Note")
         dn.company = self.company
         dn.customer = self.customer
         dn.custom_party_stock_account = self.account_name
@@ -175,7 +176,7 @@ class TestPSVLedger(TestPSV):
         dn.insert(ignore_permissions=True)
         dn.submit()
 
-        tx_name_1 = frappe.db.get_value("SMRITI PSV Transaction", {
+        tx_name_1 = smriti.db.get("SMRITI PSV Transaction", {
             "reference_doctype": "Delivery Note",
             "reference_name": dn.name,
             "docstatus": 1
@@ -183,7 +184,7 @@ class TestPSVLedger(TestPSV):
         self.assertTrue(tx_name_1)
 
         # Count ledger entries before replay
-        entries_before = frappe.db.count("SMRITI Party Stock Ledger Entry", {
+        entries_before = smriti.db.count("SMRITI Party Stock Ledger Entry", {
             "voucher_no": tx_name_1,
             "item_code": self.item
         })
@@ -194,7 +195,7 @@ class TestPSVLedger(TestPSV):
         handle_delivery_note_submit(dn)
 
         # 3. Assert no duplicate ledger entry is created
-        entries_after = frappe.db.count("SMRITI Party Stock Ledger Entry", {
+        entries_after = smriti.db.count("SMRITI Party Stock Ledger Entry", {
             "voucher_no": tx_name_1,
             "item_code": self.item
         })

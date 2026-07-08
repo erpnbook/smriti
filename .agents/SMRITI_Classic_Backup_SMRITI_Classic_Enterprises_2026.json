@@ -1,0 +1,622 @@
+{
+  "companies": [
+    {
+      "id": "comp-1",
+      "name": "SMRITI Classic Enterprises",
+      "address": "Plot No. 42, Industrial Area Phase II, New Delhi - 110020",
+      "gstIn": "07AAAAA1111A1Z1",
+      "currency": "INR",
+      "currencySymbol": "₹",
+      "fyStart": "2026-04-01",
+      "fyEnd": "2027-03-31"
+    },
+    {
+      "id": "comp-2",
+      "name": "SMRITI Tech Manufactures",
+      "address": "Sector 5, Electronics City, Bengaluru - 560100",
+      "gstIn": "29BBBBB2222B2Z2",
+      "currency": "INR",
+      "currencySymbol": "₹",
+      "fyStart": "2026-04-01",
+      "fyEnd": "2027-03-31"
+    }
+  ],
+  "ledgers": [
+    {
+      "id": "led-capital",
+      "name": "Share Capital Account",
+      "group": "Equity",
+      "subGroup": "Capital Account",
+      "openingBalance": -1000000,
+      "currentBalance": -1000000
+    },
+    {
+      "id": "led-hdfc",
+      "name": "HDFC Current Bank A/c",
+      "group": "Assets",
+      "subGroup": "Bank Accounts",
+      "openingBalance": 500000,
+      "currentBalance": 500000
+    },
+    {
+      "id": "led-icici",
+      "name": "ICICI Bank A/c",
+      "group": "Assets",
+      "subGroup": "Bank Accounts",
+      "openingBalance": 150000,
+      "currentBalance": 150000
+    },
+    {
+      "id": "led-cash",
+      "name": "Cash in Hand",
+      "group": "Assets",
+      "subGroup": "Cash-in-hand",
+      "openingBalance": 35000,
+      "currentBalance": 35000
+    },
+    {
+      "id": "led-stock",
+      "name": "Stock-in-Hand",
+      "group": "Assets",
+      "subGroup": "Stock-in-hand",
+      "openingBalance": 250000,
+      "currentBalance": 250000
+    },
+    {
+      "id": "led-building",
+      "name": "Office Building A/c",
+      "group": "Assets",
+      "subGroup": "Fixed Assets",
+      "openingBalance": 1200000,
+      "currentBalance": 1200000
+    },
+    {
+      "id": "led-abc-debtor",
+      "name": "ABC Distributors (Sundry Debtor)",
+      "group": "Assets",
+      "subGroup": "Sundry Debtors",
+      "openingBalance": 85000,
+      "currentBalance": 85000
+    },
+    {
+      "id": "led-xyz-creditor",
+      "name": "XYZ Electronics (Sundry Creditor)",
+      "group": "Liabilities",
+      "subGroup": "Sundry Creditors",
+      "openingBalance": -120000,
+      "currentBalance": -120000
+    },
+    {
+      "id": "led-cgst-input",
+      "name": "CGST Input Tax A/c",
+      "group": "Assets",
+      "subGroup": "Duties & Taxes",
+      "openingBalance": 0,
+      "currentBalance": 0
+    },
+    {
+      "id": "led-sgst-input",
+      "name": "SGST Input Tax A/c",
+      "group": "Assets",
+      "subGroup": "Duties & Taxes",
+      "openingBalance": 0,
+      "currentBalance": 0
+    },
+    {
+      "id": "led-cgst-output",
+      "name": "CGST Output Tax A/c",
+      "group": "Liabilities",
+      "subGroup": "Duties & Taxes",
+      "openingBalance": 0,
+      "currentBalance": 0
+    },
+    {
+      "id": "led-sgst-output",
+      "name": "SGST Output Tax A/c",
+      "group": "Liabilities",
+      "subGroup": "Duties & Taxes",
+      "openingBalance": 0,
+      "currentBalance": 0
+    },
+    {
+      "id": "led-sbi-loan",
+      "name": "SBI Term Loan A/c",
+      "group": "Liabilities",
+      "subGroup": "Loans (Liability)",
+      "openingBalance": -300000,
+      "currentBalance": -300000
+    },
+    {
+      "id": "led-sales",
+      "name": "Sales Account",
+      "group": "Revenue",
+      "subGroup": "Sales Accounts",
+      "openingBalance": 0,
+      "currentBalance": 0
+    },
+    {
+      "id": "led-other-inc",
+      "name": "Interest Received",
+      "group": "Revenue",
+      "subGroup": "Indirect Incomes",
+      "openingBalance": 0,
+      "currentBalance": 0
+    },
+    {
+      "id": "led-purchases",
+      "name": "Purchase Account",
+      "group": "Expenses",
+      "subGroup": "Purchase Accounts",
+      "openingBalance": 0,
+      "currentBalance": 0
+    },
+    {
+      "id": "led-rent",
+      "name": "Rent Expense A/c",
+      "group": "Expenses",
+      "subGroup": "Indirect Expenses",
+      "openingBalance": 0,
+      "currentBalance": 0
+    },
+    {
+      "id": "led-salaries",
+      "name": "Staff Salaries A/c",
+      "group": "Expenses",
+      "subGroup": "Indirect Expenses",
+      "openingBalance": 0,
+      "currentBalance": 0
+    },
+    {
+      "id": "led-office-exp",
+      "name": "Office & Stationery Exp",
+      "group": "Expenses",
+      "subGroup": "Indirect Expenses",
+      "openingBalance": 0,
+      "currentBalance": 0
+    },
+    {
+      "id": "led-freight",
+      "name": "Freight Inward A/c",
+      "group": "Expenses",
+      "subGroup": "Direct Expenses",
+      "openingBalance": 0,
+      "currentBalance": 0
+    },
+    {
+      "id": "led-custom-1783438176777",
+      "name": "demo",
+      "group": "Revenue",
+      "subGroup": "Sales Accounts",
+      "openingBalance": 0,
+      "currentBalance": 0
+    }
+  ],
+  "vouchers": [
+    {
+      "id": "vch-1",
+      "voucherNo": "REC/001",
+      "date": "2026-04-02",
+      "type": "Receipt",
+      "items": [
+        {
+          "ledgerId": "led-hdfc",
+          "amount": 1000000,
+          "type": "Dr"
+        },
+        {
+          "ledgerId": "led-capital",
+          "amount": 1000000,
+          "type": "Cr"
+        }
+      ],
+      "narration": "Being share capital received by HDFC bank transfer",
+      "referenceNo": "CHQ-891029"
+    },
+    {
+      "id": "vch-2",
+      "voucherNo": "PAY/001",
+      "date": "2026-04-05",
+      "type": "Payment",
+      "items": [
+        {
+          "ledgerId": "led-rent",
+          "amount": 30000,
+          "type": "Dr"
+        },
+        {
+          "ledgerId": "led-hdfc",
+          "amount": 30000,
+          "type": "Cr"
+        }
+      ],
+      "narration": "Office space rent for April 2026 paid to landlord",
+      "referenceNo": "TXN-91283921"
+    },
+    {
+      "id": "vch-3",
+      "voucherNo": "PUR/001",
+      "date": "2026-04-10",
+      "type": "Purchase",
+      "items": [
+        {
+          "ledgerId": "led-purchases",
+          "amount": 150000,
+          "type": "Dr"
+        },
+        {
+          "ledgerId": "led-cgst-input",
+          "amount": 13500,
+          "type": "Dr"
+        },
+        {
+          "ledgerId": "led-sgst-input",
+          "amount": 13500,
+          "type": "Dr"
+        },
+        {
+          "ledgerId": "led-xyz-creditor",
+          "amount": 177000,
+          "type": "Cr"
+        }
+      ],
+      "narration": "Purchase of 30 CPUs and 60 RAM sticks from XYZ Electronics",
+      "referenceNo": "INVC-4402",
+      "inventoryAllocations": [
+        {
+          "stockItemId": "stk-cpu",
+          "godownId": "god-main",
+          "qty": 30,
+          "rate": 3000,
+          "amount": 90000
+        },
+        {
+          "stockItemId": "stk-ram",
+          "godownId": "god-main",
+          "qty": 60,
+          "rate": 1000,
+          "amount": 60000
+        }
+      ]
+    },
+    {
+      "id": "vch-4",
+      "voucherNo": "SAL/001",
+      "date": "2026-04-15",
+      "type": "Sales",
+      "items": [
+        {
+          "ledgerId": "led-abc-debtor",
+          "amount": 118000,
+          "type": "Dr"
+        },
+        {
+          "ledgerId": "led-sales",
+          "amount": 100000,
+          "type": "Cr"
+        },
+        {
+          "ledgerId": "led-cgst-output",
+          "amount": 9000,
+          "type": "Cr"
+        },
+        {
+          "ledgerId": "led-sgst-output",
+          "amount": 9000,
+          "type": "Cr"
+        }
+      ],
+      "narration": "Sold Core i5 CPUs and DDR4 RAMs to ABC Distributors",
+      "referenceNo": "OUT-1011",
+      "inventoryAllocations": [
+        {
+          "stockItemId": "stk-cpu",
+          "godownId": "god-main",
+          "qty": 10,
+          "rate": 7000,
+          "amount": 70000
+        },
+        {
+          "stockItemId": "stk-ram",
+          "godownId": "god-main",
+          "qty": 10,
+          "rate": 3000,
+          "amount": 30000
+        }
+      ]
+    },
+    {
+      "id": "vch-5",
+      "voucherNo": "CON/001",
+      "date": "2026-04-20",
+      "type": "Contra",
+      "items": [
+        {
+          "ledgerId": "led-cash",
+          "amount": 20000,
+          "type": "Dr"
+        },
+        {
+          "ledgerId": "led-hdfc",
+          "amount": 20000,
+          "type": "Cr"
+        }
+      ],
+      "narration": "Cash withdrawn from HDFC Current account for office use"
+    },
+    {
+      "id": "vch-6",
+      "voucherNo": "PAY/002",
+      "date": "2026-04-22",
+      "type": "Payment",
+      "items": [
+        {
+          "ledgerId": "led-office-exp",
+          "amount": 4500,
+          "type": "Dr"
+        },
+        {
+          "ledgerId": "led-cash",
+          "amount": 4500,
+          "type": "Cr"
+        }
+      ],
+      "narration": "Purchase of custom office files, pens, and tea expenses"
+    },
+    {
+      "id": "vch-7",
+      "voucherNo": "REC/002",
+      "date": "2026-04-28",
+      "type": "Receipt",
+      "items": [
+        {
+          "ledgerId": "led-hdfc",
+          "amount": 118000,
+          "type": "Dr"
+        },
+        {
+          "ledgerId": "led-abc-debtor",
+          "amount": 118000,
+          "type": "Cr"
+        }
+      ],
+      "narration": "Received full amount against invoice OUT-1011 by RTGS transfer",
+      "referenceNo": "TXN-ABC910283"
+    }
+  ],
+  "stockItems": [
+    {
+      "id": "stk-cpu",
+      "name": "Intex Core i5 CPU",
+      "group": "Processors",
+      "uom": "pcs",
+      "openingQty": 40,
+      "openingValue": 120000,
+      "currentQty": 40,
+      "rate": 3000,
+      "sellingPrice": 7000,
+      "gstRate": 18
+    },
+    {
+      "id": "stk-ram",
+      "name": "DDR4 8GB RAM Module",
+      "group": "Memory",
+      "uom": "pcs",
+      "openingQty": 80,
+      "openingValue": 80000,
+      "currentQty": 80,
+      "rate": 1000,
+      "sellingPrice": 3000,
+      "gstRate": 18
+    },
+    {
+      "id": "stk-ssd",
+      "name": "1TB NVMe SSD Kingston",
+      "group": "Storage",
+      "uom": "pcs",
+      "openingQty": 50,
+      "openingValue": 150000,
+      "currentQty": 50,
+      "rate": 3000,
+      "sellingPrice": 6000,
+      "gstRate": 18
+    },
+    {
+      "id": "stk-pc-assembly",
+      "name": "SMRITI Classic PC Bundle",
+      "group": "Finished Computers",
+      "uom": "pcs",
+      "openingQty": 0,
+      "openingValue": 0,
+      "currentQty": 0,
+      "rate": 7500,
+      "sellingPrice": 18000,
+      "gstRate": 18,
+      "bom": [
+        {
+          "stockItemId": "stk-cpu",
+          "qty": 1
+        },
+        {
+          "stockItemId": "stk-ram",
+          "qty": 2
+        },
+        {
+          "stockItemId": "stk-ssd",
+          "qty": 1
+        }
+      ]
+    }
+  ],
+  "godowns": [
+    {
+      "id": "god-main",
+      "name": "Main Godown",
+      "location": "Industrial Area, New Delhi"
+    },
+    {
+      "id": "god-mumbai",
+      "name": "Mumbai Warehouse",
+      "location": "Navi Mumbai Port Area"
+    },
+    {
+      "id": "god-transit",
+      "name": "Transit Store",
+      "location": "Temporary Logistics Hub"
+    }
+  ],
+  "costCenters": [
+    {
+      "id": "cc-sales",
+      "name": "Sales & Marketing Dept"
+    },
+    {
+      "id": "cc-factory",
+      "name": "Factory Production Floor"
+    },
+    {
+      "id": "cc-admin",
+      "name": "Administration Office"
+    }
+  ],
+  "employees": [
+    {
+      "id": "emp-1",
+      "name": "Amit Kumar Mishra",
+      "department": "Accounts & Finance",
+      "designation": "Senior Accountant",
+      "bankAccount": "918273645012 HDFC",
+      "pan": "ABCDE1234F",
+      "pfNo": "DL/NDN/10293/001",
+      "esiNo": "20-11-92384-912",
+      "basicSalary": 45000,
+      "allowances": {
+        "hra": 15000,
+        "da": 5000,
+        "conveyance": 2000
+      },
+      "deductions": {
+        "pf": 5400,
+        "esi": 350,
+        "professionalTax": 200
+      }
+    },
+    {
+      "id": "emp-2",
+      "name": "Sneha Jayaraman",
+      "department": "Sales & Billing",
+      "designation": "Sales Officer",
+      "bankAccount": "102938475601 ICICI",
+      "pan": "FGHIJ5678K",
+      "pfNo": "DL/NDN/10293/002",
+      "esiNo": "20-11-92384-913",
+      "basicSalary": 30000,
+      "allowances": {
+        "hra": 10000,
+        "da": 3000,
+        "conveyance": 1500
+      },
+      "deductions": {
+        "pf": 3600,
+        "esi": 250,
+        "professionalTax": 200
+      }
+    },
+    {
+      "id": "emp-3",
+      "name": "Vikram Singh Negi",
+      "department": "Production",
+      "designation": "Factory Supervisor",
+      "bankAccount": "556677889900 SBI",
+      "pan": "KLMNO9012P",
+      "pfNo": "DL/NDN/10293/003",
+      "esiNo": "20-11-92384-914",
+      "basicSalary": 25000,
+      "allowances": {
+        "hra": 8000,
+        "da": 2500,
+        "conveyance": 1200
+      },
+      "deductions": {
+        "pf": 3000,
+        "esi": 200,
+        "professionalTax": 150
+      }
+    }
+  ],
+  "salarySlips": [],
+  "cheques": [
+    {
+      "id": "chq-1",
+      "chequeNo": "891029",
+      "date": "2026-04-02",
+      "ledgerId": "led-capital",
+      "amount": 1000000,
+      "status": "Cleared",
+      "clearingDate": "2026-04-04",
+      "remarks": "Capital injection"
+    },
+    {
+      "id": "chq-2",
+      "chequeNo": "110022",
+      "date": "2026-04-05",
+      "ledgerId": "led-rent",
+      "amount": 30000,
+      "status": "Cleared",
+      "clearingDate": "2026-04-07",
+      "remarks": "April space rent"
+    },
+    {
+      "id": "chq-3",
+      "chequeNo": "223344",
+      "date": "2026-05-02",
+      "ledgerId": "led-salaries",
+      "amount": 80000,
+      "status": "Issued",
+      "remarks": "Pending clearance"
+    }
+  ],
+  "auditLogs": [
+    {
+      "id": "log-1783438176777",
+      "timestamp": "2026-07-07T15:29:36.777Z",
+      "user": "Admin (Jawahar)",
+      "action": "Create Ledger",
+      "details": "New account ledger \"demo\" created under Revenue (Sales Accounts)"
+    },
+    {
+      "id": "log-1",
+      "timestamp": "2026-04-01T10:00:00Z",
+      "user": "Admin (Jawahar)",
+      "action": "System Init",
+      "details": "SMRITI Classic Database initialized for FY 2026-27"
+    },
+    {
+      "id": "log-2",
+      "timestamp": "2026-04-02T11:15:00Z",
+      "user": "Admin (Jawahar)",
+      "action": "Create Voucher",
+      "details": "Receipt Voucher REC/001 created for share capital"
+    },
+    {
+      "id": "log-3",
+      "timestamp": "2026-04-05T14:30:00Z",
+      "user": "Admin (Jawahar)",
+      "action": "Create Voucher",
+      "details": "Payment Voucher PAY/001 created for rent"
+    },
+    {
+      "id": "log-4",
+      "timestamp": "2026-04-10T16:45:00Z",
+      "user": "Admin (Jawahar)",
+      "action": "Create Voucher",
+      "details": "Purchase Voucher PUR/001 logged"
+    },
+    {
+      "id": "log-5",
+      "timestamp": "2026-04-15T12:00:00Z",
+      "user": "Admin (Jawahar)",
+      "action": "Create Voucher",
+      "details": "Sales Voucher SAL/001 logged with inventory items"
+    }
+  ]
+}

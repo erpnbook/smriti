@@ -13,8 +13,9 @@
 #       psv_service.py re-imports all public names for backward compatibility.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.utils import today, now_datetime, add_days
 
 from smriti_retail_os.psv_snapshot_service import get_landing_cost
@@ -42,14 +43,14 @@ def get_redistribution_suggestions(company=None):
     if company:
         filters["company"] = company
         
-    partners = frappe.get_all(
+    partners = smriti.db.get_list(
         "PSV Channel Partner",
         filters=filters,
         fields=["name", "company", "territory", "region", "zone"]
     )
     
     if not partners:
-        partners = frappe.get_all(
+        partners = smriti.db.get_list(
             "SMRITI Party Stock Account",
             filters=filters,
             fields=["name", "company", "zone", "region"]
@@ -62,7 +63,7 @@ def get_redistribution_suggestions(company=None):
         
     date_28_days_ago = add_days(today(), -28)
     
-    balances = frappe.db.sql("""
+    balances = smriti.db.sql("""
         SELECT channel_partner, item_variant, SUM(qty) as balance
         FROM `tabPSV Ledger Entry`
         GROUP BY channel_partner, item_variant
@@ -70,14 +71,14 @@ def get_redistribution_suggestions(company=None):
     """, as_dict=True)
     
     if not balances:
-        balances = frappe.db.sql("""
+        balances = smriti.db.sql("""
             SELECT party_stock_account as channel_partner, item_code as item_variant, SUM(qty) as balance
             FROM `tabSMRITI Party Stock Ledger Entry`
             GROUP BY party_stock_account, item_code
             HAVING SUM(qty) != 0
         """, as_dict=True)
         
-    sales_data = frappe.db.sql("""
+    sales_data = smriti.db.sql("""
         SELECT channel_partner, item_variant, SUM(ABS(qty)) as total_sales
         FROM `tabPSV Ledger Entry`
         WHERE qty < 0 AND posting_datetime >= %s
@@ -86,7 +87,7 @@ def get_redistribution_suggestions(company=None):
     """, (date_28_days_ago,), as_dict=True)
     
     if not sales_data:
-        sales_data = frappe.db.sql("""
+        sales_data = smriti.db.sql("""
             SELECT party_stock_account as channel_partner, item_code as item_variant, SUM(ABS(qty)) as total_sales
             FROM `tabSMRITI Party Stock Ledger Entry`
             WHERE qty < 0 AND posting_datetime >= %s
@@ -183,7 +184,7 @@ def get_channel_health_score(channel_partner, from_date=None, to_date=None):
     """
     Returns the channel health score for a channel partner.
     """
-    enabled = frappe.db.get_single_value("PSV System Settings", "channel_health_enabled")
+    enabled = smriti.db.get_single("PSV System Settings", "channel_health_enabled")
     if not enabled:
         return {
             "enabled": False,
@@ -192,7 +193,7 @@ def get_channel_health_score(channel_partner, from_date=None, to_date=None):
             "message": "Channel Health features are scheduled for Phase 1.2"
         }
     else:
-        open_alerts = frappe.db.count("SMRITI PSV Exception Record", {
+        open_alerts = smriti.db.count("SMRITI PSV Exception Record", {
             "party_stock_account": channel_partner,
             "status": "Pending Reconciliation"
         })
@@ -214,7 +215,7 @@ def get_sellin_sellout_summary(company, channel_partner=None):
     from frappe.utils import add_days
     date_28_days_ago = add_days(today(), -28)
     
-    balance_res = frappe.db.sql("""
+    balance_res = smriti.db.sql("""
         SELECT SUM(qty) FROM `tabPSV Ledger Entry`
         WHERE company = %s {0}
     """.format("AND channel_partner = %s" if channel_partner else ""), 
@@ -222,7 +223,7 @@ def get_sellin_sellout_summary(company, channel_partner=None):
     
     is_legacy = False
     if not balance_res or balance_res[0][0] is None:
-        balance_res = frappe.db.sql("""
+        balance_res = smriti.db.sql("""
             SELECT SUM(qty) FROM `tabSMRITI Party Stock Ledger Entry`
             WHERE company = %s {0}
         """.format("AND party_stock_account = %s" if channel_partner else ""),
@@ -232,13 +233,13 @@ def get_sellin_sellout_summary(company, channel_partner=None):
     current_balance = float(balance_res[0][0]) if balance_res and balance_res[0][0] is not None else 0.0
     
     if not is_legacy:
-        sellin_res = frappe.db.sql("""
+        sellin_res = smriti.db.sql("""
             SELECT SUM(qty) FROM `tabPSV Ledger Entry`
             WHERE company = %s AND qty > 0 AND posting_datetime >= %s {0}
         """.format("AND channel_partner = %s" if channel_partner else ""),
         tuple(x for x in [company, date_28_days_ago, channel_partner] if x))
     else:
-        sellin_res = frappe.db.sql("""
+        sellin_res = smriti.db.sql("""
             SELECT SUM(qty) FROM `tabSMRITI Party Stock Ledger Entry`
             WHERE company = %s AND qty > 0 AND posting_datetime >= %s {0}
         """.format("AND party_stock_account = %s" if channel_partner else ""),
@@ -247,14 +248,14 @@ def get_sellin_sellout_summary(company, channel_partner=None):
     sell_in_qty = float(sellin_res[0][0]) if sellin_res and sellin_res[0][0] is not None else 0.0
     
     if not is_legacy:
-        sellout_res = frappe.db.sql("""
+        sellout_res = smriti.db.sql("""
             SELECT SUM(ABS(qty)) FROM `tabPSV Ledger Entry`
             WHERE company = %s AND qty < 0 AND posting_datetime >= %s
               AND (transaction_type = 'Sales' OR transaction_type = 'Sales Upload' OR voucher_type = 'Sales') {0}
         """.format("AND channel_partner = %s" if channel_partner else ""),
         tuple(x for x in [company, date_28_days_ago, channel_partner] if x))
     else:
-        sellout_res = frappe.db.sql("""
+        sellout_res = smriti.db.sql("""
             SELECT SUM(ABS(qty)) FROM `tabSMRITI Party Stock Ledger Entry`
             WHERE company = %s AND qty < 0 AND posting_datetime >= %s
               AND (voucher_type = 'Sales' OR voucher_type = 'Sales Upload') {0}
@@ -289,17 +290,17 @@ def get_stock_cover_risks(company):
     critical_woc = settings.weeks_of_cover_critical or 2
     warning_woc = settings.weeks_of_cover_warning or 4
     
-    partners = frappe.get_all("PSV Channel Partner", filters={"company": company, "active": 1}, fields=["name"])
+    partners = smriti.db.get_list("PSV Channel Partner", filters={"company": company, "active": 1}, fields=["name"])
     if not partners:
-        partners = frappe.get_all("SMRITI Party Stock Account", filters={"company": company, "active": 1}, fields=["name"])
+        partners = smriti.db.get_list("SMRITI Party Stock Account", filters={"company": company, "active": 1}, fields=["name"])
     if not partners:
         return []
         
     date_28_days_ago = add_days(today(), -28)
     
-    use_new = frappe.db.exists("PSV Ledger Entry", {"company": company})
+    use_new = smriti.db.exists("PSV Ledger Entry", {"company": company})
     if use_new:
-        balances = frappe.db.sql("""
+        balances = smriti.db.sql("""
             SELECT channel_partner, item_variant, SUM(qty) as balance
             FROM `tabPSV Ledger Entry`
             WHERE company = %s
@@ -307,7 +308,7 @@ def get_stock_cover_risks(company):
             HAVING SUM(qty) > 0
         """, (company,), as_dict=True)
         
-        sales_data = frappe.db.sql("""
+        sales_data = smriti.db.sql("""
             SELECT channel_partner, item_variant, SUM(ABS(qty)) as total_sales
             FROM `tabPSV Ledger Entry`
             WHERE company = %s AND qty < 0 AND posting_datetime >= %s
@@ -315,7 +316,7 @@ def get_stock_cover_risks(company):
             GROUP BY channel_partner, item_variant
         """, (company, date_28_days_ago), as_dict=True)
     else:
-        balances = frappe.db.sql("""
+        balances = smriti.db.sql("""
             SELECT party_stock_account as channel_partner, item_code as item_variant, SUM(qty) as balance
             FROM `tabSMRITI Party Stock Ledger Entry`
             WHERE company = %s
@@ -323,7 +324,7 @@ def get_stock_cover_risks(company):
             HAVING SUM(qty) > 0
         """, (company,), as_dict=True)
         
-        sales_data = frappe.db.sql("""
+        sales_data = smriti.db.sql("""
             SELECT party_stock_account as channel_partner, item_code as item_variant, SUM(ABS(qty)) as total_sales
             FROM `tabSMRITI Party Stock Ledger Entry`
             WHERE company = %s AND qty < 0 AND posting_datetime >= %s
@@ -367,7 +368,7 @@ def get_channel_stock_trend(company):
     """
     Returns the historical total channel stock value trend.
     """
-    dates = frappe.db.sql("""
+    dates = smriti.db.sql("""
         SELECT DISTINCT snapshot_date
         FROM `tabPSV Stock Aging Snapshot`
         ORDER BY snapshot_date DESC
@@ -380,7 +381,7 @@ def get_channel_stock_trend(company):
         dates.reverse()
         for row in dates:
             date_val = row[0]
-            snaps = frappe.db.sql("""
+            snaps = smriti.db.sql("""
                 SELECT item_variant, qty
                 FROM `tabPSV Stock Aging Snapshot`
                 WHERE snapshot_date = %s
@@ -424,21 +425,21 @@ def get_inventory_productivity_metrics(company, timespan_days=30):
     start_date = add_days(now_datetime(), -timespan_days)
     
     # 1. Fetch velocity threshold
-    star_velocity_threshold = float(frappe.db.get_single_value("PSV System Settings", "star_velocity_threshold") or 1.0)
+    star_velocity_threshold = float(smriti.db.get_single("PSV System Settings", "star_velocity_threshold") or 1.0)
     
     # Check if new schema/ledger exists
-    use_new = frappe.db.exists("PSV Ledger Entry", {"company": company})
+    use_new = smriti.db.exists("PSV Ledger Entry", {"company": company})
     
     # 2. Get current stock balances
     if use_new:
-        bal_res = frappe.db.sql("""
+        bal_res = smriti.db.sql("""
             SELECT item_variant, SUM(qty) as balance
             FROM `tabPSV Ledger Entry`
             WHERE company = %s
             GROUP BY item_variant
         """, (company,), as_dict=True)
     else:
-        bal_res = frappe.db.sql("""
+        bal_res = smriti.db.sql("""
             SELECT item_code as item_variant, SUM(qty) as balance
             FROM `tabSMRITI Party Stock Ledger Entry`
             WHERE company = %s
@@ -449,7 +450,7 @@ def get_inventory_productivity_metrics(company, timespan_days=30):
     
     # 3. Get sales quantities and transaction counts
     if use_new:
-        sales_res = frappe.db.sql("""
+        sales_res = smriti.db.sql("""
             SELECT item_variant, SUM(ABS(qty)) as sales_qty, COUNT(DISTINCT voucher_no) as txn_count
             FROM `tabPSV Ledger Entry`
             WHERE company = %s AND qty < 0 AND posting_datetime >= %s
@@ -457,7 +458,7 @@ def get_inventory_productivity_metrics(company, timespan_days=30):
             GROUP BY item_variant
         """, (company, start_date), as_dict=True)
     else:
-        sales_res = frappe.db.sql("""
+        sales_res = smriti.db.sql("""
             SELECT item_code as item_variant, SUM(ABS(qty)) as sales_qty, COUNT(DISTINCT voucher_no) as txn_count
             FROM `tabSMRITI Party Stock Ledger Entry`
             WHERE company = %s AND qty < 0 AND posting_datetime >= %s
@@ -478,7 +479,7 @@ def get_inventory_productivity_metrics(company, timespan_days=30):
         }
         
     # 4. Get realized selling prices in bulk
-    realized_prices_res = frappe.db.sql("""
+    realized_prices_res = smriti.db.sql("""
         SELECT item_code as item_variant, SUM(base_amount) as total_amount, SUM(qty) as total_qty
         FROM `tabSales Invoice Item`
         WHERE docstatus = 1 AND parent IN (
@@ -493,7 +494,7 @@ def get_inventory_productivity_metrics(company, timespan_days=30):
             realized_prices[r["item_variant"]] = float(r["total_amount"]) / float(r["total_qty"])
             
     # 5. Get standard prices in bulk
-    std_prices_res = frappe.db.sql("""
+    std_prices_res = smriti.db.sql("""
         SELECT item_code as item_variant, price_list_rate
         FROM `tabItem Price`
         WHERE price_list = 'Standard Selling'
@@ -501,7 +502,7 @@ def get_inventory_productivity_metrics(company, timespan_days=30):
     std_prices = {r["item_variant"]: float(r["price_list_rate"] or 0.0) for r in std_prices_res}
     
     # 6. Get item costs and templates in bulk
-    item_info_res = frappe.db.sql("""
+    item_info_res = smriti.db.sql("""
         SELECT name, valuation_rate, standard_rate, variant_of
         FROM `tabItem`
     """, as_dict=True)

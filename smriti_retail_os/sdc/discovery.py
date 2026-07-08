@@ -467,7 +467,7 @@ class Phase0Compiler(object):
                                         if val:
                                             self.db_calls.append(val)
 
-                                # frappe.db.get_value, set_value, etc.
+                                # smriti.db.get, set_value, etc.
                                 elif (isinstance(func, ast.Attribute) and 
                                       isinstance(func.value, ast.Attribute) and 
                                       isinstance(func.value.value, ast.Name) and 

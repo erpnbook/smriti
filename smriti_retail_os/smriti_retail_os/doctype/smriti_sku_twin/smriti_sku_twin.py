@@ -13,13 +13,14 @@
 # Copyright (c) 2026, SMRITI Retail OS and contributors
 # For license information, please see license.txt
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from frappe.model.document import Document
 
 class SMRITISKUTwin(Document):
     def validate(self):
         # Uniqueness validation
-        duplicate = frappe.db.exists(
+        duplicate = smriti.db.exists(
             "SMRITI SKU Twin",
             {
                 "company": self.company,

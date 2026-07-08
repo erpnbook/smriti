@@ -11,13 +11,14 @@
 #
 
 import json
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from frappe.model.document import Document
 
 class SMRITISavedView(Document):
     def validate(self):
         # 1. Uniqueness check for (user, report_template, view_name)
-        duplicate = frappe.db.exists("SMRITI Saved View", {
+        duplicate = smriti.db.exists("SMRITI Saved View", {
             "user": self.user,
             "report_template": self.report_template,
             "view_name": self.view_name,
@@ -45,7 +46,7 @@ class SMRITISavedView(Document):
                     
         # 3. Ownership check on edit/write
         if not self.is_new():
-            db_user = frappe.db.get_value("SMRITI Saved View", self.name, "user")
+            db_user = smriti.db.get("SMRITI Saved View", self.name, "user")
             if db_user != frappe.session.user and "System Manager" not in frappe.get_roles():
                 frappe.throw(frappe._("Not authorized to modify this saved view."), frappe.PermissionError)
 

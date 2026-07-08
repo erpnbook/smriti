@@ -10,9 +10,10 @@
 
 import socket
 import datetime
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe.utils import flt, cint
 from frappe import _
+from smriti_retail_os import smriti
 from smriti_retail_os.barcode.token_registry import get_registry_for_api
 
 
@@ -112,7 +113,7 @@ def get_recent_transactions(doctype, limit=15):
         return []
 
     if doctype == "Purchase Receipt":
-        query_res = frappe.db.sql(
+        query_res = smriti.db.sql(
             """
             SELECT
                 pr.name,
@@ -127,7 +128,7 @@ def get_recent_transactions(doctype, limit=15):
             as_dict=True
         )
     else:
-        query_res = frappe.db.sql(
+        query_res = smriti.db.sql(
             """
             SELECT
                 se.name,

@@ -24,6 +24,7 @@ import unittest
 from unittest.mock import patch, MagicMock
 
 import frappe
+from smriti_retail_os import smriti
 
 
 class TestBackupSecurityHotfix(unittest.TestCase):
@@ -37,7 +38,7 @@ class TestBackupSecurityHotfix(unittest.TestCase):
         super().setUpClass()
         from smriti_retail_os.setup import setup_smriti_retail_os
         setup_smriti_retail_os()
-        frappe.db.commit()
+        smriti.db.commit()
 
     def clean_test_temp_files(self):
         import glob
@@ -64,9 +65,9 @@ class TestBackupSecurityHotfix(unittest.TestCase):
         frappe.conf.pop("backup_encryption_key", None)
         frappe.conf.pop("backup_encryption_keys", None)
         frappe.conf.pop("active_backup_encryption_key_version", None)
-        if frappe.db.exists("DocType", "SMRITI Key Custodian"):
-            frappe.db.delete("SMRITI Key Custodian")
-        frappe.db.commit()
+        if smriti.db.exists("DocType", "SMRITI Key Custodian"):
+            smriti.db.delete("SMRITI Key Custodian")
+        smriti.db.commit()
         self.clean_test_temp_files()
 
     # ─── test_1 ──────────────────────────────────────────────────────────────
@@ -449,7 +450,7 @@ class TestBackupSecurityHotfix(unittest.TestCase):
         self.assertEqual(confirm_res["status"], "success")
         
         # Check database record
-        doc = frappe.get_doc("SMRITI Key Custodian", email)
+        doc = smriti.documents.get("SMRITI Key Custodian", email)
         self.assertEqual(doc.verified, 1)
         self.assertEqual(doc.status, "Verified")
 
@@ -472,7 +473,7 @@ class TestBackupSecurityHotfix(unittest.TestCase):
         otp = re.search(r"\b\d{6}\b", message).group(0)
         
         # Manually expire the OTP in the database
-        doc = frappe.get_doc("SMRITI Key Custodian", email)
+        doc = smriti.documents.get("SMRITI Key Custodian", email)
         doc.otp_expiry = add_to_date(now_datetime(), minutes=-1)
         doc.save(ignore_permissions=True)
         
@@ -494,22 +495,20 @@ class TestBackupSecurityHotfix(unittest.TestCase):
         from smriti_retail_os.key_recovery_service import send_recovery_fragments
         
         # Create exactly 2 verified custodians in the DB
-        frappe.get_doc({
-            "doctype": "SMRITI Key Custodian",
+        smriti.documents.new("KeyCustodian").update({
             "email": "custodian1@smriti.com",
             "custodian_name": "Custodian One",
             "verified": 1,
             "status": "Verified"
         }).insert(ignore_permissions=True)
         
-        frappe.get_doc({
-            "doctype": "SMRITI Key Custodian",
+        smriti.documents.new("KeyCustodian").update({
             "email": "custodian2@smriti.com",
             "custodian_name": "Custodian Two",
             "verified": 1,
             "status": "Verified"
         }).insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         
         # Set active key version and active keys in site config
         test_key = "abcdefgh12345678"  # length 16

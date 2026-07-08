@@ -15,13 +15,13 @@ class PermissionRule(BaseValidator):
     title = "Permission & Auth Mismatches"
 
     def validate(self, nav_config):
-        import frappe
+        import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
         warnings = []
         
         # 1. Verify Role existences for custom SMRITI roles
         SMRITI_ROLES = ["SMRITI Cashier", "SMRITI Store Manager", "SMRITI Auditor", "System Manager"]
         for role in SMRITI_ROLES:
-            if not frappe.db.exists("Role", role):
+            if not smriti.db.exists("Role", role):
                 warnings.append({
                     "rule_id": self.rule_id,
                     "severity": self.severity,

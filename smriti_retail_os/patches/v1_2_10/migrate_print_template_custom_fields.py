@@ -10,7 +10,8 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 
 def execute():
     """
@@ -18,7 +19,7 @@ def execute():
     from the tabCustom Field table after verifying that the target table has the columns,
     allowing the new file-based native schema fields to take over cleanly.
     """
-    if frappe.db.exists("DocType", "SMRITI Print Template"):
+    if smriti.db.exists("DocType", "SMRITI Print Template"):
         # Verify that all 4 custom fields are present as columns in tabSMRITI Print Template
         required_cols = ["custom_field_mappings_json", "custom_version", "custom_active", "custom_is_default"]
         
@@ -30,9 +31,9 @@ def execute():
                 )
         
         # Delete Custom Field records
-        frappe.db.delete("Custom Field", {"dt": "SMRITI Print Template"})
+        smriti.db.delete("Custom Field", {"dt": "SMRITI Print Template"})
         # Mark SMRITI Print Template as a standard doctype in tabDocType before model sync
-        frappe.db.set_value("DocType", "SMRITI Print Template", "custom", 0)
-        frappe.db.commit()
+        smriti.db.set_value("DocType", "SMRITI Print Template", "custom", 0)
+        smriti.db.commit()
         print("[SMRITI Patch] Cleaned up legacy custom fields successfully.")
 

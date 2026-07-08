@@ -10,13 +10,14 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from frappe.model.document import Document
 
 class SMRITIEntityAttributeValue(Document):
     def validate(self):
         # 1. Fetch custom attribute definition
-        attr_def = frappe.db.get_value(
+        attr_def = smriti.db.get(
             "SMRITI Custom Attribute",
             self.attribute_code,
             ["entity_type", "attribute_type", "options"],

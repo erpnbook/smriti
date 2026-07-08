@@ -10,6 +10,7 @@
 #
 
 import frappe
+from smriti_retail_os import smriti
 import json
 import unittest
 from frappe.utils import flt, cint
@@ -29,14 +30,14 @@ class TestSizewiseInvoiceAPI(unittest.TestCase):
         super().setUpClass()
         from smriti_retail_os.setup import setup_smriti_retail_os
         setup_smriti_retail_os()
-        frappe.db.commit()
+        smriti.db.commit()
 
     def setUp(self):
         self._clean_up_test_records()
         # Establish standard testing parameters
-        self.company = frappe.db.exists("Company", "_Test Company")
+        self.company = smriti.db.exists("Company", "_Test Company")
         if not self.company:
-            comp = frappe.new_doc("Company")
+            comp = smriti.documents.new("Company")
             comp.company_name = "_Test Company"
             comp.country = "India"
             comp.default_currency = "INR"
@@ -44,7 +45,7 @@ class TestSizewiseInvoiceAPI(unittest.TestCase):
             self.company = comp.name
 
         # Ensure the test company has a valid GSTIN
-        frappe.db.set_value("Company", self.company, "gstin", "27AAXFT2508H1ZR") # Maharashtra GSTIN (state code 27)
+        smriti.db.set_value("Company", self.company, "gstin", "27AAXFT2508H1ZR") # Maharashtra GSTIN (state code 27)
 
         # Ensure the test company has a valid registered company address
         self._ensure_company_address(self.company)
@@ -52,14 +53,14 @@ class TestSizewiseInvoiceAPI(unittest.TestCase):
         # Resolve standard CGST, SGST, IGST accounts of the test company
         def _find_account(name_pattern):
             standard_name = f"Output Tax {name_pattern}"
-            acc = frappe.db.get_value(
+            acc = smriti.db.get(
                 "Account",
                 {"account_name": standard_name, "company": self.company, "is_group": 0},
                 "name"
             )
             if acc:
                 return acc
-            return frappe.db.get_value(
+            return smriti.db.get(
                 "Account",
                 {"account_name": ["like", f"%{name_pattern}%"], "company": self.company, "is_group": 0},
                 "name"
@@ -87,8 +88,8 @@ class TestSizewiseInvoiceAPI(unittest.TestCase):
 
         # Create valid GST HSN Code records for India Compliance enforcement
         for hsn_code, hsn_desc in [("998311", "Test Services"), ("640399", "Footwear - Other")]:
-            if not frappe.db.exists("GST HSN Code", hsn_code):
-                hsn = frappe.new_doc("GST HSN Code")
+            if not smriti.db.exists("GST HSN Code", hsn_code):
+                hsn = smriti.documents.new("GST HSN Code")
                 hsn.hsn_code = hsn_code
                 hsn.description = hsn_desc
                 hsn.insert(ignore_permissions=True)
@@ -118,8 +119,8 @@ class TestSizewiseInvoiceAPI(unittest.TestCase):
 
     def _ensure_company_address(self, company_name):
         addr_name = f"{company_name}-Registered-Test"
-        if not frappe.db.exists("Address", addr_name):
-            addr = frappe.new_doc("Address")
+        if not smriti.db.exists("Address", addr_name):
+            addr = smriti.documents.new("Address")
             addr.address_title = company_name
             addr.address_type = "Office"
             addr.address_line1 = "Test Street"
@@ -133,7 +134,7 @@ class TestSizewiseInvoiceAPI(unittest.TestCase):
             addr.gstin = "27AAXFT2508H1ZR"
             addr.append("links", {"link_doctype": "Company", "link_name": company_name})
             addr.insert(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
             return addr.name
         return addr_name
 
@@ -143,34 +144,34 @@ class TestSizewiseInvoiceAPI(unittest.TestCase):
         self._clean_up_test_records()
 
     def _clean_up_test_records(self):
-        frappe.db.delete("Sales Taxes and Charges Template")
-        frappe.db.sql("DELETE FROM `tabSales Invoice Item` WHERE parent IN (SELECT name FROM `tabSales Invoice` WHERE customer IN ('Test B2B Customer Intra', 'Test B2B Customer Inter'))")
-        frappe.db.sql("DELETE FROM `tabSales Taxes and Charges` WHERE parent IN (SELECT name FROM `tabSales Invoice` WHERE customer IN ('Test B2B Customer Intra', 'Test B2B Customer Inter'))")
-        frappe.db.sql("DELETE FROM `tabSales Invoice` WHERE customer IN ('Test B2B Customer Intra', 'Test B2B Customer Inter')")
-        frappe.db.delete("Customer", {"name": ["like", "Test B2B%"]})
-        frappe.db.delete("Item Tax", {"parent": ["like", "TEST-ART%"]})
-        frappe.db.delete("Item Price", {"item_code": ["like", "TEST-ART%"]})
-        frappe.db.delete("Item", {"item_code": ["like", "TEST-ART%"]})
-        frappe.db.delete("Address", {"name": ["like", "%-Registered-Test%"]})
-        frappe.db.delete("Dynamic Link", {"link_name": ["like", "%_Test Company%"]})
-        frappe.db.commit()
+        smriti.db.delete("Sales Taxes and Charges Template")
+        smriti.db.sql("DELETE FROM `tabSales Invoice Item` WHERE parent IN (SELECT name FROM `tabSales Invoice` WHERE customer IN ('Test B2B Customer Intra', 'Test B2B Customer Inter'))")
+        smriti.db.sql("DELETE FROM `tabSales Taxes and Charges` WHERE parent IN (SELECT name FROM `tabSales Invoice` WHERE customer IN ('Test B2B Customer Intra', 'Test B2B Customer Inter'))")
+        smriti.db.sql("DELETE FROM `tabSales Invoice` WHERE customer IN ('Test B2B Customer Intra', 'Test B2B Customer Inter')")
+        smriti.db.delete("Customer", {"name": ["like", "Test B2B%"]})
+        smriti.db.delete("Item Tax", {"parent": ["like", "TEST-ART%"]})
+        smriti.db.delete("Item Price", {"item_code": ["like", "TEST-ART%"]})
+        smriti.db.delete("Item", {"item_code": ["like", "TEST-ART%"]})
+        smriti.db.delete("Address", {"name": ["like", "%-Registered-Test%"]})
+        smriti.db.delete("Dynamic Link", {"link_name": ["like", "%_Test Company%"]})
+        smriti.db.commit()
 
     def _ensure_test_account(self, account_name):
-        acc = frappe.db.get_value("Account", {"account_name": account_name, "company": self.company}, "name")
+        acc = smriti.db.get("Account", {"account_name": account_name, "company": self.company}, "name")
         if not acc:
-            doc = frappe.new_doc("Account")
+            doc = smriti.documents.new("Account")
             doc.account_name = account_name
             doc.company = self.company
-            doc.parent_account = frappe.db.get_value("Account", {"is_group": 1, "company": self.company, "account_type": "Tax"}, "name") or frappe.db.get_value("Account", {"is_group": 1, "company": self.company}, "name")
+            doc.parent_account = smriti.db.get("Account", {"is_group": 1, "company": self.company, "account_type": "Tax"}, "name") or smriti.db.get("Account", {"is_group": 1, "company": self.company}, "name")
             doc.account_type = "Tax"
             doc.insert(ignore_permissions=True)
             acc = doc.name
         return acc
 
     def _ensure_item_tax_template(self, title, pct, tax_accounts):
-        itt_name = frappe.db.get_value("Item Tax Template", {"name": ["like", f"%{title}%"], "company": self.company}, "name")
+        itt_name = smriti.db.get("Item Tax Template", {"name": ["like", f"%{title}%"], "company": self.company}, "name")
         if not itt_name:
-            itt = frappe.new_doc("Item Tax Template")
+            itt = smriti.documents.new("Item Tax Template")
             itt.title = f"{title} - {self.company}"
             itt.company = self.company
             itt.gst_rate = pct
@@ -183,11 +184,11 @@ class TestSizewiseInvoiceAPI(unittest.TestCase):
         return itt_name
 
     def _ensure_test_item(self, item_code, gst_pct=12):
-        if not frappe.db.exists("Item", item_code):
-            item = frappe.new_doc("Item")
+        if not smriti.db.exists("Item", item_code):
+            item = smriti.documents.new("Item")
             item.item_code = item_code
             item.item_name = item_code
-            item.item_group = frappe.db.get_value("Item Group", {}, "name")
+            item.item_group = smriti.db.get("Item Group", {}, "name")
             item.stock_uom = "Nos"
             item.is_sales_item = 1
             item.gst_hsn_code = "998311"
@@ -201,9 +202,9 @@ class TestSizewiseInvoiceAPI(unittest.TestCase):
             item.insert(ignore_permissions=True)
 
     def _ensure_test_customer(self, customer_name, gstin):
-        cust_name = frappe.db.exists("Customer", customer_name)
+        cust_name = smriti.db.exists("Customer", customer_name)
         if not cust_name:
-            cust = frappe.new_doc("Customer")
+            cust = smriti.documents.new("Customer")
             cust.customer_name = customer_name
             cust.customer_type = "Company"
             cust.tax_id = gstin
@@ -218,8 +219,8 @@ class TestSizewiseInvoiceAPI(unittest.TestCase):
         state_name = state_map.get(state_code, "Maharashtra")
         
         addr_name = f"{customer_name}-Billing-Test"
-        if not frappe.db.exists("Address", addr_name):
-            addr = frappe.new_doc("Address")
+        if not smriti.db.exists("Address", addr_name):
+            addr = smriti.documents.new("Address")
             addr.address_title = customer_name
             addr.address_type = "Billing"
             addr.address_line1 = "Test Customer Street"
@@ -232,7 +233,7 @@ class TestSizewiseInvoiceAPI(unittest.TestCase):
             addr.gstin = gstin
             addr.append("links", {"link_doctype": "Customer", "link_name": cust_name})
             addr.insert(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
             
         return cust_name
 
@@ -267,7 +268,7 @@ class TestSizewiseInvoiceAPI(unittest.TestCase):
         self.assertEqual(res.get("net_total"), 4000.0) # 5 units * 800.0 taxable rate = 4000.0
         
         # 2. Check draft invoice exist in DB
-        si = frappe.get_doc("Sales Invoice", res.get("name"))
+        si = smriti.documents.get("Sales Invoice", res.get("name"))
         self.assertEqual(si.docstatus, 0)
         self.assertEqual(len(si.items), 2) # exploded into 2 items (qty 2 and qty 3)
         self.assertEqual(si.items[0].qty, 2.0)
@@ -284,7 +285,7 @@ class TestSizewiseInvoiceAPI(unittest.TestCase):
         self.assertEqual(sub_res.get("name"), res.get("name"))
 
         # Re-fetch submitted invoice and verify totals/taxes calculated by ERPNext
-        si_submitted = frappe.get_doc("Sales Invoice", res.get("name"))
+        si_submitted = smriti.documents.get("Sales Invoice", res.get("name"))
         self.assertEqual(si_submitted.docstatus, 1)
         self.assertEqual(flt(si_submitted.net_total), 4000.0)
         self.assertEqual(flt(si_submitted.grand_total), 4480.0) # 4000 + 12% GST = 4480.0
@@ -326,7 +327,7 @@ class TestSizewiseInvoiceAPI(unittest.TestCase):
         self.assertIsNotNone(res.get("name"))
 
         # 2. Check draft invoice exists in DB
-        si = frappe.get_doc("Sales Invoice", res.get("name"))
+        si = smriti.documents.get("Sales Invoice", res.get("name"))
         self.assertEqual(si.docstatus, 0)
         self.assertEqual(len(si.items), 2)
 
@@ -338,7 +339,7 @@ class TestSizewiseInvoiceAPI(unittest.TestCase):
         submit_sizewise_invoice(res.get("name"))
 
         # Re-fetch submitted invoice and verify totals/taxes calculated by ERPNext
-        si_submitted = frappe.get_doc("Sales Invoice", res.get("name"))
+        si_submitted = smriti.documents.get("Sales Invoice", res.get("name"))
         self.assertEqual(si_submitted.docstatus, 1)
 
         # Net total should be: 5 units * 800.0 * (1 - 0.35) = 5 * 520 = 2600.0
@@ -381,7 +382,7 @@ class TestSizewiseInvoiceAPI(unittest.TestCase):
 
         # 1. Save draft
         res = save_sizewise_invoice(payload)
-        si = frappe.get_doc("Sales Invoice", res.get("name"))
+        si = smriti.documents.get("Sales Invoice", res.get("name"))
 
         # Verify that item_tax_rate is populated with IGST
         for item in si.items:
@@ -390,7 +391,7 @@ class TestSizewiseInvoiceAPI(unittest.TestCase):
 
         # 2. Submit invoice
         submit_sizewise_invoice(res.get("name"))
-        si_sub = frappe.get_doc("Sales Invoice", res.get("name"))
+        si_sub = smriti.documents.get("Sales Invoice", res.get("name"))
 
         self.assertEqual(flt(si_sub.net_total), 9000.0) # 10 units * 900 = 9000.0
         self.assertEqual(flt(si_sub.grand_total), 10620.0) # 9000 + 18% IGST = 10620.0
@@ -463,8 +464,8 @@ class TestSizewiseInvoiceAPI(unittest.TestCase):
 
         # Set user session to a custom user with no roles
         frappe.set_user("test@example.com")
-        if not frappe.db.exists("User", "test@example.com"):
-            user = frappe.new_doc("User")
+        if not smriti.db.exists("User", "test@example.com"):
+            user = smriti.documents.new("User")
             user.email = "test@example.com"
             user.first_name = "Test User"
             user.insert(ignore_permissions=True)

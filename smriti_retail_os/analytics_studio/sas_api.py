@@ -7,7 +7,8 @@
 # @version: 1.0.0
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 import json
 from frappe.utils import flt, cint, nowdate
 
@@ -193,7 +194,7 @@ def sas_fetch_data(report_key, filters=None, page=1, page_size=500,
             report_engine = SmritiReportEngine(report_key, filters=filters)
             rows = report_engine.run()
         except Exception as e:
-            frappe.log_error(f"SAS fallback engine error for {report_key}: {str(e)}")
+            smriti.errors.log_error(f"SAS fallback engine error for {report_key}: {str(e)}")
             rows = []
 
         # Client-side pagination for legacy reports
@@ -328,20 +329,20 @@ def sas_save_view(view_name, report_key, state_json):
     state = _parse_json(state_json, {})
 
     # Check if view already exists for this user+report+name
-    existing = frappe.db.get_value(
+    existing = smriti.db.get(
         "SMRITI Saved View",
         {"view_name": view_name, "report_key": report_key, "owner": frappe.session.user},
         "name"
     )
 
     if existing:
-        frappe.db.set_value("SMRITI Saved View", existing, {
+        smriti.db.set_value("SMRITI Saved View", existing, {
             "applied_filters_json": json.dumps(state.get("filter_model", {})),
             "visible_columns_json": json.dumps(state),
             "modified": frappe.utils.now(),
         })
     else:
-        doc = frappe.new_doc("SMRITI Saved View")
+        doc = smriti.documents.new("SMRITI Saved View")
         doc.view_name = view_name
         doc.report_key = report_key
         doc.applied_filters_json = json.dumps(state.get("filter_model", {}))
@@ -349,7 +350,7 @@ def sas_save_view(view_name, report_key, state_json):
         # reviewed-ignore-permissions: user UI preference metadata
         doc.insert(ignore_permissions=True)
 
-    frappe.db.commit()
+    smriti.db.commit()
     return {"status": "saved", "view_name": view_name}
 
 
@@ -359,7 +360,7 @@ def sas_get_views(report_key):
     if frappe.session.user == "Guest":
         return []
 
-    views = frappe.db.get_all(
+    views = smriti.db.get_list(
         "SMRITI Saved View",
         filters={"report_key": report_key, "owner": frappe.session.user},
         fields=["view_name", "visible_columns_json", "creation", "modified"],
@@ -384,7 +385,7 @@ def sas_delete_view(view_name, report_key):
     if frappe.session.user == "Guest":
         return
 
-    existing = frappe.db.get_value(
+    existing = smriti.db.get(
         "SMRITI Saved View",
         {"view_name": view_name, "report_key": report_key, "owner": frappe.session.user},
         "name"
@@ -392,7 +393,7 @@ def sas_delete_view(view_name, report_key):
     if existing:
         # reviewed-ignore-permissions: user UI preference deletion
         frappe.delete_doc("SMRITI Saved View", existing, ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         return {"status": "deleted"}
     return {"status": "not_found"}
 
@@ -487,8 +488,8 @@ def sas_get_formula_explain(report_key, fieldname):
     # Enrich from Formula Registry if formula_id is linked
     formula_detail = {}
     formula_id = field_entry.get("formula_id") or field_entry.get("linked_formula")
-    if formula_id and frappe.db.exists("SMRITI Formula Definition", formula_id):
-        fd = frappe.get_doc("SMRITI Formula Definition", formula_id)
+    if formula_id and smriti.db.exists("SMRITI Formula Definition", formula_id):
+        fd = smriti.documents.get("SMRITI Formula Definition", formula_id)
         formula_detail = {
             "formula": fd.get("formula_expression"),
             "formula_version": fd.get("version"),

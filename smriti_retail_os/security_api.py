@@ -10,9 +10,10 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 import secrets
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.utils import cint
 from frappe.utils.password import update_password
 from smriti_retail_os.smriti_retail_os.roles import Roles
@@ -87,12 +88,12 @@ def check_administrator_protection(email):
     if email == Roles.ADMIN:
         is_admin_target = True
     else:
-        admin_email = frappe.db.get_value("User", Roles.ADMIN, "email")
+        admin_email = smriti.db.get("User", Roles.ADMIN, "email")
         if admin_email and email == admin_email:
             is_admin_target = True
 
     target_roles = []
-    if frappe.db.exists("User", email):
+    if smriti.db.exists("User", email):
         target_roles = frappe.get_roles(email)
 
     if is_admin_target or Roles.SYSTEM_MANAGER in target_roles or Roles.ADMIN in target_roles:
@@ -111,11 +112,11 @@ def list_users():
     exclude_users = ["Guest"]
     if frappe.session.user != Roles.ADMIN and Roles.ADMIN not in frappe.get_roles():
         exclude_users.append(Roles.ADMIN)
-        admin_email = frappe.db.get_value("User", Roles.ADMIN, "email")
+        admin_email = smriti.db.get("User", Roles.ADMIN, "email")
         if admin_email:
             exclude_users.append(admin_email)
             
-    users = frappe.get_all(
+    users = smriti.db.get_list(
         "User",
         filters={"name": ["not in", exclude_users], "user_type": "System User"},
         fields=["name", "email", "first_name", "last_name", "enabled", "role_profile_name"],
@@ -123,7 +124,7 @@ def list_users():
     )
     
     # Fetch all assigned roles to optimize N+1 queries
-    has_roles = frappe.get_all(
+    has_roles = smriti.db.get_list(
         "Has Role",
         filters={"parenttype": "User"},
         fields=["parent", "role"]
@@ -153,7 +154,7 @@ def save_user(email, first_name, last_name=None, roles=None, role_profile=None):
     if not email:
         frappe.throw(_("Email address is mandatory."))
         
-    is_new = not frappe.db.exists("User", email)
+    is_new = not smriti.db.exists("User", email)
     
     if is_new:
         user = SecurityRepository.new_doc("User")
@@ -176,7 +177,7 @@ def save_user(email, first_name, last_name=None, roles=None, role_profile=None):
         # reviewed-ignore-permissions: user account provisioning, gated by SMRITI Store Manager, System Manager, or Administrator roles
         user.insert(ignore_permissions=True)
         # Notify admin to send a reset link — the user cannot log in until they set a password
-        frappe.log_error(
+        smriti.errors.log_error(
             title="SMRITI: New user created — password reset required",
             message=(
                 f"User '{email}' was created with a random temporary password.\n"
@@ -205,7 +206,7 @@ def set_user_status(email, enabled):
     check_store_manager_or_admin()
     check_administrator_protection(email)
     
-    if not frappe.db.exists("User", email):
+    if not smriti.db.exists("User", email):
         frappe.throw(_("User {0} not found.").format(email))
         
     SecurityRepository.set_value("User", email, "enabled", cint(enabled))
@@ -220,7 +221,7 @@ def reset_user_password(email, password):
     check_store_manager_or_admin()
     check_administrator_protection(email)
 
-    if not frappe.db.exists("User", email):
+    if not smriti.db.exists("User", email):
         frappe.throw(_("User {0} not found.").format(email))
 
     # SEC-01: Governance Guard - Prevent privilege escalation
@@ -236,7 +237,7 @@ def reset_user_password(email, password):
             )
 
         # Block if target has any desk-access roles other than SMRITI Cashier
-        desk_roles = frappe.get_all("Role", filters={"desk_access": 1}, pluck="name")
+        desk_roles = smriti.db.get_list("Role", filters={"desk_access": 1}, pluck="name")
         cashier_role = get_allowed_cashier_role()
         for role in target_roles:
             if role in desk_roles and role != cashier_role:
@@ -268,7 +269,7 @@ def set_user_pin(email, pin):
     check_store_manager_or_admin()
     check_administrator_protection(email)
 
-    if not frappe.db.exists("User", email):
+    if not smriti.db.exists("User", email):
         frappe.throw(_("User {0} not found.").format(email))
 
     # Validate PIN format: 4–6 numeric digits
@@ -288,7 +289,7 @@ def set_user_pin(email, pin):
     _update_pw(email, pin, fieldname="custom_smriti_pin")
     SecurityRepository.commit()
 
-    frappe.log_error(
+    smriti.errors.log_error(
         title="SMRITI: Manager PIN Set",
         message=f"POS Override PIN was set for '{email}' by '{frappe.session.user}'."
     )
@@ -304,14 +305,14 @@ def clear_user_pin(email):
     check_administrator_only()
     check_administrator_protection(email)
 
-    if not frappe.db.exists("User", email):
+    if not smriti.db.exists("User", email):
         frappe.throw(_("User {0} not found.").format(email))
 
     # Clear the password hash by setting an empty sentinel value via DB
     SecurityRepository.set_value("User", email, "custom_smriti_pin", "")
     SecurityRepository.commit()
 
-    frappe.log_error(
+    smriti.errors.log_error(
         title="SMRITI: Manager PIN Cleared",
         message=f"POS Override PIN was cleared for '{email}' by '{frappe.session.user}'."
     )
@@ -337,12 +338,12 @@ def get_user_metrics():
         )
         
     exclude_users = ["Guest"]
-    admin_email = frappe.db.get_value("User", "Administrator", "email")
+    admin_email = smriti.db.get("User", "Administrator", "email")
     if admin_email:
         exclude_users.append(admin_email)
     exclude_users.append("Administrator")
     
-    total_users = frappe.db.count("User", filters={"name": ["not in", exclude_users], "user_type": "System User"})
+    total_users = smriti.db.count("User", filters={"name": ["not in", exclude_users], "user_type": "System User"})
     
     # Count SMRITI Store Manager
     # H-03 FIX: Do NOT use duplicate 'name' keys in a filters dict.
@@ -350,13 +351,13 @@ def get_user_metrics():
     # was being dropped, causing Administrator to be included in the count.
     # Fix: resolve eligible users first, then filter by role membership.
     mgr_roles = list(get_allowed_manager_roles() - {"System Manager", "Administrator"})
-    store_manager_users = frappe.get_all(
+    store_manager_users = smriti.db.get_list(
         "Has Role",
         filters={"role": ["in", mgr_roles] if mgr_roles else "SMRITI Store Manager", "parenttype": "User"},
         pluck="parent"
     )
     eligible_sm = [u for u in store_manager_users if u not in exclude_users]
-    store_managers = frappe.db.count(
+    store_managers = smriti.db.count(
         "User",
         filters={
             "name": ["in", eligible_sm] if eligible_sm else ["in", ["__NONE__"]],
@@ -366,13 +367,13 @@ def get_user_metrics():
     
     # Count SMRITI Cashier
     cashier_role = get_allowed_cashier_role()
-    cashier_users = frappe.get_all(
+    cashier_users = smriti.db.get_list(
         "Has Role",
         filters={"role": cashier_role, "parenttype": "User"},
         pluck="parent"
     )
     eligible_cashier = [u for u in cashier_users if u not in exclude_users]
-    cashiers = frappe.db.count(
+    cashiers = smriti.db.count(
         "User",
         filters={
             "name": ["in", eligible_cashier] if eligible_cashier else ["in", ["__NONE__"]],
@@ -392,7 +393,7 @@ def get_user_metrics():
 def list_roles():
     """Lists all available standard Roles."""
     check_store_manager_or_admin()
-    return frappe.get_all("Role", fields=["name", "disabled"], order_by="name asc")
+    return smriti.db.get_list("Role", fields=["name", "disabled"], order_by="name asc")
 
 @frappe.whitelist()
 def create_role(role_name):
@@ -402,7 +403,7 @@ def create_role(role_name):
     if not role_name:
         frappe.throw(_("Role Name is mandatory."))
         
-    if frappe.db.exists("Role", role_name):
+    if smriti.db.exists("Role", role_name):
         frappe.throw(_("Role {0} already exists.").format(role_name))
         
     doc = SecurityRepository.new_doc("Role")
@@ -417,7 +418,7 @@ def delete_role(role_name):
     """Deletes a standard Role. Restricted to Security Architect."""
     check_administrator_only()
     
-    if not frappe.db.exists("Role", role_name):
+    if not smriti.db.exists("Role", role_name):
         frappe.throw(_("Role {0} not found.").format(role_name))
         
     # reviewed-ignore-permissions: security role deletion, restricted to Administrator
@@ -430,9 +431,9 @@ def list_role_profiles():
     """Lists standard Role Profiles and their associated child roles."""
     check_store_manager_or_admin()
     
-    profiles = frappe.get_all("Role Profile", fields=["name"], order_by="name asc")
+    profiles = smriti.db.get_list("Role Profile", fields=["name"], order_by="name asc")
     
-    has_roles = frappe.get_all(
+    has_roles = smriti.db.get_list(
         "Has Role",
         filters={"parenttype": "Role Profile"},
         fields=["parent", "role"]
@@ -461,7 +462,7 @@ def save_role_profile(name, roles):
     if not name:
         frappe.throw(_("Profile Name is mandatory."))
         
-    is_new = not frappe.db.exists("Role Profile", name)
+    is_new = not smriti.db.exists("Role Profile", name)
     
     if is_new:
         doc = SecurityRepository.new_doc("Role Profile")
@@ -480,7 +481,7 @@ def delete_role_profile(name):
     """Deletes standard Role Profile. Restricted to Security Architect."""
     check_administrator_only()
     
-    if not frappe.db.exists("Role Profile", name):
+    if not smriti.db.exists("Role Profile", name):
         frappe.throw(_("Role Profile {0} not found.").format(name))
         
     # reviewed-ignore-permissions: security role profile deletion, restricted to Administrator
@@ -497,19 +498,19 @@ def list_user_permissions(user=None):
     
     filters = {}
     if user:
-        if user == "Administrator" or user == frappe.db.get_value("User", "Administrator", "email"):
+        if user == "Administrator" or user == smriti.db.get("User", "Administrator", "email"):
             if frappe.session.user != "Administrator" and "Administrator" not in frappe.get_roles():
                 return []
         filters["user"] = user
     else:
         if frappe.session.user != "Administrator" and "Administrator" not in frappe.get_roles():
-            admin_email = frappe.db.get_value("User", "Administrator", "email")
+            admin_email = smriti.db.get("User", "Administrator", "email")
             exclude_perms = ["Administrator"]
             if admin_email:
                 exclude_perms.append(admin_email)
             filters["user"] = ["not in", exclude_perms]
             
-    return frappe.get_all(
+    return smriti.db.get_list(
         "User Permission",
         filters=filters,
         fields=["name", "user", "allow", "for_value", "is_default"],
@@ -522,7 +523,7 @@ def add_user_permission(user, doctype, docname, is_default=0):
     check_store_manager_or_admin()
     
     # Block modifying Administrator permissions
-    if user == "Administrator" or user == frappe.db.get_value("User", "Administrator", "email"):
+    if user == "Administrator" or user == smriti.db.get("User", "Administrator", "email"):
         if frappe.session.user != "Administrator" and "Administrator" not in frappe.get_roles():
             frappe.throw(
                 _("Access Denied: User Permissions for the Administrator account cannot be modified by non-Administrators."),
@@ -552,7 +553,7 @@ def remove_user_permission(name):
         frappe.throw(_("User Permission row not found."))
         
     # Block modifying Administrator permissions
-    if perm.user == "Administrator" or perm.user == frappe.db.get_value("User", "Administrator", "email"):
+    if perm.user == "Administrator" or perm.user == smriti.db.get("User", "Administrator", "email"):
         if frappe.session.user != "Administrator" and "Administrator" not in frappe.get_roles():
             frappe.throw(
                 _("Access Denied: User Permissions for the Administrator account cannot be modified by non-Administrators."),
@@ -578,14 +579,14 @@ def remove_user_permission(name):
 def list_workflows():
     """Lists standard workflow configurations."""
     check_store_manager_or_admin()
-    return frappe.get_all("Workflow", fields=["name", "document_type", "is_active", "workflow_state_field"])
+    return smriti.db.get_list("Workflow", fields=["name", "document_type", "is_active", "workflow_state_field"])
 
 @frappe.whitelist()
 def get_workflow_details(workflow_name):
     """Retrieves full workflow details (states and transitions child tables)."""
     check_store_manager_or_admin()
     
-    if not frappe.db.exists("Workflow", workflow_name):
+    if not smriti.db.exists("Workflow", workflow_name):
         frappe.throw(_("Workflow {0} not found.").format(workflow_name))
         
     doc = SecurityRepository.get_doc("Workflow", workflow_name)
@@ -612,7 +613,7 @@ def save_workflow(name, document_type, is_active, states, transitions):
     if not name or not document_type:
         frappe.throw(_("Workflow Name and Target Document Type are mandatory."))
         
-    if frappe.db.exists("Workflow", name):
+    if smriti.db.exists("Workflow", name):
         doc = SecurityRepository.get_doc("Workflow", name)
         doc.document_type = document_type
         doc.is_active = cint(is_active)
@@ -652,7 +653,7 @@ def delete_workflow(name):
     """Deletes standard Workflow. Restricted to Security Architect."""
     check_administrator_only()
     
-    if not frappe.db.exists("Workflow", name):
+    if not smriti.db.exists("Workflow", name):
         frappe.throw(_("Workflow {0} not found.").format(name))
         
     # reviewed-ignore-permissions: business workflow deletion, restricted to Administrator
@@ -664,7 +665,7 @@ def delete_workflow(name):
 def list_workflow_states():
     """Lists standard Workflow States."""
     check_store_manager_or_admin()
-    return frappe.get_all("Workflow State", fields=["name", "style"], order_by="name asc")
+    return smriti.db.get_list("Workflow State", fields=["name", "style"], order_by="name asc")
 
 @frappe.whitelist()
 def save_workflow_state(name, style):
@@ -674,7 +675,7 @@ def save_workflow_state(name, style):
     if not name:
         frappe.throw(_("State Name is mandatory."))
         
-    if frappe.db.exists("Workflow State", name):
+    if smriti.db.exists("Workflow State", name):
         doc = SecurityRepository.get_doc("Workflow State", name)
         doc.style = style
         # reviewed-ignore-permissions: workflow states config, restricted to Administrator
@@ -702,7 +703,7 @@ def get_pending_approvals():
     user_roles = frappe.get_roles(user)
     
     # Resolve all active standard Workflows
-    workflows = frappe.get_all(
+    workflows = smriti.db.get_list(
         "Workflow",
         filters={"is_active": 1},
         fields=["name", "document_type", "workflow_state_field"]
@@ -736,7 +737,7 @@ def get_pending_approvals():
         
         try:
             # Query standard documents currently in allowed starting states
-            docs = frappe.get_all(
+            docs = smriti.db.get_list(
                 wf.document_type,
                 filters={
                     state_field: ["in", list(allowed_states)],
@@ -756,7 +757,7 @@ def get_pending_approvals():
                     "actions": state_actions.get(state, [])
                 })
         except Exception as e:
-            frappe.log_error(f"[SMRITI] Error querying approvals for {wf.document_type}: {e}")
+            smriti.errors.log_error(f"[SMRITI] Error querying approvals for {wf.document_type}: {e}")
             
     return approvals
 
@@ -818,7 +819,7 @@ def get_managers_list():
     """
     manager_roles = ["SMRITI Store Manager", "System Manager"]
 
-    users = frappe.db.get_all(
+    users = smriti.db.get_list(
         "Has Role",
         filters={"role": ["in", manager_roles]},
         pluck="parent"
@@ -827,7 +828,7 @@ def get_managers_list():
 
     result = []
     for u in unique_users:
-        user_doc = frappe.db.get_value(
+        user_doc = smriti.db.get(
             "User",
             u,
             ["name", "full_name", "enabled", "custom_smriti_pin"],

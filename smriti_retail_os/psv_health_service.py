@@ -13,8 +13,9 @@
 #       psv_service.py re-imports all public names for backward compatibility.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.utils import today, now_datetime
 
 from smriti_retail_os.balance_engine import get_party_balance
@@ -22,7 +23,7 @@ from smriti_retail_os.balance_engine import get_party_balance
 
 def find_open_alert(alert_key):
     """Finds a pending (open) alert for the given key"""
-    return frappe.db.get_value(
+    return smriti.db.get(
         "SMRITI PSV Exception Record",
         {"alert_key": alert_key, "status": "Pending Reconciliation"},
         "name"
@@ -40,14 +41,14 @@ def create_or_update_alert(party_stock_account, alert_type, severity, details, i
 
     open_alert_name = find_open_alert(alert_key)
     if open_alert_name:
-        frappe.db.set_value("SMRITI PSV Exception Record", open_alert_name, {
+        smriti.db.set_value("SMRITI PSV Exception Record", open_alert_name, {
             "last_seen": now_datetime(),
             "reconciliation_notes": details
         })
         return open_alert_name
     else:
-        doc = frappe.get_doc({
-            "doctype": "SMRITI PSV Exception Record",
+        doc = smriti.documents.new("PSVExceptionRecord")
+        doc.update({
             "timestamp": now_datetime(),
             "last_seen": now_datetime(),
             "party_stock_account": party_stock_account,
@@ -77,7 +78,7 @@ def run_psv_daily_health_check():
     from frappe.utils import add_days, getdate
     
     # Get active locations
-    active_locations = frappe.get_all(
+    active_locations = smriti.db.get_list(
         "SMRITI Party Stock Account", 
         filters={"active": 1},
         fields=["name", "status"]
@@ -87,7 +88,7 @@ def run_psv_daily_health_check():
         loc_name = loc["name"]
         
         # 1. Negative Balances (Critical)
-        neg_items = frappe.db.sql("""
+        neg_items = smriti.db.sql("""
             SELECT item_code, SUM(qty) as bal
             FROM `tabSMRITI Party Stock Ledger Entry`
             WHERE party_stock_account = %s
@@ -105,19 +106,19 @@ def run_psv_daily_health_check():
                 missing_qty=abs(item["bal"])
             )
             if loc["status"] != "Pending Reconciliation":
-                frappe.db.set_value("SMRITI Party Stock Account", loc_name, "status", "Pending Reconciliation")
+                smriti.db.set_value("SMRITI Party Stock Account", loc_name, "status", "Pending Reconciliation")
                 
         # 2. Pending Reconciliations (High)
-        has_pending_reconciliations = frappe.db.exists("SMRITI PSV Exception Record", {
+        has_pending_reconciliations = smriti.db.exists("SMRITI PSV Exception Record", {
             "party_stock_account": loc_name,
             "status": "Pending Reconciliation"
         })
         if has_pending_reconciliations:
             if loc["status"] != "Pending Reconciliation":
-                frappe.db.set_value("SMRITI Party Stock Account", loc_name, "status", "Pending Reconciliation")
+                smriti.db.set_value("SMRITI Party Stock Account", loc_name, "status", "Pending Reconciliation")
                 
         # 3. Late Uploads (Warning/Info)
-        latest_upload = frappe.db.get_value(
+        latest_upload = smriti.db.get(
             "SMRITI Party Sales Upload",
             {"party_stock_account": loc_name, "docstatus": 1},
             "period_end_date",
@@ -148,7 +149,7 @@ def run_psv_daily_health_check():
             )
             
         # 4. Locations Never Audited (Warning)
-        latest_audit = frappe.db.get_value(
+        latest_audit = smriti.db.get(
             "SMRITI Party Physical Snapshot",
             {"party_stock_account": loc_name, "docstatus": 1},
             "audit_date",
@@ -173,7 +174,7 @@ def run_psv_daily_health_check():
             
         # 5. Orphaned Invoice Detection (Hook Failure Recovery)
         # Find submitted Sales Invoices linked to this PSA that have no corresponding ledger entry
-        orphaned_invoices = frappe.db.sql("""
+        orphaned_invoices = smriti.db.sql("""
             SELECT si.name, si.company
             FROM `tabSales Invoice` si
             WHERE si.custom_party_stock_account = %s
@@ -195,7 +196,7 @@ def run_psv_daily_health_check():
             )
 
         # 6. Alert Resolution Pass
-        open_alerts = frappe.get_all(
+        open_alerts = smriti.db.get_list(
             "SMRITI PSV Exception Record",
             filters={"party_stock_account": loc_name, "status": "Pending Reconciliation"},
             fields=["name", "alert_type", "item_code"]
@@ -209,7 +210,7 @@ def run_psv_daily_health_check():
                 if bal >= 0.0:
                     should_resolve = True
             elif alert["alert_type"] == "Late Upload":
-                latest_up = frappe.db.get_value(
+                latest_up = smriti.db.get(
                     "SMRITI Party Sales Upload",
                     {"party_stock_account": loc_name, "docstatus": 1},
                     "period_end_date",
@@ -220,7 +221,7 @@ def run_psv_daily_health_check():
                     if days <= 1:
                         should_resolve = True
             elif alert["alert_type"] == "Never Audited":
-                latest_aud = frappe.db.get_value(
+                latest_aud = smriti.db.get(
                     "SMRITI Party Physical Snapshot",
                     {"party_stock_account": loc_name, "docstatus": 1},
                     "audit_date",
@@ -232,7 +233,7 @@ def run_psv_daily_health_check():
                         should_resolve = True
             elif alert["alert_type"] == "Hook Failure" and alert.get("sales_invoice"):
                 # Auto-resolve if ledger entries now exist for this invoice
-                has_entries = frappe.db.exists("SMRITI Party Stock Ledger Entry", {
+                has_entries = smriti.db.exists("SMRITI Party Stock Ledger Entry", {
                     "voucher_no": alert["sales_invoice"],
                     "party_stock_account": loc_name
                 })
@@ -240,7 +241,7 @@ def run_psv_daily_health_check():
                     should_resolve = True
                         
             if should_resolve:
-                frappe.db.set_value("SMRITI PSV Exception Record", alert["name"], {
+                smriti.db.set_value("SMRITI PSV Exception Record", alert["name"], {
                     "status": "Reconciled",
                     "reconciled_by": "Administrator",
                     "reconciled_on": now_datetime(),
@@ -248,12 +249,12 @@ def run_psv_daily_health_check():
                 })
                 
         # Re-verify if any open alerts remain
-        still_has_open_alerts = frappe.db.exists("SMRITI PSV Exception Record", {
+        still_has_open_alerts = smriti.db.exists("SMRITI PSV Exception Record", {
             "party_stock_account": loc_name,
             "status": "Pending Reconciliation"
         })
         if not still_has_open_alerts and loc["status"] != "Active":
-            frappe.db.set_value("SMRITI Party Stock Account", loc_name, "status", "Active")
+            smriti.db.set_value("SMRITI Party Stock Account", loc_name, "status", "Active")
 
 
 def validate_sales_invoice_cancel(doc, method=None):

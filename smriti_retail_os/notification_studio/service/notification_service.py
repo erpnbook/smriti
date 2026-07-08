@@ -4,7 +4,8 @@ smriti_retail_os/notification_studio/service/notification_service.py
 SMRITI Notification Service — business logic for creating and managing notifications.
 Author: Jawahar R. Mallah <jawahar.mallah@gmail.com>
 """
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from frappe.utils import now_datetime
 
 
@@ -15,8 +16,8 @@ def create_notification(user, notif_type, title, message, reference_doctype=None
                 invoice_due | system | user | sales
     """
     try:
-        doc = frappe.get_doc({
-            "doctype": "SMRITI Notification Log",
+        doc = smriti.documents.new("NotificationLog")
+        doc.update({
             "for_user": user,
             "notif_type": notif_type,
             "title": title,
@@ -28,7 +29,7 @@ def create_notification(user, notif_type, title, message, reference_doctype=None
             "created_at": now_datetime()
         })
         doc.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # Push real-time to user
         frappe.publish_realtime(
@@ -45,14 +46,14 @@ def create_notification(user, notif_type, title, message, reference_doctype=None
         )
         return doc.name
     except Exception as e:
-        frappe.log_error(f"SMRITI Notification Error: {e}", "notification_service")
+        smriti.errors.log_error(f"SMRITI Notification Error: {e}", "notification_service")
         return None
 
 
 def get_unread_count(user):
     """Return count of unread notifications for the given user."""
     try:
-        return frappe.db.count("SMRITI Notification Log", {
+        return smriti.db.count("SMRITI Notification Log", {
             "for_user": user,
             "is_read": 0
         })
@@ -63,11 +64,11 @@ def get_unread_count(user):
 def mark_as_read(name, user):
     """Mark a single notification as read."""
     try:
-        doc = frappe.get_doc("SMRITI Notification Log", name)
+        doc = smriti.documents.get("SMRITI Notification Log", name)
         if doc.for_user == user:
             doc.is_read = 1
             doc.save(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
         return True
     except Exception:
         return False
@@ -76,11 +77,11 @@ def mark_as_read(name, user):
 def mark_all_read(user):
     """Mark all notifications for the user as read."""
     try:
-        frappe.db.set_value(
+        smriti.db.set_value(
             "SMRITI Notification Log", {"for_user": user, "is_read": 0},
             "is_read", 1, update_modified=False
         )
-        frappe.db.commit()
+        smriti.db.commit()
         return True
     except Exception:
         return False
@@ -108,8 +109,8 @@ def get_notifications(user, notif_type=None, limit=50, page=1):
             start=offset,
             ignore_permissions=True
         )
-        total = frappe.db.count("SMRITI Notification Log", filters)
+        total = smriti.db.count("SMRITI Notification Log", filters)
         return {"items": rows, "total": total, "page": int(page), "limit": int(limit)}
     except Exception as e:
-        frappe.log_error(f"get_notifications error: {e}", "notification_service")
+        smriti.errors.log_error(f"get_notifications error: {e}", "notification_service")
         return {"items": [], "total": 0}

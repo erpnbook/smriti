@@ -11,8 +11,9 @@
 #
 
 import hashlib
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 
 def generate_ledger_hash(company, voucher_type, voucher_no, item_code, party_stock_account):
     """
@@ -34,11 +35,11 @@ def make_ledger_entry(company, posting_datetime, party_stock_account, item_code,
     unique_hash = generate_ledger_hash(company, voucher_type, voucher_no, item_code, party_stock_account)
     
     # Block double-writes defensively before trying database insertion
-    if frappe.db.exists("SMRITI Party Stock Ledger Entry", {"unique_hash": unique_hash}):
+    if smriti.db.exists("SMRITI Party Stock Ledger Entry", {"unique_hash": unique_hash}):
         return None
         
-    ple = frappe.get_doc({
-        "doctype": "SMRITI Party Stock Ledger Entry",
+    ple = smriti.documents.new("PartyStockLedgerEntry")
+    ple.update({
         "company": company,
         "posting_datetime": posting_datetime or frappe.utils.now_datetime(),
         "party_stock_account": party_stock_account,
@@ -81,8 +82,8 @@ def log_activity(action_type, party_stock_account=None, reference_doctype=None, 
     from smriti_retail_os.utils import get_client_ip
     ip_addr = get_client_ip()
 
-    log = frappe.get_doc({
-        "doctype": "SMRITI PSV Activity Log",
+    log = smriti.documents.new("PSVActivityLog")
+    log.update({
         "timestamp": frappe.utils.now_datetime(),
         "user": frappe.session.user or "Administrator",
         "action_type": action_type,

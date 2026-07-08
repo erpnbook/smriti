@@ -8,7 +8,8 @@
 # @version: 1.0.0
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from frappe.utils import flt, cint, nowdate, get_first_day, get_last_day
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -357,7 +358,7 @@ class DatasetEngine:
         count_sql = f"SELECT COUNT(*) as cnt FROM ({base_sql} {group_clause}) _cnt_wrap"
 
         try:
-            count_result = frappe.db.sql(count_sql, params, as_dict=True)
+            count_result = smriti.db.sql(count_sql, params, as_dict=True)
             total_count = cint(count_result[0].get("cnt", 0)) if count_result else 0
         except Exception:
             total_count = 0
@@ -373,9 +374,9 @@ class DatasetEngine:
         params["offset"] = offset
 
         try:
-            rows = frappe.db.sql(data_sql, params, as_dict=True)
+            rows = smriti.db.sql(data_sql, params, as_dict=True)
         except Exception as e:
-            frappe.log_error(f"DatasetEngine.fetch error for {self.dataset_key}: {str(e)}")
+            smriti.errors.log_error(f"DatasetEngine.fetch error for {self.dataset_key}: {str(e)}")
             rows = []
 
         return {
@@ -411,10 +412,10 @@ class DatasetEngine:
         agg_sql = f"SELECT {', '.join(agg_exprs)} FROM ({base_sql}) _agg_wrap"
 
         try:
-            result = frappe.db.sql(agg_sql, params, as_dict=True)
+            result = smriti.db.sql(agg_sql, params, as_dict=True)
             return dict(result[0]) if result else {}
         except Exception as e:
-            frappe.log_error(f"DatasetEngine.fetch_aggregates error: {str(e)}")
+            smriti.errors.log_error(f"DatasetEngine.fetch_aggregates error: {str(e)}")
             return {}
 
 

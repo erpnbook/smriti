@@ -10,9 +10,10 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe.utils import flt, cint
 from frappe import _
+from smriti_retail_os import smriti
 
 # Helper to get state from GSTIN using India Compliance utilities
 def _get_company_state_fallback(company=None):
@@ -31,16 +32,16 @@ def _get_company_state_fallback(company=None):
         if not company:
             company = (
                 frappe.defaults.get_user_default("company")
-                or frappe.db.get_value("Company", {}, "name")
+                or smriti.db.get("Company", {}, "name")
             )
         if company:
-            state = frappe.db.get_value("Company", company, "state")
+            state = smriti.db.get("Company", company, "state")
             if state:
                 return state
             # State field is empty — log a warning so admins notice in Error Log.
             # DO NOT hardcode "Karnataka" — that silently produces incorrect GST
             # invoices for companies in any other state.
-            frappe.log_error(
+            smriti.errors.log_error(
                 title="SMRITI: Company state not configured — GST risk",
                 message=(
                     f"Company '{company}' has no 'State' configured. "
@@ -94,10 +95,10 @@ def get_gst_rate_from_hsn(hsn_code, company=None):
         return None
 
     try:
-        if not frappe.db.exists("GST HSN Code", hsn_code):
+        if not smriti.db.exists("GST HSN Code", hsn_code):
             return None
 
-        hsn_doc = frappe.get_doc("GST HSN Code", hsn_code)
+        hsn_doc = smriti.documents.get("GST HSN Code", hsn_code)
         if not hsn_doc.taxes:
             return None
 
@@ -107,7 +108,7 @@ def get_gst_rate_from_hsn(hsn_code, company=None):
             if not tax.item_tax_template:
                 continue
             if company:
-                tmpl_company = frappe.db.get_value("Item Tax Template", tax.item_tax_template, "company")
+                tmpl_company = smriti.db.get("Item Tax Template", tax.item_tax_template, "company")
                 if tmpl_company == company:
                     template_name = tax.item_tax_template
                     break
@@ -123,7 +124,7 @@ def get_gst_rate_from_hsn(hsn_code, company=None):
             return None
 
         # Sum up tax rates from the template details (CGST + SGST = total GST)
-        total_rate = frappe.db.sql(
+        total_rate = smriti.db.sql(
             "SELECT SUM(tax_rate) FROM `tabItem Tax Template Detail` WHERE parent = %s",
             (template_name,)
         )
@@ -153,7 +154,7 @@ def sync_item_taxes_and_prices(doc, method):
     if not doc.stock_uom:
         doc.stock_uom = "Nos"
 
-    company = frappe.defaults.get_user_default("company") or frappe.db.get_value("Company", {}, "name")
+    company = frappe.defaults.get_user_default("company") or smriti.db.get("Company", {}, "name")
 
     # HSN-first: derive GST % from HSN Code if available
     hsn_derived_rate = None
@@ -172,20 +173,20 @@ def sync_item_taxes_and_prices(doc, method):
     pct = hsn_derived_rate if hsn_derived_rate is not None else cint(doc.custom_gst_percentage or 0)
 
     if pct:
-        template_name = frappe.db.get_value(
+        template_name = smriti.db.get(
             "Item Tax Template", 
             {"name": ["like", f"%{pct}%"], "company": company}, 
             "name"
         )
         
         if not template_name:
-            company_templates = frappe.db.get_all(
+            company_templates = smriti.db.get_list(
                 "Item Tax Template",
                 filters={"company": company},
                 pluck="name"
             )
             if company_templates:
-                details = frappe.db.get_all(
+                details = smriti.db.get_list(
                     "Item Tax Template Detail",
                     filters={"tax_rate": pct, "parent": ["in", company_templates]},
                     pluck="parent",
@@ -220,8 +221,8 @@ def after_item_save(doc, method):
         sync_price_list_rate(doc.name, "Standard Selling", flt(doc.standard_rate), doc.stock_uom)
 
 def sync_price_list_rate(item_code, price_list, rate, uom):
-    if not frappe.db.exists("Price List", price_list):
-        pl = frappe.new_doc("Price List")
+    if not smriti.db.exists("Price List", price_list):
+        pl = smriti.documents.new("Price List")
         pl.price_list_name = price_list
         pl.enabled = 1
         pl.buying = 1 if price_list == "Standard Buying" else 0
@@ -234,14 +235,14 @@ def sync_price_list_rate(item_code, price_list, rate, uom):
         "price_list": price_list,
         "uom": uom
     }
-    ip_name = frappe.db.get_value("Item Price", filters, "name")
+    ip_name = smriti.db.get("Item Price", filters, "name")
     
     if ip_name:
-        ip = frappe.get_doc("Item Price", ip_name)
+        ip = smriti.documents.get("Item Price", ip_name)
         ip.price_list_rate = rate
         ip.save(ignore_permissions=True)
     else:
-        ip = frappe.new_doc("Item Price")
+        ip = smriti.documents.new("Item Price")
         ip.item_code = item_code
         ip.price_list = price_list
         ip.price_list_rate = rate
@@ -274,7 +275,7 @@ def sync_customer_address(doc, method):
             gstin_state = resolve_address_state(doc.tax_id or doc.get("gstin"))
             resolved_gstin = doc.tax_id if state == gstin_state else None
 
-            existing_address = frappe.db.get_value(
+            existing_address = smriti.db.get(
                 "Address",
                 {
                     "links.link_doctype": "Customer",
@@ -285,14 +286,14 @@ def sync_customer_address(doc, method):
             )
 
             if existing_address:
-                addr = frappe.get_doc("Address", existing_address)
+                addr = smriti.documents.get("Address", existing_address)
                 addr.address_line1 = address_line1[:140]
                 addr.address_line2 = address_line2[:140] if address_line2 else None
                 addr.gstin = resolved_gstin
                 addr.state = state
                 addr.save(ignore_permissions=True)
             else:
-                addr = frappe.new_doc("Address")
+                addr = smriti.documents.new("Address")
                 addr.address_title = address_title[:140]
                 addr.address_type = "Billing"
                 addr.address_line1 = address_line1[:140]
@@ -307,7 +308,7 @@ def sync_customer_address(doc, method):
                 })
                 addr.insert(ignore_permissions=True)
         except Exception:
-            frappe.log_error(
+            smriti.errors.log_error(
                 title=f"SMRITI: Billing address sync failed for Customer {doc.name}",
                 message=frappe.get_traceback()
             )
@@ -326,7 +327,7 @@ def sync_customer_address(doc, method):
             gstin_state = resolve_address_state(doc.tax_id or doc.get("gstin"))
             resolved_gstin = doc.tax_id if state == gstin_state else None
 
-            existing_address = frappe.db.get_value(
+            existing_address = smriti.db.get(
                 "Address",
                 {
                     "links.link_doctype": "Customer",
@@ -337,14 +338,14 @@ def sync_customer_address(doc, method):
             )
 
             if existing_address:
-                addr = frappe.get_doc("Address", existing_address)
+                addr = smriti.documents.get("Address", existing_address)
                 addr.address_line1 = address_line1[:140]
                 addr.address_line2 = address_line2[:140] if address_line2 else None
                 addr.gstin = resolved_gstin
                 addr.state = state
                 addr.save(ignore_permissions=True)
             else:
-                addr = frappe.new_doc("Address")
+                addr = smriti.documents.new("Address")
                 addr.address_title = address_title[:140]
                 addr.address_type = "Shipping"
                 addr.address_line1 = address_line1[:140]
@@ -359,7 +360,7 @@ def sync_customer_address(doc, method):
                 })
                 addr.insert(ignore_permissions=True)
         except Exception:
-            frappe.log_error(
+            smriti.errors.log_error(
                 title=f"SMRITI: Shipping address sync failed for Customer {doc.name}",
                 message=frappe.get_traceback()
             )
@@ -375,9 +376,9 @@ def sync_supplier_address_and_credit_days(doc, method):
     3. Resolves custom_credit_days to a standard Payment Terms Template and links it.
     """
     # ── Sync/Ensure SMRITI Supplier Counterpart ───────────────────────────
-    smriti_sup_name = frappe.db.get_value("SMRITI Supplier", {"supplier_name": doc.supplier_name}, "name")
+    smriti_sup_name = smriti.db.get("SMRITI Supplier", {"supplier_name": doc.supplier_name}, "name")
     if not smriti_sup_name:
-        s = frappe.new_doc("SMRITI Supplier")
+        s = smriti.documents.new("SMRITI Supplier")
         s.supplier_name = doc.supplier_name
         s.supplier_type = doc.supplier_type or "Company"
         s.supplier_group = doc.supplier_group or "Local"
@@ -388,7 +389,7 @@ def sync_supplier_address_and_credit_days(doc, method):
         s.erpnext_supplier = doc.name
         s.insert(ignore_permissions=True)
     else:
-        s = frappe.get_doc("SMRITI Supplier", smriti_sup_name)
+        s = smriti.documents.get("SMRITI Supplier", smriti_sup_name)
         if s.erpnext_supplier != doc.name or s.supplier_name != doc.supplier_name or s.disabled != doc.disabled:
             s.erpnext_supplier = doc.name
             s.supplier_name = doc.supplier_name
@@ -409,7 +410,7 @@ def sync_supplier_address_and_credit_days(doc, method):
             gstin_state = resolve_address_state(doc.gstin or doc.tax_id)
             resolved_gstin = (doc.gstin or doc.tax_id) if state == gstin_state else None
 
-            existing_address = frappe.db.get_value(
+            existing_address = smriti.db.get(
                 "Address",
                 {
                     "links.link_doctype": "Supplier",
@@ -420,14 +421,14 @@ def sync_supplier_address_and_credit_days(doc, method):
             )
 
             if existing_address:
-                addr = frappe.get_doc("Address", existing_address)
+                addr = smriti.documents.get("Address", existing_address)
                 addr.address_line1 = address_line1[:140]
                 addr.address_line2 = address_line2[:140] if address_line2 else None
                 addr.gstin = resolved_gstin
                 addr.state = state
                 addr.save(ignore_permissions=True)
             else:
-                addr = frappe.new_doc("Address")
+                addr = smriti.documents.new("Address")
                 addr.address_title = address_title[:140]
                 addr.address_type = "Billing"
                 addr.address_line1 = address_line1[:140]
@@ -442,7 +443,7 @@ def sync_supplier_address_and_credit_days(doc, method):
                 })
                 addr.insert(ignore_permissions=True)
         except Exception:
-            frappe.log_error(
+            smriti.errors.log_error(
                 title=f"SMRITI: Billing address sync failed for Supplier {doc.name}",
                 message=frappe.get_traceback()
             )
@@ -461,7 +462,7 @@ def sync_supplier_address_and_credit_days(doc, method):
             gstin_state = resolve_address_state(doc.gstin or doc.tax_id)
             resolved_gstin = (doc.gstin or doc.tax_id) if state == gstin_state else None
 
-            existing_address = frappe.db.get_value(
+            existing_address = smriti.db.get(
                 "Address",
                 {
                     "links.link_doctype": "Supplier",
@@ -472,14 +473,14 @@ def sync_supplier_address_and_credit_days(doc, method):
             )
 
             if existing_address:
-                addr = frappe.get_doc("Address", existing_address)
+                addr = smriti.documents.get("Address", existing_address)
                 addr.address_line1 = address_line1[:140]
                 addr.address_line2 = address_line2[:140] if address_line2 else None
                 addr.gstin = resolved_gstin
                 addr.state = state
                 addr.save(ignore_permissions=True)
             else:
-                addr = frappe.new_doc("Address")
+                addr = smriti.documents.new("Address")
                 addr.address_title = address_title[:140]
                 addr.address_type = "Shipping"
                 addr.address_line1 = address_line1[:140]
@@ -494,7 +495,7 @@ def sync_supplier_address_and_credit_days(doc, method):
                 })
                 addr.insert(ignore_permissions=True)
         except Exception:
-            frappe.log_error(
+            smriti.errors.log_error(
                 title=f"SMRITI: Shipping address sync failed for Supplier {doc.name}",
                 message=frappe.get_traceback()
             )
@@ -504,8 +505,8 @@ def sync_supplier_address_and_credit_days(doc, method):
         days = cint(doc.custom_credit_days)
         template_name = f"Credit Term - {days} Days"
 
-        if not frappe.db.exists("Payment Terms Template", template_name):
-            ptt = frappe.new_doc("Payment Terms Template")
+        if not smriti.db.exists("Payment Terms Template", template_name):
+            ptt = smriti.documents.new("Payment Terms Template")
             ptt.template_name = template_name
             ptt.append("terms", {
                 "invoice_portion": 100.0,
@@ -515,7 +516,7 @@ def sync_supplier_address_and_credit_days(doc, method):
             ptt.insert(ignore_permissions=True)
 
         if doc.payment_terms != template_name:
-            frappe.db.set_value("Supplier", doc.name, "payment_terms", template_name)
+            smriti.db.set_value("Supplier", doc.name, "payment_terms", template_name)
 
 
 def initialize_item_wise_tax_details(doc, method=None):
@@ -553,9 +554,9 @@ def validate_and_reconcile_retail_invoice(doc, method):
         except ImportError:
             # C-05 FIX: Only catch ImportError (india_compliance/erpnext module not installed).
             # Fallback raw database check when the module is not available:
-            loyalty_program = frappe.db.get_value("Customer", doc.customer, "loyalty_program")
+            loyalty_program = smriti.db.get("Customer", doc.customer, "loyalty_program")
             if loyalty_program:
-                points = frappe.db.sql(
+                points = smriti.db.sql(
                     "SELECT SUM(remaining_points) FROM `tabLoyalty Point Entry` WHERE customer=%s AND loyalty_program=%s",
                     (doc.customer, loyalty_program)
                 )
@@ -568,7 +569,7 @@ def validate_and_reconcile_retail_invoice(doc, method):
                     )
 
     # 2. Validate CGE Wallet Deduction (AUD-03 & AUD-04)
-    settings = frappe.get_doc("SMRITI CGE Settings")
+    settings = smriti.documents.get_single("CGESettings")
     wallet_ded_amt = flt(doc.get("custom_wallet_deduction"))
     if wallet_ded_amt > 0.0:
         if not settings.enable_cashback:
@@ -596,7 +597,7 @@ def validate_and_reconcile_retail_invoice(doc, method):
         # Check campaign budget limits
         coupon_disc_amt = flt(doc.get("custom_coupon_discount") or doc.get("discount_amount"))
         if coupon.custom_campaign and settings.enable_campaign_budget:
-            campaign = frappe.get_doc("SMRITI Coupon Campaign", coupon.custom_campaign)
+            campaign = smriti.documents.get("SMRITI Coupon Campaign", coupon.custom_campaign)
             if campaign.stop_on_limit:
                 total_exposure = flt(campaign.budget_consumed) + flt(campaign.budget_reserved) + coupon_disc_amt
                 if total_exposure > flt(campaign.budget_limit):
@@ -638,7 +639,7 @@ def after_address_save(doc, method=None):
         if old_str != new_str:
             try:
                 # Write to SMRITI Address Audit Log
-                log_doc = frappe.new_doc("SMRITI Address Audit Log")
+                log_doc = smriti.documents.new("SMRITI Address Audit Log")
                 log_doc.changed_by = frappe.session.user
                 log_doc.changed_at = frappe.utils.now_datetime()
                 log_doc.field_name = field
@@ -647,7 +648,7 @@ def after_address_save(doc, method=None):
                 log_doc.company = company_link
                 log_doc.insert(ignore_permissions=True)
             except Exception as audit_ex:
-                frappe.log_error(f"Error logging address audit trail: {str(audit_ex)}")
+                smriti.errors.log_error(f"Error logging address audit trail: {str(audit_ex)}")
 
 
 def release_reserved_budget_on_trash(doc, method=None):
@@ -656,7 +657,7 @@ def release_reserved_budget_on_trash(doc, method=None):
     Releases campaign budget reservation from Redis and DB (AUD-17).
     """
     from frappe.utils import flt
-    settings = frappe.get_doc("SMRITI CGE Settings")
+    settings = smriti.documents.get_single("CGESettings")
     if not settings.enable_coupon:
         return
         
@@ -673,8 +674,8 @@ def release_reserved_budget_on_trash(doc, method=None):
         campaign_name = reservation.get("campaign")
         amount = flt(reservation.get("amount"))
         
-        if frappe.db.exists("SMRITI Coupon Campaign", campaign_name):
-            campaign = frappe.get_doc("SMRITI Coupon Campaign", campaign_name)
+        if smriti.db.exists("SMRITI Coupon Campaign", campaign_name):
+            campaign = smriti.documents.get("SMRITI Coupon Campaign", campaign_name)
             campaign.budget_reserved = max(0.0, flt(campaign.budget_reserved) - amount)
             campaign.save(ignore_permissions=True)
             

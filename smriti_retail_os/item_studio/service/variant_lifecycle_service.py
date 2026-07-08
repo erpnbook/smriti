@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # SMRITI Variant Lifecycle / Provisioning Service
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from smriti_retail_os.barcode.service.barcode_service import BarcodeService
 from smriti_retail_os.item_studio.repository.product_repository import ProductRepository
 
@@ -12,7 +13,7 @@ class VariantLifecycleService:
         if not value:
             return
         # Ensure Attribute exists
-        if not frappe.db.exists("Item Attribute", attribute):
+        if not smriti.db.exists("Item Attribute", attribute):
             doc = ProductRepository.new_doc("Item Attribute")
             doc.attribute_name = attribute
             doc.numeric = 0
@@ -40,13 +41,13 @@ class VariantLifecycleService:
         """
         Creates an Article template (Item with has_variants=1)
         """
-        if frappe.db.exists("Item", article_code):
+        if smriti.db.exists("Item", article_code):
             return article_code
 
-        if not item_group or not frappe.db.exists("Item Group", item_group):
-            item_group = frappe.db.get_single_value("SMRITI Settings", "default_item_group") or "Products"
+        if not item_group or not smriti.db.exists("Item Group", item_group):
+            item_group = smriti.db.get_single("SMRITI Settings", "default_item_group") or "Products"
 
-        if brand and not frappe.db.exists("Brand", brand):
+        if brand and not smriti.db.exists("Brand", brand):
             b = ProductRepository.new_doc("Brand")
             b.brand = brand
             b.insert(ignore_permissions=True)
@@ -77,7 +78,7 @@ class VariantLifecycleService:
             _ensure_item_attribute(attr)
             item.append("attributes", {"attribute": attr})
 
-        company = frappe.defaults.get_user_default("company") or frappe.get_all("Company", limit=1)[0].name
+        company = frappe.defaults.get_user_default("company") or smriti.db.get_list("Company", limit=1)[0].name
         _attach_tax_template(item, None, gst_percentage, company)
         item.insert(ignore_permissions=True)
         
@@ -89,7 +90,7 @@ class VariantLifecycleService:
         """
         Resolves or creates a variant Item matching attribute values.
         """
-        if not frappe.db.exists("Item", {"name": article, "has_variants": 1}):
+        if not smriti.db.exists("Item", {"name": article, "has_variants": 1}):
             frappe.throw(_("Article {0} is not a valid variant template item.").format(article))
 
         resolved_attributes = {}
@@ -97,7 +98,7 @@ class VariantLifecycleService:
             VariantLifecycleService.ensure_attribute_and_value(attr, val)
             
             # Map requested val to the exact case registered in the Item Attribute master
-            registered_vals = frappe.db.get_all(
+            registered_vals = smriti.db.get_list(
                 "Item Attribute Value",
                 filters={"parent": attr},
                 pluck="attribute_value"
@@ -123,7 +124,7 @@ class VariantLifecycleService:
         variant_doc.save(ignore_permissions=True)
 
         from smriti_retail_os.item_master_api import _upsert_item_price
-        template_mrp = frappe.db.get_value("Item", article, "custom_mrp") or 0.0
+        template_mrp = smriti.db.get("Item", article, "custom_mrp") or 0.0
         if template_mrp:
             _upsert_item_price(variant_doc.name, "Standard Selling", template_mrp)
             _upsert_item_price(variant_doc.name, "MRP", template_mrp)

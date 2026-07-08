@@ -12,6 +12,7 @@
 
 
 import frappe
+from smriti_retail_os import smriti
 import unittest
 from smriti_retail_os.item_master_api import (
     generate_ean13_barcode,
@@ -25,9 +26,9 @@ from smriti_retail_os.item_master_api import (
 
 def ensure_test_tax_template(company):
     # Ensure Item Tax Template GST 18% - VTC exists in the test DB
-    if not frappe.db.exists("Item Tax Template", {"title": "GST 18% - VTC", "company": company}):
+    if not smriti.db.exists("Item Tax Template", {"title": "GST 18% - VTC", "company": company}):
         try:
-            t = frappe.new_doc("Item Tax Template")
+            t = smriti.documents.new("Item Tax Template")
             t.title = "GST 18% - VTC"
             t.company = company
             t.gst_treatment = "Taxable"
@@ -40,7 +41,7 @@ def ensure_test_tax_template(company):
                 ["name", "not like", "%RCM%"],
                 ["name", "not like", "%Refund%"]
             ]
-            cgst = frappe.db.get_value("Account", filters_cgst, "name")
+            cgst = smriti.db.get("Account", filters_cgst, "name")
             
             filters_sgst = [
                 ["account_type", "=", "Tax"],
@@ -49,28 +50,28 @@ def ensure_test_tax_template(company):
                 ["name", "not like", "%RCM%"],
                 ["name", "not like", "%Refund%"]
             ]
-            sgst = frappe.db.get_value("Account", filters_sgst, "name")
+            sgst = smriti.db.get("Account", filters_sgst, "name")
             
             if cgst:
                 t.append("taxes", {"tax_type": cgst, "tax_rate": 9.0})
             if sgst:
                 t.append("taxes", {"tax_type": sgst, "tax_rate": 9.0})
             t.insert(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
         except Exception as e:
             print("Failed to create test tax template:", str(e))
 
 def ensure_item_group(name):
-    if not frappe.db.exists("Item Group", name):
+    if not smriti.db.exists("Item Group", name):
         try:
-            ig = frappe.new_doc("Item Group")
+            ig = smriti.documents.new("Item Group")
             ig.item_group_name = name
             ig.is_group = 0
-            parent = frappe.db.get_value("Item Group", {"is_group": 1}, "name")
+            parent = smriti.db.get("Item Group", {"is_group": 1}, "name")
             if parent:
                 ig.parent_item_group = parent
             ig.insert(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
         except Exception as e:
             print("Failed to create test item group:", name, str(e))
 
@@ -78,14 +79,14 @@ def ensure_attribute_values(attribute, values):
     """
     Ensures that the Item Attribute exists and has the specified values.
     """
-    if not frappe.db.exists("Item Attribute", attribute):
-        doc = frappe.new_doc("Item Attribute")
+    if not smriti.db.exists("Item Attribute", attribute):
+        doc = smriti.documents.new("Item Attribute")
         doc.attribute_name = attribute
         doc.numeric_values = 0
         doc.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
     
-    doc = frappe.get_doc("Item Attribute", attribute)
+    doc = smriti.documents.get("Item Attribute", attribute)
     
     # Clean up conflicting case-mismatched attribute values in memory
     rows_to_remove = []
@@ -108,7 +109,7 @@ def ensure_attribute_values(attribute, values):
             
     if updated or rows_to_remove:
         doc.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
 class TestSmritiRetailItemMasterAPI(unittest.TestCase):
 
@@ -117,9 +118,9 @@ class TestSmritiRetailItemMasterAPI(unittest.TestCase):
         ensure_attribute_values("Color", ["RED"])
         ensure_attribute_values("Size", ["8", "9", "10", "11"])
         # 1. Resolve basic test dependencies
-        self.company = frappe.db.exists("Company", "_Test Company")
+        self.company = smriti.db.exists("Company", "_Test Company")
         if not self.company:
-            comp = frappe.new_doc("Company")
+            comp = smriti.documents.new("Company")
             comp.company_name = "_Test Company"
             comp.country = "India"
             comp.default_currency = "INR"
@@ -130,15 +131,15 @@ class TestSmritiRetailItemMasterAPI(unittest.TestCase):
         ensure_test_tax_template(self.company)
 
         # Create store manager role link to prevent permission errors in tests
-        if not frappe.db.exists("Has Role", {"parent": frappe.session.user, "role": "SMRITI Store Manager"}):
-            r = frappe.new_doc("Has Role")
+        if not smriti.db.exists("Has Role", {"parent": frappe.session.user, "role": "SMRITI Store Manager"}):
+            r = smriti.documents.new("Has Role")
             r.parent = frappe.session.user
             r.parenttype = "User"
             r.parentfield = "roles"
             r.role = "SMRITI Store Manager"
             r.insert(ignore_permissions=True)
             
-        frappe.db.commit()
+        smriti.db.commit()
         
         # Ensure clean state for our test style code
         self.style_code = "TST-JORDAN-5"
@@ -146,23 +147,23 @@ class TestSmritiRetailItemMasterAPI(unittest.TestCase):
 
     def tearDown(self):
         self.cleanup_records()
-        frappe.db.delete("Has Role", {"parent": frappe.session.user, "role": "SMRITI Store Manager"})
-        frappe.db.commit()
+        smriti.db.delete("Has Role", {"parent": frappe.session.user, "role": "SMRITI Store Manager"})
+        smriti.db.commit()
 
     def cleanup_records(self):
         # Deletes any variants and the parent template
-        variants = frappe.db.get_all("Item", filters={"variant_of": self.style_code}, pluck="name")
+        variants = smriti.db.get_list("Item", filters={"variant_of": self.style_code}, pluck="name")
         for var in variants:
-            frappe.db.delete("Item Barcode", {"parent": var})
-            frappe.db.delete("Item Price", {"item_code": var})
+            smriti.db.delete("Item Barcode", {"parent": var})
+            smriti.db.delete("Item Price", {"item_code": var})
             frappe.delete_doc("Item", var, ignore_missing=True, force=True)
             
-        if frappe.db.exists("Item", self.style_code):
+        if smriti.db.exists("Item", self.style_code):
             frappe.delete_doc("Item", self.style_code, ignore_missing=True, force=True)
             
-        frappe.db.delete("Brand", {"name": "Nike Jordan"})
-        frappe.db.delete("GST HSN Code", {"hsn_code": "640311"})
-        frappe.db.commit()
+        smriti.db.delete("Brand", {"name": "Nike Jordan"})
+        smriti.db.delete("GST HSN Code", {"hsn_code": "640311"})
+        smriti.db.commit()
 
     def test_ean13_barcode_generation(self):
         """
@@ -215,28 +216,28 @@ class TestSmritiRetailItemMasterAPI(unittest.TestCase):
         self.assertEqual(res["created_count"], 2)
         
         # Verify parent template exists
-        self.assertTrue(frappe.db.exists("Item", self.style_code))
-        parent = frappe.get_doc("Item", self.style_code)
+        self.assertTrue(smriti.db.exists("Item", self.style_code))
+        parent = smriti.documents.get("Item", self.style_code)
         self.assertEqual(parent.brand, "Nike Jordan")
         self.assertEqual(parent.has_variants, 1)
 
         # Verify Variant 8 (Auto barcode)
         v8_code = f"{self.style_code}-RED-8"
-        self.assertTrue(frappe.db.exists("Item", v8_code))
-        v8_bar = frappe.db.get_value("Item Barcode", {"parent": v8_code}, "barcode")
+        self.assertTrue(smriti.db.exists("Item", v8_code))
+        v8_bar = smriti.db.get("Item Barcode", {"parent": v8_code}, "barcode")
         self.assertIsNotNone(v8_bar)
         self.assertEqual(len(v8_bar), 13)
         self.assertTrue(v8_bar.startswith("23"))
 
         # Verify Variant 9 (Manual barcode)
         v9_code = f"{self.style_code}-RED-9"
-        self.assertTrue(frappe.db.exists("Item", v9_code))
-        v9_bar = frappe.db.get_value("Item Barcode", {"parent": v9_code}, "barcode")
+        self.assertTrue(smriti.db.exists("Item", v9_code))
+        v9_bar = smriti.db.get("Item Barcode", {"parent": v9_code}, "barcode")
         self.assertEqual(v9_bar, "8908889990001")
 
         # Verify Variant 10 (Inactive - skipped)
         v10_code = f"{self.style_code}-RED-10"
-        self.assertFalse(frappe.db.exists("Item", v10_code))
+        self.assertFalse(smriti.db.exists("Item", v10_code))
 
         # Verify get_style_details reads the style correctly
         details = get_style_details(self.style_code)
@@ -275,16 +276,16 @@ class TestSmritiRetailItemMasterAPI(unittest.TestCase):
         )
         
         v11_code = f"{self.style_code}-RED-11"
-        self.assertTrue(frappe.db.exists("Item", v11_code))
+        self.assertTrue(smriti.db.exists("Item", v11_code))
         
         # Trigger clean delete
         del_res = delete_size_variant(v11_code)
         self.assertTrue(del_res["success"])
         
         # Verify completely purged
-        self.assertFalse(frappe.db.exists("Item", v11_code))
-        self.assertFalse(frappe.db.exists("Item Barcode", {"parent": v11_code}))
-        self.assertFalse(frappe.db.exists("Item Price", {"item_code": v11_code}))
+        self.assertFalse(smriti.db.exists("Item", v11_code))
+        self.assertFalse(smriti.db.exists("Item Barcode", {"parent": v11_code}))
+        self.assertFalse(smriti.db.exists("Item Price", {"item_code": v11_code}))
 
 
 class TestPivotMatrixImport(unittest.TestCase):
@@ -304,9 +305,9 @@ class TestPivotMatrixImport(unittest.TestCase):
         ensure_item_group("SANDAL")
         ensure_attribute_values("Color", ["BLACK", "BEIGE", "RED"])
         ensure_attribute_values("Size", ["38", "39", "40", "41", "42"])
-        self.company = frappe.db.exists("Company", "_Test Company")
+        self.company = smriti.db.exists("Company", "_Test Company")
         if not self.company:
-            comp = frappe.new_doc("Company")
+            comp = smriti.documents.new("Company")
             comp.company_name = "_Test Company"
             comp.country = "India"
             comp.default_currency = "INR"
@@ -317,34 +318,34 @@ class TestPivotMatrixImport(unittest.TestCase):
         ensure_test_tax_template(self.company)
 
         # Grant store manager role if not already present
-        if not frappe.db.exists("Has Role", {"parent": frappe.session.user, "role": "SMRITI Store Manager"}):
-            r = frappe.new_doc("Has Role")
+        if not smriti.db.exists("Has Role", {"parent": frappe.session.user, "role": "SMRITI Store Manager"}):
+            r = smriti.documents.new("Has Role")
             r.parent = frappe.session.user
             r.parenttype = "User"
             r.parentfield = "roles"
             r.role = "SMRITI Store Manager"
             r.insert(ignore_permissions=True)
 
-        frappe.db.commit()
+        smriti.db.commit()
         self._cleanup()
 
     def tearDown(self):
         self._cleanup()
-        frappe.db.delete("Has Role", {"parent": frappe.session.user, "role": "SMRITI Store Manager"})
-        frappe.db.commit()
+        smriti.db.delete("Has Role", {"parent": frappe.session.user, "role": "SMRITI Store Manager"})
+        smriti.db.commit()
 
     def _cleanup(self):
         """Remove all test items created by the pivot import tests."""
         for style in [self.PIVOT_STYLE_1, self.PIVOT_STYLE_2]:
-            variants = frappe.db.get_all("Item", filters={"variant_of": style}, pluck="name")
+            variants = smriti.db.get_list("Item", filters={"variant_of": style}, pluck="name")
             for var in variants:
-                frappe.db.delete("Item Barcode", {"parent": var})
-                frappe.db.delete("Item Price", {"item_code": var})
+                smriti.db.delete("Item Barcode", {"parent": var})
+                smriti.db.delete("Item Price", {"item_code": var})
                 frappe.delete_doc("Item", var, ignore_missing=True, force=True)
-            if frappe.db.exists("Item", style):
+            if smriti.db.exists("Item", style):
                 frappe.delete_doc("Item", style, ignore_missing=True, force=True)
-        frappe.db.delete("GST HSN Code", {"hsn_code": "640311"})
-        frappe.db.commit()
+        smriti.db.delete("GST HSN Code", {"hsn_code": "640311"})
+        smriti.db.commit()
 
     def _build_pivot_payload(self, styles):
         """
@@ -423,25 +424,25 @@ class TestPivotMatrixImport(unittest.TestCase):
         self.assertEqual(len(res.get("errors", [])), 0, msg=f"Unexpected errors: {res.get('errors', [])}")
 
         # Parent template 20016 must exist with has_variants = 1
-        self.assertTrue(frappe.db.exists("Item", self.PIVOT_STYLE_1))
-        parent = frappe.get_doc("Item", self.PIVOT_STYLE_1)
+        self.assertTrue(smriti.db.exists("Item", self.PIVOT_STYLE_1))
+        parent = smriti.documents.get("Item", self.PIVOT_STYLE_1)
         self.assertEqual(parent.has_variants, 1)
 
         # 10 variant items total (5 sizes × 2 colors)
-        variants = frappe.db.get_all("Item", filters={"variant_of": self.PIVOT_STYLE_1}, pluck="name")
+        variants = smriti.db.get_list("Item", filters={"variant_of": self.PIVOT_STYLE_1}, pluck="name")
         self.assertEqual(len(variants), 10, msg=f"Expected 10 variants, got {len(variants)}: {variants}")
 
         # Spot-check specific variants
         for color in ["BLACK", "BEIGE"]:
             for size in ["38", "39", "40", "41", "42"]:
                 vc = f"{self.PIVOT_STYLE_1}-{color}-{size}"
-                self.assertTrue(frappe.db.exists("Item", vc), msg=f"Missing variant: {vc}")
+                self.assertTrue(smriti.db.exists("Item", vc), msg=f"Missing variant: {vc}")
                 # Each variant must have exactly one EAN-13 barcode
-                barcode = frappe.db.get_value("Item Barcode", {"parent": vc}, "barcode")
+                barcode = smriti.db.get("Item Barcode", {"parent": vc}, "barcode")
                 self.assertIsNotNone(barcode, msg=f"No barcode for {vc}")
                 self.assertEqual(len(barcode), 13, msg=f"Barcode for {vc} is not 13 digits: {barcode}")
                 # MRP price list entry must exist
-                price = frappe.db.get_value(
+                price = smriti.db.get(
                     "Item Price",
                     {"item_code": vc, "price_list": "Standard Selling"},
                     "price_list_rate"
@@ -485,14 +486,14 @@ class TestPivotMatrixImport(unittest.TestCase):
         res1 = import_pivot_item_master(self._build_pivot_payload(styles))
         self.assertTrue(res1["success"])
         self.assertEqual(len(res1.get("errors", [])), 0)
-        variants_after_first = frappe.db.get_all("Item", filters={"variant_of": self.PIVOT_STYLE_2}, pluck="name")
+        variants_after_first = smriti.db.get_list("Item", filters={"variant_of": self.PIVOT_STYLE_2}, pluck="name")
         self.assertEqual(len(variants_after_first), 2)
 
         # Second import — same payload; must not create duplicates
         res2 = import_pivot_item_master(self._build_pivot_payload(styles))
         self.assertTrue(res2["success"])
         self.assertEqual(len(res2.get("errors", [])), 0)
-        variants_after_second = frappe.db.get_all("Item", filters={"variant_of": self.PIVOT_STYLE_2}, pluck="name")
+        variants_after_second = smriti.db.get_list("Item", filters={"variant_of": self.PIVOT_STYLE_2}, pluck="name")
         self.assertEqual(
             len(variants_after_second), 2,
             msg=f"Idempotency failed — got {len(variants_after_second)} variants on second run"
@@ -504,9 +505,9 @@ class TestBarcodeHardening(unittest.TestCase):
         ensure_item_group("Products")
         ensure_attribute_values("Color", ["BLK"])
         ensure_attribute_values("Size", ["8"])
-        self.company = frappe.db.exists("Company", "_Test Company")
+        self.company = smriti.db.exists("Company", "_Test Company")
         if not self.company:
-            comp = frappe.new_doc("Company")
+            comp = smriti.documents.new("Company")
             comp.company_name = "_Test Company"
             comp.country = "India"
             comp.default_currency = "INR"
@@ -515,33 +516,33 @@ class TestBarcodeHardening(unittest.TestCase):
         frappe.defaults.set_user_default("company", self.company, frappe.session.user)
         ensure_test_tax_template(self.company)
 
-        if not frappe.db.exists("Has Role", {"parent": frappe.session.user, "role": "SMRITI Store Manager"}):
-            r = frappe.new_doc("Has Role")
+        if not smriti.db.exists("Has Role", {"parent": frappe.session.user, "role": "SMRITI Store Manager"}):
+            r = smriti.documents.new("Has Role")
             r.parent = frappe.session.user
             r.parenttype = "User"
             r.parentfield = "roles"
             r.role = "SMRITI Store Manager"
             r.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         
         self.test_variant_code = "TST-HARDEN-BLK-8"
         self._cleanup()
 
     def tearDown(self):
         self._cleanup()
-        frappe.db.delete("Has Role", {"parent": frappe.session.user, "role": "SMRITI Store Manager"})
-        frappe.db.commit()
+        smriti.db.delete("Has Role", {"parent": frappe.session.user, "role": "SMRITI Store Manager"})
+        smriti.db.commit()
 
     def _cleanup(self):
-        frappe.db.delete("Item Barcode", {"parent": self.test_variant_code})
-        frappe.db.delete("Item Barcode", {"barcode": "9998887776665"})
-        frappe.db.delete("Item Barcode", {"barcode": "9998887776660"})
-        frappe.db.delete("Item Barcode", {"barcode": "SEC89012345"})
-        frappe.db.delete("Item Price", {"item_code": self.test_variant_code})
+        smriti.db.delete("Item Barcode", {"parent": self.test_variant_code})
+        smriti.db.delete("Item Barcode", {"barcode": "9998887776665"})
+        smriti.db.delete("Item Barcode", {"barcode": "9998887776660"})
+        smriti.db.delete("Item Barcode", {"barcode": "SEC89012345"})
+        smriti.db.delete("Item Price", {"item_code": self.test_variant_code})
         frappe.delete_doc("Item", self.test_variant_code, ignore_missing=True, force=True)
         frappe.delete_doc("Item", "TST-HARDEN", ignore_missing=True, force=True)
-        frappe.db.delete("Supplier", {"custom_vendor_code": "VND-TEST-1"})
-        frappe.db.commit()
+        smriti.db.delete("Supplier", {"custom_vendor_code": "VND-TEST-1"})
+        smriti.db.commit()
 
     def test_manual_barcode_validation(self):
         """
@@ -612,7 +613,7 @@ class TestBarcodeHardening(unittest.TestCase):
         create_style_with_variants(frappe.as_json(base_details), frappe.as_json(sizes_config))
         
         # Link a secondary barcode manually to mimic vendor barcode population
-        var_doc = frappe.get_doc("Item", self.test_variant_code)
+        var_doc = smriti.documents.get("Item", self.test_variant_code)
         var_doc.append("barcodes", {
             "barcode": "SEC89012345",
             "uom": "Nos",
@@ -628,7 +629,7 @@ class TestBarcodeHardening(unittest.TestCase):
         create_style_with_variants(frappe.as_json(base_details), frappe.as_json(sizes_config))
         
         # Reload and check
-        var_doc = frappe.get_doc("Item", self.test_variant_code)
+        var_doc = smriti.documents.get("Item", self.test_variant_code)
         primaries = [b.barcode for b in var_doc.barcodes if b.custom_is_primary]
         secondaries = [b.barcode for b in var_doc.barcodes if not b.custom_is_primary]
         
@@ -645,7 +646,7 @@ class TestBarcodeHardening(unittest.TestCase):
         _ensure_hsn_code("640311")
         
         # Create an item without barcodes
-        item = frappe.new_doc("Item")
+        item = smriti.documents.new("Item")
         item.item_code = self.test_variant_code
         item.item_name = "Jordan Missing Barcode"
         item.item_group = "Products"
@@ -717,19 +718,19 @@ class TestBarcodeHardening(unittest.TestCase):
         self.assertIn("Vendor Code 'VND-TEST-1' not found", res_import["failed"][0]["error"])
 
         # 4. Now create Supplier with custom_vendor_code="VND-TEST-1"
-        supp_group = frappe.db.get_value("Supplier Group", {}, "name")
+        supp_group = smriti.db.get("Supplier Group", {}, "name")
         if not supp_group:
             supp_group = "All Supplier Groups"
-            sg = frappe.new_doc("Supplier Group")
+            sg = smriti.documents.new("Supplier Group")
             sg.supplier_group_name = supp_group
             sg.insert(ignore_permissions=True)
 
-        supp = frappe.new_doc("Supplier")
+        supp = smriti.documents.new("Supplier")
         supp.supplier_name = "Test Validation Supplier"
         supp.supplier_group = supp_group
         supp.custom_vendor_code = "VND-TEST-1"
         supp.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # 5. Verify validations pass with valid vendor_code
         res_validate_ok = validate_import_rows(frappe.as_json([row]))
@@ -746,12 +747,12 @@ class TestBarcodeHardening(unittest.TestCase):
         from smriti_retail_os.master_api import save_supplier_detail, get_supplier_detail
         
         # Cleanup potential existing test suppliers
-        frappe.db.delete("Supplier", {"custom_vendor_code": "VND-TEST-MAP-1"})
-        frappe.db.delete("Supplier", {"supplier_name": "Test Null Vendor Supplier 1"})
-        frappe.db.delete("Supplier", {"supplier_name": "Test Null Vendor Supplier 2"})
-        frappe.db.delete("Item Barcode", {"parent": "TST-MAP-ITEM-1"})
+        smriti.db.delete("Supplier", {"custom_vendor_code": "VND-TEST-MAP-1"})
+        smriti.db.delete("Supplier", {"supplier_name": "Test Null Vendor Supplier 1"})
+        smriti.db.delete("Supplier", {"supplier_name": "Test Null Vendor Supplier 2"})
+        smriti.db.delete("Item Barcode", {"parent": "TST-MAP-ITEM-1"})
         frappe.delete_doc("Item", "TST-MAP-ITEM-1", ignore_missing=True, force=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # 1. Test saving supplier details with null/None vendor code doesn't collide
         s1 = save_supplier_detail(
@@ -804,16 +805,16 @@ class TestBarcodeHardening(unittest.TestCase):
         self.assertTrue(res_create["success"])
         
         # Verify supplier linked
-        item_doc = frappe.get_doc("Item", "TST-MAP-ITEM-1")
+        item_doc = smriti.documents.get("Item", "TST-MAP-ITEM-1")
         self.assertTrue(any(d.supplier == s3["name"] and d.supplier_part_no == "VND-TEST-MAP-1" for d in item_doc.supplier_items))
 
         # Cleanup
-        frappe.db.delete("Supplier", {"custom_vendor_code": "VND-TEST-MAP-1"})
-        frappe.db.delete("Supplier", {"supplier_name": "Test Null Vendor Supplier 1"})
-        frappe.db.delete("Supplier", {"supplier_name": "Test Null Vendor Supplier 2"})
-        frappe.db.delete("Item Barcode", {"parent": "TST-MAP-ITEM-1"})
+        smriti.db.delete("Supplier", {"custom_vendor_code": "VND-TEST-MAP-1"})
+        smriti.db.delete("Supplier", {"supplier_name": "Test Null Vendor Supplier 1"})
+        smriti.db.delete("Supplier", {"supplier_name": "Test Null Vendor Supplier 2"})
+        smriti.db.delete("Item Barcode", {"parent": "TST-MAP-ITEM-1"})
         frappe.delete_doc("Item", "TST-MAP-ITEM-1", ignore_missing=True, force=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
     def test_hsn_gst_rate_derivation(self):
         """
@@ -823,15 +824,15 @@ class TestBarcodeHardening(unittest.TestCase):
         hsn_test_code = "99999999"
 
         # Pre-test cleanup — remove stale records from any previous failed run
-        frappe.db.delete("GST HSN Code", {"name": hsn_test_code})
-        frappe.db.delete("Item Tax Template Detail", {"parent": ["like", "%GST 12% - Test%"]})
-        frappe.db.delete("Item Tax Template", {"name": ["like", "%GST 12% - Test%"]})
+        smriti.db.delete("GST HSN Code", {"name": hsn_test_code})
+        smriti.db.delete("Item Tax Template Detail", {"parent": ["like", "%GST 12% - Test%"]})
+        smriti.db.delete("Item Tax Template", {"name": ["like", "%GST 12% - Test%"]})
         tax_template_name = f"GST 12% - Test - {self.company}"
-        frappe.db.commit()
+        smriti.db.commit()
 
         # Create Item Tax Template for 12%
-        if not frappe.db.exists("Item Tax Template", {"title": tax_template_name}):
-            t = frappe.new_doc("Item Tax Template")
+        if not smriti.db.exists("Item Tax Template", {"title": tax_template_name}):
+            t = smriti.documents.new("Item Tax Template")
             t.title = tax_template_name
             t.company = self.company
             t.gst_treatment = "Taxable"
@@ -839,9 +840,9 @@ class TestBarcodeHardening(unittest.TestCase):
 
             # Find accounts
             filters_cgst = [["account_type", "=", "Tax"], ["company", "=", self.company], ["name", "like", "%CGST%"]]
-            cgst = frappe.db.get_value("Account", filters_cgst, "name")
+            cgst = smriti.db.get("Account", filters_cgst, "name")
             filters_sgst = [["account_type", "=", "Tax"], ["company", "=", self.company], ["name", "like", "%SGST%"]]
-            sgst = frappe.db.get_value("Account", filters_sgst, "name")
+            sgst = smriti.db.get("Account", filters_sgst, "name")
 
             if cgst:
                 t.append("taxes", {"tax_type": cgst, "tax_rate": 6.0})
@@ -850,11 +851,11 @@ class TestBarcodeHardening(unittest.TestCase):
             t.insert(ignore_permissions=True)
 
         # Re-fetch actual name (may include company abbreviation suffix)
-        tax_template_name = frappe.db.get_value(
+        tax_template_name = smriti.db.get(
             "Item Tax Template", {"title": f"GST 12% - Test - {self.company}"}, "name"
         ) or tax_template_name
 
-        hsn_doc = frappe.new_doc("GST HSN Code")
+        hsn_doc = smriti.documents.new("GST HSN Code")
         hsn_doc.name = hsn_test_code
         hsn_doc.hsn_code = hsn_test_code
         hsn_doc.append("taxes", {
@@ -862,21 +863,21 @@ class TestBarcodeHardening(unittest.TestCase):
             "company": self.company
         })
         hsn_doc.insert(ignore_permissions=True)
-        if not frappe.db.exists("Brand", "Nike"):
-            brand_doc = frappe.new_doc("Brand")
+        if not smriti.db.exists("Brand", "Nike"):
+            brand_doc = smriti.documents.new("Brand")
             brand_doc.brand = "Nike"
             brand_doc.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # Ensure Supplier for VND-TEST-HSN-1
-        frappe.db.delete("Supplier", {"custom_vendor_code": "VND-TEST-HSN-1"})
-        supp_group = frappe.db.get_value("Supplier Group", {}, "name") or "All Supplier Groups"
-        supp = frappe.new_doc("Supplier")
+        smriti.db.delete("Supplier", {"custom_vendor_code": "VND-TEST-HSN-1"})
+        supp_group = smriti.db.get("Supplier Group", {}, "name") or "All Supplier Groups"
+        supp = smriti.documents.new("Supplier")
         supp.supplier_name = "Test HSN Supplier"
         supp.supplier_group = supp_group
         supp.custom_vendor_code = "VND-TEST-HSN-1"
         supp.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # 1. Test get_hsn_gst_rate API
         from smriti_retail_os.item_master_api import get_hsn_gst_rate
@@ -913,10 +914,10 @@ class TestBarcodeHardening(unittest.TestCase):
 
         # 3. Test import_item_master prioritizes HSN GST rate
         from smriti_retail_os.item_master_api import import_item_master, _clear_hsn_cache
-        frappe.db.delete("Item Barcode", {"parent": "TST-HSN-STYLE-RED-9"})
+        smriti.db.delete("Item Barcode", {"parent": "TST-HSN-STYLE-RED-9"})
         frappe.delete_doc("Item", "TST-HSN-STYLE-RED-9", ignore_missing=True, force=True)
         frappe.delete_doc("Item", "TST-HSN-STYLE", ignore_missing=True, force=True)
-        frappe.db.commit()
+        smriti.db.commit()
         # Clear all caches to ensure fresh HSN/template resolution
         frappe.clear_document_cache("GST HSN Code", hsn_test_code)
         _clear_hsn_cache()
@@ -925,18 +926,18 @@ class TestBarcodeHardening(unittest.TestCase):
         self.assertEqual(import_res.get("created"), 1)
 
         # Verify created item has 12% GST override from HSN
-        item_variant = frappe.get_doc("Item", "TST-HSN-STYLE-RED-9")
+        item_variant = smriti.documents.get("Item", "TST-HSN-STYLE-RED-9")
         self.assertEqual(item_variant.custom_gst_percentage, "12")
 
         # Cleanup
-        frappe.db.delete("GST HSN Code", {"name": hsn_test_code})
-        frappe.db.delete("Item Tax Template", {"name": tax_template_name})
-        frappe.db.delete("Item Barcode", {"parent": "TST-HSN-STYLE-RED-9"})
+        smriti.db.delete("GST HSN Code", {"name": hsn_test_code})
+        smriti.db.delete("Item Tax Template", {"name": tax_template_name})
+        smriti.db.delete("Item Barcode", {"parent": "TST-HSN-STYLE-RED-9"})
         frappe.delete_doc("Item", "TST-HSN-STYLE-RED-9", ignore_missing=True, force=True)
         frappe.delete_doc("Item", "TST-HSN-STYLE", ignore_missing=True, force=True)
-        frappe.db.delete("Brand", {"name": "Nike"})
-        frappe.db.delete("Supplier", {"custom_vendor_code": "VND-TEST-HSN-1"})
-        frappe.db.commit()
+        smriti.db.delete("Brand", {"name": "Nike"})
+        smriti.db.delete("Supplier", {"custom_vendor_code": "VND-TEST-HSN-1"})
+        smriti.db.commit()
 
     def test_hsn_invalid_length_validation_catching(self):
         """
@@ -1026,7 +1027,7 @@ class TestSaveUserNoHardcodedPassword(unittest.TestCase):
     def _get_user_hashed_password(self, email):
         """Fetch the hashed password from __Auth table for comparison."""
         try:
-            row = frappe.db.sql(
+            row = smriti.db.sql(
                 "SELECT `password` FROM `__Auth` WHERE `doctype`='User' AND `name`=%s AND `fieldname`='password'",
                 email, as_dict=True
             )
@@ -1045,14 +1046,14 @@ class TestSaveUserNoHardcodedPassword(unittest.TestCase):
 
         # Cleanup before test
         for e in [email_a, email_b]:
-            if frappe.db.exists("User", e):
+            if smriti.db.exists("User", e):
                 frappe.delete_doc("User", e, ignore_missing=True, force=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         try:
             save_user(email_a, "Test", "SecA")
             save_user(email_b, "Test", "SecB")
-            frappe.db.commit()
+            smriti.db.commit()
 
             pwd_a = self._get_user_hashed_password(email_a)
             pwd_b = self._get_user_hashed_password(email_b)
@@ -1068,22 +1069,22 @@ class TestSaveUserNoHardcodedPassword(unittest.TestCase):
             )
         finally:
             for e in [email_a, email_b]:
-                if frappe.db.exists("User", e):
+                if smriti.db.exists("User", e):
                     frappe.delete_doc("User", e, ignore_missing=True, force=True)
-            frappe.db.commit()
+            smriti.db.commit()
 
 
 class TestAuditRemediations(unittest.TestCase):
     def setUp(self):
-        self.company = frappe.db.exists("Company", "_Test Company")
+        self.company = smriti.db.exists("Company", "_Test Company")
         if not self.company:
-            comp = frappe.new_doc("Company")
+            comp = smriti.documents.new("Company")
             comp.company_name = "_Test Company"
             comp.country = "India"
             comp.default_currency = "INR"
             comp.insert(ignore_permissions=True)
             self.company = comp.name
-        frappe.db.commit()
+        smriti.db.commit()
 
     def test_import_requires_store_manager(self):
         """
@@ -1100,22 +1101,22 @@ class TestAuditRemediations(unittest.TestCase):
 
         # Switch to cashier (without Store Manager / System Manager role)
         cashier_email = "test_cashier_remediation@test.internal"
-        if not frappe.db.exists("User", cashier_email):
-            user = frappe.new_doc("User")
+        if not smriti.db.exists("User", cashier_email):
+            user = smriti.documents.new("User")
             user.email = cashier_email
             user.first_name = "Test"
             user.last_name = "Cashier"
             user.insert(ignore_permissions=True)
             
             # Add Cashier role
-            if not frappe.db.exists("Role", "SMRITI Cashier"):
-                r = frappe.new_doc("Role")
+            if not smriti.db.exists("Role", "SMRITI Cashier"):
+                r = smriti.documents.new("Role")
                 r.role_name = "SMRITI Cashier"
                 r.insert(ignore_permissions=True)
             
             user.append("roles", {"role": "SMRITI Cashier"})
             user.save(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
 
         frappe.set_user(cashier_email)
         try:
@@ -1124,34 +1125,34 @@ class TestAuditRemediations(unittest.TestCase):
         finally:
             frappe.set_user(orig_user)
             frappe.delete_doc("User", cashier_email, ignore_missing=True, force=True)
-            frappe.db.commit()
+            smriti.db.commit()
 
     def test_reset_blocked_with_transactions(self):
         """
         DATA-ITEM-001: Wiping Item Master is blocked if active transactions exist.
         """
         # Ensure a valid Customer exists for link validation
-        customer = frappe.db.get_value("Customer", {}, "name")
+        customer = smriti.db.get("Customer", {}, "name")
         created_customer = None
         if not customer:
             customer = "_Test Customer"
-            cust = frappe.new_doc("Customer")
+            cust = smriti.documents.new("Customer")
             cust.customer_name = customer
-            cg = frappe.db.get_value("Customer Group", {}, "name")
-            t = frappe.db.get_value("Territory", {}, "name")
+            cg = smriti.db.get("Customer Group", {}, "name")
+            t = smriti.db.get("Territory", {}, "name")
             if cg: cust.customer_group = cg
             if t: cust.territory = t
             cust.insert(ignore_permissions=True)
             created_customer = cust.name
-            frappe.db.commit()
+            smriti.db.commit()
 
         # Force a dummy Sales Invoice record in DB using direct SQL to bypass ERPNext validations
         invoice_name = "TEST-SINV-REMEDIATION-0001"
-        frappe.db.sql(
+        smriti.db.sql(
             "INSERT INTO `tabSales Invoice` (name, company, customer, docstatus) VALUES (%s, %s, %s, 0)",
             (invoice_name, self.company, customer)
         )
-        frappe.db.commit()
+        smriti.db.commit()
 
         try:
             # Enable factory reset mode in conf temporarily for the check
@@ -1167,10 +1168,10 @@ class TestAuditRemediations(unittest.TestCase):
                 else:
                     frappe.conf.smriti_factory_reset_enabled = orig_reset
         finally:
-            frappe.db.sql("DELETE FROM `tabSales Invoice` WHERE name = %s", (invoice_name,))
+            smriti.db.sql("DELETE FROM `tabSales Invoice` WHERE name = %s", (invoice_name,))
             if created_customer:
                 frappe.delete_doc("Customer", created_customer, ignore_permissions=True, force=True)
-            frappe.db.commit()
+            smriti.db.commit()
 
     def test_barcode_validation(self):
         """
@@ -1232,9 +1233,9 @@ class TestAuditRemediations(unittest.TestCase):
 
 class TestSmritiAttributeLayoutReorg(unittest.TestCase):
     def setUp(self):
-        self.company = frappe.db.exists("Company", "_Test Company")
+        self.company = smriti.db.exists("Company", "_Test Company")
         if not self.company:
-            comp = frappe.new_doc("Company")
+            comp = smriti.documents.new("Company")
             comp.company_name = "_Test Company"
             comp.country = "India"
             comp.default_currency = "INR"
@@ -1242,8 +1243,8 @@ class TestSmritiAttributeLayoutReorg(unittest.TestCase):
             self.company = comp.name
         
         # Grant store manager role to active user to allow setting modifications
-        if not frappe.db.exists("Has Role", {"parent": frappe.session.user, "role": "SMRITI Store Manager"}):
-            r = frappe.new_doc("Has Role")
+        if not smriti.db.exists("Has Role", {"parent": frappe.session.user, "role": "SMRITI Store Manager"}):
+            r = smriti.documents.new("Has Role")
             r.parent = frappe.session.user
             r.parenttype = "User"
             r.parentfield = "roles"
@@ -1256,56 +1257,56 @@ class TestSmritiAttributeLayoutReorg(unittest.TestCase):
             create_smriti_attribute_layout_doctype
         )
         
-        if not frappe.db.exists("DocType", "SMRITI Audit Event"):
+        if not smriti.db.exists("DocType", "SMRITI Audit Event"):
             create_smriti_audit_event_doctype()
         else:
             try:
-                frappe.get_doc("DocType", "SMRITI Audit Event").sync_schema()
+                smriti.documents.get("DocType", "SMRITI Audit Event").sync_schema()
             except Exception:
                 pass
                 
-        if not frappe.db.exists("DocType", "SMRITI Attribute Layout"):
+        if not smriti.db.exists("DocType", "SMRITI Attribute Layout"):
             create_smriti_attribute_layout_doctype()
         else:
             try:
-                frappe.get_doc("DocType", "SMRITI Attribute Layout").sync_schema()
+                smriti.documents.get("DocType", "SMRITI Attribute Layout").sync_schema()
             except Exception:
                 pass
                 
         # Ensure unique index exists on the Attribute Layout table
         try:
-            frappe.db.sql("CREATE UNIQUE INDEX IF NOT EXISTS unique_company_attr ON `tabSMRITI Attribute Layout` (company, attribute_id)")
-            frappe.db.commit()
+            smriti.db.sql("CREATE UNIQUE INDEX IF NOT EXISTS unique_company_attr ON `tabSMRITI Attribute Layout` (company, attribute_id)")
+            smriti.db.commit()
         except Exception:
             pass
 
-        frappe.db.commit()
+        smriti.db.commit()
         
         # Clean up database
         try:
-            frappe.db.delete("SMRITI Attribute Layout", {"company": self.company})
+            smriti.db.delete("SMRITI Attribute Layout", {"company": self.company})
         except Exception:
             pass
         try:
-            frappe.db.delete("SMRITI Audit Event", {"company": self.company})
+            smriti.db.delete("SMRITI Audit Event", {"company": self.company})
         except Exception:
             pass
-        frappe.db.commit()
+        smriti.db.commit()
 
     def tearDown(self):
         try:
-            frappe.db.delete("SMRITI Attribute Layout", {"company": self.company})
+            smriti.db.delete("SMRITI Attribute Layout", {"company": self.company})
         except Exception:
             pass
         try:
-            frappe.db.delete("SMRITI Audit Event", {"company": self.company})
+            smriti.db.delete("SMRITI Audit Event", {"company": self.company})
         except Exception:
             pass
         try:
-            frappe.db.delete("Has Role", {"parent": frappe.session.user, "role": "SMRITI Store Manager"})
+            smriti.db.delete("Has Role", {"parent": frappe.session.user, "role": "SMRITI Store Manager"})
         except Exception:
             pass
-        frappe.db.commit()
+        smriti.db.commit()
 
     def test_attr_001_deterministic_sorting(self):
         """
@@ -1374,21 +1375,21 @@ class TestSmritiAttributeLayoutReorg(unittest.TestCase):
             )
             
         # Verify composite db constraint on SMRITI Attribute Layout: (company, attribute_id) unique
-        doc1 = frappe.new_doc("SMRITI Attribute Layout")
+        doc1 = smriti.documents.new("SMRITI Attribute Layout")
         doc1.company = self.company
         doc1.attribute_id = "SIZE"
         doc1.weight = 1
         doc1.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         
-        doc2 = frappe.new_doc("SMRITI Attribute Layout")
+        doc2 = smriti.documents.new("SMRITI Attribute Layout")
         doc2.company = self.company
         doc2.attribute_id = "SIZE"
         doc2.weight = 2
         
         with self.assertRaises(Exception): # DB constraint error (UniqueIndexError or IntegrityError)
             doc2.insert(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
 
     def test_attr_004_ean13_collision_retry(self):
         """
@@ -1401,7 +1402,7 @@ class TestSmritiAttributeLayoutReorg(unittest.TestCase):
         bar1 = generate_ean13_barcode()
         
         # Create an item with bar1
-        item = frappe.new_doc("Item")
+        item = smriti.documents.new("Item")
         item.item_code = "TST-COLLISION-1"
         item.item_name = "Collision Test 1"
         item.item_group = "Products"
@@ -1409,7 +1410,7 @@ class TestSmritiAttributeLayoutReorg(unittest.TestCase):
         item.gst_hsn_code = "640311"
         item.append("barcodes", {"barcode": bar1, "uom": "Nos"})
         item.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         
         try:
             # We mock random EAN generation to collide with bar1 first, then generate a new one
@@ -1434,7 +1435,7 @@ class TestSmritiAttributeLayoutReorg(unittest.TestCase):
                 random.randint = original_randint
         finally:
             frappe.delete_doc("Item", "TST-COLLISION-1", ignore_permissions=True, force=True)
-            frappe.db.commit()
+            smriti.db.commit()
 
     def test_attr_005_audit_payload(self):
         """
@@ -1449,7 +1450,7 @@ class TestSmritiAttributeLayoutReorg(unittest.TestCase):
             attributes=[{"attribute_id": "COLOR", "weight": 5}]
         )
         
-        events = frappe.get_all(
+        events = smriti.db.get_list(
             "SMRITI Audit Event",
             filters={"company": self.company, "event_type": "ATTRIBUTE_LAYOUT_CHANGED"},
             fields=["before_state", "after_state", "user"]
@@ -1462,7 +1463,7 @@ class TestSmritiAttributeLayoutReorg(unittest.TestCase):
         
         # 2. Test reset event
         reset_item_attributes(company=self.company)
-        reset_events = frappe.get_all(
+        reset_events = smriti.db.get_list(
             "SMRITI Audit Event",
             filters={"company": self.company, "event_type": "ATTRIBUTE_LAYOUT_RESET"},
             fields=["before_state", "after_state"]
@@ -1544,27 +1545,27 @@ class TestIdempotentImport(unittest.TestCase):
     def setUpClass(cls):
         frappe.set_user("Administrator")
         # Ensure brand/supplier exist
-        if not frappe.db.exists("Brand", "Nike"):
+        if not smriti.db.exists("Brand", "Nike"):
             frappe.get_doc({"doctype": "Brand", "brand_name": "Nike"}).insert(ignore_permissions=True)
-        if not frappe.db.exists("Supplier", {"custom_vendor_code": "VND-TEST-1"}):
+        if not smriti.db.exists("Supplier", {"custom_vendor_code": "VND-TEST-1"}):
             # Delete conflicting Test Supplier name if it has no vendor code, or use a unique name
-            frappe.db.delete("Supplier", {"supplier_name": "Test Idempotent Supplier"})
+            smriti.db.delete("Supplier", {"supplier_name": "Test Idempotent Supplier"})
             frappe.get_doc({
                 "doctype": "Supplier",
                 "supplier_name": "Test Idempotent Supplier",
                 "supplier_group": "Local",
                 "custom_vendor_code": "VND-TEST-1"
             }).insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
     @classmethod
     def tearDownClass(cls):
         # Clean up created items
         for item in ["TST-IDEM-STYLE-RED-9", "TST-IDEM-STYLE"]:
             frappe.delete_doc("Item", item, ignore_missing=True, force=True)
-        frappe.db.delete("Brand", {"name": "Nike"})
-        frappe.db.delete("Supplier", {"custom_vendor_code": "VND-TEST-1"})
-        frappe.db.commit()
+        smriti.db.delete("Brand", {"name": "Nike"})
+        smriti.db.delete("Supplier", {"custom_vendor_code": "VND-TEST-1"})
+        smriti.db.commit()
 
     def test_idempotent_import_twice(self):
         """
@@ -1594,26 +1595,26 @@ class TestIdempotentImport(unittest.TestCase):
         }]
 
         # Clean up before we start
-        frappe.db.delete("Item Barcode", {"barcode": "TEST-IDEM-BAR-1"})
+        smriti.db.delete("Item Barcode", {"barcode": "TEST-IDEM-BAR-1"})
         for item in ["TST-IDEM-STYLE-RED-9", "TST-IDEM-STYLE"]:
             frappe.delete_doc("Item", item, ignore_missing=True, force=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # Count items before import
-        count_before = frappe.db.count("Item", {"name": ["in", ["TST-IDEM-STYLE-RED-9", "TST-IDEM-STYLE"]]})
+        count_before = smriti.db.count("Item", {"name": ["in", ["TST-IDEM-STYLE-RED-9", "TST-IDEM-STYLE"]]})
         self.assertEqual(count_before, 0)
 
         # First import: should create the items successfully
         res1 = import_item_master(frappe.as_json(rows))
         self.assertEqual(len(res1.get("failed", [])), 0)
         
-        count_after_1 = frappe.db.count("Item", {"name": ["in", ["TST-IDEM-STYLE-RED-9", "TST-IDEM-STYLE"]]})
+        count_after_1 = smriti.db.count("Item", {"name": ["in", ["TST-IDEM-STYLE-RED-9", "TST-IDEM-STYLE"]]})
         self.assertGreater(count_after_1, 0)
 
         # Second import: should run successfully and result in exactly 0 duplicate records
         res2 = import_item_master(frappe.as_json(rows))
         self.assertEqual(len(res2.get("failed", [])), 0)
 
-        count_after_2 = frappe.db.count("Item", {"name": ["in", ["TST-IDEM-STYLE-RED-9", "TST-IDEM-STYLE"]]})
+        count_after_2 = smriti.db.count("Item", {"name": ["in", ["TST-IDEM-STYLE-RED-9", "TST-IDEM-STYLE"]]})
         # Assert no new/duplicate Item records created in database on second import
         self.assertEqual(count_after_2 - count_after_1, 0)

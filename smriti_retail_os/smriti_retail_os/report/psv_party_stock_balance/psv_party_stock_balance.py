@@ -5,7 +5,8 @@
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from smriti_retail_os.balance_engine import get_all_party_balances
 
 def execute(filters=None):
@@ -43,7 +44,7 @@ def execute(filters=None):
                 break
         
         if match:
-            mrp = frappe.db.get_value("Item", r.item_code, "standard_rate") or 0
+            mrp = smriti.db.get("Item", r.item_code, "standard_rate") or 0
             data.append({
                 "party_stock_account": r.party_stock_account,
                 "location_name":       r.location_name,

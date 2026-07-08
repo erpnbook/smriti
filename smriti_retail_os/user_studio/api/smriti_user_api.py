@@ -5,6 +5,7 @@ SMRITI User Studio API — profile, preferences, activity.
 Author: Jawahar R. Mallah <jawahar.mallah@gmail.com>
 """
 import frappe
+from smriti_retail_os import smriti
 from frappe.utils import now_datetime
 
 # Cache TTL constants
@@ -17,7 +18,7 @@ def get_my_profile():
     """Get current user's profile information."""
     user = frappe.session.user
     try:
-        doc = frappe.get_doc("User", user)
+        doc = smriti.documents.get("User", user)
         roles = frappe.get_roles(user)
         # Determine display role
         if "System Manager" in roles:
@@ -46,7 +47,7 @@ def get_my_profile():
             "creation": str(doc.creation)
         }
     except Exception as e:
-        frappe.log_error(str(e), "get_my_profile")
+        smriti.errors.log_error(str(e), "get_my_profile")
         return {"error": str(e)}
 
 
@@ -55,7 +56,7 @@ def update_my_profile(first_name=None, last_name=None, phone=None, language=None
     """Update allowed profile fields for the current user."""
     user = frappe.session.user
     try:
-        doc = frappe.get_doc("User", user)
+        doc = smriti.documents.get("User", user)
         if first_name is not None:
             doc.first_name = first_name
         if last_name is not None:
@@ -68,10 +69,10 @@ def update_my_profile(first_name=None, last_name=None, phone=None, language=None
             doc.time_zone = time_zone
         # reviewed-ignore-permissions: user profile self-update, restricted to the logged-in user
         doc.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         return {"status": "ok", "message": "Profile updated successfully."}
     except Exception as e:
-        frappe.log_error(str(e), "update_my_profile")
+        smriti.errors.log_error(str(e), "update_my_profile")
         return {"status": "error", "message": str(e)}
 
 
@@ -85,12 +86,12 @@ def change_password(old_password, new_password):
         check_password(user, old_password)
         # Set new password
         update_password(user, new_password)
-        frappe.db.commit()
+        smriti.db.commit()
         return {"status": "ok", "message": "Password changed successfully."}
     except frappe.AuthenticationError:
         return {"status": "error", "message": "Current password is incorrect."}
     except Exception as e:
-        frappe.log_error(str(e), "change_password")
+        smriti.errors.log_error(str(e), "change_password")
         return {"status": "error", "message": str(e)}
 
 
@@ -99,7 +100,7 @@ def get_my_activity(limit=20):
     """Get recent login/activity log for current user."""
     user = frappe.session.user
     try:
-        rows = frappe.db.sql("""
+        rows = smriti.db.sql("""
             SELECT name, subject, creation, ip_address,
                    reference_doctype, reference_name
             FROM `tabActivity Log`
@@ -109,7 +110,7 @@ def get_my_activity(limit=20):
         """, {"user": user, "limit": int(limit)}, as_dict=True)
         return rows
     except Exception as e:
-        frappe.log_error(str(e), "get_my_activity")
+        smriti.errors.log_error(str(e), "get_my_activity")
         return []
 
 
@@ -117,7 +118,7 @@ def get_my_activity(limit=20):
 def logout():
     """Log out the current user via Frappe's session manager."""
     frappe.local.login_manager.logout()
-    frappe.db.commit()
+    smriti.db.commit()
     return {"status": "ok", "redirect": "/smriti-login"}
 
 

@@ -3,6 +3,7 @@
 # For license information, please see license.txt
 
 import frappe
+from smriti_retail_os import smriti
 import datetime
 
 def get_tally_date_format(date_val):
@@ -18,7 +19,7 @@ def get_tally_date_format(date_val):
 
 def generate_voucher_xml(doctype, doc_name, settings):
 	"""Generates a Tally-compliant XML Voucher payload for Sales, Purchase, Debit/Credit Notes, and Receipt/Payment entries."""
-	doc = frappe.get_doc(doctype, doc_name) if isinstance(doc_name, str) else doc_name
+	doc = smriti.documents.get(doctype, doc_name) if isinstance(doc_name, str) else doc_name
 	date_str = get_tally_date_format(doc.posting_date)
 
 	# Resolve Voucher Number and Reference Number
@@ -51,7 +52,7 @@ def generate_voucher_xml(doctype, doc_name, settings):
 		account_head = doc.get(account_fieldname)
 		is_cash = False
 		if account_head:
-			acc_type = frappe.db.get_value("Account", account_head, "account_type")
+			acc_type = smriti.db.get("Account", account_head, "account_type")
 			if acc_type == "Cash" or "cash" in account_head.lower():
 				is_cash = True
 		cash_bank_ledger = settings.cash_ledger if is_cash else settings.bank_ledger

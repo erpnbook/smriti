@@ -11,6 +11,7 @@
 #
 
 import frappe
+from smriti_retail_os import smriti
 import unittest
 import json
 from smriti_retail_os.barcode_api import (
@@ -31,9 +32,9 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
                 frappe.utils.background_jobs.default_queue_list.append("barcode")
         # Clean up any test templates and their versions
         test_templates = ["TEST_ZPL_TEMPLATE", "TEST_TSPL_TEMPLATE", "TEST_MAPPINGS_TEMPLATE", "TEST_TOO_LARGE", "TEST_INVALID_MAPPINGS", "TEST_RESTORE_SNAP_TEMPLATE", "TEST_LOCK_TEMPLATE", "TEST_LEGACY_TEMPLATE"]
-        frappe.db.delete("SMRITI Print Template Version", {"template": ["in", test_templates]})
-        frappe.db.delete("SMRITI Print Template", {"name": ["in", test_templates]})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Print Template Version", {"template": ["in", test_templates]})
+        smriti.db.delete("SMRITI Print Template", {"name": ["in", test_templates]})
+        smriti.db.commit()
         from smriti_retail_os.setup import seed_master_doctypes, setup_activity_log_options, create_smriti_barcode_settings_doctype
         seed_master_doctypes()
         setup_activity_log_options()
@@ -62,9 +63,9 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
             frappe.utils.background_jobs.validate_queue = self._original_validate_queue
         # Clean up test templates and their versions
         test_templates = ["TEST_ZPL_TEMPLATE", "TEST_TSPL_TEMPLATE", "TEST_MAPPINGS_TEMPLATE", "TEST_TOO_LARGE", "TEST_INVALID_MAPPINGS", "TEST_RESTORE_SNAP_TEMPLATE", "TEST_LOCK_TEMPLATE", "TEST_LEGACY_TEMPLATE"]
-        frappe.db.delete("SMRITI Print Template Version", {"template": ["in", test_templates]})
-        frappe.db.delete("SMRITI Print Template", {"name": ["in", test_templates]})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Print Template Version", {"template": ["in", test_templates]})
+        smriti.db.delete("SMRITI Print Template", {"name": ["in", test_templates]})
+        smriti.db.commit()
 
     def test_print_template_lifecycle(self):
         """Tests standard CRUD lifecycle of SMRITI Print Template records."""
@@ -80,10 +81,10 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
             field_mappings_json=json.dumps([{"label_field": "item_name", "erp_field": "item_name"}])
         )
         
-        self.assertTrue(frappe.db.exists("SMRITI Print Template", "TEST_ZPL_TEMPLATE"))
+        self.assertTrue(smriti.db.exists("SMRITI Print Template", "TEST_ZPL_TEMPLATE"))
         
         # 2. Read Template
-        doc = frappe.get_doc("SMRITI Print Template", "TEST_ZPL_TEMPLATE")
+        doc = smriti.documents.get("SMRITI Print Template", "TEST_ZPL_TEMPLATE")
         self.assertEqual(doc.template_title, template_name)
         self.assertEqual(doc.label_size, "50x25")
         self.assertEqual(doc.printer_language, "ZPL")
@@ -111,9 +112,9 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         self.assertNotEqual(doc.template_checksum, old_checksum)
 
         # 4. Delete Template
-        frappe.db.delete("SMRITI Print Template Version", {"template": "TEST_ZPL_TEMPLATE"})
+        smriti.db.delete("SMRITI Print Template Version", {"template": "TEST_ZPL_TEMPLATE"})
         frappe.delete_doc("SMRITI Print Template", "TEST_ZPL_TEMPLATE")
-        self.assertFalse(frappe.db.exists("SMRITI Print Template", "TEST_ZPL_TEMPLATE"))
+        self.assertFalse(smriti.db.exists("SMRITI Print Template", "TEST_ZPL_TEMPLATE"))
 
     def test_template_rendering_zpl(self):
         """Tests ZPL template substitution and print command counts."""
@@ -238,7 +239,7 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
             field_mappings_json=json.dumps([{"label_field": "item_name", "erp_field": "item_name"}])
         )
         
-        doc = frappe.get_doc("SMRITI Print Template", "TEST_ZPL_TEMPLATE")
+        doc = smriti.documents.get("SMRITI Print Template", "TEST_ZPL_TEMPLATE")
         
         # Verify legacy custom field attributes are directly accessible on the document object
         self.assertTrue(hasattr(doc, "custom_field_mappings_json"))
@@ -257,7 +258,7 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         large_raw = "A" * (101 * 1024)  # 101 KB
         
         # Test validation on direct save/insert
-        doc = frappe.new_doc("SMRITI Print Template")
+        doc = smriti.documents.new("SMRITI Print Template")
         doc.name = "TEST_TOO_LARGE"
         doc.template_title = template_name
         doc.label_size = "50x25"
@@ -281,7 +282,7 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         template_name = "Test Invalid Mappings"
         
         # 1. Invalid JSON string
-        doc = frappe.new_doc("SMRITI Print Template")
+        doc = smriti.documents.new("SMRITI Print Template")
         doc.name = "TEST_INVALID_MAPPINGS"
         doc.template_title = template_name
         doc.label_size = "50x25"
@@ -297,8 +298,8 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
 
     def test_honeywell_seed_exists(self):
         """Verifies that the default Honeywell template was successfully seeded."""
-        self.assertTrue(frappe.db.exists("SMRITI Print Template", "IMPACT_HONEYWELL_IH2_ZPL"))
-        doc = frappe.get_doc("SMRITI Print Template", "IMPACT_HONEYWELL_IH2_ZPL")
+        self.assertTrue(smriti.db.exists("SMRITI Print Template", "IMPACT_HONEYWELL_IH2_ZPL"))
+        doc = smriti.documents.get("SMRITI Print Template", "IMPACT_HONEYWELL_IH2_ZPL")
         self.assertEqual(doc.template_title, "IMPACT by Honeywell IH-2 (ZPL)")
         self.assertEqual(doc.printer_language, "ZPL")
         self.assertEqual(doc.printer_family, "ZPL")
@@ -325,8 +326,8 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         finally:
             frappe.flags.in_test = old_in_test
         
-        self.assertTrue(frappe.db.exists("SMRITI Print Job", {"job_id": job_id}))
-        status = frappe.db.get_value("SMRITI Print Job", {"job_id": job_id}, "status")
+        self.assertTrue(smriti.db.exists("SMRITI Print Job", {"job_id": job_id}))
+        status = smriti.db.get("SMRITI Print Job", {"job_id": job_id}, "status")
         self.assertEqual(status, "Queued")
         
         prn_path = frappe.get_site_path('private', 'print_jobs', f"{job_id}.prn")
@@ -335,8 +336,8 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
             self.assertEqual(f.read(), payload)
             
         # Clean up
-        frappe.db.delete("SMRITI Print Job", {"job_id": job_id})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Print Job", {"job_id": job_id})
+        smriti.db.commit()
         try:
             os.unlink(prn_path)
         except FileNotFoundError:
@@ -369,15 +370,15 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
             _process_print_job(print_job_id=job_id)
             mock_send.assert_called_once_with(payload, "192.168.1.180", 9100)
             
-        status = frappe.db.get_value("SMRITI Print Job", {"job_id": job_id}, "status")
+        status = smriti.db.get("SMRITI Print Job", {"job_id": job_id}, "status")
         self.assertEqual(status, "Success")
         
         prn_path = frappe.get_site_path('private', 'print_jobs', f"{job_id}.prn")
         self.assertFalse(os.path.exists(prn_path))
         
         # Clean up database
-        frappe.db.delete("SMRITI Print Job", {"job_id": job_id})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Print Job", {"job_id": job_id})
+        smriti.db.commit()
 
     def test_async_3_process_failed_retains_prn(self):
         """test_async_3: _process_print_job sets Failed, .prn file retained on failure"""
@@ -410,15 +411,15 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
                 _frappe = sys.modules.get('frappe')
                 if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in tests/test_barcode_api.py:404: {sys.exc_info()[1]}")
                 
-        status = frappe.db.get_value("SMRITI Print Job", {"job_id": job_id}, "status")
+        status = smriti.db.get("SMRITI Print Job", {"job_id": job_id}, "status")
         self.assertEqual(status, "Failed")
         
         prn_path = frappe.get_site_path('private', 'print_jobs', f"{job_id}.prn")
         self.assertTrue(os.path.exists(prn_path))
         
         # Clean up
-        frappe.db.delete("SMRITI Print Job", {"job_id": job_id})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Print Job", {"job_id": job_id})
+        smriti.db.commit()
         try:
             os.unlink(prn_path)
         except FileNotFoundError:
@@ -447,8 +448,8 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         self.assertEqual(res.get("status"), "Queued")
         
         # Clean up
-        frappe.db.delete("SMRITI Print Job", {"job_id": job_id})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Print Job", {"job_id": job_id})
+        smriti.db.commit()
         prn_path = frappe.get_site_path('private', 'print_jobs', f"{job_id}.prn")
         try:
             os.unlink(prn_path)
@@ -503,12 +504,12 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
             mock_send_new.assert_called_once_with(payload, "192.168.1.180", 9100)
             
         self.assertNotEqual(job_id, new_job_id)
-        new_status = frappe.db.get_value("SMRITI Print Job", {"job_id": new_job_id}, "status")
+        new_status = smriti.db.get("SMRITI Print Job", {"job_id": new_job_id}, "status")
         self.assertEqual(new_status, "Success")
         
         # Clean up both jobs
-        frappe.db.delete("SMRITI Print Job", {"job_id": ["in", [job_id, new_job_id]]})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Print Job", {"job_id": ["in", [job_id, new_job_id]]})
+        smriti.db.commit()
         for j in [job_id, new_job_id]:
             prn_path = frappe.get_site_path('private', 'print_jobs', f"{j}.prn")
             try:
@@ -554,12 +555,12 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
             
         self.assertEqual(len(set(job_ids)), 250)
         
-        db_count = frappe.db.count("SMRITI Print Job", {"job_id": ["in", job_ids]})
+        db_count = smriti.db.count("SMRITI Print Job", {"job_id": ["in", job_ids]})
         self.assertEqual(db_count, 250)
         
         # Clean up
-        frappe.db.delete("SMRITI Print Job", {"job_id": ["in", job_ids]})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Print Job", {"job_id": ["in", job_ids]})
+        smriti.db.commit()
         for j in job_ids:
             prn_path = frappe.get_site_path('private', 'print_jobs', f"{j}.prn")
             try:
@@ -574,14 +575,14 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         import os
         
         # Create 3 test jobs
-        doc1 = frappe.new_doc("SMRITI Print Job")
+        doc1 = smriti.documents.new("SMRITI Print Job")
         doc1.job_id = "JOB-TEST-S-OLD"
         doc1.name = "JOB-TEST-S-OLD"
         doc1.status = "Success"
         doc1.completed_on = add_days(now_datetime(), -31)
         doc1.insert(ignore_permissions=True)
         
-        doc2 = frappe.new_doc("SMRITI Print Job")
+        doc2 = smriti.documents.new("SMRITI Print Job")
         doc2.job_id = "JOB-TEST-F-OLD"
         doc2.name = "JOB-TEST-F-OLD"
         doc2.status = "Failed"
@@ -594,7 +595,7 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         with open(prn_path2, "w") as f:
             f.write("failed old payload")
             
-        doc3 = frappe.new_doc("SMRITI Print Job")
+        doc3 = smriti.documents.new("SMRITI Print Job")
         doc3.job_id = "JOB-TEST-F-NEW"
         doc3.name = "JOB-TEST-F-NEW"
         doc3.status = "Failed"
@@ -604,20 +605,20 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         with open(prn_path3, "w") as f:
             f.write("failed new payload")
             
-        frappe.db.commit()
+        smriti.db.commit()
         
         cleanup_old_print_jobs()
         
-        self.assertFalse(frappe.db.exists("SMRITI Print Job", "JOB-TEST-S-OLD"))
-        self.assertFalse(frappe.db.exists("SMRITI Print Job", "JOB-TEST-F-OLD"))
+        self.assertFalse(smriti.db.exists("SMRITI Print Job", "JOB-TEST-S-OLD"))
+        self.assertFalse(smriti.db.exists("SMRITI Print Job", "JOB-TEST-F-OLD"))
         self.assertFalse(os.path.exists(prn_path2))
         
-        self.assertTrue(frappe.db.exists("SMRITI Print Job", "JOB-TEST-F-NEW"))
+        self.assertTrue(smriti.db.exists("SMRITI Print Job", "JOB-TEST-F-NEW"))
         self.assertTrue(os.path.exists(prn_path3))
         
         # Clean up doc3 and file3
         frappe.delete_doc("SMRITI Print Job", "JOB-TEST-F-NEW", ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         try:
             os.unlink(prn_path3)
         except FileNotFoundError:
@@ -660,7 +661,7 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         finally:
             # Clean up print job and file
             frappe.delete_doc("SMRITI Print Job", job_id, ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
             prn_path = frappe.get_site_path('private', 'print_jobs', f"{job_id}.prn")
             if os.path.exists(prn_path):
                 try:
@@ -717,8 +718,8 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
             )
             
         # Clean up
-        frappe.db.delete("SMRITI Print Job", {"job_id": job_id})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Print Job", {"job_id": job_id})
+        smriti.db.commit()
         prn_path = frappe.get_site_path('private', 'print_jobs', f"{job_id}.prn")
         try:
             os.unlink(prn_path)
@@ -734,9 +735,9 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         )
         
         template_name = "Test Restore Snap Template"
-        frappe.db.delete("SMRITI Print Template", {"name": "TEST_RESTORE_SNAP_TEMPLATE"})
-        frappe.db.delete("SMRITI Print Template Version", {"template": "TEST_RESTORE_SNAP_TEMPLATE"})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Print Template", {"name": "TEST_RESTORE_SNAP_TEMPLATE"})
+        smriti.db.delete("SMRITI Print Template Version", {"template": "TEST_RESTORE_SNAP_TEMPLATE"})
+        smriti.db.commit()
         
         # 1. Create first version
         save_print_template(
@@ -746,7 +747,7 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
             raw_template="^XA^FDV1^XZ",
             custom_version="1.0.0"
         )
-        doc = frappe.get_doc("SMRITI Print Template", "TEST_RESTORE_SNAP_TEMPLATE")
+        doc = smriti.documents.get("SMRITI Print Template", "TEST_RESTORE_SNAP_TEMPLATE")
         v1_checksum = doc.template_checksum
         
         # 2. Modify to create V2 (this snapshots V1 as version 1.0.0 in history)
@@ -783,15 +784,15 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         self.assertEqual(versions_after[0].raw_template, "^XA^FDV2^XZ")
         
         # Clean up
-        frappe.db.delete("SMRITI Print Template", {"name": "TEST_RESTORE_SNAP_TEMPLATE"})
-        frappe.db.delete("SMRITI Print Template Version", {"template": "TEST_RESTORE_SNAP_TEMPLATE"})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Print Template", {"name": "TEST_RESTORE_SNAP_TEMPLATE"})
+        smriti.db.delete("SMRITI Print Template Version", {"template": "TEST_RESTORE_SNAP_TEMPLATE"})
+        smriti.db.commit()
 
     def test_17_legacy_template_no_visual_layout_blocks_canvas(self):
         """test_17: Legacy template has no custom_visual_layout_json"""
         template_name = "Test Legacy Template"
-        frappe.db.delete("SMRITI Print Template", {"name": "TEST_LEGACY_TEMPLATE"})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Print Template", {"name": "TEST_LEGACY_TEMPLATE"})
+        smriti.db.commit()
         
         save_print_template(
             template_name=template_name,
@@ -800,12 +801,12 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
             raw_template="^XA^FDLegacy^XZ"
         )
         
-        doc = frappe.get_doc("SMRITI Print Template", "TEST_LEGACY_TEMPLATE")
+        doc = smriti.documents.get("SMRITI Print Template", "TEST_LEGACY_TEMPLATE")
         self.assertIsNone(doc.custom_visual_layout_json)
         
         # Clean up
         frappe.delete_doc("SMRITI Print Template", "TEST_LEGACY_TEMPLATE")
-        frappe.db.commit()
+        smriti.db.commit()
 
     def test_18_dpi_dot_coordinate_translation(self):
         """test_18: DPI dot coordinate translation correctness"""
@@ -829,9 +830,9 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         )
         
         template_name = "Test Lock Template"
-        frappe.db.delete("SMRITI Print Template", {"name": "TEST_LOCK_TEMPLATE"})
-        frappe.db.delete("SMRITI Print Template Version", {"template": "TEST_LOCK_TEMPLATE"})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Print Template", {"name": "TEST_LOCK_TEMPLATE"})
+        smriti.db.delete("SMRITI Print Template Version", {"template": "TEST_LOCK_TEMPLATE"})
+        smriti.db.commit()
         
         # 1. Create version 1
         save_print_template(
@@ -861,9 +862,9 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         )
         
         # Clean up
-        frappe.db.delete("SMRITI Print Template", {"name": "TEST_LOCK_TEMPLATE"})
-        frappe.db.delete("SMRITI Print Template Version", {"template": "TEST_LOCK_TEMPLATE"})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Print Template", {"name": "TEST_LOCK_TEMPLATE"})
+        smriti.db.delete("SMRITI Print Template Version", {"template": "TEST_LOCK_TEMPLATE"})
+        smriti.db.commit()
 
     def test_20_print_safe_margin_boundary_detection(self):
         """test_20: safe margin limits boundary detection (1.5mm inset)"""
@@ -971,8 +972,8 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
 
     def test_24_printability_formula_seeded(self):
         """test_24: Verify SMRITI-PRN-SCORE-01 formula exists in Formula Registry"""
-        self.assertTrue(frappe.db.exists("SMRITI Formula Definition", {"formula_id": "SMRITI-PRN-SCORE-01"}))
-        doc = frappe.get_doc("SMRITI Formula Definition", {"formula_id": "SMRITI-PRN-SCORE-01"})
+        self.assertTrue(smriti.db.exists("SMRITI Formula Definition", {"formula_id": "SMRITI-PRN-SCORE-01"}))
+        doc = smriti.documents.get("SMRITI Formula Definition", {"formula_id": "SMRITI-PRN-SCORE-01"})
         self.assertEqual(doc.status, "Approved")
         self.assertEqual(doc.is_active, 1)
         self.assertIn("explainability_json", doc.as_dict())
@@ -1030,7 +1031,7 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         self.assertEqual(res_65["grade"], "F")
         
         frappe.db.set_single_value("SMRITI Barcode Settings", "enforce_printability_threshold", 1)
-        frappe.db.commit()
+        smriti.db.commit()
         self.assertRaises(
             frappe.ValidationError,
             save_print_template,
@@ -1042,7 +1043,7 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         )
         
         frappe.db.set_single_value("SMRITI Barcode Settings", "enforce_printability_threshold", 0)
-        frappe.db.commit()
+        smriti.db.commit()
         try:
             save_print_template(
                 template_name="TEST_LOCK_TEMPLATE",
@@ -1055,7 +1056,7 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
             self.fail("save_print_template should allow save on Grade F when enforce is disabled")
             
         frappe.db.set_single_value("SMRITI Barcode Settings", "enforce_printability_threshold", 1)
-        frappe.db.commit()
+        smriti.db.commit()
 
     def test_27_quiet_zone_intrusion_modes(self):
         """test_27: Test quiet zone intrusions (non-decorative triggers error, decorative triggers warning)"""
@@ -1140,8 +1141,8 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         from smriti_retail_os.barcode_api import get_printability_formula_config
         
         # Delete any existing warning error logs for clean check
-        frappe.db.delete("Error Log", {"method": "SMRITI Formula Registry Warning"})
-        frappe.db.commit()
+        smriti.db.delete("Error Log", {"method": "SMRITI Formula Registry Warning"})
+        smriti.db.commit()
         
         try:
             frappe.cache().delete_value("smriti:barcode_printability_formula_config")
@@ -1161,11 +1162,11 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
             self.assertEqual(cfg["weights"]["margin"], 25)
             
             # Verify that Error Log is created
-            log_exists = frappe.db.exists("Error Log", {"method": "SMRITI Formula Registry Warning"})
+            log_exists = smriti.db.exists("Error Log", {"method": "SMRITI Formula Registry Warning"})
             self.assertTrue(log_exists)
             
             # Verify log content
-            log_doc = frappe.get_doc("Error Log", log_exists)
+            log_doc = smriti.documents.get("Error Log", log_exists)
             self.assertIn("SMRITI-PRN-SCORE-01", log_doc.error)
 
     def test_32_expand_item_variants(self):
@@ -1173,16 +1174,16 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         from smriti_retail_os.barcode_api import expand_item_variants
         
         # Create standard test items if not exists
-        if not frappe.db.exists("Item", "TEST-ITEM-123"):
-            if not frappe.db.exists("GST HSN Code", "641590"):
+        if not smriti.db.exists("Item", "TEST-ITEM-123"):
+            if not smriti.db.exists("GST HSN Code", "641590"):
                 frappe.get_doc({"doctype": "GST HSN Code", "hsn_code": "641590"}).insert(ignore_permissions=True)
-            doc = frappe.new_doc("Item")
+            doc = smriti.documents.new("Item")
             doc.item_code = "TEST-ITEM-123"
             doc.item_name = "Test Item 123"
             doc.item_group = "All Item Groups"
             doc.gst_hsn_code = "641590"
             doc.insert(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
 
         # Test Standard Item
         res_std = expand_item_variants("TEST-ITEM-123", 5)
@@ -1192,7 +1193,7 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
 
         # Cleanup
         frappe.delete_doc("Item", "TEST-ITEM-123", ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
     def test_33_get_items_by_range(self):
         """test_33: numerical and alphabetical range loading"""
@@ -1201,17 +1202,17 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         # Create standard test items with ranges
         for i in range(1, 6):
             code = f"BBM-{i:04d}"
-            if not frappe.db.exists("Item", code):
-                if not frappe.db.exists("GST HSN Code", "641590"):
+            if not smriti.db.exists("Item", code):
+                if not smriti.db.exists("GST HSN Code", "641590"):
                     frappe.get_doc({"doctype": "GST HSN Code", "hsn_code": "641590"}).insert(ignore_permissions=True)
-                doc = frappe.new_doc("Item")
+                doc = smriti.documents.new("Item")
                 doc.item_code = code
                 doc.item_name = f"Test Range Item {i}"
                 doc.item_group = "All Item Groups"
                 doc.gst_hsn_code = "641590"
                 doc.insert(ignore_permissions=True)
                 
-        frappe.db.commit()
+        smriti.db.commit()
         
         # Numerical range BBM-0002 to BBM-0004
         res_num = get_items_by_range("BBM-0002", "BBM-0004")
@@ -1228,7 +1229,7 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         # Clean up
         for i in range(1, 6):
             frappe.delete_doc("Item", f"BBM-{i:04d}", ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
     def test_34_get_transaction_items_checklist(self):
         """test_34: get_transaction_items_checklist returns transaction checklist data"""

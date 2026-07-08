@@ -4,18 +4,16 @@
 # @description: SMRITI Explain Service — retail operating system module.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
-# @version: 1.8.6
+# @version: 1.9.0 — Migrated to smriti.core.platform (SPC-012)
 # @license: GPL-3.0-only
 # SPDX-License-Identifier: GPL-3.0-only
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-# Copyright (c) 2026, SMRITI Retail OS and contributors
-# For license information, please see license.txt
 
 import json
-import frappe
-from frappe.utils import now_datetime
+import frappe                       # frappe.throw, frappe.session — framework utilities
+from frappe.utils import now_datetime  # framework utility
+from smriti_retail_os import smriti
 
 def get_explain_payload(formula_id, version=None):
     """
@@ -27,8 +25,8 @@ def get_explain_payload(formula_id, version=None):
 
     # 1. Determine active version if not specified
     if not version:
-        version = frappe.db.get_value(
-            "SMRITI Formula Definition",
+        version = smriti.db.get(
+            "FormulaDef",
             {"formula_id": formula_id, "is_active": 1, "status": "Approved"},
             "formula_version"
         )
@@ -39,7 +37,7 @@ def get_explain_payload(formula_id, version=None):
 
     # 2. Check Redis Cache
     cache_key = f"smriti:explain:{formula_id}:{version}"
-    cached_data = frappe.cache().get_value(cache_key)
+    cached_data = smriti.cache.get(cache_key)
     if cached_data:
         payload = json.loads(cached_data)
         # Log audit trail for cache hits too
@@ -47,8 +45,8 @@ def get_explain_payload(formula_id, version=None):
         return payload
 
     # 3. Cache Miss: Fetch from DB
-    docs = frappe.get_all(
-        "SMRITI Formula Definition",
+    docs = smriti.db.get_list(
+        "FormulaDef",
         filters={"formula_id": formula_id, "formula_version": version},
         fields=[
             "name", "formula_id", "formula_name", "formula_version",
@@ -69,8 +67,8 @@ def get_explain_payload(formula_id, version=None):
     formula_category = doc.get("formula_category")
 
     # 4. Fetch related formulas (same category, different ID)
-    related_docs = frappe.get_all(
-        "SMRITI Formula Definition",
+    related_docs = smriti.db.get_list(
+        "FormulaDef",
         filters={
             "is_active": 1,
             "status": "Approved",
@@ -115,7 +113,7 @@ def get_explain_payload(formula_id, version=None):
             pass
 
     # 6. Save to Redis Cache (TTL = 3600 seconds)
-    frappe.cache().set_value(cache_key, json.dumps(payload), expires_in_sec=3600)
+    smriti.cache.set(cache_key, json.dumps(payload), ttl=3600)
 
     # 7. Log Audit Record
     log_explain_audit(formula_id, version, formula_category)
@@ -130,8 +128,8 @@ def log_explain_audit(formula_id, version, category):
     from smriti_retail_os.utils import get_client_ip
     ip_addr = get_client_ip()
 
-    log = frappe.get_doc({
-        "doctype": "SMRITI PSV Activity Log",
+    log = smriti.documents.new("PSVActivityLog")
+    log.update({
         "timestamp": now_datetime(),
         "user": frappe.session.user or "Administrator",
         "action_type": "Formula Explained",
@@ -142,4 +140,4 @@ def log_explain_audit(formula_id, version, category):
         "details": f"Version: {version}, Category: {category}"
     })
     log.insert(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()

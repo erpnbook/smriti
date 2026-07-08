@@ -20,6 +20,7 @@
 #
 
 import frappe
+from smriti_retail_os import smriti
 import unittest
 import json
 
@@ -41,24 +42,24 @@ class TestCGEGenericAPI(unittest.TestCase):
         self.test_employee_email = "test_employee@erpnbook.com"
         
         # Clean up any residual test tiers & resolution policies & users (prevent test contamination)
-        frappe.db.delete(self.test_doctype, {"tier_name": self.test_tier_name})
-        frappe.db.delete("SMRITI Benefit Resolution Policy", {"policy_name": "_Test Resolution Policy"})
-        if frappe.db.exists("User", self.test_employee_email):
+        smriti.db.delete(self.test_doctype, {"tier_name": self.test_tier_name})
+        smriti.db.delete("SMRITI Benefit Resolution Policy", {"policy_name": "_Test Resolution Policy"})
+        if smriti.db.exists("User", self.test_employee_email):
             frappe.delete_doc("User", self.test_employee_email, ignore_permissions=True)
         else:
-            frappe.db.delete("Has Role", {"parent": self.test_employee_email})
-        frappe.db.commit()
+            smriti.db.delete("Has Role", {"parent": self.test_employee_email})
+        smriti.db.commit()
 
     def tearDown(self):
         # Restore user session and clean up
         self.set_user_and_clear_roles("Administrator")
-        frappe.db.delete(self.test_doctype, {"tier_name": self.test_tier_name})
-        frappe.db.delete("SMRITI Benefit Resolution Policy", {"policy_name": "_Test Resolution Policy"})
-        if frappe.db.exists("User", self.test_employee_email):
+        smriti.db.delete(self.test_doctype, {"tier_name": self.test_tier_name})
+        smriti.db.delete("SMRITI Benefit Resolution Policy", {"policy_name": "_Test Resolution Policy"})
+        if smriti.db.exists("User", self.test_employee_email):
             frappe.delete_doc("User", self.test_employee_email, ignore_permissions=True)
         else:
-            frappe.db.delete("Has Role", {"parent": self.test_employee_email})
-        frappe.db.commit()
+            smriti.db.delete("Has Role", {"parent": self.test_employee_email})
+        smriti.db.commit()
 
     def set_user_and_clear_roles(self, user):
         """Switches the current user and clears request-local roles cache to ensure re-evaluation."""
@@ -90,7 +91,7 @@ class TestCGEGenericAPI(unittest.TestCase):
         
         doc_name = save_cge_generic_doc(self.test_doctype, doc_data)
         self.assertTrue(doc_name)
-        self.assertTrue(frappe.db.exists(self.test_doctype, doc_name))
+        self.assertTrue(smriti.db.exists(self.test_doctype, doc_name))
 
         doc_details = get_cge_generic_doc(self.test_doctype, doc_name)
         self.assertEqual(doc_details.get("tier_name"), self.test_tier_name)
@@ -100,7 +101,7 @@ class TestCGEGenericAPI(unittest.TestCase):
 
         res = delete_cge_generic_doc(self.test_doctype, doc_name)
         self.assertTrue(res)
-        self.assertFalse(frappe.db.exists(self.test_doctype, doc_name))
+        self.assertFalse(smriti.db.exists(self.test_doctype, doc_name))
 
     # --- CGE-TEST-04: Permission Enforcement ---
     def test_cge_permission_enforcement(self):
@@ -112,13 +113,13 @@ class TestCGEGenericAPI(unittest.TestCase):
 
         # Test 2: Standard non-manager User is blocked
         self.set_user_and_clear_roles("Administrator")
-        user = frappe.new_doc("User")
+        user = smriti.documents.new("User")
         user.email = self.test_employee_email
         user.first_name = "Test Employee"
         # Give cashier access (not manager access)
         user.append("roles", {"role": "SMRITI Cashier"})
         user.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
             
         frappe.clear_cache(user=self.test_employee_email)
         self.set_user_and_clear_roles(self.test_employee_email)
@@ -127,9 +128,9 @@ class TestCGEGenericAPI(unittest.TestCase):
 
         # Test 3: SMRITI Store Manager is allowed
         self.set_user_and_clear_roles("Administrator")
-        frappe.get_doc("User", self.test_employee_email).append("roles", {"role": "SMRITI Store Manager"}).save(ignore_permissions=True)
+        smriti.documents.get("User", self.test_employee_email).append("roles", {"role": "SMRITI Store Manager"}).save(ignore_permissions=True)
         frappe.clear_cache(user=self.test_employee_email)
-        frappe.db.commit()
+        smriti.db.commit()
         
         self.set_user_and_clear_roles(self.test_employee_email)
         # Should execute without throwing PermissionError
@@ -233,19 +234,17 @@ class TestCGEGenericAPI(unittest.TestCase):
         
         test_inst = "_Test Linked Instrument"
         test_cust = "_Test Linked Customer"
-        test_comp = frappe.get_all("Company", limit=1)[0].name
+        test_comp = smriti.db.get_list("Company", limit=1)[0].name
 
         # 1. Setup Customer & Instrument
-        if not frappe.db.exists("Customer", test_cust):
-            frappe.get_doc({
-                "doctype": "Customer",
+        if not smriti.db.exists("Customer", test_cust):
+            smriti.documents.new("Customer").update({
                 "customer_name": test_cust,
                 "customer_group": "Individual"
             }).insert(ignore_permissions=True)
 
-        if not frappe.db.exists("SMRITI Benefit Instrument Type", "CASHBACK"):
-            frappe.get_doc({
-                "doctype": "SMRITI Benefit Instrument Type",
+        if not smriti.db.exists("SMRITI Benefit Instrument Type", "CASHBACK"):
+            smriti.documents.new("BenefitInstrumentType").update({
                 "type_name": "CASHBACK"
             }).insert(ignore_permissions=True)
 
@@ -257,7 +256,7 @@ class TestCGEGenericAPI(unittest.TestCase):
             "allow_negative_balance": 0
         })
         inst_doc.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # 2. Setup Wallet referencing the Instrument
         wallet_doc = frappe.get_doc({
@@ -268,7 +267,7 @@ class TestCGEGenericAPI(unittest.TestCase):
             "balance": 150.0
         })
         wallet_doc.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # 3. Attempt to delete the Instrument while Wallet references it
         # This must raise a LinkExistsError (standard Frappe deletion safety check)
@@ -276,7 +275,7 @@ class TestCGEGenericAPI(unittest.TestCase):
             delete_cge_generic_doc(instrument_doctype, test_inst)
 
         # Cleanup
-        frappe.db.delete(wallet_doctype, {"benefit_instrument": test_inst})
-        frappe.db.delete(instrument_doctype, {"instrument_name": test_inst})
-        frappe.db.delete("Customer", {"name": test_cust})
-        frappe.db.commit()
+        smriti.db.delete(wallet_doctype, {"benefit_instrument": test_inst})
+        smriti.db.delete(instrument_doctype, {"instrument_name": test_inst})
+        smriti.db.delete("Customer", {"name": test_cust})
+        smriti.db.commit()

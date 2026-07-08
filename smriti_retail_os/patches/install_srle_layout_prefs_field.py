@@ -11,18 +11,19 @@ Safe to run multiple times (idempotent via exists check).
 Copyright (c) 2026 AITDL NETWORK. All rights reserved.
 """
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 
 
 def execute():
     field_name = "User-smriti_layout_prefs"
 
-    if frappe.db.exists("Custom Field", field_name):
+    if smriti.db.exists("Custom Field", field_name):
         frappe.logger().info(f"SRLE patch: Custom Field '{field_name}' already exists — skipped.")
         return
 
-    custom_field = frappe.get_doc({
-        "doctype":     "Custom Field",
+    custom_field = smriti.documents.new("CustomField")
+    custom_field.update({
         "name":        field_name,
         "dt":          "User",
         "fieldname":   "smriti_layout_prefs",
@@ -38,5 +39,5 @@ def execute():
         "module": "Smriti Retail OS",
     })
     custom_field.insert(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
     frappe.logger().info(f"SRLE patch: Custom Field '{field_name}' created successfully.")

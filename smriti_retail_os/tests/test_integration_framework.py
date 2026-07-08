@@ -8,6 +8,7 @@
 import json
 import unittest
 import frappe
+from smriti_retail_os import smriti
 from smriti_retail_os.integration.core.base_adapter import BaseIntegrationAdapter
 from smriti_retail_os.integration.core.validator import validate_event_payload
 from smriti_retail_os.integration.core.policy import evaluate_routing_policy
@@ -45,14 +46,14 @@ class TestIntegrationFramework(unittest.TestCase):
         frappe.db.begin()
         
         # Ensure DocTypes exist dynamically in test DB if needed
-        self.queue_exists = frappe.db.exists("DocType", "SMRITI Integration Queue")
+        self.queue_exists = smriti.db.exists("DocType", "SMRITI Integration Queue")
         
         # Cleanup mock entries
         if self.queue_exists:
-            frappe.db.delete("SMRITI Integration Queue", {"adapter_id": ["in", ["mock.success", "mock.failure", "accounting.tally"]]})
+            smriti.db.delete("SMRITI Integration Queue", {"adapter_id": ["in", ["mock.success", "mock.failure", "accounting.tally"]]})
 
     def tearDown(self):
-        frappe.db.rollback()
+        smriti.db.rollback()
 
     def test_schema_validator_fails_on_missing_fields(self):
         """Checks validator raises ValueError when required fields are missing from payload."""
@@ -99,7 +100,7 @@ class TestIntegrationFramework(unittest.TestCase):
         )
         
         # Verify database record
-        entries = frappe.get_all(
+        entries = smriti.db.get_list(
             "SMRITI Integration Queue",
             filters={"document_name": "SINV-TEST-99"},
             fields=["name", "event_type", "document_type", "document_name", "status", "priority", "adapter_id"]
@@ -122,7 +123,7 @@ class TestIntegrationFramework(unittest.TestCase):
             payload_dict={"data": "test"},
             priority="Normal"
         )
-        frappe.db.commit()
+        smriti.db.commit()
 
         # Inject mock success adapter dynamically
         from smriti_retail_os.integration.core.registry import IntegrationRegistry
@@ -138,7 +139,7 @@ class TestIntegrationFramework(unittest.TestCase):
             IntegrationEngine.process_queue(limit=10)
             
             # Verify status updated to Success
-            status = frappe.db.get_value("SMRITI Integration Queue", queue_id, "status")
+            status = smriti.db.get("SMRITI Integration Queue", queue_id, "status")
             self.assertEqual(status, "Success")
         finally:
             # Restore original registry function
@@ -157,7 +158,7 @@ class TestIntegrationFramework(unittest.TestCase):
             payload_dict={"data": "test"},
             priority="Normal"
         )
-        frappe.db.commit()
+        smriti.db.commit()
 
         from smriti_retail_os.integration.core.registry import IntegrationRegistry
         original_get_active = IntegrationRegistry.get_active_adapters
@@ -170,8 +171,8 @@ class TestIntegrationFramework(unittest.TestCase):
             # Run first attempt
             IntegrationEngine.process_queue(limit=10)
             
-            status = frappe.db.get_value("SMRITI Integration Queue", queue_id, "status")
-            retry_count = frappe.db.get_value("SMRITI Integration Queue", queue_id, "retry_count")
+            status = smriti.db.get("SMRITI Integration Queue", queue_id, "status")
+            retry_count = smriti.db.get("SMRITI Integration Queue", queue_id, "retry_count")
             
             self.assertEqual(status, "Retrying")
             self.assertEqual(retry_count, 1)

@@ -23,10 +23,11 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 import fnmatch
 import werkzeug.routing.exceptions
 from frappe import _
+from smriti_retail_os import smriti
 from smriti_retail_os import __version__
 from smriti_retail_os.security_constants import PROTECTED_CONFIG_PATTERNS
 from werkzeug.exceptions import HTTPException
@@ -128,7 +129,7 @@ def extend_bootinfo(bootinfo):
             from smriti_retail_os.navigation.navigation_service import get_user_navigation
             bootinfo.smriti_navigation = get_user_navigation(user)
         except Exception as e:
-            frappe.log_error(str(e), "SMRITI Navigation Manager Resolution Error")
+            smriti.errors.log_error(str(e), "SMRITI Navigation Manager Resolution Error")
             try:
                 import json
                 from smriti_retail_os.navigation.navigation_service import CANONICAL_NAV
@@ -174,7 +175,7 @@ def extend_bootinfo(bootinfo):
         })
 
     except Exception as e:
-        frappe.log_error(str(e), "SMRITI extend_bootinfo Error")
+        smriti.errors.log_error(str(e), "SMRITI extend_bootinfo Error")
 
 
 def on_session_creation(login_manager):
@@ -189,7 +190,7 @@ def on_session_creation(login_manager):
         route      = _get_smriti_route(user_roles)
         frappe.local.response["home_page"] = route
     except Exception as e:
-        frappe.log_error(str(e), "SMRITI on_session_creation Error")
+        smriti.errors.log_error(str(e), "SMRITI on_session_creation Error")
         frappe.local.response["home_page"] = "/smriti"
 
 
@@ -351,7 +352,7 @@ def check_desk_access():
     except (frappe.PermissionError, frappe.AuthenticationError):
         raise  # Intentional security responses — must not be swallowed
     except Exception as e:
-        frappe.log_error(str(e), "SMRITI Desk Access Check Error")
+        smriti.errors.log_error(str(e), "SMRITI Desk Access Check Error")
 
 
 def _get_smriti_route(user_roles):
@@ -371,7 +372,7 @@ def _log_blocked_download(filename, user, reason):
             f"{reason} File='{filename}' User='{user}' IP={getattr(frappe.local, 'request_ip', 'Unknown')}"
         )
     except Exception:
-        frappe.log_error("SMRITI Blocked Download Log Error", frappe.get_traceback())
+        smriti.errors.log_error("SMRITI Blocked Download Log Error", frappe.get_traceback())
 
 
 def _is_desk_allowed(user, user_roles):
@@ -391,7 +392,7 @@ def _is_smriti_frontend_enabled():
     """
     try:
         # Use db.sql to avoid exceptions when the custom field doesn't exist yet
-        result = frappe.db.sql(
+        result = smriti.db.sql(
             "SELECT value FROM `tabSingles` WHERE doctype='System Settings' AND field='custom_smriti_frontend_enabled'"
         )
         if result:
@@ -435,7 +436,7 @@ def get_smriti_session_info():
 
         return {
             "user":              user,
-            "full_name":         frappe.db.get_value(
+            "full_name":         smriti.db.get(
                                      "User", user, "full_name"
                                  ) or user,
             "roles":             user_roles,
@@ -452,7 +453,7 @@ def get_smriti_session_info():
             }
         }
     except Exception as e:
-        frappe.log_error(str(e), "SMRITI Session Info Error")
+        smriti.errors.log_error(str(e), "SMRITI Session Info Error")
         return {"error": str(e)}
 
 
@@ -467,7 +468,7 @@ def health_check():
 
     try:
         # Check DB connection
-        frappe.db.sql("SELECT 1")
+        smriti.db.sql("SELECT 1")
         status["db"] = "ok"
     except Exception as e:
         status["db"] = f"error: {e}"

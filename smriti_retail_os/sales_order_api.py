@@ -10,9 +10,10 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe.utils import flt, cint, nowdate
 from frappe import _
+from smriti_retail_os import smriti
 
 def check_store_manager_role():
     """
@@ -34,7 +35,7 @@ def get_open_sales_orders(customer=None):
     if customer:
         filters["customer"] = customer
 
-    orders = frappe.get_all(
+    orders = smriti.db.get_list(
         "Sales Order",
         filters=filters,
         fields=["name", "customer", "customer_name", "transaction_date", "grand_total", "per_delivered"],
@@ -47,10 +48,10 @@ def get_so_details(so_name):
     """
     Fetches open item lines for a given Sales Order.
     """
-    if not frappe.db.exists("Sales Order", so_name):
+    if not smriti.db.exists("Sales Order", so_name):
         return None
 
-    so = frappe.get_doc("Sales Order", so_name)
+    so = smriti.documents.get("Sales Order", so_name)
     items = []
     
     for item in so.items:
@@ -89,9 +90,9 @@ def create_sales_order(customer, items, delivery_date=None, remarks=None):
         frappe.throw(_("Cannot create Sales Order with an empty items list."))
 
     items_list = frappe.parse_json(items)
-    company = frappe.defaults.get_user_default("company") or frappe.db.get_single_value("Global Defaults", "default_company") or (frappe.get_all("Company", limit=1)[0].name if frappe.get_all("Company", limit=1) else None)
+    company = frappe.defaults.get_user_default("company") or smriti.db.get_single("Global Defaults", "default_company") or (smriti.db.get_list("Company", limit=1)[0].name if smriti.db.get_list("Company", limit=1) else None)
 
-    so = frappe.new_doc("Sales Order")
+    so = smriti.documents.new("Sales Order")
     so.customer = customer
     so.transaction_date = nowdate()
     so.delivery_date = delivery_date or nowdate()
@@ -107,10 +108,10 @@ def create_sales_order(customer, items, delivery_date=None, remarks=None):
 
         if not wh:
             # Get default warehouse from Item or fallback
-            wh = frappe.db.get_value("Item Reorder", {"parent": item_code}, "warehouse") or frappe.db.get_value("Item", item_code, "default_warehouse")
+            wh = smriti.db.get("Item Reorder", {"parent": item_code}, "warehouse") or smriti.db.get("Item", item_code, "default_warehouse")
         if not wh:
             # Fallback to general warehouse
-            wh = frappe.db.get_value("Warehouse", {"company": company, "is_group": 0}, "name")
+            wh = smriti.db.get("Warehouse", {"company": company, "is_group": 0}, "name")
 
         so.append("items", {
             "item_code": item_code,
@@ -118,16 +119,16 @@ def create_sales_order(customer, items, delivery_date=None, remarks=None):
             "rate": rate,
             "warehouse": wh,
             "delivery_date": delivery_date or nowdate(),
-            "uom": it.get("stock_uom") or frappe.db.get_value("Item", item_code, "stock_uom") or "Nos"
+            "uom": it.get("stock_uom") or smriti.db.get("Item", item_code, "stock_uom") or "Nos"
         })
 
     try:
         # reviewed-ignore-permissions: sales order booking, gated by cashier session
         so.insert(ignore_permissions=True)
         so.submit()
-        frappe.db.commit()
+        smriti.db.commit()
     except Exception:
-        frappe.db.rollback()
+        smriti.db.rollback()
         raise
 
     return {

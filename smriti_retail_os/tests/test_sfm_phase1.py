@@ -11,6 +11,7 @@
 #
 
 import frappe
+from smriti_retail_os import smriti
 import unittest
 from frappe.tests.utils import FrappeTestCase
 from frappe.utils import nowdate, getdate, add_days, flt
@@ -22,32 +23,32 @@ class TestSFMPhase1(FrappeTestCase):
         super().setUpClass()
         # Seed standard Gender records if missing
         for g_name in ["Male", "Female"]:
-            if not frappe.db.exists("Gender", g_name):
-                g = frappe.new_doc("Gender")
+            if not smriti.db.exists("Gender", g_name):
+                g = smriti.documents.new("Gender")
                 g.gender = g_name
                 g.insert(ignore_permissions=True)
         # Create test company
         cls.company = "_Test SFM Company"
-        if not frappe.db.exists("Company", cls.company):
-            comp = frappe.new_doc("Company")
+        if not smriti.db.exists("Company", cls.company):
+            comp = smriti.documents.new("Company")
             comp.company_name = cls.company
             comp.country = "India"
             comp.default_currency = "INR"
             comp.insert(ignore_permissions=True)
 
         # Ensure company is associated with active Fiscal Years
-        for fy_name in frappe.db.get_all("Fiscal Year", filters={"disabled": 0}, pluck="name"):
-            fy = frappe.get_doc("Fiscal Year", fy_name)
+        for fy_name in smriti.db.get_list("Fiscal Year", filters={"disabled": 0}, pluck="name"):
+            fy = smriti.documents.get("Fiscal Year", fy_name)
             if not any(c.company == cls.company for c in fy.companies):
                 fy.append("companies", {"company": cls.company})
                 fy.save(ignore_permissions=True)
 
         # Ensure valid GSTIN and Address on Company for compliance validation
-        frappe.db.set_value("Company", cls.company, "gstin", "27AAXFT2508H1ZR")
+        smriti.db.set_value("Company", cls.company, "gstin", "27AAXFT2508H1ZR")
         
         addr_name = f"{cls.company}-Registered-Test"
-        if not frappe.db.exists("Address", addr_name):
-            addr = frappe.new_doc("Address")
+        if not smriti.db.exists("Address", addr_name):
+            addr = smriti.documents.new("Address")
             addr.address_title = cls.company
             addr.address_type = "Office"
             addr.address_line1 = "Test Street"
@@ -61,13 +62,13 @@ class TestSFMPhase1(FrappeTestCase):
             addr.gstin = "27AAXFT2508H1ZR"
             addr.append("links", {"link_doctype": "Company", "link_name": cls.company})
             addr.insert(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
 
         # Resolve or create basic accounts needed for Invoice submission
-        cls.debit_to = frappe.db.get_value("Account", {"company": cls.company, "account_type": "Receivable", "is_group": 0}, "name")
+        cls.debit_to = smriti.db.get("Account", {"company": cls.company, "account_type": "Receivable", "is_group": 0}, "name")
         if not cls.debit_to:
-            parent_recv = frappe.db.get_value("Account", {"company": cls.company, "account_type": "Receivable", "is_group": 1}, "name")
-            acc = frappe.new_doc("Account")
+            parent_recv = smriti.db.get("Account", {"company": cls.company, "account_type": "Receivable", "is_group": 1}, "name")
+            acc = smriti.documents.new("Account")
             acc.account_name = "Debtors"
             acc.parent_account = parent_recv
             acc.company = cls.company
@@ -75,10 +76,10 @@ class TestSFMPhase1(FrappeTestCase):
             acc.insert(ignore_permissions=True)
             cls.debit_to = acc.name
 
-        cls.income_account = frappe.db.get_value("Account", {"company": cls.company, "root_type": "Income", "is_group": 0}, "name")
+        cls.income_account = smriti.db.get("Account", {"company": cls.company, "root_type": "Income", "is_group": 0}, "name")
         if not cls.income_account:
-            parent_inc = frappe.db.get_value("Account", {"company": cls.company, "root_type": "Income", "is_group": 1}, "name")
-            acc = frappe.new_doc("Account")
+            parent_inc = smriti.db.get("Account", {"company": cls.company, "root_type": "Income", "is_group": 1}, "name")
+            acc = smriti.documents.new("Account")
             acc.account_name = "Sales"
             acc.parent_account = parent_inc
             acc.company = cls.company
@@ -87,13 +88,13 @@ class TestSFMPhase1(FrappeTestCase):
             cls.income_account = acc.name
 
         # Resolve UOM and Item Group
-        cls.uom = frappe.db.exists("UOM", "Nos") or frappe.db.get_value("UOM", {}, "name") or "Nos"
-        cls.item_group = frappe.db.exists("Item Group", "All Item Groups") or frappe.db.get_value("Item Group", {}, "name") or "All Item Groups"
+        cls.uom = smriti.db.exists("UOM", "Nos") or smriti.db.get("UOM", {}, "name") or "Nos"
+        cls.item_group = smriti.db.exists("Item Group", "All Item Groups") or smriti.db.get("Item Group", {}, "name") or "All Item Groups"
 
         # Resolve or create Warehouse
-        cls.warehouse = frappe.db.get_value("Warehouse", {"company": cls.company, "is_group": 0}, "name")
+        cls.warehouse = smriti.db.get("Warehouse", {"company": cls.company, "is_group": 0}, "name")
         if not cls.warehouse:
-            w = frappe.new_doc("Warehouse")
+            w = smriti.documents.new("Warehouse")
             w.warehouse_name = "Test SFM Stores"
             w.company = cls.company
             w.is_group = 0
@@ -102,20 +103,20 @@ class TestSFMPhase1(FrappeTestCase):
 
         # Create test item brand
         cls.brand = "Raymond Test Brand"
-        if not frappe.db.exists("Brand", cls.brand):
-            b = frappe.new_doc("Brand")
+        if not smriti.db.exists("Brand", cls.brand):
+            b = smriti.documents.new("Brand")
             b.brand = cls.brand
             b.insert(ignore_permissions=True)
 
-        if not frappe.db.exists("GST HSN Code", "649211"):
-            hsn = frappe.new_doc("GST HSN Code")
+        if not smriti.db.exists("GST HSN Code", "649211"):
+            hsn = smriti.documents.new("GST HSN Code")
             hsn.hsn_code = "649211"
             hsn.insert(ignore_permissions=True)
 
         # Create test item
         cls.item = "TEST-SFM-ITEM-01"
-        if not frappe.db.exists("Item", cls.item):
-            itm = frappe.new_doc("Item")
+        if not smriti.db.exists("Item", cls.item):
+            itm = smriti.documents.new("Item")
             itm.item_code = cls.item
             itm.item_name = "Test SFM Item"
             itm.item_group = cls.item_group
@@ -126,8 +127,8 @@ class TestSFMPhase1(FrappeTestCase):
 
         # Create test customer
         cls.customer = "Test Customer SFM"
-        if not frappe.db.exists("Customer", cls.customer):
-            cust = frappe.new_doc("Customer")
+        if not smriti.db.exists("Customer", cls.customer):
+            cust = smriti.documents.new("Customer")
             cust.customer_name = cls.customer
             cust.customer_group = "Individual"
             cust.territory = "All Territories"
@@ -135,8 +136,8 @@ class TestSFMPhase1(FrappeTestCase):
 
         # Create test employees
         cls.emp_p = "EMP-SFM-PRIMARY"
-        if not frappe.db.exists("Employee", cls.emp_p):
-            e = frappe.new_doc("Employee")
+        if not smriti.db.exists("Employee", cls.emp_p):
+            e = smriti.documents.new("Employee")
             e.employee_name = "Rahul Primary Owner"
             e.first_name = "Rahul"
             e.company = cls.company
@@ -146,11 +147,11 @@ class TestSFMPhase1(FrappeTestCase):
             e.date_of_birth = "1990-01-01"
             e.insert(ignore_permissions=True)
             # Store ID in DB matching name
-            frappe.db.set_value("Employee", e.name, "name", cls.emp_p)
+            smriti.db.set_value("Employee", e.name, "name", cls.emp_p)
 
         cls.emp_s = "EMP-SFM-SECONDARY"
-        if not frappe.db.exists("Employee", cls.emp_s):
-            e = frappe.new_doc("Employee")
+        if not smriti.db.exists("Employee", cls.emp_s):
+            e = smriti.documents.new("Employee")
             e.employee_name = "Sonia Secondary Owner"
             e.first_name = "Sonia"
             e.company = cls.company
@@ -159,11 +160,11 @@ class TestSFMPhase1(FrappeTestCase):
             e.date_of_joining = "2026-01-01"
             e.date_of_birth = "1990-01-01"
             e.insert(ignore_permissions=True)
-            frappe.db.set_value("Employee", e.name, "name", cls.emp_s)
+            smriti.db.set_value("Employee", e.name, "name", cls.emp_s)
 
         cls.emp_w = "EMP-SFM-WALKIN"
-        if not frappe.db.exists("Employee", cls.emp_w):
-            e = frappe.new_doc("Employee")
+        if not smriti.db.exists("Employee", cls.emp_w):
+            e = smriti.documents.new("Employee")
             e.employee_name = "Walkin Fallback Staff"
             e.first_name = "Walkin"
             e.company = cls.company
@@ -172,19 +173,19 @@ class TestSFMPhase1(FrappeTestCase):
             e.date_of_joining = "2026-01-01"
             e.date_of_birth = "1990-01-01"
             e.insert(ignore_permissions=True)
-            frappe.db.set_value("Employee", e.name, "name", cls.emp_w)
+            smriti.db.set_value("Employee", e.name, "name", cls.emp_w)
 
         # Create test SMRITI Store
         cls.store = "Store - Test SFM"
-        if not frappe.db.exists("SMRITI Store", cls.store):
-            s = frappe.new_doc("SMRITI Store")
+        if not smriti.db.exists("SMRITI Store", cls.store):
+            s = smriti.documents.new("SMRITI Store")
             s.store_name = cls.store
             s.default_warehouse = cls.warehouse
             s.company = cls.company
             s.insert(ignore_permissions=True)
             cls.store = s.name
 
-        frappe.db.commit()
+        smriti.db.commit()
 
     def setUp(self):
         super().setUp()
@@ -192,20 +193,20 @@ class TestSFMPhase1(FrappeTestCase):
         frappe.session.user = "Administrator"
 
         # Clear transactions and ledgers
-        frappe.db.delete("SMRITI Customer Ownership")
-        frappe.db.delete("SMRITI Sales Target")
-        frappe.db.delete("SMRITI Attribution Ledger")
-        frappe.db.delete("SMRITI Attribution Event")
-        frappe.db.delete("SMRITI Sales KPI Snapshot")
+        smriti.db.delete("SMRITI Customer Ownership")
+        smriti.db.delete("SMRITI Sales Target")
+        smriti.db.delete("SMRITI Attribution Ledger")
+        smriti.db.delete("SMRITI Attribution Event")
+        smriti.db.delete("SMRITI Sales KPI Snapshot")
 
         # Clean up Sales Invoices
-        invoice_names = frappe.get_all("Sales Invoice", filters={"company": self.company}, pluck="name")
+        invoice_names = smriti.db.get_list("Sales Invoice", filters={"company": self.company}, pluck="name")
         if invoice_names:
-            frappe.db.delete("Sales Invoice Item", {"parent": ["in", invoice_names]})
-            frappe.db.delete("Sales Invoice", {"name": ["in", invoice_names]})
+            smriti.db.delete("Sales Invoice Item", {"parent": ["in", invoice_names]})
+            smriti.db.delete("Sales Invoice", {"name": ["in", invoice_names]})
 
         # Initialize Settings
-        frappe.db.set_value("SMRITI SFM Settings", "SMRITI SFM Settings", {
+        smriti.db.set_value("SMRITI SFM Settings", "SMRITI SFM Settings", {
             "enable_sfm": 1,
             "ownership_precedence": 1,
             "primary_split_pct": 70.0,
@@ -214,7 +215,7 @@ class TestSFMPhase1(FrappeTestCase):
         }, update_modified=False)
 
         frappe.clear_cache()
-        frappe.db.commit()
+        smriti.db.commit()
 
     def tearDown(self):
         frappe.flags.in_test = False
@@ -225,7 +226,7 @@ class TestSFMPhase1(FrappeTestCase):
         frappe.clear_cache()
         if hasattr(frappe.local, "document_cache"):
             frappe.local.document_cache.clear()
-        settings = frappe.get_doc("SMRITI SFM Settings")
+        settings = smriti.documents.get_single("SFMSettings")
         settings.primary_split_pct = 60.0
         settings.secondary_split_pct = 30.0 # Total 90%
         
@@ -236,7 +237,7 @@ class TestSFMPhase1(FrappeTestCase):
         frappe.clear_cache()
         if hasattr(frappe.local, "document_cache"):
             frappe.local.document_cache.clear()
-        settings = frappe.get_doc("SMRITI SFM Settings")
+        settings = smriti.documents.get_single("SFMSettings")
         settings.primary_split_pct = 70.0
         settings.secondary_split_pct = 30.0 # Total 100%
         settings.save() # Should pass
@@ -244,7 +245,7 @@ class TestSFMPhase1(FrappeTestCase):
     def test_customer_ownership_timeline_validation(self):
         """Test timeline deactivation on active customer ownership creation."""
         # 1. Create original owner assignment starting 2026-06-01
-        own1 = frappe.new_doc("SMRITI Customer Ownership")
+        own1 = smriti.documents.new("SMRITI Customer Ownership")
         own1.customer = self.customer
         own1.primary_owner = self.emp_p
         own1.start_date = "2026-06-01"
@@ -257,7 +258,7 @@ class TestSFMPhase1(FrappeTestCase):
         self.assertIsNone(own1.end_date)
 
         # 2. Create new owner assignment starting 2026-06-10
-        own2 = frappe.new_doc("SMRITI Customer Ownership")
+        own2 = smriti.documents.new("SMRITI Customer Ownership")
         own2.customer = self.customer
         own2.primary_owner = self.emp_w
         own2.start_date = "2026-06-10"
@@ -273,7 +274,7 @@ class TestSFMPhase1(FrappeTestCase):
     def test_settings_precedence_and_split(self):
         """Test revenue split credits are resolved correctly based on customer ownership precedence."""
         # Assign customer owners
-        own = frappe.new_doc("SMRITI Customer Ownership")
+        own = smriti.documents.new("SMRITI Customer Ownership")
         own.customer = self.customer
         own.primary_owner = self.emp_p
         own.secondary_owner = self.emp_s
@@ -283,7 +284,7 @@ class TestSFMPhase1(FrappeTestCase):
         own.insert(ignore_permissions=True)
 
         # Submit Sales Invoice for this customer
-        si = frappe.new_doc("Sales Invoice")
+        si = smriti.documents.new("Sales Invoice")
         si.company = self.company
         si.customer = self.customer
         si.posting_date = "2026-06-02"
@@ -302,7 +303,7 @@ class TestSFMPhase1(FrappeTestCase):
         si.submit()
 
         # Query Ledger Entries
-        ledgers = frappe.get_all(
+        ledgers = smriti.db.get_list(
             "SMRITI Attribution Ledger",
             filters={"invoice_reference": si.name},
             fields=["employee", "credit_percentage", "revenue_credit", "ownership_type", "store", "ownership_record"]
@@ -327,7 +328,7 @@ class TestSFMPhase1(FrappeTestCase):
     def test_walk_in_fallback(self):
         """Test walk-in employee fallback when no customer ownership matches."""
         # Submit Sales Invoice (no customer ownership defined)
-        si = frappe.new_doc("Sales Invoice")
+        si = smriti.documents.new("Sales Invoice")
         si.company = self.company
         si.customer = self.customer
         si.posting_date = "2026-06-02"
@@ -346,7 +347,7 @@ class TestSFMPhase1(FrappeTestCase):
         si.submit()
 
         # Query Ledger Entries
-        ledgers = frappe.get_all(
+        ledgers = smriti.db.get_list(
             "SMRITI Attribution Ledger",
             filters={"invoice_reference": si.name},
             fields=["employee", "credit_percentage", "revenue_credit", "ownership_type"]
@@ -361,7 +362,7 @@ class TestSFMPhase1(FrappeTestCase):
 
     def test_ledger_reversal_on_invoice_cancel(self):
         """Test ledger reversal entry generation when invoice is cancelled."""
-        si = frappe.new_doc("Sales Invoice")
+        si = smriti.documents.new("Sales Invoice")
         si.company = self.company
         si.customer = self.customer
         si.posting_date = "2026-06-02"
@@ -383,7 +384,7 @@ class TestSFMPhase1(FrappeTestCase):
         si.cancel()
 
         # Query Ledger entries (including status)
-        ledgers = frappe.get_all(
+        ledgers = smriti.db.get_list(
             "SMRITI Attribution Ledger",
             filters={"invoice_reference": si.name},
             fields=["name", "employee", "revenue_credit", "ledger_status", "reversal_reference"]
@@ -405,9 +406,9 @@ class TestSFMPhase1(FrappeTestCase):
         """Test daily KPI snapshots are updated and target achievements compute properly."""
         # 1. Create a Target of 100,000 for Rahul Primary Employee in June 2026
         # Resolve fiscal year
-        fiscal_year = frappe.get_all("Fiscal Year", limit=1, pluck="name")[0]
+        fiscal_year = smriti.db.get_list("Fiscal Year", limit=1, pluck="name")[0]
         
-        target = frappe.new_doc("SMRITI Sales Target")
+        target = smriti.documents.new("SMRITI Sales Target")
         target.employee = self.emp_p
         target.company = self.company
         target.fiscal_year = fiscal_year
@@ -416,7 +417,7 @@ class TestSFMPhase1(FrappeTestCase):
         target.insert(ignore_permissions=True)
 
         # 2. Add Customer Ownership assignment
-        own = frappe.new_doc("SMRITI Customer Ownership")
+        own = smriti.documents.new("SMRITI Customer Ownership")
         own.customer = self.customer
         own.primary_owner = self.emp_p
         own.start_date = "2026-06-01"
@@ -425,7 +426,7 @@ class TestSFMPhase1(FrappeTestCase):
         own.insert(ignore_permissions=True)
 
         # 3. Submit Invoice 1 (Revenue = 5,000)
-        si1 = frappe.new_doc("Sales Invoice")
+        si1 = smriti.documents.new("Sales Invoice")
         si1.company = self.company
         si1.customer = self.customer
         si1.posting_date = "2026-06-05"
@@ -444,18 +445,18 @@ class TestSFMPhase1(FrappeTestCase):
         si1.submit()
 
         # Debug printing before assertion
-        print("ALL LEDGERS IN TEST:", frappe.get_all("SMRITI Attribution Ledger", fields=["name", "employee", "posting_date", "revenue_credit"]))
-        print("ALL SNAPSHOTS IN TEST:", frappe.get_all("SMRITI Sales KPI Snapshot", fields=["name", "employee", "date", "revenue"]))
-        print("ALL EVENTS IN TEST:", frappe.get_all("SMRITI Attribution Event", fields=["invoice_reference", "status", "error_message"]))
+        print("ALL LEDGERS IN TEST:", smriti.db.get_list("SMRITI Attribution Ledger", fields=["name", "employee", "posting_date", "revenue_credit"]))
+        print("ALL SNAPSHOTS IN TEST:", smriti.db.get_list("SMRITI Sales KPI Snapshot", fields=["name", "employee", "date", "revenue"]))
+        print("ALL EVENTS IN TEST:", smriti.db.get_list("SMRITI Attribution Event", fields=["invoice_reference", "status", "error_message"]))
 
         # Verify daily snapshot for Jun 5, 2026
-        snapshot = frappe.get_doc("SMRITI Sales KPI Snapshot", {"employee": self.emp_p, "date": "2026-06-05"})
+        snapshot = smriti.documents.get("SMRITI Sales KPI Snapshot", {"employee": self.emp_p, "date": "2026-06-05"})
         self.assertEqual(flt(snapshot.revenue), 5000.0)
         self.assertEqual(snapshot.transactions, 1)
         self.assertEqual(snapshot.customers, 1)
 
         # 4. Submit Invoice 2 (Revenue = 3,000)
-        si2 = frappe.new_doc("Sales Invoice")
+        si2 = smriti.documents.new("Sales Invoice")
         si2.company = self.company
         si2.customer = self.customer
         si2.posting_date = "2026-06-05"
@@ -477,7 +478,7 @@ class TestSFMPhase1(FrappeTestCase):
         frappe.clear_cache()
         if hasattr(frappe.local, "document_cache"):
             frappe.local.document_cache.clear()
-        snapshot = frappe.get_doc("SMRITI Sales KPI Snapshot", snapshot.name)
+        snapshot = smriti.documents.get("SMRITI Sales KPI Snapshot", snapshot.name)
         self.assertEqual(flt(snapshot.revenue), 8000.0)
         self.assertEqual(snapshot.transactions, 2)
         self.assertEqual(snapshot.customers, 1) # Same customer, so unique count remains 1
@@ -489,7 +490,7 @@ class TestSFMPhase1(FrappeTestCase):
         frappe.clear_cache()
         if hasattr(frappe.local, "document_cache"):
             frappe.local.document_cache.clear()
-        snapshot = frappe.get_doc("SMRITI Sales KPI Snapshot", snapshot.name)
+        snapshot = smriti.documents.get("SMRITI Sales KPI Snapshot", snapshot.name)
         self.assertEqual(flt(snapshot.revenue), 5000.0)
         self.assertEqual(snapshot.transactions, 1)
 

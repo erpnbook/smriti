@@ -1,6 +1,7 @@
 import hashlib
 import json
 import frappe
+from smriti_retail_os import smriti
 from typing import Tuple
 
 def get_context_hash(rule_name: str, reset_rule: str, context_dict: dict) -> Tuple[str, dict]:
@@ -36,11 +37,11 @@ def increment_counter(rule_name: str, reset_rule: str, context_dict: dict) -> in
     context_hash, details = get_context_hash(rule_name, reset_rule, context_dict)
     counter_name = context_hash
     
-    if not frappe.db.exists("SMRITI Numbering Counter", counter_name):
+    if not smriti.db.exists("SMRITI Numbering Counter", counter_name):
         try:
             # Inline transaction to insert and establish the row
-            doc = frappe.get_doc({
-                "doctype": "SMRITI Numbering Counter",
+            doc = smriti.documents.new("NumberingCounter")
+            doc.update({
                 "name": counter_name,
                 "rule": rule_name,
                 "context_hash": context_hash,
@@ -48,13 +49,13 @@ def increment_counter(rule_name: str, reset_rule: str, context_dict: dict) -> in
                 "current_value": 0
             })
             doc.insert(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
         except Exception:
             # Concurrent insertion safety
-            frappe.db.rollback()
+            smriti.db.rollback()
             
     # Row lock for atomic update
-    res = frappe.db.sql(
+    res = smriti.db.sql(
         "select current_value from `tabSMRITI Numbering Counter` where name = %s for update",
         (counter_name,)
     )
@@ -62,7 +63,7 @@ def increment_counter(rule_name: str, reset_rule: str, context_dict: dict) -> in
     current_val = res[0][0] if res else 0
     next_val = current_val + 1
     
-    frappe.db.sql(
+    smriti.db.sql(
         "update `tabSMRITI Numbering Counter` set current_value = %s where name = %s",
         (next_val, counter_name)
     )

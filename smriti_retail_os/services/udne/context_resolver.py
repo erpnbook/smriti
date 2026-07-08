@@ -1,5 +1,6 @@
 import datetime
 import frappe
+from smriti_retail_os import smriti
 from smriti_retail_os.services.udne.interfaces import GenerationContext
 from smriti_retail_os.services.udne.fy_resolver import resolve_fy
 
@@ -29,7 +30,7 @@ def resolve_context(context: GenerationContext) -> dict:
     state_code = ""
     if context.branch:
         try:
-            wh_details = frappe.db.get_value("Warehouse", context.branch, ["custom_gst_state", "state"], as_dict=True)
+            wh_details = smriti.db.get("Warehouse", context.branch, ["custom_gst_state", "state"], as_dict=True)
             if wh_details:
                 state_code = wh_details.get("custom_gst_state") or wh_details.get("state") or ""
         except Exception:

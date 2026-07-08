@@ -9,29 +9,30 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 
 def run():
     print("Creating uq_wallet_cust_comp_inst...")
     try:
-        frappe.db.sql("CREATE UNIQUE INDEX uq_wallet_cust_comp_inst ON `tabSMRITI Benefit Wallet` (customer, company, benefit_instrument)")
+        smriti.db.sql("CREATE UNIQUE INDEX uq_wallet_cust_comp_inst ON `tabSMRITI Benefit Wallet` (customer, company, benefit_instrument)")
         print("Success")
     except Exception as e:
         print(f"Error/Already exists: {e}")
         
     print("Creating idx_ledger_cust_inst_date...")
     try:
-        frappe.db.sql("CREATE INDEX idx_ledger_cust_inst_date ON `tabSMRITI Benefit Ledger` (customer, benefit_instrument, posting_date)")
+        smriti.db.sql("CREATE INDEX idx_ledger_cust_inst_date ON `tabSMRITI Benefit Ledger` (customer, benefit_instrument, posting_date)")
         print("Success")
     except Exception as e:
         print(f"Error/Already exists: {e}")
         
     print("Creating idx_ledger_ref...")
     try:
-        frappe.db.sql("CREATE INDEX idx_ledger_ref ON `tabSMRITI Benefit Ledger` (reference_doctype, reference_name)")
+        smriti.db.sql("CREATE INDEX idx_ledger_ref ON `tabSMRITI Benefit Ledger` (reference_doctype, reference_name)")
         print("Success")
     except Exception as e:
         print(f"Error/Already exists: {e}")
         
-    frappe.db.commit()
+    smriti.db.commit()
     print("Index creation complete!")

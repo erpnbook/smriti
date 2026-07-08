@@ -10,10 +10,11 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 import json
 from frappe.utils import flt, nowdate
 from frappe import _
+from smriti_retail_os import smriti
 from smriti_retail_os.utils.invoice_utils import resolve_barcode, parse_pdt_file, detect_pdt_columns
 
 
@@ -28,25 +29,25 @@ def get_company_details(company=None):
     else:
         if frappe.flags.in_test:
             company_name = (frappe.defaults.get_user_default("company")
-                            or frappe.get_all("Company", limit=1)[0].name)
+                            or smriti.db.get_list("Company", limit=1)[0].name)
         else:
             company_name = (
                 frappe.defaults.get_user_default("company")
-                or frappe.db.get_single_value("Global Defaults", "default_company")
-                or frappe.get_all("Company", limit=1, pluck="name")[0]
+                or smriti.db.get_single("Global Defaults", "default_company")
+                or smriti.db.get_list("Company", limit=1, pluck="name")[0]
             )
     
-    company = frappe.get_doc("Company", company_name)
+    company = smriti.documents.get("Company", company_name)
 
     # Company address
     address_data = {}
-    addr_link = frappe.db.get_value(
+    addr_link = smriti.db.get(
         "Dynamic Link",
         {"link_doctype": "Company", "link_name": company_name, "parenttype": "Address"},
         "parent"
     )
     if addr_link:
-        addr = frappe.get_doc("Address", addr_link)
+        addr = smriti.documents.get("Address", addr_link)
         address_data = {
             "line1":   addr.address_line1 or "",
             "line2":   addr.address_line2 or "",
@@ -59,7 +60,7 @@ def get_company_details(company=None):
 
     # Bank account details
     bank_data = {}
-    bank_link = frappe.db.get_value(
+    bank_link = smriti.db.get(
         "Bank Account",
         {"company": company_name, "is_default": 1},
         ["bank", "bank_account_no", "branch_code"],
@@ -94,20 +95,20 @@ def get_company_details(company=None):
 @frappe.whitelist()
 def get_customer_details(customer):
     """Returns customer GSTIN, address, and contact details."""
-    if not frappe.db.exists("Customer", customer):
+    if not smriti.db.exists("Customer", customer):
         frappe.throw(_("Customer {0} not found.").format(customer))
 
-    cust = frappe.get_doc("Customer", customer)
+    cust = smriti.documents.get("Customer", customer)
 
     # Billing address
     address_data = {}
-    addr_link = frappe.db.get_value(
+    addr_link = smriti.db.get(
         "Dynamic Link",
         {"link_doctype": "Customer", "link_name": customer, "parenttype": "Address"},
         "parent"
     )
     if addr_link:
-        addr = frappe.get_doc("Address", addr_link)
+        addr = smriti.documents.get("Address", addr_link)
         address_data = {
             "line1":   addr.address_line1 or "",
             "line2":   addr.address_line2 or "",
@@ -136,7 +137,7 @@ def get_customer_details(customer):
 @frappe.whitelist()
 def search_customers(query=""):
     """Searches customers by name for autocomplete dropdown."""
-    results = frappe.get_all(
+    results = smriti.db.get_list(
         "Customer",
         filters=[["Customer", "customer_name", "like", f"%{query}%"],
                  ["Customer", "disabled", "=", 0]],
@@ -157,7 +158,7 @@ def search_items(query=""):
             ["Item", "item_code", "like", f"%{query}%"],
             ["Item", "item_name", "like", f"%{query}%"]
         ]
-    results = frappe.get_all(
+    results = smriti.db.get_list(
         "Item",
         filters=filters,
         or_filters=or_filters,
@@ -198,7 +199,7 @@ def get_item_details_by_article(article, color=""):
         return {}
 
     # Try parent item first
-    parent = frappe.db.get_value(
+    parent = smriti.db.get(
         "Item",
         article,
         ["name", "item_name", "item_group", "brand", "gst_hsn_code", "custom_sub_category", "custom_mrp", "custom_gst_percentage", "valuation_rate"],
@@ -207,7 +208,7 @@ def get_item_details_by_article(article, color=""):
 
     if not parent:
         # Fuzzy match by article name or code
-        candidate = frappe.db.get_value(
+        candidate = smriti.db.get(
             "Item",
             {"item_code": ["like", f"%{article}%"], "disabled": 0},
             ["name", "item_name", "item_group", "brand", "gst_hsn_code", "custom_sub_category", "custom_mrp", "custom_gst_percentage", "valuation_rate"],
@@ -233,7 +234,7 @@ def get_item_details_by_article(article, color=""):
 
     # Try to find a variant matching the color to get precise pricing/attributes
     if color:
-        variant = frappe.db.get_value(
+        variant = smriti.db.get(
             "Item",
             {"variant_of": parent.name, "item_code": ["like", f"%{color}%"], "disabled": 0},
             ["name", "custom_mrp", "custom_gst_percentage", "gst_hsn_code"],
@@ -316,14 +317,14 @@ def check_invoice_permissions():
 def _find_tax_account(name_pattern, company):
     """Finds standard Output Tax first, then falls back to fuzzy match."""
     standard_name = f"Output Tax {name_pattern}"
-    acc = frappe.db.get_value(
+    acc = smriti.db.get(
         "Account",
         {"account_name": standard_name, "company": company, "is_group": 0},
         "name"
     )
     if acc:
         return acc
-    return frappe.db.get_value(
+    return smriti.db.get(
         "Account",
         {"account_name": ["like", f"%{name_pattern}%"], "company": company, "is_group": 0},
         "name"
@@ -379,18 +380,18 @@ def save_sizewise_invoice(payload):
         frappe.throw(_("Please add at least one item row."))
 
     company = (frappe.defaults.get_user_default("company")
-               or frappe.get_all("Company", limit=1)[0].name)
+               or smriti.db.get_list("Company", limit=1)[0].name)
 
     # Load existing or create new
     invoice_name = data.get("invoice_name")
-    if invoice_name and frappe.db.exists("Sales Invoice", invoice_name):
-        si = frappe.get_doc("Sales Invoice", invoice_name)
+    if invoice_name and smriti.db.exists("Sales Invoice", invoice_name):
+        si = smriti.documents.get("Sales Invoice", invoice_name)
         if si.docstatus != 0:
             frappe.throw(_("Cannot edit a submitted or cancelled invoice."))
         si.set("items", [])
         si.set("taxes", [])
     else:
-        si = frappe.new_doc("Sales Invoice")
+        si = smriti.documents.new("Sales Invoice")
 
     si.customer        = customer
     si.posting_date    = invoice_date
@@ -401,7 +402,7 @@ def save_sizewise_invoice(payload):
 
     # Auto-resolve SMRITI Party Stock Account for the customer
     if not si.get("custom_party_stock_account"):
-        psa = frappe.db.get_value(
+        psa = smriti.db.get(
             "SMRITI Party Stock Account",
             {"customer": customer, "company": company, "active": 1},
             "name"
@@ -412,7 +413,7 @@ def save_sizewise_invoice(payload):
 
     # Auto-resolve Company Address (Required by India Compliance)
     if not si.company_address:
-        addr = frappe.get_all(
+        addr = smriti.db.get_list(
             "Address",
             filters=[
                 ["Dynamic Link", "link_doctype", "=", "Company"],
@@ -425,7 +426,7 @@ def save_sizewise_invoice(payload):
         if addr:
             si.company_address = addr[0].name
         else:
-            addr = frappe.get_all(
+            addr = smriti.db.get_list(
                 "Address",
                 filters=[
                     ["Dynamic Link", "link_doctype", "=", "Company"],
@@ -438,7 +439,7 @@ def save_sizewise_invoice(payload):
 
     # Auto-resolve Customer Address
     if not si.customer_address:
-        cust_addr = frappe.get_all(
+        cust_addr = smriti.db.get_list(
             "Address",
             filters=[
                 ["Dynamic Link", "link_doctype", "=", "Customer"],
@@ -527,7 +528,7 @@ def save_sizewise_invoice(payload):
     si.flags.ignore_mandatory   = True
     # reviewed-ignore-permissions: gated by user session validation and billing permissions
     si.save(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
 
     return {
         "name":        si.name,
@@ -550,11 +551,11 @@ def _resolve_item_code(article, color, size, fallback_item_code):
         article,
         fallback_item_code,
     ]:
-        if candidate and frappe.db.exists("Item", candidate):
+        if candidate and smriti.db.exists("Item", candidate):
             return candidate
 
     # Fuzzy name match
-    found = frappe.db.get_value("Item", {"item_name": ["like", f"%{article}%"], "disabled": 0}, "name")
+    found = smriti.db.get("Item", {"item_name": ["like", f"%{article}%"], "disabled": 0}, "name")
     if found:
         return found
 
@@ -617,11 +618,11 @@ def _add_gst_taxes(si, tax_type, company):
 def submit_sizewise_invoice(invoice_name):
     """Submits a draft sizewise sales invoice."""
     check_invoice_permissions()
-    si = frappe.get_doc("Sales Invoice", invoice_name)
+    si = smriti.documents.get("Sales Invoice", invoice_name)
     if si.docstatus != 0:
         frappe.throw(_("Invoice {0} is already submitted or cancelled.").format(invoice_name))
     si.submit()
-    frappe.db.commit()
+    smriti.db.commit()
     return {"name": si.name, "message": f"Invoice {si.name} submitted successfully."}
 
 
@@ -629,10 +630,10 @@ def submit_sizewise_invoice(invoice_name):
 def get_sizewise_invoice(invoice_name):
     """Loads a saved sizewise invoice and reconstructs the matrix payload."""
     check_invoice_permissions()
-    if not frappe.db.exists("Sales Invoice", invoice_name):
+    if not smriti.db.exists("Sales Invoice", invoice_name):
         frappe.throw(_("Invoice {0} not found.").format(invoice_name))
 
-    si = frappe.get_doc("Sales Invoice", invoice_name)
+    si = smriti.documents.get("Sales Invoice", invoice_name)
 
     try:
         raw_json = si.get("custom_sizewise_json") or si.remarks
@@ -672,7 +673,7 @@ def list_sizewise_invoices(customer="", limit=30):
         ["Sales Invoice", "custom_sizewise_json", "!=", ""]
     ]
 
-    return frappe.get_all(
+    return smriti.db.get_list(
         "Sales Invoice",
         filters=filters,
         or_filters=or_filters,
@@ -686,11 +687,11 @@ def list_sizewise_invoices(customer="", limit=30):
 def cancel_sizewise_invoice(invoice_name):
     """Cancels a submitted sizewise invoice."""
     check_invoice_permissions()
-    si = frappe.get_doc("Sales Invoice", invoice_name)
+    si = smriti.documents.get("Sales Invoice", invoice_name)
     if si.docstatus != 1:
         frappe.throw(_("Only submitted invoices can be cancelled."))
     si.cancel()
-    frappe.db.commit()
+    smriti.db.commit()
     return {"name": si.name, "message": f"Invoice {si.name} cancelled."}
 
 

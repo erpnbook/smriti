@@ -19,11 +19,12 @@
 # All active service code (psv_analysis_service.py, balance_engine.py) was
 # migrated in BUG-005 to reference "SMRITI PSV Reorder Rule".
 # This file is kept to avoid migration errors if any historical DB records exist.
-# Action: Run `frappe.db.count("PSV Reorder Rule")` on staging. If zero, remove
+# Action: Run `smriti.db.count("PSV Reorder Rule")` on staging. If zero, remove
 # this folder and add a migration patch in v2.1.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from frappe.model.document import Document
 
 

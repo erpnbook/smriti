@@ -12,7 +12,8 @@ Copyright (c) 2026 AITDL NETWORK. All rights reserved.
 """
 
 import json
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from smriti_retail_os.layout_engine.layout_preferences import (
     validate_and_sanitise,
     defaults as default_prefs,
@@ -25,7 +26,7 @@ _PREFS_FIELD = "smriti_layout_prefs"
 def _field_exists() -> bool:
     """Returns True if the custom field exists on the User doctype."""
     try:
-        return frappe.db.exists(
+        return smriti.db.exists(
             "Custom Field",
             {"dt": "User", "fieldname": _PREFS_FIELD}
         )
@@ -50,7 +51,7 @@ def get_layout_preferences() -> dict:
         if not _field_exists():
             return default_prefs()
 
-        raw_json = frappe.db.get_value("User", user, _PREFS_FIELD) or ""
+        raw_json = smriti.db.get("User", user, _PREFS_FIELD) or ""
         if not raw_json:
             return default_prefs()
 
@@ -58,7 +59,7 @@ def get_layout_preferences() -> dict:
         return validate_and_sanitise(raw)
 
     except Exception:
-        frappe.log_error(frappe.get_traceback(), "SRLE.get_layout_preferences")
+        smriti.errors.log_error(frappe.get_traceback(), "SRLE.get_layout_preferences")
         return default_prefs()
 
 
@@ -87,14 +88,14 @@ def save_layout_preferences(prefs: str) -> dict:
         raw = json.loads(prefs) if isinstance(prefs, str) else prefs
         clean = validate_and_sanitise(raw)
 
-        frappe.db.set_value(
+        smriti.db.set_value(
             "User", user, _PREFS_FIELD, json.dumps(clean),
             update_modified=False
         )
-        frappe.db.commit()
+        smriti.db.commit()
 
         return {"status": "saved", "prefs": clean}
 
     except Exception:
-        frappe.log_error(frappe.get_traceback(), "SRLE.save_layout_preferences")
+        smriti.errors.log_error(frappe.get_traceback(), "SRLE.save_layout_preferences")
         return {"status": "error", "reason": "An error occurred saving your layout preferences."}

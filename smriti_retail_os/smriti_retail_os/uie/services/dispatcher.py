@@ -4,17 +4,18 @@
 
 import frappe
 from frappe import _
+from smriti_retail_os import smriti
 import time
 import datetime
 from smriti_retail_os.smriti_retail_os.uie.services.sdk.rest_adapter import RestAdapter
 
 def dispatch_queue_item(queue_name):
 	"""Processes a single queue item from SMRITI UIE Sync Queue."""
-	queue_item = frappe.get_doc("SMRITI UIE Sync Queue", queue_name)
+	queue_item = smriti.documents.get("SMRITI UIE Sync Queue", queue_name)
 	if queue_item.status not in ("Pending", "Retrying", "Failed"):
 		return
 		
-	integration = frappe.get_doc("SMRITI UIE Integration", queue_item.integration)
+	integration = smriti.documents.get("SMRITI UIE Integration", queue_item.integration)
 	if not integration.enabled:
 		return
 
@@ -32,14 +33,14 @@ def dispatch_queue_item(queue_name):
 	if integration.connector_type == "REST":
 		adapter = RestAdapter()
 	else:
-		frappe.log_error(f"Unsupported connector type: {integration.connector_type}", "UIE Dispatch Error")
+		smriti.errors.log_error(f"Unsupported connector type: {integration.connector_type}", "UIE Dispatch Error")
 		queue_item.status = "Dead-Letter"
 		queue_item.dead_letter_reason = f"Unsupported connector: {integration.connector_type}"
 		queue_item.save(ignore_permissions=True)
 		
 		# Log the failure in UIE Sync Log
-		log = frappe.get_doc({
-			"doctype": "SMRITI UIE Sync Log",
+		log = smriti.documents.new("UIESyncLog")
+		log.update({
 			"timestamp": datetime.datetime.now(),
 			"queue_item": queue_item.name,
 			"request_payload": queue_item.payload,
@@ -78,8 +79,8 @@ def dispatch_queue_item(queue_name):
 	queue_item.save(ignore_permissions=True)
 
 	# Write Sync Log
-	log = frappe.get_doc({
-		"doctype": "SMRITI UIE Sync Log",
+	log = smriti.documents.new("UIESyncLog")
+	log.update({
 		"timestamp": datetime.datetime.now(),
 		"queue_item": queue_item.name,
 		"request_payload": queue_item.payload,
@@ -107,7 +108,7 @@ def enqueue_document_sync(doc, method=None):
 		f"{doc.doctype.upper().replace(' ', '_')}_{method_str.upper()}"
 	)
 
-	integrations = frappe.get_all(
+	integrations = smriti.db.get_list(
 		"SMRITI UIE Integration",
 		filters={"enabled": 1},
 		fields=["name", "priority", "mapping_rules", "schema_validator"]
@@ -121,18 +122,18 @@ def enqueue_document_sync(doc, method=None):
 		try:
 			payload = payload_builder.build_payload(doc, integration)
 		except Exception as ex:
-			frappe.log_error(f"UIE payload creation failed for {doc.name}: {str(ex)}")
+			smriti.errors.log_error(f"UIE payload creation failed for {doc.name}: {str(ex)}")
 			continue
 
 		# Compute deterministic idempotency key
 		idemp_str = f"{doc.doctype}:{doc.name}:{integration.name}"
 		idempotency_key = hashlib.md5(idemp_str.encode("utf-8")).hexdigest()
 
-		if frappe.db.exists("SMRITI UIE Sync Queue", {"idempotency_key": idempotency_key}):
+		if smriti.db.exists("SMRITI UIE Sync Queue", {"idempotency_key": idempotency_key}):
 			continue
 
-		queue_item = frappe.get_doc({
-			"doctype": "SMRITI UIE Sync Queue",
+		queue_item = smriti.documents.new("UIESyncQueue")
+		queue_item.update({
 			"queue_id": frappe.generate_hash(),
 			"event_type": event_type,
 			"document_type": doc.doctype,
@@ -144,7 +145,7 @@ def enqueue_document_sync(doc, method=None):
 			"idempotency_key": idempotency_key
 		})
 		queue_item.insert(ignore_permissions=True)
-		frappe.db.commit()
+		smriti.db.commit()
 
 		frappe.enqueue(
 			"smriti_retail_os.smriti_retail_os.uie.services.dispatcher.dispatch_queue_item",

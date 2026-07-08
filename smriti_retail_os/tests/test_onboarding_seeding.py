@@ -11,6 +11,7 @@
 
 import unittest
 import frappe
+from smriti_retail_os import smriti
 from smriti_retail_os.setup import setup_smriti_retail_os
 
 class TestOnboardingSeeding(unittest.TestCase):
@@ -24,21 +25,21 @@ class TestOnboardingSeeding(unittest.TestCase):
         2. Seeding execution is idempotent (consecutive executions create no duplicate records).
         """
         # Phase 1: Clean up existing seeded records to test a fresh install state
-        frappe.db.delete("SMRITI Related Formula")
-        frappe.db.delete("SMRITI Related Term")
-        frappe.db.delete("SMRITI Business Term")
-        frappe.db.delete("SMRITI Formula Definition")
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Related Formula")
+        smriti.db.delete("SMRITI Related Term")
+        smriti.db.delete("SMRITI Business Term")
+        smriti.db.delete("SMRITI Formula Definition")
+        smriti.db.commit()
 
         # Verify tables are empty
-        self.assertEqual(frappe.db.count("SMRITI Formula Definition"), 0)
-        self.assertEqual(frappe.db.count("SMRITI Business Term"), 0)
+        self.assertEqual(smriti.db.count("SMRITI Formula Definition"), 0)
+        self.assertEqual(smriti.db.count("SMRITI Business Term"), 0)
 
         # Phase 2: Run setup function (simulating a fresh install)
         setup_smriti_retail_os()
         
-        formula_count_1 = frappe.db.count("SMRITI Formula Definition")
-        term_count_1 = frappe.db.count("SMRITI Business Term")
+        formula_count_1 = smriti.db.count("SMRITI Formula Definition")
+        term_count_1 = smriti.db.count("SMRITI Business Term")
 
         # Verify that default records were created
         self.assertGreater(formula_count_1, 0, "Formula definitions were not seeded.")
@@ -49,8 +50,8 @@ class TestOnboardingSeeding(unittest.TestCase):
         # Phase 3: Run setup function a second time (simulating a subsequent migration/update)
         setup_smriti_retail_os()
 
-        formula_count_2 = frappe.db.count("SMRITI Formula Definition")
-        term_count_2 = frappe.db.count("SMRITI Business Term")
+        formula_count_2 = smriti.db.count("SMRITI Formula Definition")
+        term_count_2 = smriti.db.count("SMRITI Business Term")
 
         # Verify that counts are identical (proving idempotency)
         self.assertEqual(formula_count_1, formula_count_2, "Duplicate formula definitions were created on second run.")

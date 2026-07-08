@@ -17,7 +17,8 @@
 # @version: 1.8.6
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from frappe.utils import now_datetime
 
 
@@ -34,7 +35,7 @@ def evaluate_license_status():
         }
     """
     try:
-        if not frappe.db.exists("DocType", "SMRITI License"):
+        if not smriti.db.exists("DocType", "SMRITI License"):
             return  # Pre-migration: DocType not yet installed
 
         doc = frappe.get_single("SMRITI License")
@@ -45,7 +46,7 @@ def evaluate_license_status():
 
         # _recalculate_license_state runs inside validate() on save
         doc.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         new_status = doc.license_status
         new_health  = doc.license_health
@@ -64,7 +65,7 @@ def evaluate_license_status():
             "remarks":                remarks,
         })
         doc.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # Log status change to activity log if it changed
         if prev_status != new_status:
@@ -77,14 +78,14 @@ def evaluate_license_status():
                 "remarks":      f"Auto-evaluated by daily scheduler. Was: {prev_status}",
             })
             doc.save(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
 
         frappe.logger("smriti.license").info(
             f"[SMRITI License] Daily evaluation: {prev_status} → {new_status}"
         )
 
     except Exception as e:
-        frappe.log_error(
+        smriti.errors.log_error(
             title="SMRITI License — Daily Evaluation Error",
             message=frappe.get_traceback()
         )

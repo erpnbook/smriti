@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 # SMRITI Matrix Platform Service
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 import json
 from frappe import _
+from smriti_retail_os import smriti
 from smriti_retail_os.matrix_engine.dto.matrix_dtos import (
     MatrixDefinitionDTO, MatrixVariantDTO, MatrixCellDTO, MatrixSessionDTO
 )
@@ -17,9 +18,9 @@ class MatrixService:
         Falls back to a default Color/Size matrix if none matches.
         """
         if not matrix_name:
-            matrix_name = frappe.db.get_value("SMRITI Matrix Definition", {}, "name")
+            matrix_name = smriti.db.get("SMRITI Matrix Definition", {}, "name")
             
-        if matrix_name and frappe.db.exists("SMRITI Matrix Definition", matrix_name):
+        if matrix_name and smriti.db.exists("SMRITI Matrix Definition", matrix_name):
             doc = MatrixRepository.get_doc("SMRITI Matrix Definition", matrix_name)
             # Map axes
             axis_x = "Size"
@@ -84,7 +85,7 @@ class MatrixService:
         definition = MatrixService.get_active_definition(matrix_name)
 
         # 2. Query Variants
-        variants = frappe.db.get_all(
+        variants = smriti.db.get_list(
             "Item",
             filters={"variant_of": article, "disabled": 0},
             fields=["name", "item_name", "standard_rate", "stock_uom"]
@@ -93,7 +94,7 @@ class MatrixService:
         variants_data = []
         for v in variants:
             # Fetch attributes
-            v_attrs = frappe.db.get_all(
+            v_attrs = smriti.db.get_list(
                 "Item Variant Attribute",
                 filters={"parent": v.name},
                 fields=["attribute", "attribute_value"]
@@ -102,7 +103,7 @@ class MatrixService:
             variants_data.append((v, attr_dict))
 
         # Fetch configured attributes on the template item itself
-        template_attrs = frappe.db.get_all(
+        template_attrs = smriti.db.get_list(
             "Item Variant Attribute",
             filters={"parent": article},
             pluck="attribute"
@@ -124,7 +125,7 @@ class MatrixService:
                     existing_sizes.add(x_val)
 
             # Get size groups
-            company = frappe.defaults.get_user_default("company") or frappe.db.get_value("Company", {}, "name")
+            company = frappe.defaults.get_user_default("company") or smriti.db.get("Company", {}, "name")
             from smriti_retail_os.company_api import get_size_groups as get_company_size_groups
             from smriti_retail_os.master_api import _DEFAULT_SIZE_GROUPS
             groups = get_company_size_groups(company)
@@ -153,7 +154,7 @@ class MatrixService:
                 all_sizes.update(best_group.get("sizes") or [])
             else:
                 # Fallback to all sizes in global master if no specific group matches or no variants exist yet
-                all_sizes.update(frappe.db.get_all("Item Attribute Value", filters={"parent": definition.axis_x}, pluck="attribute_value"))
+                all_sizes.update(smriti.db.get_list("Item Attribute Value", filters={"parent": definition.axis_x}, pluck="attribute_value"))
         else:
             all_sizes.add("No Size configured")
 
@@ -192,7 +193,7 @@ class MatrixService:
             y_val = y_val or "Default"
 
             # Barcode
-            barcode = frappe.db.get_value(
+            barcode = smriti.db.get(
                 "Item Barcode",
                 {"parent": v.name, "custom_is_primary": 1},
                 "barcode"
@@ -236,7 +237,7 @@ class MatrixService:
                 cells.append(MatrixCellDTO(x_val=x, y_val=y, qty=0, variant=var_dto))
 
         # Fetch template Item name and rate
-        tpl_name, tpl_rate = frappe.db.get_value("Item", article, ["item_name", "standard_rate"]) or (article, 0.0)
+        tpl_name, tpl_rate = smriti.db.get("Item", article, ["item_name", "standard_rate"]) or (article, 0.0)
 
         session = MatrixSessionDTO(
             article=article,
@@ -302,6 +303,6 @@ class MatrixService:
         """
         # Delete keys matching different definition name combinations
         frappe.cache().delete_key(f"smriti_matrix_session:{article}:default")
-        definitions = frappe.db.get_all("SMRITI Matrix Definition", pluck="name")
+        definitions = smriti.db.get_list("SMRITI Matrix Definition", pluck="name")
         for d in definitions:
             frappe.cache().delete_key(f"smriti_matrix_session:{article}:{d}")

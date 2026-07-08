@@ -11,6 +11,7 @@
 #
 
 import frappe
+from smriti_retail_os import smriti
 import unittest
 import json
 import hashlib
@@ -30,69 +31,69 @@ class TestSmritiReports(unittest.TestCase):
         super().setUpClass()
         from smriti_retail_os.setup import setup_smriti_retail_os
         setup_smriti_retail_os()
-        frappe.db.commit()
+        smriti.db.commit()
 
         # Use standard pre-configured _Test Company
         cls.company_name = "_Test Company"
-        if not frappe.db.exists("Company", cls.company_name):
-            cls.company = frappe.new_doc("Company")
+        if not smriti.db.exists("Company", cls.company_name):
+            cls.company = smriti.documents.new("Company")
             cls.company.company_name = cls.company_name
             cls.company.default_currency = "INR"
             cls.company.country = "India"
             cls.company.insert(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
 
         # Ensure test customer exists
         cls.customer_name = "Test Customer reports"
-        if not frappe.db.exists("Customer", cls.customer_name):
-            cust = frappe.new_doc("Customer")
+        if not smriti.db.exists("Customer", cls.customer_name):
+            cust = smriti.documents.new("Customer")
             cust.customer_name = cls.customer_name
-            cust.customer_group = frappe.db.get_value("Customer Group", {}, "name") or "All Customer Groups"
-            cust.territory = frappe.db.get_value("Territory", {}, "name") or "All Territories"
+            cust.customer_group = smriti.db.get("Customer Group", {}, "name") or "All Customer Groups"
+            cust.territory = smriti.db.get("Territory", {}, "name") or "All Territories"
             cust.insert(ignore_permissions=True, ignore_mandatory=True, ignore_links=True)
-            frappe.db.commit()
+            smriti.db.commit()
 
         # Ensure test supplier exists
         cls.supplier_name = "Test Supplier reports"
-        if not frappe.db.exists("Supplier", cls.supplier_name):
-            supp = frappe.new_doc("Supplier")
+        if not smriti.db.exists("Supplier", cls.supplier_name):
+            supp = smriti.documents.new("Supplier")
             supp.supplier_name = cls.supplier_name
-            supp.supplier_group = frappe.db.get_value("Supplier Group", {}, "name") or "All Supplier Groups"
+            supp.supplier_group = smriti.db.get("Supplier Group", {}, "name") or "All Supplier Groups"
             supp.insert(ignore_permissions=True, ignore_mandatory=True, ignore_links=True)
-            frappe.db.commit()
+            smriti.db.commit()
 
     @classmethod
     def tearDownClass(cls):
         # Remove only the test customer and supplier. Keep standard company.
-        frappe.db.delete("Customer", {"customer_name": cls.customer_name})
-        frappe.db.delete("Supplier", {"supplier_name": cls.supplier_name})
-        frappe.db.commit()
+        smriti.db.delete("Customer", {"customer_name": cls.customer_name})
+        smriti.db.delete("Supplier", {"supplier_name": cls.supplier_name})
+        smriti.db.commit()
         super().tearDownClass()
 
     def setUp(self):
         super().setUp()
         # Clean up any leftover entries from previous aborted test runs
-        frappe.db.delete("Payment Entry", {"company": self.company_name, "party": ["in", [self.customer_name, self.supplier_name]]})
-        frappe.db.delete("Sales Invoice", {"company": self.company_name, "customer": self.customer_name})
-        frappe.db.delete("Purchase Invoice", {"company": self.company_name, "supplier": self.supplier_name})
-        frappe.db.delete("Payment Ledger Entry", {"company": self.company_name, "party": ["in", [self.customer_name, self.supplier_name]]})
-        frappe.db.sql("""
+        smriti.db.delete("Payment Entry", {"company": self.company_name, "party": ["in", [self.customer_name, self.supplier_name]]})
+        smriti.db.delete("Sales Invoice", {"company": self.company_name, "customer": self.customer_name})
+        smriti.db.delete("Purchase Invoice", {"company": self.company_name, "supplier": self.supplier_name})
+        smriti.db.delete("Payment Ledger Entry", {"company": self.company_name, "party": ["in", [self.customer_name, self.supplier_name]]})
+        smriti.db.sql("""
             DELETE FROM `tabPayment Entry Reference` 
             WHERE parent NOT IN (SELECT name FROM `tabPayment Entry`)
         """)
-        frappe.db.commit()
+        smriti.db.commit()
 
     def tearDown(self):
         # Clean up entries created by this test
-        frappe.db.delete("Payment Entry", {"company": self.company_name, "party": ["in", [self.customer_name, self.supplier_name]]})
-        frappe.db.delete("Sales Invoice", {"company": self.company_name, "customer": self.customer_name})
-        frappe.db.delete("Purchase Invoice", {"company": self.company_name, "supplier": self.supplier_name})
-        frappe.db.delete("Payment Ledger Entry", {"company": self.company_name, "party": ["in", [self.customer_name, self.supplier_name]]})
-        frappe.db.sql("""
+        smriti.db.delete("Payment Entry", {"company": self.company_name, "party": ["in", [self.customer_name, self.supplier_name]]})
+        smriti.db.delete("Sales Invoice", {"company": self.company_name, "customer": self.customer_name})
+        smriti.db.delete("Purchase Invoice", {"company": self.company_name, "supplier": self.supplier_name})
+        smriti.db.delete("Payment Ledger Entry", {"company": self.company_name, "party": ["in", [self.customer_name, self.supplier_name]]})
+        smriti.db.sql("""
             DELETE FROM `tabPayment Entry Reference` 
             WHERE parent NOT IN (SELECT name FROM `tabPayment Entry`)
         """)
-        frappe.db.commit()
+        smriti.db.commit()
         super().tearDown()
 
     def test_get_reports_list(self):
@@ -137,8 +138,8 @@ class TestSmritiReports(unittest.TestCase):
         frappe.cache().delete_value(cache_key)
 
         # Force template to have cache minutes
-        frappe.db.set_value("SMRITI Report Template", "item_wise_sales", "cache_minutes", 10)
-        frappe.db.commit()
+        smriti.db.set_value("SMRITI Report Template", "item_wise_sales", "cache_minutes", 10)
+        smriti.db.commit()
 
         # Run report
         data = get_smriti_report_data("item_wise_sales", filters)
@@ -151,8 +152,8 @@ class TestSmritiReports(unittest.TestCase):
         self.assertEqual(len(data), len(cached_data))
 
         # Reset cache setting
-        frappe.db.set_value("SMRITI Report Template", "item_wise_sales", "cache_minutes", 0)
-        frappe.db.commit()
+        smriti.db.set_value("SMRITI Report Template", "item_wise_sales", "cache_minutes", 0)
+        smriti.db.commit()
         frappe.cache().delete_value(cache_key)
 
     def test_saved_views_lifecycle(self):
@@ -183,7 +184,7 @@ class TestSmritiReports(unittest.TestCase):
         # 3. Delete view
         result = delete_smriti_saved_view(view_doc_name)
         self.assertEqual(result.get("success"), True)
-        self.assertFalse(frappe.db.exists("SMRITI Saved View", view_doc_name))
+        self.assertFalse(smriti.db.exists("SMRITI Saved View", view_doc_name))
 
     def test_saved_view_column_reordering(self):
         """Tests that custom column reordering is preserved in SMRITI Saved Views."""
@@ -238,7 +239,7 @@ class TestSmritiReports(unittest.TestCase):
     def test_payment_and_receipt_registers(self):
         """Tests payment_register and receipt_register SQL reports."""
         # Insert mock Sales Invoice first to satisfy reference validation in Payment Entry
-        si_ref = frappe.new_doc("Sales Invoice")
+        si_ref = smriti.documents.new("Sales Invoice")
         si_ref.company = self.company_name
         si_ref.customer = self.customer_name
         si_ref.currency = "INR"
@@ -252,14 +253,14 @@ class TestSmritiReports(unittest.TestCase):
         si_ref.insert(ignore_permissions=True, ignore_mandatory=True, ignore_links=True)
         
         si_ref_name = si_ref.name
-        frappe.db.set_value("Sales Invoice", si_ref_name, {
+        smriti.db.set_value("Sales Invoice", si_ref_name, {
             "posting_date": "2026-06-01",
             "outstanding_amount": 5000.0,
             "docstatus": 1
         })
 
         # Create mock Payment Ledger Entry so Payment Entry validation sees the invoice as outstanding
-        ple = frappe.new_doc("Payment Ledger Entry")
+        ple = smriti.documents.new("Payment Ledger Entry")
         ple.company = self.company_name
         ple.posting_date = "2026-06-01"
         ple.due_date = "2026-06-01"
@@ -277,9 +278,9 @@ class TestSmritiReports(unittest.TestCase):
         ple.insert(ignore_permissions=True, ignore_mandatory=True, ignore_links=True)
 
         frappe.clear_document_cache("Sales Invoice", si_ref_name)
-        frappe.db.commit()
+        smriti.db.commit()
         
-        pe_rec = frappe.new_doc("Payment Entry")
+        pe_rec = smriti.documents.new("Payment Entry")
         pe_rec.payment_type = "Receive"
         pe_rec.party_type = "Customer"
         pe_rec.party = self.customer_name
@@ -302,7 +303,7 @@ class TestSmritiReports(unittest.TestCase):
         })
         pe_rec.insert(ignore_permissions=True, ignore_mandatory=True, ignore_links=True)
         pe_receive_name = pe_rec.name
-        frappe.db.set_value("Payment Entry", pe_receive_name, {
+        smriti.db.set_value("Payment Entry", pe_receive_name, {
             "posting_date": "2026-06-01",
             "paid_amount": 5000.0,
             "base_paid_amount": 5000.0,
@@ -315,7 +316,7 @@ class TestSmritiReports(unittest.TestCase):
         })
 
         # Insert mock Payment Entry (docstatus=1) for Pay
-        pe_pay = frappe.new_doc("Payment Entry")
+        pe_pay = smriti.documents.new("Payment Entry")
         pe_pay.payment_type = "Pay"
         pe_pay.party_type = "Supplier"
         pe_pay.party = self.supplier_name
@@ -331,7 +332,7 @@ class TestSmritiReports(unittest.TestCase):
         pe_pay.paid_to_account_currency = "INR"
         pe_pay.insert(ignore_permissions=True, ignore_mandatory=True, ignore_links=True)
         pe_pay_name = pe_pay.name
-        frappe.db.set_value("Payment Entry", pe_pay_name, {
+        smriti.db.set_value("Payment Entry", pe_pay_name, {
             "posting_date": "2026-06-01",
             "paid_amount": 3000.0,
             "base_paid_amount": 3000.0,
@@ -344,7 +345,7 @@ class TestSmritiReports(unittest.TestCase):
             "docstatus": 1
         })
         
-        frappe.db.commit()
+        smriti.db.commit()
 
         # 1. Run Payment Register
         filters = {
@@ -369,11 +370,11 @@ class TestSmritiReports(unittest.TestCase):
         self.assertEqual(match_rec[0].against_invoice, si_ref_name)
 
         # Cleanup
-        frappe.db.delete("Payment Entry", pe_receive_name)
-        frappe.db.delete("Payment Entry Reference", {"parent": pe_receive_name})
-        frappe.db.delete("Payment Entry", pe_pay_name)
-        frappe.db.delete("Sales Invoice", si_ref_name)
-        frappe.db.commit()
+        smriti.db.delete("Payment Entry", pe_receive_name)
+        smriti.db.delete("Payment Entry Reference", {"parent": pe_receive_name})
+        smriti.db.delete("Payment Entry", pe_pay_name)
+        smriti.db.delete("Sales Invoice", si_ref_name)
+        smriti.db.commit()
 
     def test_cash_book(self):
         """Tests cash_book aggregator calculation."""
@@ -384,10 +385,10 @@ class TestSmritiReports(unittest.TestCase):
         # Insert test GL Entries
         gle_name1 = "GLE-TEST-CASH-001"
         gle_name2 = "GLE-TEST-CASH-002"
-        frappe.db.delete("GL Entry", {"voucher_no": ["in", [gle_name1, gle_name2]]})
+        smriti.db.delete("GL Entry", {"voucher_no": ["in", [gle_name1, gle_name2]]})
         
         # Opening entry (dated before from_date)
-        gle1 = frappe.new_doc("GL Entry")
+        gle1 = smriti.documents.new("GL Entry")
         gle1.posting_date = "2026-05-31"
         gle1.account = cash_account
         gle1.company = company
@@ -400,7 +401,7 @@ class TestSmritiReports(unittest.TestCase):
         gle1.insert(ignore_permissions=True, ignore_mandatory=True, ignore_links=True)
 
         # Current entry (dated within from_date to_date)
-        gle2 = frappe.new_doc("GL Entry")
+        gle2 = smriti.documents.new("GL Entry")
         gle2.posting_date = "2026-06-01"
         gle2.account = cash_account
         gle2.company = company
@@ -412,7 +413,7 @@ class TestSmritiReports(unittest.TestCase):
         gle2.is_cancelled = 0
         gle2.insert(ignore_permissions=True, ignore_mandatory=True, ignore_links=True)
         
-        frappe.db.commit()
+        smriti.db.commit()
 
         filters = {
             "company": company,
@@ -427,15 +428,15 @@ class TestSmritiReports(unittest.TestCase):
         self.assertEqual(float(res[0]["closing_balance"]), 13000.0)
 
         # Cleanup
-        frappe.db.delete("GL Entry", {"voucher_no": ["in", [gle_name1, gle_name2]]})
-        frappe.db.commit()
+        smriti.db.delete("GL Entry", {"voucher_no": ["in", [gle_name1, gle_name2]]})
+        smriti.db.commit()
 
     def test_day_book(self):
         """Tests day_book multi-doctype business daily summary aggregator."""
         company = self.company_name
         
         # Create mock Sales Invoice
-        si = frappe.new_doc("Sales Invoice")
+        si = smriti.documents.new("Sales Invoice")
         si.company = company
         si.customer = self.customer_name
         si.currency = "INR"
@@ -448,13 +449,13 @@ class TestSmritiReports(unittest.TestCase):
         si.net_total = 15000.0
         si.insert(ignore_permissions=True, ignore_mandatory=True, ignore_links=True)
         si_name = si.name
-        frappe.db.set_value("Sales Invoice", si_name, {
+        smriti.db.set_value("Sales Invoice", si_name, {
             "posting_date": "2026-06-01",
             "docstatus": 1
         })
 
         # Create mock Purchase Invoice
-        pi = frappe.new_doc("Purchase Invoice")
+        pi = smriti.documents.new("Purchase Invoice")
         pi.company = company
         pi.supplier = self.supplier_name
         pi.currency = "INR"
@@ -467,13 +468,13 @@ class TestSmritiReports(unittest.TestCase):
         pi.net_total = 8000.0
         pi.insert(ignore_permissions=True, ignore_mandatory=True, ignore_links=True)
         pi_name = pi.name
-        frappe.db.set_value("Purchase Invoice", pi_name, {
+        smriti.db.set_value("Purchase Invoice", pi_name, {
             "posting_date": "2026-06-01",
             "docstatus": 1
         })
 
         # Create mock Payment Entry (Receive)
-        pe_rec = frappe.new_doc("Payment Entry")
+        pe_rec = smriti.documents.new("Payment Entry")
         pe_rec.payment_type = "Receive"
         pe_rec.party_type = "Customer"
         pe_rec.party = self.customer_name
@@ -484,7 +485,7 @@ class TestSmritiReports(unittest.TestCase):
         pe_rec.target_exchange_rate = 1.0
         pe_rec.insert(ignore_permissions=True, ignore_mandatory=True, ignore_links=True)
         pe_rec_name = pe_rec.name
-        frappe.db.set_value("Payment Entry", pe_rec_name, {
+        smriti.db.set_value("Payment Entry", pe_rec_name, {
             "posting_date": "2026-06-01",
             "paid_amount": 12000.0,
             "base_paid_amount": 12000.0,
@@ -496,7 +497,7 @@ class TestSmritiReports(unittest.TestCase):
         })
 
         # Create mock Payment Entry (Pay)
-        pe_pay = frappe.new_doc("Payment Entry")
+        pe_pay = smriti.documents.new("Payment Entry")
         pe_pay.payment_type = "Pay"
         pe_pay.party_type = "Supplier"
         pe_pay.party = self.supplier_name
@@ -507,7 +508,7 @@ class TestSmritiReports(unittest.TestCase):
         pe_pay.target_exchange_rate = 1.0
         pe_pay.insert(ignore_permissions=True, ignore_mandatory=True, ignore_links=True)
         pe_pay_name = pe_pay.name
-        frappe.db.set_value("Payment Entry", pe_pay_name, {
+        smriti.db.set_value("Payment Entry", pe_pay_name, {
             "posting_date": "2026-06-01",
             "paid_amount": 5000.0,
             "base_paid_amount": 5000.0,
@@ -518,7 +519,7 @@ class TestSmritiReports(unittest.TestCase):
             "docstatus": 1
         })
 
-        frappe.db.commit()
+        smriti.db.commit()
 
         filters = {
             "company": company,
@@ -536,18 +537,18 @@ class TestSmritiReports(unittest.TestCase):
         self.assertEqual(float(day_row["net_cash_position"]), 7000.0)
 
         # Cleanup
-        frappe.db.delete("Sales Invoice", si_name)
-        frappe.db.delete("Purchase Invoice", pi_name)
-        frappe.db.delete("Payment Entry", pe_rec_name)
-        frappe.db.delete("Payment Entry", pe_pay_name)
-        frappe.db.commit()
+        smriti.db.delete("Sales Invoice", si_name)
+        smriti.db.delete("Purchase Invoice", pi_name)
+        smriti.db.delete("Payment Entry", pe_rec_name)
+        smriti.db.delete("Payment Entry", pe_pay_name)
+        smriti.db.commit()
 
     def test_outstandings_and_ageing(self):
         """Tests customer and supplier outstanding aging reports and filters."""
         company = self.company_name
         
         # 1. Customer Outstanding
-        si = frappe.new_doc("Sales Invoice")
+        si = smriti.documents.new("Sales Invoice")
         si.company = company
         si.customer = self.customer_name
         si.currency = "INR"
@@ -562,7 +563,7 @@ class TestSmritiReports(unittest.TestCase):
         si_name = si.name
         
         from frappe.utils import add_days, nowdate
-        frappe.db.set_value("Sales Invoice", si_name, {
+        smriti.db.set_value("Sales Invoice", si_name, {
             "posting_date": add_days(nowdate(), -45),
             "due_date": add_days(nowdate(), -15),
             "outstanding_amount": 25000.0,
@@ -570,7 +571,7 @@ class TestSmritiReports(unittest.TestCase):
         })
 
         # 2. Supplier Outstanding
-        pi = frappe.new_doc("Purchase Invoice")
+        pi = smriti.documents.new("Purchase Invoice")
         pi.company = company
         pi.supplier = self.supplier_name
         pi.currency = "INR"
@@ -584,14 +585,14 @@ class TestSmritiReports(unittest.TestCase):
         pi.insert(ignore_permissions=True, ignore_mandatory=True, ignore_links=True)
         pi_name = pi.name
         
-        frappe.db.set_value("Purchase Invoice", pi_name, {
+        smriti.db.set_value("Purchase Invoice", pi_name, {
             "posting_date": add_days(nowdate(), -15),
             "due_date": nowdate(),
             "outstanding_amount": 18000.0,
             "docstatus": 1
         })
 
-        frappe.db.commit()
+        smriti.db.commit()
 
         # Test Customer Outstanding report
         res_cust = get_smriti_report_data("customer_outstanding", {"company": company})
@@ -629,14 +630,14 @@ class TestSmritiReports(unittest.TestCase):
         self.assertNotIn(pi_name, [r.invoice for r in res_supp_bucket_31_60])
 
         # Cleanup
-        frappe.db.delete("Sales Invoice", si_name)
-        frappe.db.delete("Purchase Invoice", pi_name)
-        frappe.db.commit()
+        smriti.db.delete("Sales Invoice", si_name)
+        smriti.db.delete("Purchase Invoice", pi_name)
+        smriti.db.commit()
 
     def test_audit_reports(self):
         """Tests that SMRITI Security Audit Log and Address Change Log reports execute successfully."""
         # 1. Insert mock Activity Log
-        log1 = frappe.new_doc("Activity Log")
+        log1 = smriti.documents.new("Activity Log")
         log1.user = "Administrator"
         log1.operation = "Login"
         log1.subject = "Test report run audit"
@@ -644,7 +645,7 @@ class TestSmritiReports(unittest.TestCase):
         log1_name = log1.name
         
         # 2. Insert mock SMRITI Address Audit Log
-        log2 = frappe.new_doc("SMRITI Address Audit Log")
+        log2 = smriti.documents.new("SMRITI Address Audit Log")
         log2.company = self.company_name
         log2.changed_by = "Administrator"
         log2.changed_at = "2026-06-12 12:00:00"
@@ -654,7 +655,7 @@ class TestSmritiReports(unittest.TestCase):
         log2.insert(ignore_permissions=True)
         log2_name = log2.name
         
-        frappe.db.commit()
+        smriti.db.commit()
         
         # 3. Query Security Audit Log
         filters = {
@@ -680,6 +681,6 @@ class TestSmritiReports(unittest.TestCase):
         self.assertEqual(res_addr[0]["field_name"], "address_line1")
         
         # Cleanup
-        frappe.db.delete("Activity Log", log1_name)
-        frappe.db.delete("SMRITI Address Audit Log", log2_name)
-        frappe.db.commit()
+        smriti.db.delete("Activity Log", log1_name)
+        smriti.db.delete("SMRITI Address Audit Log", log2_name)
+        smriti.db.commit()

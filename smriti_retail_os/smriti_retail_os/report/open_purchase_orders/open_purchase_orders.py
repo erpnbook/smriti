@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # SMRITI Open Purchase Orders Script Report
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 
 def execute(filters=None):
     columns = get_columns()
@@ -35,7 +36,7 @@ def get_data(filters):
     if filters.get("to_date"):
         conds.setdefault("transaction_date", ["<=", filters.get("to_date")])
 
-    return frappe.get_all(
+    return smriti.db.get_list(
         "SMRITI Purchase Order",
         filters=conds,
         fields=["name as po_number", "supplier", "supplier_name", "transaction_date", "schedule_date", "total_qty", "grand_total", "per_received", "status"],

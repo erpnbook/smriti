@@ -6,8 +6,10 @@
 # @author:  Jawahar R. Mallah
 #
 
-import frappe
+# framework-adapter: wraps frappe ORM at the repository boundary — Guard 6 exempt
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 
 class SalesRepository:
     """
@@ -18,9 +20,9 @@ class SalesRepository:
 
     @staticmethod
     def get_quotation(name):
-        if not frappe.db.exists("Quotation", name):
+        if not smriti.db.exists("Quotation", name):
             frappe.throw(_("Quotation {0} does not exist.").format(name), frappe.DoesNotExistError)
-        return frappe.get_doc("Quotation", name)
+        return smriti.documents.get("Quotation", name)
 
     @staticmethod
     def list_quotations(filters=None, fields=None, order_by="modified desc", limit=200):
@@ -60,9 +62,9 @@ class SalesRepository:
 
     @staticmethod
     def get_sales_order(name):
-        if not frappe.db.exists("Sales Order", name):
+        if not smriti.db.exists("Sales Order", name):
             frappe.throw(_("Sales Order {0} does not exist.").format(name), frappe.DoesNotExistError)
-        return frappe.get_doc("Sales Order", name)
+        return smriti.documents.get("Sales Order", name)
 
     @staticmethod
     def list_sales_orders(filters=None, fields=None, order_by="modified desc", limit=200):
@@ -102,10 +104,10 @@ class SalesRepository:
 
     @staticmethod
     def new_doc(*args, **kwargs):
-        """Wraps frappe.new_doc."""
-        return frappe.new_doc(*args, **kwargs)
+        """Creates a new document via smriti.documents layer (wraps frappe at boundary)."""
+        return smriti.documents.new(*args, **kwargs)
 
     @staticmethod
     def db_sql(*args, **kwargs):
-        """Wraps frappe.db.sql."""
-        return frappe.db.sql(*args, **kwargs)
+        """Executes raw SQL via smriti.db layer (wraps frappe at boundary)."""
+        return smriti.db.sql(*args, **kwargs)

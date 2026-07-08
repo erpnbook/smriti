@@ -11,6 +11,7 @@
 #
 
 import frappe
+from smriti_retail_os import smriti
 import unittest
 from smriti_retail_os.services.knowledge_service import (
     get_asset_by_uri,
@@ -22,13 +23,13 @@ from smriti_retail_os.services.knowledge_service import (
 class TestKnowledgeOS(unittest.TestCase):
     def setUp(self):
         # 1. Clean up test database records
-        frappe.db.delete("SMRITI Knowledge Relation")
-        frappe.db.delete("SMRITI Knowledge Asset", {"asset_code": ["like", "TST-%"]})
-        frappe.db.delete("SMRITI Business Term", {"term_id": ["in", ["TST-T-001", "TST-T-002"]]})
-        frappe.db.delete("SMRITI Formula Definition", {"formula_id": ["in", ["TST-F-001"]]})
-        frappe.db.delete("SMRITI Entity Attribute Value", {"parent": "TST-ITEM-001"})
-        frappe.db.delete("SMRITI Custom Attribute", {"attribute_code": ["like", "TST_%"]})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Knowledge Relation")
+        smriti.db.delete("SMRITI Knowledge Asset", {"asset_code": ["like", "TST-%"]})
+        smriti.db.delete("SMRITI Business Term", {"term_id": ["in", ["TST-T-001", "TST-T-002"]]})
+        smriti.db.delete("SMRITI Formula Definition", {"formula_id": ["in", ["TST-F-001"]]})
+        smriti.db.delete("SMRITI Entity Attribute Value", {"parent": "TST-ITEM-001"})
+        smriti.db.delete("SMRITI Custom Attribute", {"attribute_code": ["like", "TST_%"]})
+        smriti.db.commit()
 
         # 2. Create actual referenced documents
         self.term_1 = frappe.get_doc({
@@ -68,28 +69,28 @@ class TestKnowledgeOS(unittest.TestCase):
             "effective_date": "2026-06-21",
             "formula_expression": "a + b"
         }).insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         frappe.cache().delete_value("smriti:skos:asset:smriti:formula:TST-F-001")
         frappe.cache().delete_value("smriti:skos:asset:smriti:term:TST-T-001")
         frappe.cache().delete_value("smriti:skos:asset:smriti:term:TST-T-002")
 
     def tearDown(self):
-        frappe.db.delete("SMRITI Knowledge Relation")
-        frappe.db.delete("SMRITI Knowledge Asset", {"asset_code": ["like", "TST-%"]})
-        frappe.db.delete("SMRITI Business Term", {"term_id": ["in", ["TST-T-001", "TST-T-002"]]})
-        frappe.db.delete("SMRITI Formula Definition", {"formula_id": ["in", ["TST-F-001"]]})
-        frappe.db.delete("SMRITI Entity Attribute Value", {"parent": "TST-ITEM-001"})
-        frappe.db.delete("SMRITI Custom Attribute", {"attribute_code": ["like", "TST_%"]})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Knowledge Relation")
+        smriti.db.delete("SMRITI Knowledge Asset", {"asset_code": ["like", "TST-%"]})
+        smriti.db.delete("SMRITI Business Term", {"term_id": ["in", ["TST-T-001", "TST-T-002"]]})
+        smriti.db.delete("SMRITI Formula Definition", {"formula_id": ["in", ["TST-F-001"]]})
+        smriti.db.delete("SMRITI Entity Attribute Value", {"parent": "TST-ITEM-001"})
+        smriti.db.delete("SMRITI Custom Attribute", {"attribute_code": ["like", "TST_%"]})
+        smriti.db.commit()
         frappe.cache().delete_value("smriti:skos:asset:smriti:formula:TST-F-001")
         frappe.cache().delete_value("smriti:skos:asset:smriti:term:TST-T-001")
         frappe.cache().delete_value("smriti:skos:asset:smriti:term:TST-T-002")
 
     def test_asset_registry_validations(self):
         """KAR-01: Verifies unique constraints and basic validations."""
-        frappe.db.delete("SMRITI Knowledge Asset", {"asset_code": ["like", "TST-%"]})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Knowledge Asset", {"asset_code": ["like", "TST-%"]})
+        smriti.db.commit()
 
         asset1 = frappe.get_doc({
             "doctype": "SMRITI Knowledge Asset",
@@ -103,7 +104,7 @@ class TestKnowledgeOS(unittest.TestCase):
             "reference_name": self.term_1.name
         })
         asset1.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # Duplicate asset_code should fail
         asset_dup_code = frappe.get_doc({
@@ -137,8 +138,8 @@ class TestKnowledgeOS(unittest.TestCase):
 
     def test_relations_validations(self):
         """KGR-01: Verifies unique edge constraint, self-loop detection, and traversals."""
-        frappe.db.delete("SMRITI Knowledge Asset", {"asset_code": ["like", "TST-%"]})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Knowledge Asset", {"asset_code": ["like", "TST-%"]})
+        smriti.db.commit()
 
         # Create assets
         asset1 = frappe.get_doc({
@@ -187,7 +188,7 @@ class TestKnowledgeOS(unittest.TestCase):
             "tenant_scope": "Global"
         })
         rel1.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # Duplicate relation edge should fail
         rel_dup = frappe.get_doc({
@@ -218,7 +219,7 @@ class TestKnowledgeOS(unittest.TestCase):
             "is_reportable": 1
         })
         attr.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # Invalid attribute code format should fail (contains invalid character - hyphen)
         attr_invalid = frappe.get_doc({
@@ -241,7 +242,7 @@ class TestKnowledgeOS(unittest.TestCase):
             "attribute_value": "Diwali"
         })
         val.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # Invalid select option value should fail
         val_invalid_option = frappe.get_doc({
@@ -267,8 +268,8 @@ class TestKnowledgeOS(unittest.TestCase):
 
     def test_platform_service_endpoints(self):
         """SKOS Core API: Verifies cached get, traverse depth caps, and search permissions."""
-        frappe.db.delete("SMRITI Knowledge Asset", {"asset_code": ["like", "TST-%"]})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Knowledge Asset", {"asset_code": ["like", "TST-%"]})
+        smriti.db.commit()
 
         # Create active approved public asset
         asset_pub = frappe.get_doc({
@@ -299,7 +300,7 @@ class TestKnowledgeOS(unittest.TestCase):
             "reference_doctype": "SMRITI Business Term",
             "reference_name": self.term_2.name
         }).insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # 1. Fetch URI works and caches
         doc_fetched = get_asset_by_uri("smriti:term:TST-T-001")
@@ -330,9 +331,9 @@ class TestKnowledgeOS(unittest.TestCase):
     def test_lifecycle_auto_sync(self):
         """SKOS Core API: Verifies lifecycle auto-sync hooks for Terms and Formulas."""
         # Clean up in case of leftover TST-LIFECYCLE-T1
-        frappe.db.delete("SMRITI Knowledge Asset", {"asset_uri": "smriti:term:TST-LIFECYCLE-T1"})
-        frappe.db.delete("SMRITI Business Term", {"term_id": "TST-LIFECYCLE-T1"})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Knowledge Asset", {"asset_uri": "smriti:term:TST-LIFECYCLE-T1"})
+        smriti.db.delete("SMRITI Business Term", {"term_id": "TST-LIFECYCLE-T1"})
+        smriti.db.commit()
 
         # Create a new Business Term (draft must be inactive)
         term = frappe.get_doc({
@@ -347,12 +348,12 @@ class TestKnowledgeOS(unittest.TestCase):
             "definition": "Lifecycle definition",
             "hinglish_definition": "Hinglish explanation here"
         }).insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # The KAR asset should be automatically created by the hooks
-        asset_name = frappe.db.exists("SMRITI Knowledge Asset", {"asset_uri": "smriti:term:TST-LIFECYCLE-T1"})
+        asset_name = smriti.db.exists("SMRITI Knowledge Asset", {"asset_uri": "smriti:term:TST-LIFECYCLE-T1"})
         self.assertIsNotNone(asset_name)
-        asset_doc = frappe.get_doc("SMRITI Knowledge Asset", asset_name)
+        asset_doc = smriti.documents.get("SMRITI Knowledge Asset", asset_name)
         self.assertEqual(asset_doc.title, "Lifecycle Term 1")
         self.assertEqual(asset_doc.status, "Draft")
         self.assertEqual(asset_doc.is_active, 0)
@@ -362,7 +363,7 @@ class TestKnowledgeOS(unittest.TestCase):
         term.status = "Approved"
         term.is_active = 1
         term.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # The KAR asset should be automatically updated
         asset_doc.reload()
@@ -372,9 +373,9 @@ class TestKnowledgeOS(unittest.TestCase):
 
         # Delete the Business Term
         term.delete()
-        frappe.db.commit()
+        smriti.db.commit()
 
         # The KAR asset and relations should be automatically cleaned up
-        self.assertFalse(frappe.db.exists("SMRITI Knowledge Asset", {"asset_uri": "smriti:term:TST-LIFECYCLE-T1"}))
+        self.assertFalse(smriti.db.exists("SMRITI Knowledge Asset", {"asset_uri": "smriti:term:TST-LIFECYCLE-T1"}))
 
 

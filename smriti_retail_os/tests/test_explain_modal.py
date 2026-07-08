@@ -16,14 +16,15 @@
 import json
 import unittest
 import frappe
+from smriti_retail_os import smriti
 from smriti_retail_os.api.explain_api import get_explain_payload
 
 class TestExplainModal(unittest.TestCase):
     def setUp(self):
         # Ensure we have our test formula
-        frappe.db.delete("SMRITI Formula Definition", {"formula_id": "TST-EXP-001"})
-        frappe.db.delete("SMRITI PSV Activity Log", {"reference_name": "TST-EXP-001"})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Formula Definition", {"formula_id": "TST-EXP-001"})
+        smriti.db.delete("SMRITI PSV Activity Log", {"reference_name": "TST-EXP-001"})
+        smriti.db.commit()
 
         # Insert a dummy active and approved formula
         self.doc = frappe.get_doc({
@@ -49,16 +50,16 @@ class TestExplainModal(unittest.TestCase):
             })
         })
         self.doc.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # Clean Redis cache for test key
         cache_key = "smriti:explain:TST-EXP-001:1.0.0"
         frappe.cache().delete_value(cache_key)
 
     def tearDown(self):
-        frappe.db.delete("SMRITI Formula Definition", {"formula_id": "TST-EXP-001"})
-        frappe.db.delete("SMRITI PSV Activity Log", {"reference_name": "TST-EXP-001"})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Formula Definition", {"formula_id": "TST-EXP-001"})
+        smriti.db.delete("SMRITI PSV Activity Log", {"reference_name": "TST-EXP-001"})
+        smriti.db.commit()
 
         cache_key = "smriti:explain:TST-EXP-001:1.0.0"
         frappe.cache().delete_value(cache_key)
@@ -73,7 +74,7 @@ class TestExplainModal(unittest.TestCase):
         self.assertEqual(payload["explainability_json"]["related_training_lesson"], "TRN-TST-001")
 
         # Check if audit log was written
-        logs = frappe.get_all(
+        logs = smriti.db.get_list(
             "SMRITI PSV Activity Log",
             filters={"reference_name": "TST-EXP-001"},
             fields=["action_type", "event_type", "details"]
@@ -101,7 +102,7 @@ class TestExplainModal(unittest.TestCase):
         self.assertEqual(payload_2["formula_id"], "TST-EXP-001")
 
         # Audit logs should show 2 entries (one for each hit/miss)
-        logs = frappe.get_all(
+        logs = smriti.db.get_list(
             "SMRITI PSV Activity Log",
             filters={"reference_name": "TST-EXP-001"},
             fields=["action_type", "event_type"]

@@ -16,6 +16,7 @@ import unittest
 import werkzeug.routing.exceptions
 from unittest.mock import patch
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.utils import today, now_datetime, add_days
 from smriti_retail_os.tests.test_psv import TestPSV
 from smriti_retail_os.boot import check_desk_access
@@ -30,29 +31,29 @@ class TestGAReadinessAudit(TestPSV):
         super().setUp()
         frappe.session.user = "Administrator"
         # Ensure any test formula or terms are deleted before run
-        frappe.db.delete("SMRITI Formula Definition", {"formula_id": "TST-SYNC-FRM"})
-        frappe.db.delete("SMRITI Business Term", {"term_id": "TST_SYNC_TRM"})
-        frappe.db.delete("SMRITI Knowledge Asset", {"asset_uri": ["in", ["smriti:formula:TST-SYNC-FRM", "smriti:term:TST_SYNC_TRM"]]})
-        frappe.db.delete("SMRITI Knowledge Relation")
-        frappe.db.delete("SMRITI SKU Twin", {"company": self.company, "party_stock_account": self.account_name, "item_code": self.item})
-        frappe.db.delete("SMRITI Loyalty Rule")
-        frappe.db.delete("SMRITI Loyalty Tier")
+        smriti.db.delete("SMRITI Formula Definition", {"formula_id": "TST-SYNC-FRM"})
+        smriti.db.delete("SMRITI Business Term", {"term_id": "TST_SYNC_TRM"})
+        smriti.db.delete("SMRITI Knowledge Asset", {"asset_uri": ["in", ["smriti:formula:TST-SYNC-FRM", "smriti:term:TST_SYNC_TRM"]]})
+        smriti.db.delete("SMRITI Knowledge Relation")
+        smriti.db.delete("SMRITI SKU Twin", {"company": self.company, "party_stock_account": self.account_name, "item_code": self.item})
+        smriti.db.delete("SMRITI Loyalty Rule")
+        smriti.db.delete("SMRITI Loyalty Tier")
 
     def tearDown(self):
-        frappe.db.delete("SMRITI Formula Definition", {"formula_id": "TST-SYNC-FRM"})
-        frappe.db.delete("SMRITI Business Term", {"term_id": "TST_SYNC_TRM"})
-        frappe.db.delete("SMRITI Knowledge Asset", {"asset_uri": ["in", ["smriti:formula:TST-SYNC-FRM", "smriti:term:TST_SYNC_TRM"]]})
-        frappe.db.delete("SMRITI Knowledge Relation")
-        frappe.db.delete("SMRITI SKU Twin", {"company": self.company, "party_stock_account": self.account_name, "item_code": self.item})
-        frappe.db.delete("SMRITI Loyalty Rule")
-        frappe.db.delete("SMRITI Loyalty Tier")
+        smriti.db.delete("SMRITI Formula Definition", {"formula_id": "TST-SYNC-FRM"})
+        smriti.db.delete("SMRITI Business Term", {"term_id": "TST_SYNC_TRM"})
+        smriti.db.delete("SMRITI Knowledge Asset", {"asset_uri": ["in", ["smriti:formula:TST-SYNC-FRM", "smriti:term:TST_SYNC_TRM"]]})
+        smriti.db.delete("SMRITI Knowledge Relation")
+        smriti.db.delete("SMRITI SKU Twin", {"company": self.company, "party_stock_account": self.account_name, "item_code": self.item})
+        smriti.db.delete("SMRITI Loyalty Rule")
+        smriti.db.delete("SMRITI Loyalty Tier")
         super().tearDown()
 
     @patch("smriti_retail_os.psv_service.create_psv_transaction", side_effect=Exception("Simulated PSV DB Failure"))
     def test_billing_psv_resiliency(self, mock_create):
         """Verify that PSV Inventory Visibility Layer failure does not block Sales Invoice submission and creates an Exception Record."""
         # 1. Create a standard Sales Invoice referencing custom_party_stock_account
-        si = frappe.new_doc("Sales Invoice")
+        si = smriti.documents.new("Sales Invoice")
         si.company = self.company
         si.customer = self.customer
         si.custom_party_stock_account = self.account_name
@@ -75,7 +76,7 @@ class TestGAReadinessAudit(TestPSV):
         self.assertEqual(si.docstatus, 1)
 
         # Assert exception record is created
-        ex_rec_name = frappe.db.exists("SMRITI PSV Exception Record", {
+        ex_rec_name = smriti.db.exists("SMRITI PSV Exception Record", {
             "party_stock_account": self.account_name,
             "sales_invoice": si.name,
             "status": "Pending Reconciliation"
@@ -83,15 +84,15 @@ class TestGAReadinessAudit(TestPSV):
         self.assertTrue(ex_rec_name)
 
         # Assert exception record fields
-        ex_rec = frappe.get_doc("SMRITI PSV Exception Record", ex_rec_name)
+        ex_rec = smriti.documents.get("SMRITI PSV Exception Record", ex_rec_name)
         self.assertEqual(ex_rec.sales_invoice, si.name)
         # Pending Reconciliation is SMRITI's Open state for PSV Exception Records
         self.assertEqual(ex_rec.status, "Pending Reconciliation")
 
         # Clean up Sales Invoice so it does not leak as an orphan to other health check tests
-        frappe.db.delete("Sales Invoice", {"name": si.name})
-        frappe.db.delete("Sales Invoice Item", {"parent": si.name})
-        frappe.db.commit()
+        smriti.db.delete("Sales Invoice", {"name": si.name})
+        smriti.db.delete("Sales Invoice Item", {"parent": si.name})
+        smriti.db.commit()
 
     def test_desk_routing_interception(self):
         """Verify that attempts to access blocked native desk/app routes raise RequestRedirect to SMRITI."""
@@ -113,15 +114,15 @@ class TestGAReadinessAudit(TestPSV):
         # Set user as cashier (non-System-Manager) to enforce desk-access guard on remaining /desk/ and /app/ routes
         original_user = frappe.session.user
         frappe.session.user = "cashier@example.com"
-        if not frappe.db.exists("User", "cashier@example.com"):
-            user = frappe.get_doc({
-                "doctype": "User",
+        if not smriti.db.exists("User", "cashier@example.com"):
+            user = smriti.documents.new("User")
+            user.update({
                 "email": "cashier@example.com",
                 "first_name": "Cashier Test",
                 "send_welcome_email": 0
             }).insert(ignore_permissions=True)
             user.add_roles("SMRITI Cashier")
-            frappe.db.commit()
+            smriti.db.commit()
             
         original_request = getattr(frappe.local, "request", None)
         try:
@@ -141,9 +142,8 @@ class TestGAReadinessAudit(TestPSV):
         """Verify explainability definition resolves correctly for standard formulas."""
         # Ensure INV-002 exists and is active and approved
         fid = "INV-002"
-        if not frappe.db.exists("SMRITI Formula Definition", {"formula_id": fid}):
-            frappe.get_doc({
-                "doctype": "SMRITI Formula Definition",
+        if not smriti.db.exists("SMRITI Formula Definition", {"formula_id": fid}):
+            smriti.documents.new("FormulaDefinition").update({
                 "formula_id": fid,
                 "formula_name": "Weeks of Cover Formula",
                 "formula_version": "1.0.0",
@@ -159,13 +159,13 @@ class TestGAReadinessAudit(TestPSV):
                 "implementation_reference": "pdt_service.py",
                 "business_owner": "Jawahar R. Mallah"
             }).insert(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
         else:
-            frappe.db.set_value("SMRITI Formula Definition", {"formula_id": fid}, {"status": "Approved", "is_active": 1})
-            frappe.db.commit()
+            smriti.db.set_value("SMRITI Formula Definition", {"formula_id": fid}, {"status": "Approved", "is_active": 1})
+            smriti.db.commit()
             
         # Clear cache for the formula
-        version = frappe.db.get_value("SMRITI Formula Definition", {"formula_id": fid, "is_active": 1, "status": "Approved"}, "formula_version")
+        version = smriti.db.get("SMRITI Formula Definition", {"formula_id": fid, "is_active": 1, "status": "Approved"}, "formula_version")
         frappe.cache().delete_value(f"smriti:explain:{fid}:{version}")
 
         # Retrieve formula explainability payload
@@ -178,7 +178,7 @@ class TestGAReadinessAudit(TestPSV):
         self.assertTrue(payload["worked_example"])
         
         # Verify explain audit log was successfully generated
-        logs = frappe.get_all("SMRITI PSV Activity Log", filters={
+        logs = smriti.db.get_list("SMRITI PSV Activity Log", filters={
             "reference_name": "INV-002",
             "action_type": "Formula Explained"
         })
@@ -187,25 +187,25 @@ class TestGAReadinessAudit(TestPSV):
     def test_cge_resolution_pipeline(self):
         """Verify CGE rules, loyalty tier multipliers, and priority resolution without database wallet mutations."""
         # 1. Configure tier: Gold Tier gets 1.5X multiplier
-        if not frappe.db.exists("SMRITI Loyalty Tier", "Gold Tier"):
-            tier = frappe.new_doc("SMRITI Loyalty Tier")
+        if not smriti.db.exists("SMRITI Loyalty Tier", "Gold Tier"):
+            tier = smriti.documents.new("SMRITI Loyalty Tier")
             tier.tier_name = "Gold Tier"
             tier.min_points = 0.0
             tier.tier_multiplier = 1.5
             tier.active = 1
             tier.insert(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
             
         # Configure rule: Test Brand gets 2.0X multiplier, stacking allowed
         brand = "CGE Test Brand"
-        if not frappe.db.exists("Brand", brand):
-            b_doc = frappe.new_doc("Brand")
+        if not smriti.db.exists("Brand", brand):
+            b_doc = smriti.documents.new("Brand")
             b_doc.brand = brand
             b_doc.insert(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
             
-        if not frappe.db.exists("SMRITI Loyalty Rule", "CGE Brand Multiplier"):
-            rule = frappe.new_doc("SMRITI Loyalty Rule")
+        if not smriti.db.exists("SMRITI Loyalty Rule", "CGE Brand Multiplier"):
+            rule = smriti.documents.new("SMRITI Loyalty Rule")
             rule.rule_name = "CGE Brand Multiplier"
             rule.rule_type = "Multiplier"
             rule.dimension = "Brand"
@@ -216,16 +216,16 @@ class TestGAReadinessAudit(TestPSV):
             rule.allow_stack = 1
             rule.status = "Active"
             rule.insert(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
             
         # Ensure CGE settings is populated
-        settings = frappe.get_doc("SMRITI CGE Settings")
+        settings = smriti.documents.get_single("CGESettings")
         settings.enable_rule_trace = 1
         settings.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         
         # Create a Sales Invoice mockup (do not submit/commit wallet balances)
-        invoice = frappe.new_doc("Sales Invoice")
+        invoice = smriti.documents.new("Sales Invoice")
         invoice.name = "INV-CGE-TEST-GA-01"
         invoice.customer = self.customer
         invoice.posting_date = today()
@@ -233,8 +233,8 @@ class TestGAReadinessAudit(TestPSV):
         
         # Create test item with brand
         item_code = "TEST-CGE-GA-ITEM"
-        if not frappe.db.exists("Item", item_code):
-            itm = frappe.new_doc("Item")
+        if not smriti.db.exists("Item", item_code):
+            itm = smriti.documents.new("Item")
             itm.item_code = item_code
             itm.item_name = "Test CGE Ray Item"
             itm.item_group = self.item_group
@@ -242,7 +242,7 @@ class TestGAReadinessAudit(TestPSV):
             itm.stock_uom = self.uom
             itm.gst_hsn_code = self.hsn_code
             itm.insert(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
             
         invoice.append("items", {
             "item_code": item_code,
@@ -274,20 +274,20 @@ class TestGAReadinessAudit(TestPSV):
                 voucher_type="Sales",
                 voucher_no=f"INV-PDT-TEST-{i}"
             )
-        frappe.db.commit()
+        smriti.db.commit()
         
         # Trigger cache rebuild
         rebuild_twin_cache(self.company, self.account_name, self.item, "FULL_REBUILD")
         
         # Assert database record exists
-        twin_name = frappe.db.exists("SMRITI SKU Twin", {
+        twin_name = smriti.db.exists("SMRITI SKU Twin", {
             "company": self.company,
             "party_stock_account": self.account_name,
             "item_code": self.item
         })
         self.assertTrue(twin_name)
         
-        twin = frappe.get_doc("SMRITI SKU Twin", twin_name)
+        twin = smriti.documents.get("SMRITI SKU Twin", twin_name)
         
         # Assertions on pipeline metrics calculations (not specific forecast accuracy values)
         self.assertIsNotNone(twin.weekly_velocity)
@@ -305,15 +305,14 @@ class TestGAReadinessAudit(TestPSV):
     def test_dictionary_formula_sync(self):
         """Verify SKOS Asset auto-sync edge maps between Formula and Business Dictionary."""
         # 1. Clean existing records
-        frappe.db.delete("SMRITI Formula Definition", {"formula_id": "TST-SYNC-FRM"})
-        frappe.db.delete("SMRITI Business Term", {"term_id": "TST_SYNC_TRM"})
-        frappe.db.delete("SMRITI Knowledge Asset", {"asset_uri": ["in", ["smriti:formula:TST-SYNC-FRM", "smriti:term:TST_SYNC_TRM"]]})
-        frappe.db.delete("SMRITI Knowledge Relation")
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Formula Definition", {"formula_id": "TST-SYNC-FRM"})
+        smriti.db.delete("SMRITI Business Term", {"term_id": "TST_SYNC_TRM"})
+        smriti.db.delete("SMRITI Knowledge Asset", {"asset_uri": ["in", ["smriti:formula:TST-SYNC-FRM", "smriti:term:TST_SYNC_TRM"]]})
+        smriti.db.delete("SMRITI Knowledge Relation")
+        smriti.db.commit()
         
         # 2. Create Formula Definition
-        frappe.get_doc({
-            "doctype": "SMRITI Formula Definition",
+        smriti.documents.new("FormulaDefinition").update({
             "formula_id": "TST-SYNC-FRM",
             "formula_name": "Sync Test Formula",
             "formula_version": "1.0.0",
@@ -329,12 +328,11 @@ class TestGAReadinessAudit(TestPSV):
             "implementation_reference": "Ref",
             "business_owner": "Jawahar R. Mallah"
         }).insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         
         # 3. Create Business Term
-        formula_name = frappe.db.get_value("SMRITI Formula Definition", {"formula_id": "TST-SYNC-FRM"})
-        frappe.get_doc({
-            "doctype": "SMRITI Business Term",
+        formula_name = smriti.db.get("SMRITI Formula Definition", {"formula_id": "TST-SYNC-FRM"})
+        smriti.documents.new("BusinessTerm").update({
             "term_id": "TST_SYNC_TRM",
             "term_name": "Sync Test Term",
             "term_category": "Inventory",
@@ -352,21 +350,21 @@ class TestGAReadinessAudit(TestPSV):
             "faq": json.dumps([]),
             "common_mistakes": json.dumps([])
         }).insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         
         # 4. Verify SKOS Asset Auto-Sync
         # SMRITI Knowledge Asset exists for Formula
-        formula_asset = frappe.db.exists("SMRITI Knowledge Asset", {"asset_uri": "smriti:formula:TST-SYNC-FRM"})
+        formula_asset = smriti.db.exists("SMRITI Knowledge Asset", {"asset_uri": "smriti:formula:TST-SYNC-FRM"})
         self.assertTrue(formula_asset)
         
         # SMRITI Knowledge Asset exists for Term
-        term_asset = frappe.db.exists("SMRITI Knowledge Asset", {"asset_uri": "smriti:term:TST_SYNC_TRM"})
+        term_asset = smriti.db.exists("SMRITI Knowledge Asset", {"asset_uri": "smriti:term:TST_SYNC_TRM"})
         self.assertTrue(term_asset)
         
         # Verify directed relation edge exists in KGR-01
-        f_asset_name = frappe.db.get_value("SMRITI Knowledge Asset", {"asset_uri": "smriti:formula:TST-SYNC-FRM"})
-        t_asset_name = frappe.db.get_value("SMRITI Knowledge Asset", {"asset_uri": "smriti:term:TST_SYNC_TRM"})
-        relation_exists = frappe.db.exists("SMRITI Knowledge Relation", {
+        f_asset_name = smriti.db.get("SMRITI Knowledge Asset", {"asset_uri": "smriti:formula:TST-SYNC-FRM"})
+        t_asset_name = smriti.db.get("SMRITI Knowledge Asset", {"asset_uri": "smriti:term:TST_SYNC_TRM"})
+        relation_exists = smriti.db.exists("SMRITI Knowledge Relation", {
             "source_asset_id": t_asset_name,
             "target_asset_id": f_asset_name
         })
@@ -380,8 +378,8 @@ class TestGAReadinessAudit(TestPSV):
     def test_report_dictionary_runtime_resolution(self):
         """Verify report engine projection recovery fallback and explainability audit logs."""
         template_id = "test_resolution_report"
-        if not frappe.db.exists("SMRITI Report Template", template_id):
-            tpl = frappe.new_doc("SMRITI Report Template")
+        if not smriti.db.exists("SMRITI Report Template", template_id):
+            tpl = smriti.documents.new("SMRITI Report Template")
             tpl.report_key = template_id
             tpl.report_name = "Test Resolution Report"
             tpl.report_category = "Sales"
@@ -390,7 +388,7 @@ class TestGAReadinessAudit(TestPSV):
                 {"fieldname": "qty_sold", "label": "Qty Sold"}
             ])
             tpl.insert(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
             
         from smriti_retail_os.reports_api import REPORT_QUERIES
         REPORT_QUERIES[template_id] = {
@@ -400,11 +398,11 @@ class TestGAReadinessAudit(TestPSV):
         }
         
         # Clear audit logs for this template
-        frappe.db.delete("SMRITI PSV Activity Log", {
+        smriti.db.delete("SMRITI PSV Activity Log", {
             "reference_name": template_id,
             "action_type": "Formula Explained"
         })
-        frappe.db.commit()
+        smriti.db.commit()
         
         try:
             filters = {"company": self.company}
@@ -415,7 +413,7 @@ class TestGAReadinessAudit(TestPSV):
             self.assertTrue(isinstance(res, list))
             
             # Assert projection recovery occurs and explainability audit event is created
-            logs = frappe.get_all("SMRITI PSV Activity Log", filters={
+            logs = smriti.db.get_list("SMRITI PSV Activity Log", filters={
                 "reference_name": template_id,
                 "action_type": "Formula Explained"
             })

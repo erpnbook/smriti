@@ -5,13 +5,13 @@
 #               calculates the pipeline health score, and generates snapshots.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-06-25
-# @version: 1.8.6
+# @version: 1.9.0 — Migrated to smriti.core.platform (SPC-012)
 # @sprint: 3C — Trial Health Snapshot
-# @authority: Jawahar R. Mallah, Founder & Chief Architect, AITDL
 #
 
-import frappe
 from datetime import datetime, timedelta
+import frappe                            # frappe.logger, frappe.session — framework utilities
+from smriti_retail_os import smriti
 
 _LOG = frappe.logger('smriti.trial')
 
@@ -60,7 +60,7 @@ def get_health_config():
         "max_penalty": 20.0
     }
     try:
-        settings = frappe.get_single('SMRITI Trial Settings')
+        settings = smriti.documents.get("TrialSettings", "SMRITI Trial Settings")
         target = getattr(settings, 'health_target_sla_hours', None)
         mult = getattr(settings, 'health_sla_penalty_multiplier', None)
         mx = getattr(settings, 'health_max_sla_penalty', None)
@@ -85,25 +85,22 @@ def generate_health_snapshot(snapshot_type="Daily", operator=None):
         today_end = now.replace(hour=23, minute=59, second=59)
 
         # 1. Collect Metrics
-        active = frappe.db.count('SMRITI Trial Activation', {'activation_status': ['in', ['Active', 'Activated']]})
-        failed = frappe.db.count('SMRITI Trial Activation', {'activation_status': 'Failed'})
-        pending = frappe.db.count('SMRITI Trial Activation', {'activation_status': 'Pending'})
-        provisioning = frappe.db.count('SMRITI Trial Activation', {'activation_status': 'Provisioning'})
-        converted_total = frappe.db.count('SMRITI Trial Activation', {'activation_status': 'Converted to Paid'})
-        
-        # Expiring within N days
+        active = smriti.db.count("TrialActivation", {"activation_status": ["in", ["Active", "Activated"]]})
+        failed = smriti.db.count("TrialActivation", {"activation_status": "Failed"})
+        pending = smriti.db.count("TrialActivation", {"activation_status": "Pending"})
+        provisioning = smriti.db.count("TrialActivation", {"activation_status": "Provisioning"})
+        converted_total = smriti.db.count("TrialActivation", {"activation_status": "Converted to Paid"})
+
         expiring_7d = _count_expiring(7)
         expiring_3d = _count_expiring(3)
         expiring_1d = _count_expiring(1)
-        
-        # Expired today
-        expired_today = frappe.db.count('SMRITI Trial Activation', {
-            'activation_status': 'Expired',
-            'modified': ['between', [today_start, today_end]]
+
+        expired_today = smriti.db.count("TrialActivation", {
+            "activation_status": "Expired",
+            "modified": ["between", [today_start, today_end]]
         })
 
-        # Calculate average SLA (Converted modified -> trial_start_date)
-        sla_rows = frappe.db.sql(
+        sla_rows = smriti.db.sql(
             """
             SELECT AVG(TIMESTAMPDIFF(MINUTE, tl.modified, ta.trial_start_date)) AS avg_minutes
             FROM `tabSMRITI Trial Activation` ta
@@ -134,8 +131,8 @@ def generate_health_snapshot(snapshot_type="Daily", operator=None):
             interpretation = "Critical"
 
         # 3. Create Immutable Snapshot Record
-        doc = frappe.get_doc({
-            "doctype": "SMRITI Trial Health Snapshot",
+        doc = smriti.documents.new("TrialHealthSnapshot")
+        doc.update({
             "snapshot_date": now.date(),
             "snapshot_time": now,
             "snapshot_type": snapshot_type,
@@ -156,7 +153,7 @@ def generate_health_snapshot(snapshot_type="Daily", operator=None):
             "generated_by": operator or frappe.session.user or "Administrator"
         })
         doc.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         _LOG.info(
             f"TRIAL_HEALTH_SNAPSHOT: Created snapshot ({doc.name}) | "
@@ -166,14 +163,14 @@ def generate_health_snapshot(snapshot_type="Daily", operator=None):
         return doc
         
     except Exception as e:
-        frappe.log_error(title="SMRITI generate_health_snapshot Failed", message=frappe.get_traceback())
+        smriti.errors.log_error("SMRITI generate_health_snapshot Failed", exc=e)
         _LOG.exception(f"generate_health_snapshot error: {e}")
         raise e
 
 
 def _count_expiring(days):
     """Count Active/Activated trials expiring within N days from now."""
-    rows = frappe.db.sql(
+    rows = smriti.db.sql(
         """
         SELECT COUNT(*) AS cnt FROM `tabSMRITI Trial Activation`
         WHERE  activation_status IN ('Active', 'Activated')

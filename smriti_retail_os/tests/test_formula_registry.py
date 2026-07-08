@@ -14,6 +14,7 @@
 # For license information, please see license.txt
 
 import frappe
+from smriti_retail_os import smriti
 import json
 import unittest
 from smriti_retail_os.services.formula_service import (
@@ -29,24 +30,24 @@ class TestFormulaRegistry(unittest.TestCase):
         seed_formulas()
         from smriti_retail_os.patches.seed_telemetry_meta import execute as seed_telemetry
         seed_telemetry()
-        frappe.db.commit()
+        smriti.db.commit()
 
     def setUp(self):
         # Clean up any test formula entries to avoid collision
-        frappe.db.delete("SMRITI Formula Definition", {"formula_id": "TST-001"})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Formula Definition", {"formula_id": "TST-001"})
+        smriti.db.commit()
 
     def tearDown(self):
-        frappe.db.delete("SMRITI Formula Definition", {"formula_id": "TST-001"})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Formula Definition", {"formula_id": "TST-001"})
+        smriti.db.commit()
 
     def test_schema_and_validation(self):
         # 1. Assert DocType exists
-        self.assertTrue(frappe.db.exists("DocType", "SMRITI Formula Definition"))
+        self.assertTrue(smriti.db.exists("DocType", "SMRITI Formula Definition"))
 
         # 2. Insert valid formula definition
-        doc = frappe.get_doc({
-            "doctype": "SMRITI Formula Definition",
+        doc = smriti.documents.new("FormulaDefinition")
+        doc.update({
             "formula_id": "TST-001",
             "formula_name": "Test Formula One",
             "formula_version": "1.0.0",
@@ -59,11 +60,11 @@ class TestFormulaRegistry(unittest.TestCase):
             "dependent_features": json.dumps(["Test Feature"])
         })
         doc.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # 3. Assert duplicate formula_id + formula_version throws ValidationError
-        dup = frappe.get_doc({
-            "doctype": "SMRITI Formula Definition",
+        dup = smriti.documents.new("FormulaDefinition")
+        dup.update({
             "formula_id": "TST-001",
             "formula_name": "Test Formula One Duplicate",
             "formula_version": "1.0.0",
@@ -77,8 +78,8 @@ class TestFormulaRegistry(unittest.TestCase):
 
     def test_status_active_constraint(self):
         # 1. Assert that non-approved formulas cannot be active
-        doc = frappe.get_doc({
-            "doctype": "SMRITI Formula Definition",
+        doc = smriti.documents.new("FormulaDefinition")
+        doc.update({
             "formula_id": "TST-001",
             "formula_name": "Draft Formula",
             "formula_version": "1.0.0",
@@ -93,12 +94,12 @@ class TestFormulaRegistry(unittest.TestCase):
         # 2. Assert that non-approved formula with is_active = 0 is allowed
         doc.is_active = 0
         doc.insert(ignore_permissions=True)
-        self.assertTrue(frappe.db.exists("SMRITI Formula Definition", doc.name))
+        self.assertTrue(smriti.db.exists("SMRITI Formula Definition", doc.name))
 
     def test_json_payload_validation(self):
         # 1. Malformed explainability_json should raise ValidationError
-        doc = frappe.get_doc({
-            "doctype": "SMRITI Formula Definition",
+        doc = smriti.documents.new("FormulaDefinition")
+        doc.update({
             "formula_id": "TST-001",
             "formula_name": "Invalid JSON Formula",
             "formula_version": "1.0.0",
@@ -132,7 +133,7 @@ class TestFormulaRegistry(unittest.TestCase):
 
         for fid in seeded_ids:
             self.assertTrue(
-                frappe.db.exists("SMRITI Formula Definition", {"formula_id": fid, "is_active": 1}),
+                smriti.db.exists("SMRITI Formula Definition", {"formula_id": fid, "is_active": 1}),
                 f"Formula {fid} not found or inactive."
             )
 
@@ -167,9 +168,9 @@ class TestFormulaRegistry(unittest.TestCase):
         from smriti_retail_os.services.formula_service import FORMULA_INDEX
         
         created_inv_005 = False
-        if not frappe.db.exists("SMRITI Formula Definition", {"formula_id": "INV-005"}):
-            inv_005_doc = frappe.get_doc({
-                "doctype": "SMRITI Formula Definition",
+        if not smriti.db.exists("SMRITI Formula Definition", {"formula_id": "INV-005"}):
+            inv_005_doc = smriti.documents.new("FormulaDefinition")
+            inv_005_doc.update({
                 "formula_id": "INV-005",
                 "formula_name": "Promo Conversion Rate",
                 "formula_version": "1.0.0",
@@ -180,17 +181,17 @@ class TestFormulaRegistry(unittest.TestCase):
                 "formula_expression": "promo_sales_qty / total_sales_qty"
             })
             inv_005_doc.insert(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
             created_inv_005 = True
             
         try:
             for fid in FORMULA_INDEX:
                 self.assertTrue(
-                    frappe.db.exists("SMRITI Formula Definition", {"formula_id": fid}),
+                    smriti.db.exists("SMRITI Formula Definition", {"formula_id": fid}),
                     f"Formula ID {fid} in FORMULA_INDEX does not exist in SMRITI Formula Definition."
                 )
         finally:
             if created_inv_005:
-                frappe.db.delete("SMRITI Formula Definition", {"formula_id": "INV-005"})
-                frappe.db.commit()
+                smriti.db.delete("SMRITI Formula Definition", {"formula_id": "INV-005"})
+                smriti.db.commit()
 

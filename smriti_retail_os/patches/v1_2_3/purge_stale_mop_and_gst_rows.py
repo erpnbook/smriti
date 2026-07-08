@@ -23,7 +23,8 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 
 
 def execute():
@@ -45,7 +46,7 @@ def execute():
     )
 
     if mop_deleted or gst_deleted:
-        frappe.db.commit()
+        smriti.db.commit()
         frappe.logger().info(
             f"[SMRITI patch v1.2.3] Purged stale child rows — "
             f"MoP: {mop_deleted}, GST: {gst_deleted}"
@@ -61,7 +62,7 @@ def _purge_table(table, company_col, label):
     Deletes rows from `table` where `company_col` does not match any
     existing Company name. Returns the count of deleted rows.
     """
-    stale = frappe.db.sql(
+    stale = smriti.db.sql(
         f"""
         SELECT t.name
         FROM `{table}` t
@@ -77,7 +78,7 @@ def _purge_table(table, company_col, label):
         return 0
 
     names = tuple(r.name for r in stale)
-    companies = list({frappe.db.sql(
+    companies = list({smriti.db.sql(
         f"SELECT `{company_col}` FROM `{table}` WHERE name = %s", r.name
     )[0][0] for r in stale})
 
@@ -87,8 +88,8 @@ def _purge_table(table, company_col, label):
     )
 
     if len(names) == 1:
-        frappe.db.sql(f"DELETE FROM `{table}` WHERE name = %s", names[0])
+        smriti.db.sql(f"DELETE FROM `{table}` WHERE name = %s", names[0])
     else:
-        frappe.db.sql(f"DELETE FROM `{table}` WHERE name IN {names}")
+        smriti.db.sql(f"DELETE FROM `{table}` WHERE name IN {names}")
 
     return len(stale)

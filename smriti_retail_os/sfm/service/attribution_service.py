@@ -10,8 +10,9 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.utils import flt, getdate, nowdate, nowtime
 
 def resolve_store(company, warehouse):
@@ -22,16 +23,16 @@ def resolve_store(company, warehouse):
     """
     if not warehouse:
         # Find default warehouse for company from Company Settings
-        warehouse = frappe.db.get_value("Company", company, "default_cash_warehouse")
+        warehouse = smriti.db.get("Company", company, "default_cash_warehouse")
         if not warehouse:
-            warehouse = frappe.db.get_value("Warehouse", {"company": company, "is_group": 0}, "name")
+            warehouse = smriti.db.get("Warehouse", {"company": company, "is_group": 0}, "name")
 
-    store_name = frappe.db.get_value("SMRITI Store", {"default_warehouse": warehouse, "company": company}, "name")
+    store_name = smriti.db.get("SMRITI Store", {"default_warehouse": warehouse, "company": company}, "name")
     if not store_name:
-        store_name = frappe.db.get_value("SMRITI Store", {"company": company}, "name")
+        store_name = smriti.db.get("SMRITI Store", {"company": company}, "name")
         if not store_name:
             # Create a default SMRITI Store dynamically
-            store = frappe.new_doc("SMRITI Store")
+            store = smriti.documents.new("SMRITI Store")
             wh_part = warehouse.split(' - ')[0] if ' - ' in warehouse else warehouse
             clean_company = company.replace(" ", "_")
             store.store_name = f"Store - {wh_part} ({clean_company})"
@@ -47,7 +48,7 @@ def update_kpi_snapshot(employee, store, date, company):
     Aggregates daily sales performance from SMRITI Attribution Ledger to SMRITI Sales KPI Snapshot.
     Calculates net revenue, transaction count, and unique customers.
     """
-    ledger_entries = frappe.get_all(
+    ledger_entries = smriti.db.get_list(
         "SMRITI Attribution Ledger",
         filters={
             "employee": employee,
@@ -78,20 +79,20 @@ def update_kpi_snapshot(employee, store, date, company):
     net_customers = len(active_customers)
     
     # Get or create the snapshot document
-    snapshot_name = frappe.db.get_value(
+    snapshot_name = smriti.db.get(
         "SMRITI Sales KPI Snapshot",
         {"employee": employee, "store": store, "date": date, "company": company},
         "name"
     )
     
     if snapshot_name:
-        snapshot = frappe.get_doc("SMRITI Sales KPI Snapshot", snapshot_name)
+        snapshot = smriti.documents.get("SMRITI Sales KPI Snapshot", snapshot_name)
         snapshot.revenue = net_revenue
         snapshot.transactions = net_transactions
         snapshot.customers = net_customers
         snapshot.save(ignore_permissions=True)
     else:
-        snapshot = frappe.new_doc("SMRITI Sales KPI Snapshot")
+        snapshot = smriti.documents.new("SMRITI Sales KPI Snapshot")
         snapshot.employee = employee
         snapshot.store = store
         snapshot.date = date
@@ -107,7 +108,7 @@ def process_invoice_submit(doc, method=None):
     Creates attribution event and ledger records.
     """
     # 1. Create SMRITI Attribution Event log entry
-    event = frappe.new_doc("SMRITI Attribution Event")
+    event = smriti.documents.new("SMRITI Attribution Event")
     event.invoice_reference = doc.name
     event.invoice_doctype = doc.doctype
     event.customer = doc.customer
@@ -143,7 +144,7 @@ def process_invoice_submit(doc, method=None):
         # Scenario A: Customer Ownership Precedence
         if settings.ownership_precedence and doc.customer:
             # Query active ownership timelines
-            owners = frappe.get_all(
+            owners = smriti.db.get_list(
                 "SMRITI Customer Ownership",
                 filters=[
                     ["customer", "=", doc.customer],
@@ -190,7 +191,7 @@ def process_invoice_submit(doc, method=None):
         if not resolved and doc.get("sales_team"):
             for member in doc.sales_team:
                 if member.sales_person:
-                    employee = frappe.db.get_value("Sales Person", member.sales_person, "employee")
+                    employee = smriti.db.get("Sales Person", member.sales_person, "employee")
                     if employee:
                         pct = flt(member.allocated_percentage)
                         attributions.append({
@@ -207,9 +208,9 @@ def process_invoice_submit(doc, method=None):
             walkin = settings.walkin_employee
             if not walkin:
                 # Look for / create Walk-In employee dynamically
-                walkin = frappe.db.get_value("Employee", {"employee_name": ["like", "%Walk-In%"]}, "name")
+                walkin = smriti.db.get("Employee", {"employee_name": ["like", "%Walk-In%"]}, "name")
                 if not walkin:
-                    emp = frappe.new_doc("Employee")
+                    emp = smriti.documents.new("Employee")
                     emp.employee_name = "Walk-In Employee"
                     emp.first_name = "Walk-In"
                     emp.company = doc.company
@@ -227,7 +228,7 @@ def process_invoice_submit(doc, method=None):
 
         # Insert Ledger Entries and trigger KPI updates
         for attr in attributions:
-            ledger = frappe.new_doc("SMRITI Attribution Ledger")
+            ledger = smriti.documents.new("SMRITI Attribution Ledger")
             ledger.invoice_reference = doc.name
             ledger.invoice_doctype = doc.doctype
             ledger.customer = doc.customer
@@ -254,7 +255,7 @@ def process_invoice_submit(doc, method=None):
     except Exception as e:
         if frappe.flags.in_test:
             raise e
-        frappe.log_error(message=frappe.get_traceback(), title="SMRITI SFM Submission Failure")
+        smriti.errors.log_error(message=frappe.get_traceback(), title="SMRITI SFM Submission Failure")
         event.status = "Pending"
         event.error_message = str(e)
         event.save(ignore_permissions=True)
@@ -264,7 +265,7 @@ def process_invoice_cancel(doc, method=None):
     Attributions cancellation hook.
     Inserts negative reversal ledger entries and updates statuses.
     """
-    event = frappe.new_doc("SMRITI Attribution Event")
+    event = smriti.documents.new("SMRITI Attribution Event")
     event.invoice_reference = doc.name
     event.invoice_doctype = doc.doctype
     event.customer = doc.customer
@@ -278,7 +279,7 @@ def process_invoice_cancel(doc, method=None):
 
     try:
         # Retrieve all active ledger entries for this invoice
-        active_entries = frappe.get_all(
+        active_entries = smriti.db.get_list(
             "SMRITI Attribution Ledger",
             filters={
                 "invoice_reference": doc.name,
@@ -290,7 +291,7 @@ def process_invoice_cancel(doc, method=None):
 
         for entry in active_entries:
             # Create a reversal ledger entry
-            rev = frappe.new_doc("SMRITI Attribution Ledger")
+            rev = smriti.documents.new("SMRITI Attribution Ledger")
             rev.invoice_reference = doc.name
             rev.invoice_doctype = doc.doctype
             rev.customer = doc.customer
@@ -310,7 +311,7 @@ def process_invoice_cancel(doc, method=None):
             rev.insert(ignore_permissions=True)
 
             # Update the original entry's status to Reversed
-            frappe.db.set_value(
+            smriti.db.set_value(
                 "SMRITI Attribution Ledger", 
                 entry.name, 
                 {
@@ -328,6 +329,6 @@ def process_invoice_cancel(doc, method=None):
     except Exception as e:
         if frappe.flags.in_test:
             raise e
-        frappe.log_error(message=frappe.get_traceback(), title="SMRITI SFM Cancellation Failure")
+        smriti.errors.log_error(message=frappe.get_traceback(), title="SMRITI SFM Cancellation Failure")
         event.error_message = str(e)
         event.save(ignore_permissions=True)

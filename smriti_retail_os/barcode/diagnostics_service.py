@@ -10,7 +10,8 @@
 #
 
 import json
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from frappe.utils import cint
 from smriti_retail_os.barcode.token_registry import build_preview_token_dict
 
@@ -22,8 +23,8 @@ from smriti_retail_os.barcode.token_registry import build_preview_token_dict
 def get_barcode_hrt_reserved_height():
     """Fetches barcode_hrt_reserved_height_mm from settings or returns 2.5 fallback."""
     try:
-        if frappe.db.exists("DocType", "SMRITI Barcode Settings"):
-            res = frappe.db.sql(
+        if smriti.db.exists("DocType", "SMRITI Barcode Settings"):
+            res = smriti.db.sql(
                 "SELECT value FROM `tabSingles` WHERE doctype = 'SMRITI Barcode Settings' "
                 "AND field = 'barcode_hrt_reserved_height_mm'"
             )
@@ -37,8 +38,8 @@ def get_barcode_hrt_reserved_height():
 def get_enforce_printability_threshold():
     """Fetches enforce_printability_threshold from settings or returns 1 fallback."""
     try:
-        if frappe.db.exists("DocType", "SMRITI Barcode Settings"):
-            res = frappe.db.sql(
+        if smriti.db.exists("DocType", "SMRITI Barcode Settings"):
+            res = smriti.db.sql(
                 "SELECT value FROM `tabSingles` WHERE doctype = 'SMRITI Barcode Settings' "
                 "AND field = 'enforce_printability_threshold'"
             )
@@ -81,8 +82,8 @@ def get_printability_formula_config():
     }
 
     try:
-        if frappe.db.exists("SMRITI Formula Definition", {"formula_id": "SMRITI-PRN-SCORE-01"}):
-            formula_json = frappe.db.get_value(
+        if smriti.db.exists("SMRITI Formula Definition", {"formula_id": "SMRITI-PRN-SCORE-01"}):
+            formula_json = smriti.db.get(
                 "SMRITI Formula Definition",
                 {"formula_id": "SMRITI-PRN-SCORE-01"},
                 "explainability_json"
@@ -96,17 +97,17 @@ def get_printability_formula_config():
                 if db_cfg.get("version"):
                     config["version"] = db_cfg["version"]
             else:
-                frappe.log_error(
+                smriti.errors.log_error(
                     title="SMRITI Formula Registry Warning",
                     message="SMRITI-PRN-SCORE-01 has empty explainability_json. Using fallback."
                 )
         else:
-            frappe.log_error(
+            smriti.errors.log_error(
                 title="SMRITI Formula Registry Warning",
                 message="SMRITI-PRN-SCORE-01 missing from Formula Registry. Using fallback."
             )
     except Exception as e:
-        frappe.log_error(
+        smriti.errors.log_error(
             title="SMRITI Formula Registry Warning",
             message=f"Formula Registry fetch failed: {str(e)}"
         )

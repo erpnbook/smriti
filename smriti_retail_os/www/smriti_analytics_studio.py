@@ -6,7 +6,8 @@
 # @version: 1.0.0
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 
 
 def get_context(context):
@@ -31,10 +32,10 @@ def get_context(context):
 
     # Company (for filter defaults)
     context.default_company = frappe.defaults.get_user_default("company") or \
-        frappe.db.get_single_value("Global Defaults", "default_company") or ""
+        smriti.db.get_single("Global Defaults", "default_company") or ""
 
     # Available currencies
-    context.currency_symbol = frappe.db.get_single_value("System Settings", "currency") or "INR"
+    context.currency_symbol = smriti.db.get_single("System Settings", "currency") or "INR"
 
     # CSRF token — required by smriti_ui_resolver.js frappe.call() shim
     # The shim reads window.csrf_token (global.csrf_token) on L71

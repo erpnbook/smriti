@@ -12,6 +12,7 @@
 
 import frappe
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.utils import flt
 from smriti_retail_os.sfm.service.target_service import get_month_date_range, get_employee_target_vs_achievement
 
@@ -31,7 +32,7 @@ def get_sfm_leaderboard(company, fiscal_year, month, store=None):
     if store:
         filters["store"] = store
         
-    snapshots = frappe.get_all(
+    snapshots = smriti.db.get_list(
         "SMRITI Sales KPI Snapshot",
         filters=filters,
         fields=["employee", "revenue", "transactions", "customers"]
@@ -49,7 +50,7 @@ def get_sfm_leaderboard(company, fiscal_year, month, store=None):
         
     # Look up employee names
     for emp in agg.keys():
-        agg[emp]["employee_name"] = frappe.db.get_value("Employee", emp, "employee_name") or emp
+        agg[emp]["employee_name"] = smriti.db.get("Employee", emp, "employee_name") or emp
         
     # Sort descending by revenue
     leaderboard = sorted(agg.values(), key=lambda x: x["revenue"], reverse=True)
@@ -72,7 +73,7 @@ def get_employee_summary(employee, fiscal_year, month, company):
     start_date, end_date = get_month_date_range(fiscal_year, month)
     
     # Fetch total transactions and customers from snapshot
-    totals = frappe.db.get_value(
+    totals = smriti.db.get(
         "SMRITI Sales KPI Snapshot",
         {
             "employee": employee,
@@ -85,7 +86,7 @@ def get_employee_summary(employee, fiscal_year, month, company):
     
     res["total_transactions"] = int(totals.total_transactions) if totals and totals.total_transactions else 0
     res["total_customers"] = int(totals.total_customers) if totals and totals.total_customers else 0
-    res["employee_name"] = frappe.db.get_value("Employee", employee, "employee_name") or employee
+    res["employee_name"] = smriti.db.get("Employee", employee, "employee_name") or employee
     
     return res
 
@@ -98,7 +99,7 @@ def get_store_performance_center(company, fiscal_year, month, store=None):
     
     # Query targets in this company
     target_filters = {"company": company, "fiscal_year": fiscal_year, "month": month}
-    targets = frappe.get_all("SMRITI Sales Target", filters=target_filters, fields=["employee", "target_amount"])
+    targets = smriti.db.get_list("SMRITI Sales Target", filters=target_filters, fields=["employee", "target_amount"])
     
     # If store is provided, we filter targets to only employees in that store (by their snapshots or employee branch)
     # Let's filter targets
@@ -106,7 +107,7 @@ def get_store_performance_center(company, fiscal_year, month, store=None):
     for t in targets:
         if store:
             # Check if this employee has any snapshot in this store for the month
-            has_snapshot = frappe.db.exists("SMRITI Sales KPI Snapshot", {
+            has_snapshot = smriti.db.exists("SMRITI Sales KPI Snapshot", {
                 "employee": t.employee,
                 "store": store,
                 "date": ["between", [start_date, end_date]]
@@ -123,7 +124,7 @@ def get_store_performance_center(company, fiscal_year, month, store=None):
     if store:
         achievement_filters["store"] = store
         
-    totals = frappe.db.get_value(
+    totals = smriti.db.get(
         "SMRITI Sales KPI Snapshot",
         achievement_filters,
         ["sum(revenue) as total_revenue", "sum(transactions) as total_transactions"],
@@ -170,15 +171,15 @@ def save_sales_target(
         "store": store,
     }
 
-    if target_name and frappe.db.exists("SMRITI Sales Target", target_name):
-        doc = frappe.get_doc("SMRITI Sales Target", target_name)
+    if target_name and smriti.db.exists("SMRITI Sales Target", target_name):
+        doc = smriti.documents.get("SMRITI Sales Target", target_name)
         doc.update(fields)
         doc.save(ignore_permissions=False)
     else:
-        doc = frappe.get_doc({"doctype": "SMRITI Sales Target", **fields})
+        doc = smriti.documents.new("SalesTarget"); smriti.documents.last().update(**fields)
         doc.insert(ignore_permissions=False)
 
-    frappe.db.commit()
+    smriti.db.commit()
     return {"name": doc.name}
 
 
@@ -207,15 +208,15 @@ def save_customer_ownership(
         "is_active": int(is_active),
     }
 
-    if ownership_name and frappe.db.exists("SMRITI Customer Ownership", ownership_name):
-        doc = frappe.get_doc("SMRITI Customer Ownership", ownership_name)
+    if ownership_name and smriti.db.exists("SMRITI Customer Ownership", ownership_name):
+        doc = smriti.documents.get("SMRITI Customer Ownership", ownership_name)
         doc.update(fields)
         doc.save(ignore_permissions=False)
     else:
-        doc = frappe.get_doc({"doctype": "SMRITI Customer Ownership", **fields})
+        doc = smriti.documents.new("CustomerOwnership"); smriti.documents.last().update(**fields)
         doc.insert(ignore_permissions=False)
 
-    frappe.db.commit()
+    smriti.db.commit()
     return {"name": doc.name}
 
 
@@ -254,7 +255,7 @@ def save_sfm_settings(
     if walkin_employee is not None:
         doc.walkin_employee  = walkin_employee
     doc.save(ignore_permissions=False)
-    frappe.db.commit()
+    smriti.db.commit()
     return {"saved": True}
 
 

@@ -10,14 +10,15 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.model.document import Document
 
 class SMRITISalesTarget(Document):
     def validate(self):
         # Ensure only one target exists per employee, company, fiscal_year, and month
-        duplicate = frappe.db.exists("SMRITI Sales Target", {
+        duplicate = smriti.db.exists("SMRITI Sales Target", {
             "employee": self.employee,
             "company": self.company,
             "fiscal_year": self.fiscal_year,

@@ -10,7 +10,8 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from frappe.utils import now_datetime
 
 class SMRITINegativeStockApprovalService(object):
@@ -21,7 +22,7 @@ class SMRITINegativeStockApprovalService(object):
 
 	def __init__(self, case_id):
 		self.case_id = case_id
-		self.case_doc = frappe.get_doc("SMRITI Negative Stock Case", self.case_id)
+		self.case_doc = smriti.documents.get("SMRITI Negative Stock Case", self.case_id)
 
 	def submit_for_approval(self, user_id=None):
 		"""
@@ -33,7 +34,7 @@ class SMRITINegativeStockApprovalService(object):
 		self.case_doc.status = "Pending Approval"
 		self.case_doc.requested_by = user_id or frappe.session.user
 		self.case_doc.save(ignore_permissions=True)
-		frappe.db.commit()
+		smriti.db.commit()
 
 		# Optional: Send notification to Store Manager role users
 		self.notify_approvers()
@@ -59,7 +60,7 @@ class SMRITINegativeStockApprovalService(object):
 		self.case_doc.approval_reference = reference
 
 		self.case_doc.save(ignore_permissions=True)
-		frappe.db.commit()
+		smriti.db.commit()
 
 		return self.case_doc
 
@@ -78,7 +79,7 @@ class SMRITINegativeStockApprovalService(object):
 		self.case_doc.approval_level = "Store Manager"
 
 		self.case_doc.save(ignore_permissions=True)
-		frappe.db.commit()
+		smriti.db.commit()
 
 		return self.case_doc
 

@@ -4,6 +4,7 @@ smriti_retail_os/tests/test_notification_studio.py
 Unit tests for SMRITI Notification Studio triggers and scheduled daily checks.
 """
 import frappe
+from smriti_retail_os import smriti
 import unittest
 from frappe.utils import today, add_days
 from smriti_retail_os.notification_studio.service.notification_triggers import (
@@ -16,38 +17,38 @@ from smriti_retail_os.notification_studio.service.scheduled_checks import (
 class TestNotificationStudio(unittest.TestCase):
     def setUp(self):
         # Create a test customer if not exists
-        if not frappe.db.exists("Customer", "Test Notification Customer"):
-            customer_group = frappe.db.get_value("Customer Group", {"is_group": 0}, "name") or "Individual"
-            territory = frappe.db.get_value("Territory", {"is_group": 0}, "name") or "All Territories"
-            doc = frappe.get_doc({
-                "doctype": "Customer",
+        if not smriti.db.exists("Customer", "Test Notification Customer"):
+            customer_group = smriti.db.get("Customer Group", {"is_group": 0}, "name") or "Individual"
+            territory = smriti.db.get("Territory", {"is_group": 0}, "name") or "All Territories"
+            doc = smriti.documents.new("Customer")
+            doc.update({
                 "customer_name": "Test Notification Customer",
                 "customer_type": "Individual",
                 "customer_group": customer_group,
                 "territory": territory
             })
             doc.insert(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
 
         # Create a test supplier if not exists
-        if not frappe.db.exists("Supplier", "Test Notification Supplier"):
-            supplier_group = frappe.db.get_value("Supplier Group", {"is_group": 0}, "name") or "All Supplier Groups"
-            doc = frappe.get_doc({
-                "doctype": "Supplier",
+        if not smriti.db.exists("Supplier", "Test Notification Supplier"):
+            supplier_group = smriti.db.get("Supplier Group", {"is_group": 0}, "name") or "All Supplier Groups"
+            doc = smriti.documents.new("Supplier")
+            doc.update({
                 "supplier_name": "Test Notification Supplier",
                 "supplier_type": "Individual",
                 "supplier_group": supplier_group
             })
             doc.insert(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
 
         # Clear existing logs for tests to avoid noise
-        frappe.db.delete("SMRITI Notification Log")
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Notification Log")
+        smriti.db.commit()
 
     def test_trigger_purchase_approval(self):
-        po = frappe.get_doc({
-            "doctype": "Purchase Order",
+        po = smriti.documents.new("PurchaseOrder")
+        po.update({
             "supplier": "Test Notification Supplier",
             "transaction_date": today(),
             "items": [{
@@ -62,13 +63,13 @@ class TestNotificationStudio(unittest.TestCase):
         trigger_purchase_approval(po, "on_submit")
         
         # Verify notification was generated for purchase_approval
-        logs = frappe.get_all("SMRITI Notification Log", filters={"notif_type": "purchase_approval"}, fields=["message"])
+        logs = smriti.db.get_list("SMRITI Notification Log", filters={"notif_type": "purchase_approval"}, fields=["message"])
         self.assertTrue(len(logs) > 0)
         self.assertIn("Test Notification Supplier", logs[0].get("message") or "")
 
     def test_trigger_grn_received(self):
-        pr = frappe.get_doc({
-            "doctype": "Purchase Receipt",
+        pr = smriti.documents.new("PurchaseReceipt")
+        pr.update({
             "supplier": "Test Notification Supplier",
             "items": [{
                 "item_code": "TEST-SFM-ITEM-01",
@@ -81,12 +82,12 @@ class TestNotificationStudio(unittest.TestCase):
         trigger_grn_received(pr, "on_submit")
         
         # Verify notification was generated for grn_received
-        logs = frappe.get_all("SMRITI Notification Log", filters={"notif_type": "grn_received"})
+        logs = smriti.db.get_list("SMRITI Notification Log", filters={"notif_type": "grn_received"})
         self.assertTrue(len(logs) > 0)
 
     def test_trigger_sales_notification(self):
-        si = frappe.get_doc({
-            "doctype": "Sales Invoice",
+        si = smriti.documents.new("SalesInvoice")
+        si.update({
             "customer": "Test Notification Customer",
             "due_date": today(),
             "grand_total": 500.0,
@@ -102,7 +103,7 @@ class TestNotificationStudio(unittest.TestCase):
         trigger_sales_notification(si, "on_submit")
         
         # Verify notification was generated for sales
-        logs = frappe.get_all("SMRITI Notification Log", filters={"notif_type": "sales"})
+        logs = smriti.db.get_list("SMRITI Notification Log", filters={"notif_type": "sales"})
         self.assertTrue(len(logs) > 0)
 
     def test_scheduled_low_stock_checks(self):

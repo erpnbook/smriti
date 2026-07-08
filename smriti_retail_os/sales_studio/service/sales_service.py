@@ -5,8 +5,9 @@
 # @author:  Jawahar R. Mallah
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.utils import flt, cint, nowdate
 from smriti_retail_os.sales_studio.repository.sales_repository import SalesRepository
 from smriti_retail_os.sales_studio.service.sales_validation_service import SalesValidationService
@@ -37,26 +38,26 @@ class SalesService:
         if not company:
             company = frappe.defaults.get_user_default("company") or frappe.db.get_single_value("Global Defaults", "default_company")
 
-        item_doc = frappe.get_doc("Item", item_code)
+        item_doc = smriti.documents.get("Item", item_code)
         
         # Standard Selling Price lookup
-        rate = frappe.db.get_value(
+        rate = smriti.db.get(
             "Item Price", 
             {"item_code": item_code, "price_list": "Standard Selling"}, 
             "price_list_rate"
         ) or item_doc.valuation_rate or 0.0
 
         # MRP Price lookup
-        mrp = item_doc.custom_mrp or frappe.db.get_value(
+        mrp = item_doc.custom_mrp or smriti.db.get(
             "Item Price", 
             {"item_code": item_code, "price_list": "MRP"}, 
             "price_list_rate"
         ) or rate
 
         # Resolve warehouse
-        warehouse = frappe.db.get_value("Item Reorder", {"parent": item_code}, "warehouse") or item_doc.default_warehouse
+        warehouse = smriti.db.get("Item Reorder", {"parent": item_code}, "warehouse") or item_doc.default_warehouse
         if not warehouse and company:
-            warehouse = frappe.db.get_value("Warehouse", {"company": company, "is_group": 0}, "name")
+            warehouse = smriti.db.get("Warehouse", {"company": company, "is_group": 0}, "name")
 
         gst_percentage = cint(item_doc.custom_gst_percentage) if item_doc.custom_gst_percentage else 0
         if not gst_percentage and item_doc.gst_hsn_code:
@@ -276,24 +277,24 @@ class SalesService:
             return None
 
         # Resolve parent items matching article code
-        items = frappe.db.get_all("Item", filters={
+        items = smriti.db.get_list("Item", filters={
             "disabled": 0,
             "variant_of": article
         }, fields=["name"])
 
         if not items:
-            items = frappe.db.get_all("Item", filters={
+            items = smriti.db.get_list("Item", filters={
                 "disabled": 0,
                 "custom_style_code": article
             }, fields=["name"])
 
         if not items:
-            if frappe.db.exists("Item", article):
+            if smriti.db.exists("Item", article):
                 return article
             return None
 
         for item in items:
-            attrs = frappe.db.get_all("Item Variant Attribute", filters={"parent": item.name}, fields=["attribute", "attribute_value"])
+            attrs = smriti.db.get_list("Item Variant Attribute", filters={"parent": item.name}, fields=["attribute", "attribute_value"])
             attr_map = {a.attribute.lower(): a.attribute_value.lower() for a in attrs}
 
             has_color = False

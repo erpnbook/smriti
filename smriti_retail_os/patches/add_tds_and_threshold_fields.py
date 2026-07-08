@@ -14,7 +14,8 @@ it automatically from the JSON definition. No ALTER TABLE needed.
 Copyright (c) 2026 AITDL NETWORK. All rights reserved.
 """
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 
 
 def execute():
@@ -23,7 +24,7 @@ def execute():
     table = "tabSMRITI Supplier"
 
     # Guard: table must exist (will be created by meta-sync if brand new install)
-    tables = [r[0] for r in frappe.db.sql("SHOW TABLES LIKE %s", (table,))]
+    tables = [r[0] for r in smriti.db.sql("SHOW TABLES LIKE %s", (table,))]
     if not tables:
         frappe.logger().info(
             f"v2.3.1 patch: {table} does not exist yet — skipping tds_category column add. "
@@ -31,7 +32,7 @@ def execute():
         )
         return
 
-    existing = frappe.db.sql(
+    existing = smriti.db.sql(
         f"SHOW COLUMNS FROM `{table}` LIKE %s", ("tds_category",)
     )
     if existing:
@@ -39,7 +40,7 @@ def execute():
             f"v2.3.1 patch: `{table}`.`tds_category` already exists — skipped."
         )
     else:
-        frappe.db.sql(
+        smriti.db.sql(
             f"ALTER TABLE `{table}` ADD COLUMN `tds_category` varchar(140) DEFAULT NULL"
         )
         frappe.logger().info(
@@ -55,5 +56,5 @@ def execute():
         "(Single DocType — handled by Frappe meta-sync)."
     )
 
-    frappe.db.commit()
+    smriti.db.commit()
     frappe.logger().info("v2.3.1 patch: complete.")

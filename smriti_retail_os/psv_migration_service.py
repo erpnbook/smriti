@@ -15,8 +15,9 @@
 
 import hashlib
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.utils import today, now_datetime
 
 
@@ -27,16 +28,16 @@ def create_reversal_entry(original_name, reason):
     """
     frappe.only_for(["System Manager", "SMRITI Store Manager"])
     
-    if not frappe.db.exists("PSV Ledger Entry", original_name):
+    if not smriti.db.exists("PSV Ledger Entry", original_name):
         frappe.throw(_("Original ledger entry {0} not found.").format(original_name))
         
-    orig = frappe.get_doc("PSV Ledger Entry", original_name)
+    orig = smriti.documents.get("PSV Ledger Entry", original_name)
     
-    already_reversed = frappe.db.exists("PSV Ledger Entry", {"reversal_of": original_name})
+    already_reversed = smriti.db.exists("PSV Ledger Entry", {"reversal_of": original_name})
     if already_reversed:
         frappe.throw(_("Ledger entry {0} has already been reversed by {1}.").format(original_name, already_reversed))
         
-    rev = frappe.new_doc("PSV Ledger Entry")
+    rev = smriti.documents.new("PSV Ledger Entry")
     rev.company = orig.company
     rev.posting_datetime = now_datetime()
     rev.channel_partner = orig.channel_partner
@@ -53,7 +54,7 @@ def create_reversal_entry(original_name, reason):
     
     # reviewed-ignore-permissions: bypass for whitelisted create_reversal_entry endpoint, gated by System Manager or SMRITI Store Manager roles
     rev.insert(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
     return rev.name
 
 
@@ -80,7 +81,7 @@ def migrate_to_new_psv_partner(dry_run=0):
     is_dry_run = int(dry_run) > 0
     
     try:
-        legacy_psas = frappe.get_all(
+        legacy_psas = smriti.db.get_list(
             "SMRITI Party Stock Account",
             fields=["name", "company", "customer", "location_name", "zone", "region", "active", "status"]
         )
@@ -89,9 +90,9 @@ def migrate_to_new_psv_partner(dry_run=0):
         
         for psa in legacy_psas:
             partner_name = f"{psa.customer}-{psa.location_name}"
-            partner_exists = frappe.db.exists("PSV Channel Partner", partner_name)
+            partner_exists = smriti.db.exists("PSV Channel Partner", partner_name)
             
-            legacy_brands = frappe.db.sql("""
+            legacy_brands = smriti.db.sql("""
                 SELECT DISTINCT i.brand
                 FROM `tabSMRITI Party Stock Ledger Entry` ple
                 INNER JOIN `tabItem` i ON ple.item_code = i.name
@@ -103,8 +104,8 @@ def migrate_to_new_psv_partner(dry_run=0):
             if partner_exists:
                 report["partners_skipped"] += 1
             else:
-                territory = frappe.db.get_value("Customer", psa.customer, "territory") or "All Territories"
-                if not frappe.db.exists("Territory", territory):
+                territory = smriti.db.get("Customer", psa.customer, "territory") or "All Territories"
+                if not smriti.db.exists("Territory", territory):
                     territory = "All Territories"
                     
                 partner_doc_data = {
@@ -133,7 +134,7 @@ def migrate_to_new_psv_partner(dry_run=0):
                 
                 if not is_dry_run:
                     try:
-                        partner_doc = frappe.get_doc(partner_doc_data)
+                        partner_doc = smriti.documents.new_from_dict(partner_doc_data)
                         # reviewed-ignore-permissions: no role restriction — any authenticated user may migrate psv partners, by design
                         partner_doc.insert(ignore_permissions=True)
                         report["partners_created"] += 1
@@ -143,7 +144,7 @@ def migrate_to_new_psv_partner(dry_run=0):
                 else:
                     report["partners_created"] += 1
             
-            ledger_entries = frappe.get_all(
+            ledger_entries = smriti.db.get_list(
                 "SMRITI Party Stock Ledger Entry",
                 filters={"party_stock_account": psa.name},
                 fields=["*"]
@@ -158,15 +159,15 @@ def migrate_to_new_psv_partner(dry_run=0):
                 "Transfer": "Dispatch"
             }
             
-            company_currency = frappe.db.get_value("Company", psa.company, "default_currency") or "INR"
-            active_fy = frappe.db.get_value("Fiscal Year", {"year_start_date": ["<=", today()], "year_end_date": [">=", today()]}, "name")
+            company_currency = smriti.db.get("Company", psa.company, "default_currency") or "INR"
+            active_fy = smriti.db.get("Fiscal Year", {"year_start_date": ["<=", today()], "year_end_date": [">=", today()]}, "name")
             
             for le in ledger_entries:
                 posting_datetime_str = str(le.posting_datetime)
                 fy = active_fy
                 if le.posting_datetime:
                     le_date_str = str(le.posting_datetime.date() if hasattr(le.posting_datetime, "date") else le.posting_datetime).split()[0]
-                    le_fy = frappe.db.get_value("Fiscal Year", {"year_start_date": ["<=", le_date_str], "year_end_date": [">=", le_date_str]}, "name")
+                    le_fy = smriti.db.get("Fiscal Year", {"year_start_date": ["<=", le_date_str], "year_end_date": [">=", le_date_str]}, "name")
                     if le_fy:
                         fy = le_fy
                         
@@ -175,7 +176,7 @@ def migrate_to_new_psv_partner(dry_run=0):
                 raw_string = f"{psa.company}{posting_datetime_str}{partner_name}{le.item_code}{str(le.qty)}{tx_type}{le.voucher_type}{le.voucher_no}"
                 unique_hash = hashlib.sha256(raw_string.encode('utf-8')).hexdigest()
                 
-                new_entry_exists = frappe.db.exists("PSV Ledger Entry", {"unique_hash": unique_hash})
+                new_entry_exists = smriti.db.exists("PSV Ledger Entry", {"unique_hash": unique_hash})
                 if new_entry_exists:
                     continue
                     
@@ -197,14 +198,14 @@ def migrate_to_new_psv_partner(dry_run=0):
                 
                 if not is_dry_run:
                     try:
-                        ledger_doc = frappe.get_doc(ledger_doc_data)
+                        ledger_doc = smriti.documents.new_from_dict(ledger_doc_data)
                         # reviewed-ignore-permissions: no role restriction — any authenticated user may migrate psv partners, by design
                         ledger_doc.insert(ignore_permissions=True)
                     except Exception as e:
                         report["errors"].append(f"Error migrating ledger entry for {partner_name}, item {le.item_code}: {str(e)}")
         
         if not is_dry_run:
-            frappe.db.commit()
+            smriti.db.commit()
             
     except Exception as e:
         report["errors"].append(f"Migration failed with critical error: {str(e)}")

@@ -10,7 +10,8 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from frappe.utils import now_datetime
 
 class SMRITINegativeStockRecoveryService(object):
@@ -32,14 +33,14 @@ class SMRITINegativeStockRecoveryService(object):
 			return
 
 		# Get current actual stock from ERPNext Stock Ledger
-		actual_qty = frappe.db.get_value("Bin", {
+		actual_qty = smriti.db.get("Bin", {
 			"item_code": self.item_code,
 			"warehouse": self.warehouse
 		}, "actual_qty") or 0.0
 
 		if actual_qty >= 0:
 			# Find all cases for this item + warehouse that are Open, Approved, or Pending Approval
-			open_cases = frappe.get_all("SMRITI Negative Stock Case", filters={
+			open_cases = smriti.db.get_list("SMRITI Negative Stock Case", filters={
 				"item_code": self.item_code,
 				"warehouse": self.warehouse,
 				"status": ["in", ["Open", "Approved", "Pending Approval"]]
@@ -47,7 +48,7 @@ class SMRITINegativeStockRecoveryService(object):
 
 			for case in open_cases:
 				# Trigger recovery document insertion
-				rec = frappe.new_doc("SMRITI Negative Stock Recovery")
+				rec = smriti.documents.new("SMRITI Negative Stock Recovery")
 				rec.case_id = case.name
 				rec.recovered_qty = abs(case.negative_qty)
 				rec.recovery_source_doctype = source_doctype or "Stock Ledger"
@@ -58,13 +59,13 @@ class SMRITINegativeStockRecoveryService(object):
 				rec.insert(ignore_permissions=True)
 
 				# Update Case status to 'Recovered'
-				frappe.db.set_value("SMRITI Negative Stock Case", case.name, {
+				smriti.db.set_value("SMRITI Negative Stock Case", case.name, {
 					"status": "Recovered",
 					"recovery_reference": rec.name
 				})
 				
 				# Commit the updates
-				frappe.db.commit()
+				smriti.db.commit()
 
 				frappe.logger().info(f"[SMRITI SNSM] Case {case.name} successfully recovered via {source_doctype} {source_name}. Current balance: {actual_qty}")
 
@@ -82,7 +83,7 @@ class SMRITINegativeStockRecoveryService(object):
 		Background task scheduled daily to sweep and recover any orphaned negative stock cases.
 		"""
 		# Get all cases that are Open or Approved
-		cases = frappe.get_all("SMRITI Negative Stock Case", filters={
+		cases = smriti.db.get_list("SMRITI Negative Stock Case", filters={
 			"status": ["in", ["Open", "Approved", "Pending Approval"]]
 		}, fields=["name", "item_code", "warehouse", "negative_qty"])
 

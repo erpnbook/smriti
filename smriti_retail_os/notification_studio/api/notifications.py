@@ -5,6 +5,7 @@ Whitelisted API endpoints for SMRITI Notification Center.
 Author: Jawahar R. Mallah
 """
 import frappe
+from smriti_retail_os import smriti
 from smriti_retail_os.notification_studio.service.notification_service import (
     get_notifications as _get_notifications,
     get_unread_count as _get_unread_count,
@@ -81,7 +82,7 @@ def delete_notification(name):
             NotificationRepository.commit()
         return {"status": "ok"}
     except Exception as e:
-        frappe.log_error(str(e), "delete_notification")
+        smriti.errors.log_error(str(e), "delete_notification")
         return {"status": "error", "message": str(e)}
 
 @frappe.whitelist()

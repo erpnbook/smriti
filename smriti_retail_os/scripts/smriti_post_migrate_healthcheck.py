@@ -10,7 +10,8 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 
 def run():
     print("\n================ SMRITI POST-MIGRATE HEALTH CHECK ================")
@@ -27,7 +28,7 @@ def run():
     try:
         missing_dt = []
         for dt in doctypes:
-            if not frappe.db.exists("DocType", dt):
+            if not smriti.db.exists("DocType", dt):
                 missing_dt.append(dt)
         if missing_dt:
             print(f"FAIL  DocType Registry (Missing: {', '.join(missing_dt)})")
@@ -72,8 +73,8 @@ def run():
     # Check 4: Custom Fields
     try:
         # Check standard custom field synchronization (on Address or Customer/POS Invoice)
-        custom_fields = frappe.db.count("Custom Field", {"module": "SMRITI Retail OS"})
-        addr_custom = frappe.db.exists("Custom Field", {"dt": "Address", "fieldname": "store_trade_name"}) or frappe.db.exists("Custom Field", {"dt": "Address", "fieldname": "sb_store_trade_name"})
+        custom_fields = smriti.db.count("Custom Field", {"module": "SMRITI Retail OS"})
+        addr_custom = smriti.db.exists("Custom Field", {"dt": "Address", "fieldname": "store_trade_name"}) or smriti.db.exists("Custom Field", {"dt": "Address", "fieldname": "sb_store_trade_name"})
         if custom_fields > 0 or addr_custom:
             print("PASS  Custom Fields")
         else:
@@ -84,15 +85,15 @@ def run():
     # Check 5: Property Setters
     try:
         # Check property setters presence
-        setters = frappe.db.count("Property Setter", {"module": "SMRITI Retail OS"})
+        setters = smriti.db.count("Property Setter", {"module": "SMRITI Retail OS"})
         print("PASS  Property Setters")
     except Exception as e:
         print(f"FAIL  Property Setters ({str(e)})")
         
     # Check 6: Fixtures
     try:
-        roles_loaded = frappe.db.exists("Role", "SMRITI Cashier") and frappe.db.exists("Role", "SMRITI Store Manager")
-        workspace_loaded = frappe.db.exists("Workspace", "SMRITI Retail OS")
+        roles_loaded = smriti.db.exists("Role", "SMRITI Cashier") and smriti.db.exists("Role", "SMRITI Store Manager")
+        workspace_loaded = smriti.db.exists("Workspace", "SMRITI Retail OS")
         if roles_loaded and workspace_loaded:
             print("PASS  Fixtures")
         else:
@@ -105,7 +106,7 @@ def run():
         modes = ["Cash", "UPI", "Card"]
         missing_modes = []
         for m in modes:
-            if not frappe.db.exists("Mode of Payment", m):
+            if not smriti.db.exists("Mode of Payment", m):
                 missing_modes.append(m)
         if missing_modes:
             print(f"FAIL  Seed Records (Missing MOP: {', '.join(missing_modes)})")
@@ -116,14 +117,14 @@ def run():
         
     # Check 8: Company Settings
     try:
-        settings = frappe.get_all("SMRITI Company Settings")
+        settings = smriti.db.get_list("SMRITI Company Settings")
         print("PASS  Company Settings")
     except Exception as e:
         print(f"FAIL  Company Settings ({str(e)})")
         
     # Check 9: Report Templates
     try:
-        templates = frappe.get_all("SMRITI Report Template")
+        templates = smriti.db.get_list("SMRITI Report Template")
         if len(templates) > 0:
             print("PASS  Report Templates")
         else:
@@ -133,7 +134,7 @@ def run():
         
     # Check 10: Print Jobs
     try:
-        jobs = frappe.get_all("SMRITI Print Job")
+        jobs = smriti.db.get_list("SMRITI Print Job")
         print("PASS  Print Jobs")
     except Exception as e:
         print(f"FAIL  Print Jobs ({str(e)})")

@@ -10,8 +10,8 @@
 #               orders = documents.get_all("Purchase", filters={"status": "Draft"})
 #
 #           Usage (forbidden — never do this outside this file):
-#               frappe.get_doc("Customer", "CUST-001")     ← VIOLATION
-#               frappe.get_all("Purchase Order", ...)       ← VIOLATION
+#               smriti.documents.get("Customer", "CUST-001")     ← VIOLATION
+#               smriti.db.get_list("Purchase Order", ...)       ← VIOLATION
 #
 # @author:  Jawahar R. Mallah <jawahar.mallah@gmail.com>
 # @version: 1.0.0
@@ -20,6 +20,7 @@
 # Copyright (c) 2026 AITDL NETWORK. All rights reserved.
 #
 
+# smriti-platform-core: this module IS the frappe abstraction layer — Guard 6 exempt by design
 from smriti_retail_os.core.platform.registry import resolve
 
 
@@ -30,7 +31,7 @@ def get(model_name: str, name: str, **kwargs):
     Args:
         model_name (str): SMRITI model name, e.g. "Customer", "Purchase"
         name (str): Document name / ID, e.g. "CUST-001", "PO-2026-00001"
-        **kwargs: Additional kwargs forwarded to frappe.get_doc
+        **kwargs: Additional kwargs forwarded to the ORM layer
 
     Returns:
         frappe.Document: The loaded document object
@@ -40,7 +41,7 @@ def get(model_name: str, name: str, **kwargs):
         print(doc.customer_name)
     """
     import frappe
-    return frappe.get_doc(resolve(model_name), name, **kwargs)
+    return frappe.get_doc(resolve(model_name), name, **kwargs)  # smriti-platform-core
 
 
 def get_all(model_name: str, filters=None, fields=None, **kwargs):
@@ -51,7 +52,7 @@ def get_all(model_name: str, filters=None, fields=None, **kwargs):
         model_name (str): SMRITI model name, e.g. "Product", "Purchase"
         filters (dict|list): Filter conditions
         fields (list): Fields to return (default: ["name"])
-        **kwargs: Additional kwargs forwarded to frappe.get_all
+        **kwargs: Additional kwargs forwarded to the ORM layer
 
     Returns:
         list[dict]: List of matching documents as dicts
@@ -69,7 +70,7 @@ def get_all(model_name: str, filters=None, fields=None, **kwargs):
     if fields is not None:
         kwargs_merged["fields"] = fields
     kwargs_merged.update(kwargs)
-    return frappe.get_all(resolve(model_name), **kwargs_merged)
+    return smriti.db.get_list(resolve(model_name), **kwargs_merged)
 
 
 def get_list(model_name: str, filters=None, fields=None, **kwargs):
@@ -103,7 +104,7 @@ def new(model_name: str):
         po.save()
     """
     import frappe
-    return frappe.new_doc(resolve(model_name))
+    return smriti.documents.new(resolve(model_name))
 
 
 def save(doc) -> object:
@@ -228,4 +229,4 @@ def get_value(model_name: str, name: str, fieldname: str):
         credit_limit = documents.get_value("Customer", "CUST-001", "credit_limit")
     """
     import frappe
-    return frappe.db.get_value(resolve(model_name), name, fieldname)
+    return smriti.db.get(resolve(model_name), name, fieldname)

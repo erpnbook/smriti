@@ -14,8 +14,9 @@ import hashlib
 import os
 import csv
 import contextlib
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.utils import get_datetime, today, now_datetime
 from smriti_retail_os.ledger_engine import make_ledger_entry, log_activity
 from smriti_retail_os.balance_engine import get_party_balance, get_bulk_party_balances
@@ -72,7 +73,7 @@ def _psv_upload_lock(party_stock_account):
 
 def create_psv_transaction(psa, transaction_type, items, company=None, reference_doctype=None, reference_name=None, remarks=None, posting_date=None, opening_import_batch=None):
     if not company:
-        company = frappe.db.get_value("SMRITI Party Stock Account", psa, "company")
+        company = smriti.db.get("SMRITI Party Stock Account", psa, "company")
         
     fingerprint = None
     if reference_doctype and reference_name:
@@ -80,7 +81,7 @@ def create_psv_transaction(psa, transaction_type, items, company=None, reference
         # BUG-006 FIX: Check both Draft (0) and Submitted (1) to close the race window
         # where two concurrent requests both pass a docstatus=1-only check.
         # Cancelled transactions (docstatus=2) are excluded — they may be legitimately reprocessed.
-        existing = frappe.db.get_value(
+        existing = smriti.db.get(
             "SMRITI PSV Transaction",
             {"mapping_fingerprint": fingerprint, "docstatus": ["in", [0, 1]]},
             "name"
@@ -89,7 +90,7 @@ def create_psv_transaction(psa, transaction_type, items, company=None, reference
             return existing
 
 
-    doc = frappe.new_doc("SMRITI PSV Transaction")
+    doc = smriti.documents.new("SMRITI PSV Transaction")
     doc.party_stock_account = psa
     doc.transaction_type = transaction_type
     doc.company = company
@@ -137,9 +138,8 @@ def process_sales_invoice_submit(doc, method=None):
         if items_data:
             create_psv_transaction(doc.custom_party_stock_account, tx_type, items_data, doc.company, doc.doctype, doc.name, "Generated from Sales Invoice", get_posting_datetime(doc))
     except Exception as e:
-        frappe.log_error(title=f"PSV Error: {doc.name}", message=frappe.get_traceback())
-        frappe.get_doc({
-            "doctype": "SMRITI PSV Exception Record",
+        smriti.errors.log_error(title=f"PSV Error: {doc.name}", message=frappe.get_traceback())
+        smriti.documents.new("PSVExceptionRecord").update({
             "timestamp": now_datetime(),
             "last_seen": now_datetime(),
             "party_stock_account": doc.custom_party_stock_account,
@@ -148,17 +148,16 @@ def process_sales_invoice_submit(doc, method=None):
             "reconciliation_notes": str(e),
             "status": "Pending Reconciliation"
         }).insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
 def process_sales_invoice_cancel(doc, method=None):
     if not doc.get("custom_party_stock_account"): return
     try:
-        tx_name = frappe.db.get_value("SMRITI PSV Transaction", {"reference_doctype": doc.doctype, "reference_name": doc.name, "docstatus": 1})
-        if tx_name: frappe.get_doc("SMRITI PSV Transaction", tx_name).cancel()
+        tx_name = smriti.db.get("SMRITI PSV Transaction", {"reference_doctype": doc.doctype, "reference_name": doc.name, "docstatus": 1})
+        if tx_name: smriti.documents.get("SMRITI PSV Transaction", tx_name).cancel()
     except Exception as e:
-        frappe.log_error(title=f"PSV Cancel Error: {doc.name}", message=frappe.get_traceback())
-        frappe.get_doc({
-            "doctype": "SMRITI PSV Exception Record",
+        smriti.errors.log_error(title=f"PSV Cancel Error: {doc.name}", message=frappe.get_traceback())
+        smriti.documents.new("PSVExceptionRecord").update({
             "timestamp": now_datetime(),
             "last_seen": now_datetime(),
             "party_stock_account": doc.custom_party_stock_account,
@@ -167,7 +166,7 @@ def process_sales_invoice_cancel(doc, method=None):
             "reconciliation_notes": str(e),
             "status": "Pending Reconciliation"
         }).insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 # ─── WEEKLY SALES UPLOAD ──────────────────────────────────────────────────────
 
 def validate_sales_upload(doc):
@@ -187,11 +186,11 @@ def validate_sales_upload(doc):
 
     # 2. File duplicate MD5 check
     if doc.excel_file:
-        file_doc = frappe.get_doc("File", {"file_url": doc.excel_file})
+        file_doc = smriti.documents.get("File", {"file_url": doc.excel_file})
         file_content = file_doc.get_content()
         file_hash = hashlib.md5(file_content).hexdigest()
 
-        duplicate = frappe.db.exists(
+        duplicate = smriti.db.exists(
             "SMRITI Party Sales Upload",
             {"file_hash": file_hash, "name": ["!=", doc.name]}
         )
@@ -200,7 +199,7 @@ def validate_sales_upload(doc):
         doc.file_hash = file_hash
 
     # 3. Period Overlap Check
-    overlapping_import = frappe.db.sql("""
+    overlapping_import = smriti.db.sql("""
         SELECT name
         FROM `tabSMRITI Party Sales Upload`
         WHERE party_stock_account = %s
@@ -245,7 +244,7 @@ def parse_and_populate_items(doc):
     """
     Parses CSV/Excel file and populates the child items table.
     """
-    file_doc = frappe.get_doc("File", {"file_url": doc.excel_file})
+    file_doc = smriti.documents.get("File", {"file_url": doc.excel_file})
     file_path = file_doc.get_full_path()
     
     # We support simple CSV parsing for testing/import, and Excel via openpyxl
@@ -278,7 +277,7 @@ def parse_and_populate_items(doc):
             frappe.throw(_("Python library 'openpyxl' is required to parse Excel files."))
 
 def process_sales_upload_submit(doc):
-    frappe.db.set_value(doc.doctype, doc.name, "status", "Imported")
+    smriti.db.set_value(doc.doctype, doc.name, "status", "Imported")
     items_data = [{"item_code": i.item_code, "qty": i.qty_sold} for i in doc.items]
     create_psv_transaction(doc.party_stock_account, "SALES_UPLOAD", items_data, doc.company, doc.doctype, doc.name, f"Imported from {doc.name}")
 
@@ -296,16 +295,16 @@ def process_sales_upload_cancel(doc):
     3. Fallback: if no PSV Transaction exists (legacy/pre-fix data), write direct
        reversal entries as before — but with the correct sign.
     """
-    frappe.db.set_value(doc.doctype, doc.name, "status", "Draft")
+    smriti.db.set_value(doc.doctype, doc.name, "status", "Draft")
 
     # Preferred path: cancel the PSV Transaction (handles ledger reversal atomically)
-    tx_name = frappe.db.get_value(
+    tx_name = smriti.db.get(
         "SMRITI PSV Transaction",
         {"reference_doctype": doc.doctype, "reference_name": doc.name, "docstatus": 1},
         "name"
     )
     if tx_name:
-        frappe.get_doc("SMRITI PSV Transaction", tx_name).cancel()
+        smriti.documents.get("SMRITI PSV Transaction", tx_name).cancel()
     else:
         # Fallback for historical data that was processed before the PSV Transaction
         # document layer existed. Write direct reversal entries.
@@ -354,9 +353,9 @@ def process_physical_snapshot_submit(doc):
 def process_physical_snapshot_cancel(doc):
     doc.approved_by = None
     doc.approved_on = None
-    tx_name = frappe.db.get_value("SMRITI PSV Transaction", {"reference_doctype": doc.doctype, "reference_name": doc.name, "docstatus": 1})
+    tx_name = smriti.db.get("SMRITI PSV Transaction", {"reference_doctype": doc.doctype, "reference_name": doc.name, "docstatus": 1})
     if tx_name:
-        frappe.get_doc("SMRITI PSV Transaction", tx_name).cancel()
+        smriti.documents.get("SMRITI PSV Transaction", tx_name).cancel()
 
 def import_opening_balances(company, party_stock_account, items_data):
     import uuid

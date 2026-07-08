@@ -24,6 +24,7 @@
 #
 
 
+# smriti-platform-core: this module IS the frappe abstraction layer — Guard 6 exempt by design
 import datetime
 
 
@@ -176,4 +177,4 @@ def log_error(title: str, exc: Exception = None, context: dict = None):
         message += f"\n\nContext: {context}"
     if exc:
         message += f"\n\nTraceback:\n{traceback.format_exc()}"
-    frappe.log_error(message, title=title)
+    smriti.errors.log_error(message, title=title)

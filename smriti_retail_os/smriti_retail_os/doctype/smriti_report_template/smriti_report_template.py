@@ -10,18 +10,19 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from frappe.model.document import Document
 
 class SMRITIReportTemplate(Document):
     def before_save(self):
         # 1. Deterministic version serialization on modify
         if not self.is_new():
-            db_version = frappe.db.get_value("SMRITI Report Template", self.name, "template_version", for_update=True)
+            db_version = smriti.db.get("SMRITI Report Template", self.name, "template_version", for_update=True)
             self.template_version = (db_version or 0) + 1
             
             # 2. Audit Trail logging
-            db_doc = frappe.get_doc("SMRITI Report Template", self.name)
+            db_doc = smriti.documents.get("SMRITI Report Template", self.name)
             before_state = db_doc.as_dict()
             after_state = self.as_dict()
             
@@ -30,8 +31,8 @@ class SMRITIReportTemplate(Document):
                 
             company = frappe.defaults.get_user_default("Company") or ""
             
-            log_doc = frappe.get_doc({
-                "doctype": "SMRITI Audit Event",
+            log_doc = smriti.documents.new("AuditEvent")
+            log_doc.update({
                 "timestamp": frappe.utils.now_datetime(),
                 "user": frappe.session.user,
                 "event_type": "REPORT_TEMPLATE_MODIFIED",

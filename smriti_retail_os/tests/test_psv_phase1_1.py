@@ -14,6 +14,7 @@
 # For license information, please see license.txt
 
 import frappe
+from smriti_retail_os import smriti
 import time
 import hashlib
 from frappe.tests.utils import FrappeTestCase
@@ -34,53 +35,53 @@ from smriti_retail_os.psv_service import (
 class TestPSVPhase1_1(FrappeTestCase):
     def setUp(self):
         # Clean up database records
-        frappe.db.delete("PSV Ledger Entry")
-        frappe.db.delete("PSV Channel Partner")
-        frappe.db.delete("PSV Channel Partner Brand")
-        frappe.db.delete("PSV Stock Aging Snapshot")
-        frappe.db.delete("SMRITI Party Stock Account")
-        frappe.db.delete("SMRITI Party Stock Ledger Entry")
-        frappe.db.delete("SMRITI PSV Exception Record")
+        smriti.db.delete("PSV Ledger Entry")
+        smriti.db.delete("PSV Channel Partner")
+        smriti.db.delete("PSV Channel Partner Brand")
+        smriti.db.delete("PSV Stock Aging Snapshot")
+        smriti.db.delete("SMRITI Party Stock Account")
+        smriti.db.delete("SMRITI Party Stock Ledger Entry")
+        smriti.db.delete("SMRITI PSV Exception Record")
         for it in ["PARENT-VAL-RATE", "VAR-PARENT-VAL", "PARENT-STD-RATE", "VAR-PARENT-STD", "PARENT-PRICE-LIST", "VAR-PARENT-PRICE"]:
-            frappe.db.delete("Item Price", {"item_code": it})
-            frappe.db.delete("Item", it)
-        frappe.db.commit()
+            smriti.db.delete("Item Price", {"item_code": it})
+            smriti.db.delete("Item", it)
+        smriti.db.commit()
 
         # Create basic link dependencies
-        self.uom = frappe.db.exists("UOM", "Nos") or frappe.db.get_value("UOM", {}, "name")
+        self.uom = smriti.db.exists("UOM", "Nos") or smriti.db.get("UOM", {}, "name")
         if not self.uom:
-            uom_doc = frappe.new_doc("UOM")
+            uom_doc = smriti.documents.new("UOM")
             uom_doc.uom_name = "Nos"
             uom_doc.insert(ignore_permissions=True)
             self.uom = uom_doc.name
 
-        self.item_group = frappe.db.exists("Item Group", "All Item Groups") or frappe.db.get_value("Item Group", {}, "name")
+        self.item_group = smriti.db.exists("Item Group", "All Item Groups") or smriti.db.get("Item Group", {}, "name")
         if not self.item_group:
-            ig = frappe.new_doc("Item Group")
+            ig = smriti.documents.new("Item Group")
             ig.item_group_name = "All Item Groups"
             ig.is_group = 0
             ig.insert(ignore_permissions=True)
             self.item_group = ig.name
 
         self.company = "Test PSV Company 1.1"
-        if not frappe.db.exists("Company", self.company):
-            comp = frappe.new_doc("Company")
+        if not smriti.db.exists("Company", self.company):
+            comp = smriti.documents.new("Company")
             comp.company_name = self.company
             comp.country = "India"
             comp.default_currency = "INR"
             comp.insert(ignore_permissions=True)
 
         self.customer = "Test Customer 1.1"
-        if not frappe.db.exists("Customer", self.customer):
-            cust = frappe.new_doc("Customer")
+        if not smriti.db.exists("Customer", self.customer):
+            cust = smriti.documents.new("Customer")
             cust.customer_name = self.customer
             cust.customer_type = "Individual"
             cust.insert(ignore_permissions=True)
 
         # Create valid GST HSN Code record for India Compliance
-        self.hsn_code = frappe.db.exists("GST HSN Code", "998311") or frappe.db.get_value("GST HSN Code", {}, "name")
+        self.hsn_code = smriti.db.exists("GST HSN Code", "998311") or smriti.db.get("GST HSN Code", {}, "name")
         if not self.hsn_code:
-            hsn = frappe.new_doc("GST HSN Code")
+            hsn = smriti.documents.new("GST HSN Code")
             hsn.hsn_code = "998311"
             hsn.description = "Test Services"
             hsn.insert(ignore_permissions=True)
@@ -88,8 +89,8 @@ class TestPSVPhase1_1(FrappeTestCase):
 
         # Ensure active Fiscal Year exists
         self.fy_name = "2026-2027"
-        if not frappe.db.exists("Fiscal Year", self.fy_name):
-            fy = frappe.new_doc("Fiscal Year")
+        if not smriti.db.exists("Fiscal Year", self.fy_name):
+            fy = smriti.documents.new("Fiscal Year")
             fy.year = self.fy_name
             fy.year_start_date = "2026-04-01"
             fy.year_end_date = "2027-03-31"
@@ -97,8 +98,8 @@ class TestPSVPhase1_1(FrappeTestCase):
             fy.insert(ignore_permissions=True)
 
         # Create standard buying price list if missing
-        if not frappe.db.exists("Price List", "Standard Buying"):
-            pl = frappe.new_doc("Price List")
+        if not smriti.db.exists("Price List", "Standard Buying"):
+            pl = smriti.documents.new("Price List")
             pl.price_list_name = "Standard Buying"
             pl.enabled = 1
             pl.buying = 1
@@ -106,27 +107,27 @@ class TestPSVPhase1_1(FrappeTestCase):
             pl.insert(ignore_permissions=True)
 
         # Create mock territories Terr-A and Terr-B
-        parent_terr = frappe.db.exists("Territory", "All Territories") or frappe.db.get_value("Territory", {"is_group": 1}, "name")
+        parent_terr = smriti.db.exists("Territory", "All Territories") or smriti.db.get("Territory", {"is_group": 1}, "name")
         if not parent_terr:
-            pt = frappe.new_doc("Territory")
+            pt = smriti.documents.new("Territory")
             pt.territory_name = "All Territories"
             pt.is_group = 1
             pt.insert(ignore_permissions=True)
             parent_terr = pt.name
             
         for terr_name in ["Terr-A", "Terr-B"]:
-            if not frappe.db.exists("Territory", terr_name):
-                t = frappe.new_doc("Territory")
+            if not smriti.db.exists("Territory", terr_name):
+                t = smriti.documents.new("Territory")
                 t.territory_name = terr_name
                 t.is_group = 0
                 t.parent_territory = parent_terr
                 t.insert(ignore_permissions=True)
 
         # Create standard Item Attribute for template items
-        if frappe.db.exists("Item Attribute", "Test Attribute"):
+        if smriti.db.exists("Item Attribute", "Test Attribute"):
             frappe.delete_doc("Item Attribute", "Test Attribute", force=True)
             
-        attr = frappe.new_doc("Item Attribute")
+        attr = smriti.documents.new("Item Attribute")
         attr.attribute_name = "Test Attribute"
         attr.append("item_attribute_values", {"attribute_value": "Default", "abbr": "Def"})
         attr.insert(ignore_permissions=True)
@@ -140,16 +141,16 @@ class TestPSVPhase1_1(FrappeTestCase):
         settings.channel_health_enabled = 1
         settings.redistribution_scope = "Same Territory"
         settings.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
     def tearDown(self):
-        frappe.db.rollback()
+        smriti.db.rollback()
 
     # --- Landing Cost Hierarchy Tests ---
     def test_01_landing_cost_variant_valuation_rate(self):
         item_code = "VAR-VAL-RATE"
-        if not frappe.db.exists("Item", item_code):
-            item = frappe.new_doc("Item")
+        if not smriti.db.exists("Item", item_code):
+            item = smriti.documents.new("Item")
             item.item_code = item_code
             item.item_group = self.item_group
             item.stock_uom = self.uom
@@ -160,8 +161,8 @@ class TestPSVPhase1_1(FrappeTestCase):
 
     def test_02_landing_cost_variant_standard_rate(self):
         item_code = "VAR-STD-RATE"
-        if not frappe.db.exists("Item", item_code):
-            item = frappe.new_doc("Item")
+        if not smriti.db.exists("Item", item_code):
+            item = smriti.documents.new("Item")
             item.item_code = item_code
             item.item_group = self.item_group
             item.stock_uom = self.uom
@@ -172,8 +173,8 @@ class TestPSVPhase1_1(FrappeTestCase):
 
     def test_03_landing_cost_variant_price_list(self):
         item_code = "VAR-PRICE-LIST"
-        if not frappe.db.exists("Item", item_code):
-            item = frappe.new_doc("Item")
+        if not smriti.db.exists("Item", item_code):
+            item = smriti.documents.new("Item")
             item.item_code = item_code
             item.item_group = self.item_group
             item.stock_uom = self.uom
@@ -181,7 +182,7 @@ class TestPSVPhase1_1(FrappeTestCase):
             item.insert(ignore_permissions=True)
         
         # Create standard buying price
-        ip = frappe.new_doc("Item Price")
+        ip = smriti.documents.new("Item Price")
         ip.item_code = item_code
         ip.price_list = "Standard Buying"
         ip.price_list_rate = 150.0
@@ -190,8 +191,8 @@ class TestPSVPhase1_1(FrappeTestCase):
 
     def test_04_landing_cost_parent_valuation_rate(self):
         parent_code = "PARENT-VAL-RATE"
-        if not frappe.db.exists("Item", parent_code):
-            parent = frappe.new_doc("Item")
+        if not smriti.db.exists("Item", parent_code):
+            parent = smriti.documents.new("Item")
             parent.item_code = parent_code
             parent.item_group = self.item_group
             parent.stock_uom = self.uom
@@ -200,15 +201,15 @@ class TestPSVPhase1_1(FrappeTestCase):
             parent.insert(ignore_permissions=True)
             
             # Set has_variants and attributes by bypassing validate
-            parent = frappe.get_doc("Item", parent_code)
+            parent = smriti.documents.get("Item", parent_code)
             parent.has_variants = 1
             parent.append("attributes", {"attribute": "Test Attribute"})
             parent.flags.ignore_validate = True
             parent.save(ignore_permissions=True)
             
         variant_code = "VAR-PARENT-VAL"
-        if not frappe.db.exists("Item", variant_code):
-            var = frappe.new_doc("Item")
+        if not smriti.db.exists("Item", variant_code):
+            var = smriti.documents.new("Item")
             var.item_code = variant_code
             var.item_group = self.item_group
             var.stock_uom = self.uom
@@ -221,8 +222,8 @@ class TestPSVPhase1_1(FrappeTestCase):
 
     def test_05_landing_cost_parent_standard_rate(self):
         parent_code = "PARENT-STD-RATE"
-        if not frappe.db.exists("Item", parent_code):
-            parent = frappe.new_doc("Item")
+        if not smriti.db.exists("Item", parent_code):
+            parent = smriti.documents.new("Item")
             parent.item_code = parent_code
             parent.item_group = self.item_group
             parent.stock_uom = self.uom
@@ -231,15 +232,15 @@ class TestPSVPhase1_1(FrappeTestCase):
             parent.insert(ignore_permissions=True)
             
             # Set has_variants and attributes by bypassing validate
-            parent = frappe.get_doc("Item", parent_code)
+            parent = smriti.documents.get("Item", parent_code)
             parent.has_variants = 1
             parent.append("attributes", {"attribute": "Test Attribute"})
             parent.flags.ignore_validate = True
             parent.save(ignore_permissions=True)
             
         variant_code = "VAR-PARENT-STD"
-        if not frappe.db.exists("Item", variant_code):
-            var = frappe.new_doc("Item")
+        if not smriti.db.exists("Item", variant_code):
+            var = smriti.documents.new("Item")
             var.item_code = variant_code
             var.item_group = self.item_group
             var.stock_uom = self.uom
@@ -252,8 +253,8 @@ class TestPSVPhase1_1(FrappeTestCase):
 
     def test_06_landing_cost_parent_price_list(self):
         parent_code = "PARENT-PRICE-LIST"
-        if not frappe.db.exists("Item", parent_code):
-            parent = frappe.new_doc("Item")
+        if not smriti.db.exists("Item", parent_code):
+            parent = smriti.documents.new("Item")
             parent.item_code = parent_code
             parent.item_group = self.item_group
             parent.stock_uom = self.uom
@@ -261,15 +262,15 @@ class TestPSVPhase1_1(FrappeTestCase):
             parent.insert(ignore_permissions=True)
             
             # Set has_variants and attributes by bypassing validate
-            parent = frappe.get_doc("Item", parent_code)
+            parent = smriti.documents.get("Item", parent_code)
             parent.has_variants = 1
             parent.append("attributes", {"attribute": "Test Attribute"})
             parent.flags.ignore_validate = True
             parent.save(ignore_permissions=True)
             
         variant_code = "VAR-PARENT-PRICE"
-        if not frappe.db.exists("Item", variant_code):
-            var = frappe.new_doc("Item")
+        if not smriti.db.exists("Item", variant_code):
+            var = smriti.documents.new("Item")
             var.item_code = variant_code
             var.item_group = self.item_group
             var.stock_uom = self.uom
@@ -278,7 +279,7 @@ class TestPSVPhase1_1(FrappeTestCase):
             var.append("attributes", {"attribute": "Test Attribute", "attribute_value": "Default"})
             var.insert(ignore_permissions=True)
             
-        ip = frappe.new_doc("Item Price")
+        ip = smriti.documents.new("Item Price")
         ip.item_code = parent_code
         ip.price_list = "Standard Buying"
         ip.price_list_rate = 210.0
@@ -288,8 +289,8 @@ class TestPSVPhase1_1(FrappeTestCase):
 
     def test_07_landing_cost_fallback_zero(self):
         item_code = "VAR-FALLBACK-ZERO"
-        if not frappe.db.exists("Item", item_code):
-            item = frappe.new_doc("Item")
+        if not smriti.db.exists("Item", item_code):
+            item = smriti.documents.new("Item")
             item.item_code = item_code
             item.item_group = self.item_group
             item.stock_uom = self.uom
@@ -300,7 +301,7 @@ class TestPSVPhase1_1(FrappeTestCase):
     # --- Immutable Ledger Tests ---
     def test_08_immutable_ledger_prevent_update(self):
         partner = self.create_mock_partner("CP-IMMUTABLE")
-        le = frappe.new_doc("PSV Ledger Entry")
+        le = smriti.documents.new("PSV Ledger Entry")
         le.company = self.company
         le.posting_datetime = now_datetime()
         le.channel_partner = partner
@@ -314,7 +315,7 @@ class TestPSVPhase1_1(FrappeTestCase):
 
     def test_09_immutable_ledger_prevent_delete(self):
         partner = self.create_mock_partner("CP-DELETE")
-        le = frappe.new_doc("PSV Ledger Entry")
+        le = smriti.documents.new("PSV Ledger Entry")
         le.company = self.company
         le.posting_datetime = now_datetime()
         le.channel_partner = partner
@@ -328,7 +329,7 @@ class TestPSVPhase1_1(FrappeTestCase):
     def test_10_unique_hash_generation(self):
         partner = self.create_mock_partner("CP-HASH")
         item = self.create_mock_item("IT-HASH")
-        le = frappe.new_doc("PSV Ledger Entry")
+        le = smriti.documents.new("PSV Ledger Entry")
         le.company = self.company
         le.posting_datetime = now_datetime()
         le.channel_partner = partner
@@ -339,7 +340,7 @@ class TestPSVPhase1_1(FrappeTestCase):
         self.assertTrue(le.unique_hash is not None)
         
         # Verify unique constraint prevents duplicate insert with same hash
-        le2 = frappe.new_doc("PSV Ledger Entry")
+        le2 = smriti.documents.new("PSV Ledger Entry")
         le2.company = le.company
         le2.posting_datetime = le.posting_datetime
         le2.channel_partner = le.channel_partner
@@ -351,7 +352,7 @@ class TestPSVPhase1_1(FrappeTestCase):
     def test_11_ledger_hash_post_insert_lock(self):
         partner = self.create_mock_partner("CP-HASH-LOCK")
         item = self.create_mock_item("IT-HASH-LOCK")
-        le = frappe.new_doc("PSV Ledger Entry")
+        le = smriti.documents.new("PSV Ledger Entry")
         le.company = self.company
         le.posting_datetime = now_datetime()
         le.channel_partner = partner
@@ -369,7 +370,7 @@ class TestPSVPhase1_1(FrappeTestCase):
     def test_12_reversal_qty_inversion(self):
         partner = self.create_mock_partner("CP-REV-QTY")
         item = self.create_mock_item("IT-REV-QTY")
-        le = frappe.new_doc("PSV Ledger Entry")
+        le = smriti.documents.new("PSV Ledger Entry")
         le.company = self.company
         le.posting_datetime = now_datetime()
         le.channel_partner = partner
@@ -379,13 +380,13 @@ class TestPSVPhase1_1(FrappeTestCase):
         le.insert(ignore_permissions=True)
         
         rev_name = create_reversal_entry(le.name, "Testing reversal")
-        rev = frappe.get_doc("PSV Ledger Entry", rev_name)
+        rev = smriti.documents.get("PSV Ledger Entry", rev_name)
         self.assertEqual(rev.qty, -50.0)
 
     def test_13_reversal_references_original(self):
         partner = self.create_mock_partner("CP-REV-REF")
         item = self.create_mock_item("IT-REV-REF")
-        le = frappe.new_doc("PSV Ledger Entry")
+        le = smriti.documents.new("PSV Ledger Entry")
         le.company = self.company
         le.posting_datetime = now_datetime()
         le.channel_partner = partner
@@ -395,13 +396,13 @@ class TestPSVPhase1_1(FrappeTestCase):
         le.insert(ignore_permissions=True)
         
         rev_name = create_reversal_entry(le.name, "Error correction")
-        rev = frappe.get_doc("PSV Ledger Entry", rev_name)
+        rev = smriti.documents.get("PSV Ledger Entry", rev_name)
         self.assertEqual(rev.reversal_of, le.name)
 
     def test_14_reversal_prevents_duplicate(self):
         partner = self.create_mock_partner("CP-REV-DUP")
         item = self.create_mock_item("IT-REV-DUP")
-        le = frappe.new_doc("PSV Ledger Entry")
+        le = smriti.documents.new("PSV Ledger Entry")
         le.company = self.company
         le.posting_datetime = now_datetime()
         le.channel_partner = partner
@@ -416,7 +417,7 @@ class TestPSVPhase1_1(FrappeTestCase):
     def test_15_reversal_transaction_type(self):
         partner = self.create_mock_partner("CP-REV-TYPE")
         item = self.create_mock_item("IT-REV-TYPE")
-        le = frappe.new_doc("PSV Ledger Entry")
+        le = smriti.documents.new("PSV Ledger Entry")
         le.company = self.company
         le.posting_datetime = now_datetime()
         le.channel_partner = partner
@@ -426,7 +427,7 @@ class TestPSVPhase1_1(FrappeTestCase):
         le.insert(ignore_permissions=True)
         
         rev_name = create_reversal_entry(le.name, "Correction")
-        rev = frappe.get_doc("PSV Ledger Entry", rev_name)
+        rev = smriti.documents.get("PSV Ledger Entry", rev_name)
         self.assertEqual(rev.transaction_type, "Reversal")
 
     # --- Snapshot Generation Tests ---
@@ -451,7 +452,7 @@ class TestPSVPhase1_1(FrappeTestCase):
         settings.snapshot_batch_size = 1
         settings.last_processed_partner = ""
         settings.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         
         res1 = generate_snapshots()
         settings.reload()
@@ -467,7 +468,7 @@ class TestPSVPhase1_1(FrappeTestCase):
         item = self.create_mock_item("IT-FIFO-AGING")
         
         # Create a ledger entry 45 days ago
-        le_old = frappe.new_doc("PSV Ledger Entry")
+        le_old = smriti.documents.new("PSV Ledger Entry")
         le_old.company = self.company
         le_old.posting_datetime = add_days(today(), -45)
         le_old.channel_partner = partner
@@ -477,7 +478,7 @@ class TestPSVPhase1_1(FrappeTestCase):
         le_old.insert(ignore_permissions=True)
         
         # Create a ledger entry 10 days ago
-        le_new = frappe.new_doc("PSV Ledger Entry")
+        le_new = smriti.documents.new("PSV Ledger Entry")
         le_new.company = self.company
         le_new.posting_datetime = add_days(today(), -10)
         le_new.channel_partner = partner
@@ -502,7 +503,7 @@ class TestPSVPhase1_1(FrappeTestCase):
         item = self.create_mock_item("IT-ALERT-CRIT")
         
         # Create 10 units aging 190 days
-        le_old = frappe.new_doc("PSV Ledger Entry")
+        le_old = smriti.documents.new("PSV Ledger Entry")
         le_old.company = self.company
         le_old.posting_datetime = add_days(today(), -190)
         le_old.channel_partner = partner
@@ -524,7 +525,7 @@ class TestPSVPhase1_1(FrappeTestCase):
         item = self.create_mock_item("IT-ALERT-WARN")
         
         # Create 10 units aging 70 days
-        le_old = frappe.new_doc("PSV Ledger Entry")
+        le_old = smriti.documents.new("PSV Ledger Entry")
         le_old.company = self.company
         le_old.posting_datetime = add_days(today(), -70)
         le_old.channel_partner = partner
@@ -546,7 +547,7 @@ class TestPSVPhase1_1(FrappeTestCase):
         item = self.create_mock_item("IT-ALERT-HLTH")
         
         # Create 10 units aging 15 days
-        le_old = frappe.new_doc("PSV Ledger Entry")
+        le_old = smriti.documents.new("PSV Ledger Entry")
         le_old.company = self.company
         le_old.posting_datetime = add_days(today(), -15)
         le_old.channel_partner = partner
@@ -569,7 +570,7 @@ class TestPSVPhase1_1(FrappeTestCase):
         p_src = self.create_mock_partner("CP-REDIST-SRC-TERR", territory="Terr-A")
         item = self.create_mock_item("IT-REDIST-TERR")
         
-        le_src = frappe.new_doc("PSV Ledger Entry")
+        le_src = smriti.documents.new("PSV Ledger Entry")
         le_src.company = self.company
         le_src.posting_datetime = now_datetime()
         le_src.channel_partner = p_src
@@ -580,7 +581,7 @@ class TestPSVPhase1_1(FrappeTestCase):
         
         # Create sink (low stock, high sales) in same territory
         p_snk = self.create_mock_partner("CP-REDIST-SNK-TERR", territory="Terr-A")
-        le_snk = frappe.new_doc("PSV Ledger Entry")
+        le_snk = smriti.documents.new("PSV Ledger Entry")
         le_snk.company = self.company
         le_snk.posting_datetime = now_datetime()
         le_snk.channel_partner = p_snk
@@ -590,7 +591,7 @@ class TestPSVPhase1_1(FrappeTestCase):
         le_snk.insert(ignore_permissions=True)
         
         # Simulate sales for sink (12 units sold in last 4 weeks -> 3/week velocity)
-        le_sale = frappe.new_doc("PSV Ledger Entry")
+        le_sale = smriti.documents.new("PSV Ledger Entry")
         le_sale.company = self.company
         le_sale.posting_datetime = add_days(today(), -10)
         le_sale.channel_partner = p_snk
@@ -608,12 +609,12 @@ class TestPSVPhase1_1(FrappeTestCase):
         settings = frappe.get_single("PSV System Settings")
         settings.redistribution_scope = "Same Region"
         settings.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         
         p_src = self.create_mock_partner("CP-REDIST-SRC-REG", region="Maharashtra")
         item = self.create_mock_item("IT-REDIST-REG")
         
-        le_src = frappe.new_doc("PSV Ledger Entry")
+        le_src = smriti.documents.new("PSV Ledger Entry")
         le_src.company = self.company
         le_src.posting_datetime = now_datetime()
         le_src.channel_partner = p_src
@@ -623,7 +624,7 @@ class TestPSVPhase1_1(FrappeTestCase):
         le_src.insert(ignore_permissions=True)
         
         p_snk = self.create_mock_partner("CP-REDIST-SNK-REG", region="Maharashtra")
-        le_snk = frappe.new_doc("PSV Ledger Entry")
+        le_snk = smriti.documents.new("PSV Ledger Entry")
         le_snk.company = self.company
         le_snk.posting_datetime = now_datetime()
         le_snk.channel_partner = p_snk
@@ -632,7 +633,7 @@ class TestPSVPhase1_1(FrappeTestCase):
         le_snk.transaction_type = "Opening"
         le_snk.insert(ignore_permissions=True)
         
-        le_sale = frappe.new_doc("PSV Ledger Entry")
+        le_sale = smriti.documents.new("PSV Ledger Entry")
         le_sale.company = self.company
         le_sale.posting_datetime = add_days(today(), -10)
         le_sale.channel_partner = p_snk
@@ -648,12 +649,12 @@ class TestPSVPhase1_1(FrappeTestCase):
         settings = frappe.get_single("PSV System Settings")
         settings.redistribution_scope = "All"
         settings.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         
         p_src = self.create_mock_partner("CP-REDIST-SRC-ALL", territory="Terr-A")
         item = self.create_mock_item("IT-REDIST-ALL")
         
-        le_src = frappe.new_doc("PSV Ledger Entry")
+        le_src = smriti.documents.new("PSV Ledger Entry")
         le_src.company = self.company
         le_src.posting_datetime = now_datetime()
         le_src.channel_partner = p_src
@@ -663,7 +664,7 @@ class TestPSVPhase1_1(FrappeTestCase):
         le_src.insert(ignore_permissions=True)
         
         p_snk = self.create_mock_partner("CP-REDIST-SNK-ALL", territory="Terr-B")
-        le_snk = frappe.new_doc("PSV Ledger Entry")
+        le_snk = smriti.documents.new("PSV Ledger Entry")
         le_snk.company = self.company
         le_snk.posting_datetime = now_datetime()
         le_snk.channel_partner = p_snk
@@ -672,7 +673,7 @@ class TestPSVPhase1_1(FrappeTestCase):
         le_snk.transaction_type = "Opening"
         le_snk.insert(ignore_permissions=True)
         
-        le_sale = frappe.new_doc("PSV Ledger Entry")
+        le_sale = smriti.documents.new("PSV Ledger Entry")
         le_sale.company = self.company
         le_sale.posting_datetime = add_days(today(), -10)
         le_sale.channel_partner = p_snk
@@ -689,7 +690,7 @@ class TestPSVPhase1_1(FrappeTestCase):
         settings = frappe.get_single("PSV System Settings")
         settings.channel_health_enabled = 0
         settings.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         
         res = get_channel_health_score("CP-MOCK-HEALTH")
         self.assertEqual(res["enabled"], False)
@@ -703,8 +704,8 @@ class TestPSVPhase1_1(FrappeTestCase):
     def test_27_channel_health_score_enabled_poor(self):
         partner = self.create_mock_partner("CP-HEALTH-POOR")
         # Ensure a matching legacy account exists for link validation
-        if not frappe.db.exists("SMRITI Party Stock Account", partner):
-            legacy_psa = frappe.new_doc("SMRITI Party Stock Account")
+        if not smriti.db.exists("SMRITI Party Stock Account", partner):
+            legacy_psa = smriti.documents.new("SMRITI Party Stock Account")
             legacy_psa.company = self.company
             legacy_psa.customer = self.customer
             legacy_psa.location_name = "CP-HEALTH-POOR"
@@ -712,8 +713,8 @@ class TestPSVPhase1_1(FrappeTestCase):
             
         # Add 3 critical exceptions
         for i in range(3):
-            doc = frappe.get_doc({
-                "doctype": "SMRITI PSV Exception Record",
+            doc = smriti.documents.new("PSVExceptionRecord")
+            doc.update({
                 "party_stock_account": partner,
                 "severity": "Critical",
                 "status": "Pending Reconciliation",
@@ -729,7 +730,7 @@ class TestPSVPhase1_1(FrappeTestCase):
         item = self.create_mock_item("IT-SELLIO-VEL")
         
         # Dispatch (sell-in) of 80 units
-        le_in = frappe.new_doc("PSV Ledger Entry")
+        le_in = smriti.documents.new("PSV Ledger Entry")
         le_in.company = self.company
         le_in.posting_datetime = add_days(today(), -5)
         le_in.channel_partner = partner
@@ -739,7 +740,7 @@ class TestPSVPhase1_1(FrappeTestCase):
         le_in.insert(ignore_permissions=True)
         
         # Sales (sell-out) of 20 units
-        le_out = frappe.new_doc("PSV Ledger Entry")
+        le_out = smriti.documents.new("PSV Ledger Entry")
         le_out.company = self.company
         le_out.posting_datetime = add_days(today(), -3)
         le_out.channel_partner = partner
@@ -757,7 +758,7 @@ class TestPSVPhase1_1(FrappeTestCase):
         partner = self.create_mock_partner("CP-SELLIO-WOC")
         item = self.create_mock_item("IT-SELLIO-WOC")
         
-        le_in = frappe.new_doc("PSV Ledger Entry")
+        le_in = smriti.documents.new("PSV Ledger Entry")
         le_in.company = self.company
         le_in.posting_datetime = add_days(today(), -5)
         le_in.channel_partner = partner
@@ -766,7 +767,7 @@ class TestPSVPhase1_1(FrappeTestCase):
         le_in.transaction_type = "Dispatch"
         le_in.insert(ignore_permissions=True)
         
-        le_out = frappe.new_doc("PSV Ledger Entry")
+        le_out = smriti.documents.new("PSV Ledger Entry")
         le_out.company = self.company
         le_out.posting_datetime = add_days(today(), -3)
         le_out.channel_partner = partner
@@ -783,7 +784,7 @@ class TestPSVPhase1_1(FrappeTestCase):
     # --- Migration Tests ---
     def test_30_migration_dry_run_diagnostics(self):
         # Create legacy SMRITI PSA and ledger
-        legacy_psa = frappe.new_doc("SMRITI Party Stock Account")
+        legacy_psa = smriti.documents.new("SMRITI Party Stock Account")
         legacy_psa.company = self.company
         legacy_psa.customer = self.customer
         legacy_psa.location_name = "Mumbai Legacy"
@@ -794,7 +795,7 @@ class TestPSVPhase1_1(FrappeTestCase):
         self.assertTrue(report["partners_created"] > 0)
 
     def test_31_migration_dry_run_does_not_commit(self):
-        legacy_psa = frappe.new_doc("SMRITI Party Stock Account")
+        legacy_psa = smriti.documents.new("SMRITI Party Stock Account")
         legacy_psa.company = self.company
         legacy_psa.customer = self.customer
         legacy_psa.location_name = "Mumbai Legacy Dry"
@@ -802,28 +803,28 @@ class TestPSVPhase1_1(FrappeTestCase):
         
         migrate_to_new_psv_partner(dry_run=1)
         # Verify no partner created in DB
-        self.assertFalse(frappe.db.exists("PSV Channel Partner", f"{self.customer}-Mumbai Legacy Dry"))
+        self.assertFalse(smriti.db.exists("PSV Channel Partner", f"{self.customer}-Mumbai Legacy Dry"))
 
     def test_32_migration_actual_commit_success(self):
-        legacy_psa = frappe.new_doc("SMRITI Party Stock Account")
+        legacy_psa = smriti.documents.new("SMRITI Party Stock Account")
         legacy_psa.company = self.company
         legacy_psa.customer = self.customer
         legacy_psa.location_name = "Mumbai Legacy Actual"
         legacy_psa.insert(ignore_permissions=True)
         
         migrate_to_new_psv_partner(dry_run=0)
-        self.assertTrue(frappe.db.exists("PSV Channel Partner", f"{self.customer}-Mumbai Legacy Actual"))
+        self.assertTrue(smriti.db.exists("PSV Channel Partner", f"{self.customer}-Mumbai Legacy Actual"))
 
     def test_33_migration_creates_brands(self):
-        legacy_psa = frappe.new_doc("SMRITI Party Stock Account")
+        legacy_psa = smriti.documents.new("SMRITI Party Stock Account")
         legacy_psa.company = self.company
         legacy_psa.customer = self.customer
         legacy_psa.location_name = "Mumbai Legacy Brands"
         legacy_psa.insert(ignore_permissions=True)
         
-        brand = frappe.db.exists("Brand", "Nike") or frappe.get_doc({"doctype": "Brand", "brand": "Nike"}).insert(ignore_permissions=True).name
-        if not frappe.db.exists("Item", "IT-MIG-BRAND"):
-            item = frappe.new_doc("Item")
+        brand = smriti.db.exists("Brand", "Nike") or frappe.get_doc({"doctype": "Brand", "brand": "Nike"}).insert(ignore_permissions=True).name
+        if not smriti.db.exists("Item", "IT-MIG-BRAND"):
+            item = smriti.documents.new("Item")
             item.item_code = "IT-MIG-BRAND"
             item.item_group = self.item_group
             item.stock_uom = self.uom
@@ -831,10 +832,10 @@ class TestPSVPhase1_1(FrappeTestCase):
             item.brand = brand
             item.insert(ignore_permissions=True)
         else:
-            frappe.db.set_value("Item", "IT-MIG-BRAND", "brand", brand)
-            item = frappe.get_doc("Item", "IT-MIG-BRAND")
+            smriti.db.set_value("Item", "IT-MIG-BRAND", "brand", brand)
+            item = smriti.documents.get("Item", "IT-MIG-BRAND")
         
-        le = frappe.new_doc("SMRITI Party Stock Ledger Entry")
+        le = smriti.documents.new("SMRITI Party Stock Ledger Entry")
         le.company = self.company
         le.posting_datetime = now_datetime()
         le.party_stock_account = legacy_psa.name
@@ -847,19 +848,19 @@ class TestPSVPhase1_1(FrappeTestCase):
         
         migrate_to_new_psv_partner(dry_run=0)
         
-        partner = frappe.get_doc("PSV Channel Partner", f"{self.customer}-Mumbai Legacy Brands")
+        partner = smriti.documents.get("PSV Channel Partner", f"{self.customer}-Mumbai Legacy Brands")
         self.assertEqual(len(partner.brands), 1)
         self.assertEqual(partner.brands[0].brand, brand)
 
     def test_34_migration_copies_ledger(self):
-        legacy_psa = frappe.new_doc("SMRITI Party Stock Account")
+        legacy_psa = smriti.documents.new("SMRITI Party Stock Account")
         legacy_psa.company = self.company
         legacy_psa.customer = self.customer
         legacy_psa.location_name = "Mumbai Legacy Copy"
         legacy_psa.insert(ignore_permissions=True)
         
         item = self.create_mock_item("IT-MIG-COPY")
-        le = frappe.new_doc("SMRITI Party Stock Ledger Entry")
+        le = smriti.documents.new("SMRITI Party Stock Ledger Entry")
         le.company = self.company
         le.posting_datetime = now_datetime()
         le.party_stock_account = legacy_psa.name
@@ -873,7 +874,7 @@ class TestPSVPhase1_1(FrappeTestCase):
         migrate_to_new_psv_partner(dry_run=0)
         
         # Verify ledger copied
-        self.assertTrue(frappe.db.exists("PSV Ledger Entry", {
+        self.assertTrue(smriti.db.exists("PSV Ledger Entry", {
             "channel_partner": f"{self.customer}-Mumbai Legacy Copy",
             "item_variant": item,
             "qty": 15.0
@@ -882,14 +883,14 @@ class TestPSVPhase1_1(FrappeTestCase):
     # --- API Backward Compatibility Fallback Tests ---
     def test_35_api_compatibility_dashboard_fallback(self):
         # Verify dashboard summary API returns results using legacy tables when new tables are empty
-        legacy_psa = frappe.new_doc("SMRITI Party Stock Account")
+        legacy_psa = smriti.documents.new("SMRITI Party Stock Account")
         legacy_psa.company = self.company
         legacy_psa.customer = self.customer
         legacy_psa.location_name = "Mumbai Dashboard Compat"
         legacy_psa.insert(ignore_permissions=True)
         
         item = self.create_mock_item("IT-DASH-COMPAT")
-        le = frappe.new_doc("SMRITI Party Stock Ledger Entry")
+        le = smriti.documents.new("SMRITI Party Stock Ledger Entry")
         le.company = self.company
         le.posting_datetime = now_datetime()
         le.party_stock_account = legacy_psa.name
@@ -906,14 +907,14 @@ class TestPSVPhase1_1(FrappeTestCase):
         self.assertEqual(summary["total_locations"], 1)
 
     def test_36_api_compatibility_balance_detail_fallback(self):
-        legacy_psa = frappe.new_doc("SMRITI Party Stock Account")
+        legacy_psa = smriti.documents.new("SMRITI Party Stock Account")
         legacy_psa.company = self.company
         legacy_psa.customer = self.customer
         legacy_psa.location_name = "Mumbai Bal Compat"
         legacy_psa.insert(ignore_permissions=True)
         
         item = self.create_mock_item("IT-BAL-COMPAT")
-        le = frappe.new_doc("SMRITI Party Stock Ledger Entry")
+        le = smriti.documents.new("SMRITI Party Stock Ledger Entry")
         le.company = self.company
         le.posting_datetime = now_datetime()
         le.party_stock_account = legacy_psa.name
@@ -931,14 +932,14 @@ class TestPSVPhase1_1(FrappeTestCase):
         self.assertEqual(details[0]["balance"], 20.0)
 
     def test_37_api_compatibility_reorder_fallback(self):
-        legacy_psa = frappe.new_doc("SMRITI Party Stock Account")
+        legacy_psa = smriti.documents.new("SMRITI Party Stock Account")
         legacy_psa.company = self.company
         legacy_psa.customer = self.customer
         legacy_psa.location_name = "Mumbai Reorder Compat"
         legacy_psa.insert(ignore_permissions=True)
         
         item = self.create_mock_item("IT-REO-COMPAT")
-        le = frappe.new_doc("SMRITI Party Stock Ledger Entry")
+        le = smriti.documents.new("SMRITI Party Stock Ledger Entry")
         le.company = self.company
         le.posting_datetime = now_datetime()
         le.party_stock_account = legacy_psa.name
@@ -958,7 +959,7 @@ class TestPSVPhase1_1(FrappeTestCase):
         partner = self.create_mock_partner("CP-DASH-NEW")
         item = self.create_mock_item("IT-DASH-NEW")
         
-        le = frappe.new_doc("PSV Ledger Entry")
+        le = smriti.documents.new("PSV Ledger Entry")
         le.company = self.company
         le.posting_datetime = now_datetime()
         le.channel_partner = partner
@@ -976,7 +977,7 @@ class TestPSVPhase1_1(FrappeTestCase):
         partner = self.create_mock_partner("CP-BAL-NEW")
         item = self.create_mock_item("IT-BAL-NEW")
         
-        le = frappe.new_doc("PSV Ledger Entry")
+        le = smriti.documents.new("PSV Ledger Entry")
         le.company = self.company
         le.posting_datetime = now_datetime()
         le.channel_partner = partner
@@ -995,7 +996,7 @@ class TestPSVPhase1_1(FrappeTestCase):
         partner = self.create_mock_partner("CP-REO-NEW")
         item = self.create_mock_item("IT-REO-NEW")
         
-        le = frappe.new_doc("PSV Ledger Entry")
+        le = smriti.documents.new("PSV Ledger Entry")
         le.company = self.company
         le.posting_datetime = now_datetime()
         le.channel_partner = partner
@@ -1012,7 +1013,7 @@ class TestPSVPhase1_1(FrappeTestCase):
         partner = self.create_mock_partner("CP-AUTO-NAME")
         item = self.create_mock_item("IT-AUTO-NAME")
         
-        le = frappe.new_doc("PSV Ledger Entry")
+        le = smriti.documents.new("PSV Ledger Entry")
         le.company = self.company
         le.posting_datetime = now_datetime()
         le.channel_partner = partner
@@ -1029,7 +1030,7 @@ class TestPSVPhase1_1(FrappeTestCase):
         partner = self.create_mock_partner("CP-NAME-REUSE")
         item = self.create_mock_item("IT-NAME-REUSE")
         
-        le1 = frappe.new_doc("PSV Ledger Entry")
+        le1 = smriti.documents.new("PSV Ledger Entry")
         le1.company = self.company
         le1.posting_datetime = now_datetime()
         le1.channel_partner = partner
@@ -1038,7 +1039,7 @@ class TestPSVPhase1_1(FrappeTestCase):
         le1.transaction_type = "Opening"
         le1.insert(ignore_permissions=True)
         
-        le2 = frappe.new_doc("PSV Ledger Entry")
+        le2 = smriti.documents.new("PSV Ledger Entry")
         le2.company = self.company
         le2.posting_datetime = now_datetime()
         le2.channel_partner = partner
@@ -1050,9 +1051,9 @@ class TestPSVPhase1_1(FrappeTestCase):
         self.assertNotEqual(le1.name, le2.name)
 
     def test_43_channel_partner_primary_brand_default(self):
-        brand = frappe.db.exists("Brand", "Nike") or frappe.get_doc({"doctype": "Brand", "brand": "Nike"}).insert(ignore_permissions=True).name
+        brand = smriti.db.exists("Brand", "Nike") or frappe.get_doc({"doctype": "Brand", "brand": "Nike"}).insert(ignore_permissions=True).name
         
-        partner = frappe.new_doc("PSV Channel Partner")
+        partner = smriti.documents.new("PSV Channel Partner")
         partner.company = self.company
         partner.customer = self.customer
         partner.location_name = "Mumbai Brand Default"
@@ -1064,10 +1065,10 @@ class TestPSVPhase1_1(FrappeTestCase):
         self.assertEqual(partner.primary_brand, brand)
 
     def test_44_channel_partner_primary_brand_explicit(self):
-        brand1 = frappe.db.exists("Brand", "Nike") or frappe.get_doc({"doctype": "Brand", "brand": "Nike"}).insert(ignore_permissions=True).name
-        brand2 = frappe.db.exists("Brand", "Adidas") or frappe.get_doc({"doctype": "Brand", "brand": "Adidas"}).insert(ignore_permissions=True).name
+        brand1 = smriti.db.exists("Brand", "Nike") or frappe.get_doc({"doctype": "Brand", "brand": "Nike"}).insert(ignore_permissions=True).name
+        brand2 = smriti.db.exists("Brand", "Adidas") or frappe.get_doc({"doctype": "Brand", "brand": "Adidas"}).insert(ignore_permissions=True).name
         
-        partner = frappe.new_doc("PSV Channel Partner")
+        partner = smriti.documents.new("PSV Channel Partner")
         partner.company = self.company
         partner.customer = self.customer
         partner.location_name = "Mumbai Brand Explicit"
@@ -1099,7 +1100,7 @@ class TestPSVPhase1_1(FrappeTestCase):
         partner = self.create_mock_partner("CP-VEL-ZERO")
         item = self.create_mock_item("IT-VEL-ZERO")
         
-        le = frappe.new_doc("PSV Ledger Entry")
+        le = smriti.documents.new("PSV Ledger Entry")
         le.company = self.company
         le.posting_datetime = now_datetime()
         le.channel_partner = partner
@@ -1125,8 +1126,8 @@ class TestPSVPhase1_1(FrappeTestCase):
     # --- Helper methods ---
     def create_mock_partner(self, name_suffix, territory="All Territories", region="Maharashtra"):
         partner_name = f"{self.customer}-{name_suffix}"
-        if not frappe.db.exists("PSV Channel Partner", partner_name):
-            doc = frappe.new_doc("PSV Channel Partner")
+        if not smriti.db.exists("PSV Channel Partner", partner_name):
+            doc = smriti.documents.new("PSV Channel Partner")
             doc.company = self.company
             doc.customer = self.customer
             doc.location_name = name_suffix
@@ -1136,8 +1137,8 @@ class TestPSVPhase1_1(FrappeTestCase):
         return partner_name
 
     def create_mock_item(self, item_code):
-        if not frappe.db.exists("Item", item_code):
-            doc = frappe.new_doc("Item")
+        if not smriti.db.exists("Item", item_code):
+            doc = smriti.documents.new("Item")
             doc.item_code = item_code
             doc.item_group = self.item_group
             doc.stock_uom = self.uom
@@ -1189,9 +1190,9 @@ def run_diagnostics():
     """
     frappe.only_for(["System Manager"])
     
-    indexes = frappe.db.sql("SHOW INDEX FROM `tabPSV Ledger Entry`", as_dict=True)
+    indexes = smriti.db.sql("SHOW INDEX FROM `tabPSV Ledger Entry`", as_dict=True)
     
-    explain_balance = frappe.db.sql("""
+    explain_balance = smriti.db.sql("""
         EXPLAIN SELECT channel_partner, item_variant, SUM(qty) as balance
         FROM `tabPSV Ledger Entry`
         WHERE company = 'Test PSV Company 1.1'
@@ -1199,7 +1200,7 @@ def run_diagnostics():
         HAVING SUM(qty) > 0
     """, as_dict=True)
     
-    explain_sales = frappe.db.sql("""
+    explain_sales = smriti.db.sql("""
         EXPLAIN SELECT channel_partner, item_variant, SUM(ABS(qty)) as total_sales
         FROM `tabPSV Ledger Entry`
         WHERE company = 'Test PSV Company 1.1' AND qty < 0 AND posting_datetime >= '2026-05-14'

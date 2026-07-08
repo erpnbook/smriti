@@ -11,12 +11,13 @@
 # SPDX-License-Identifier: GPL-3.0-only
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 import os
 import json
 import subprocess
 import fnmatch
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.utils import get_site_path, now_datetime
 from smriti_retail_os.security_constants import PROTECTED_CONFIG_PATTERNS
 
@@ -69,8 +70,8 @@ def get_system_health():
         "db_port": frappe.conf.db_port or "3306",
     }
     try:
-        db_status["db_version"] = frappe.db.sql("SELECT VERSION()")[0][0]
-        db_status["table_count"] = frappe.db.sql("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE()")[0][0]
+        db_status["db_version"] = smriti.db.sql("SELECT VERSION()")[0][0]
+        db_status["table_count"] = smriti.db.sql("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE()")[0][0]
     except Exception as e:
         db_status["error"] = str(e)
 
@@ -101,14 +102,14 @@ def get_system_health():
         queues = get_queue_list()
         queue_status["queues"] = queues
         # Total jobs count
-        queue_status["failed_jobs_count"] = frappe.db.count("Error Log", {"method": ["like", "%RQ Job%"]})
+        queue_status["failed_jobs_count"] = smriti.db.count("Error Log", {"method": ["like", "%RQ Job%"]})
     except Exception as e:
         queue_status["error"] = str(e)
 
     # 6. Last Migration Status
     migration_status = {}
     try:
-        last_patches = frappe.db.get_all(
+        last_patches = smriti.db.get_list(
             "Patch Log",
             fields=["patch", "creation"],
             limit=5,
@@ -189,7 +190,7 @@ def trigger_backup(backup_type="all"):
             "data": data
         }
     except Exception as e:
-        frappe.log_error(f"Platform Center Backup Error: {str(e)}")
+        smriti.errors.log_error(f"Platform Center Backup Error: {str(e)}")
         return {
             "success": False,
             "error": str(e)
@@ -233,7 +234,7 @@ def execute_command(cmd):
         res = subprocess.run(cmd, capture_output=True, text=True, check=True)
         frappe.logger().info(f"[Platform Center] {cmd} Output: {res.stdout}")
     except Exception as e:
-        frappe.log_error(f"[Platform Center] Failed command {cmd}: {str(e)}")
+        smriti.errors.log_error(f"[Platform Center] Failed command {cmd}: {str(e)}")
 
 @frappe.whitelist()
 def get_diagnostics(log_type="error", limit=50):
@@ -242,14 +243,14 @@ def get_diagnostics(log_type="error", limit=50):
     
     limit = int(limit)
     if log_type == "error":
-        return frappe.db.get_all(
+        return smriti.db.get_list(
             "Error Log",
             fields=["name", "method", "creation", "error"],
             limit=limit,
             order_by="creation desc"
         )
     elif log_type == "failed_jobs":
-        return frappe.db.get_all(
+        return smriti.db.get_list(
             "Error Log",
             filters={"method": ["like", "%RQ Job%"]},
             fields=["name", "method", "creation", "error"],
@@ -304,11 +305,11 @@ def run_repair(tool, dry_run=0):
             from smriti_retail_os.company_api import get_active_company
             co = get_active_company()
             if co:
-                abbr = frappe.db.get_value("Company", co, "abbr")
+                abbr = smriti.db.get("Company", co, "abbr")
                 mops = ["CGST", "SGST", "IGST"]
                 for mop in mops:
                     full_acc = f"{mop} - {abbr}"
-                    if not frappe.db.exists("Account", full_acc):
+                    if not smriti.db.exists("Account", full_acc):
                         logs.append(f"WARNING: Tax ledger {full_acc} is missing.")
                     else:
                         logs.append(f"OK: Tax ledger {full_acc} verified.")
@@ -321,8 +322,8 @@ def run_repair(tool, dry_run=0):
             logs.append("SMRITI roles (Cashier, Store Manager) and workspace permissions rebuilt.")
             
         elif tool == "fix_broken_links":
-            companies = frappe.get_all("Company", pluck="name")
-            stale_rows = frappe.db.sql("""
+            companies = smriti.db.get_list("Company", pluck="name")
+            stale_rows = smriti.db.sql("""
                 SELECT name, parent, company, idx FROM `tabMode of Payment Account`
             """, as_dict=True)
             cleaned = 0
@@ -335,7 +336,7 @@ def run_repair(tool, dry_run=0):
                         "idx": row.idx
                     })
                     if not dry_run:
-                        frappe.db.delete("Mode of Payment Account", {"name": row.name})
+                        smriti.db.delete("Mode of Payment Account", {"name": row.name})
                         logs.append(f"Deleted stale Mode of Payment Account row: {row.name} for non-existent company '{row.company}'.")
                         cleaned += 1
             
@@ -345,7 +346,7 @@ def run_repair(tool, dry_run=0):
                 if cleaned == 0:
                     logs.append("No stale company references found in child tables.")
                 else:
-                    frappe.db.commit()
+                    smriti.db.commit()
                     logs.append(f"Successfully cleaned {cleaned} stale links from the database.")
             
         return {"success": True, "logs": logs, "records": records}
@@ -436,10 +437,9 @@ def execute_restore(file_name, confirm_text, password):
         pre_backup_path = os.path.basename(generator.backup_path_db)
         print(f"[Platform Center] Pre-restore backup created: {pre_backup_path}")
     except Exception as e:
-        frappe.log_error(f"Pre-restore Backup Failure: {str(e)}")
+        smriti.errors.log_error(f"Pre-restore Backup Failure: {str(e)}")
         # Log failure in activity log
-        frappe.get_doc({
-            "doctype": "Activity Log",
+        smriti.documents.new("ActivityLog").update({
             "user": user,
             "operation": "Database Restore",
             "subject": f"Pre-restore backup failed for {file_name}",
@@ -448,7 +448,7 @@ def execute_restore(file_name, confirm_text, password):
             "content": f"Failed to create pre-restore backup. Error: {str(e)}"
         # reviewed-ignore-permissions: system-level restore operation, gated by password and confirmation checks
         }).insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         frappe.throw(_("Restore aborted: Failed to create automatic pre-restore backup. Error: {0}").format(str(e)))
 
     # Find matching files and private files
@@ -501,8 +501,7 @@ def execute_restore(file_name, confirm_text, password):
         error_msg = str(e)
         
     # Write audit log entry
-    frappe.get_doc({
-        "doctype": "Activity Log",
+    smriti.documents.new("ActivityLog").update({
         "user": user,
         "operation": "Database Restore",
         "subject": f"Database restore of {file_name}",
@@ -511,7 +510,7 @@ def execute_restore(file_name, confirm_text, password):
         "content": f"Backup Restored: {file_name}\nPre-restore Backup: {pre_backup_path}\nResult Status: {'Success' if success else 'Failed'}\nError: {error_msg}"
     # reviewed-ignore-permissions: system-level restore operation, gated by password and confirmation checks
     }).insert(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
     
     if not success:
         return {

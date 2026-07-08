@@ -17,6 +17,7 @@
 
 import frappe
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.utils import flt, cint, getdate, nowdate
 import json
 
@@ -57,7 +58,7 @@ def get_wallet_ledger(customer=None, transaction_type=None, limit=50):
     if transaction_type:
         filters["transaction_type"] = transaction_type
         
-    return frappe.get_all("SMRITI Wallet Ledger",
+    return smriti.db.get_list("SMRITI Wallet Ledger",
         filters=filters,
         fields=[
             "name", "ledger_sequence", "customer", "wallet_type", 
@@ -135,14 +136,14 @@ def reverse_wallet_transaction(ledger_seq, reason):
         frappe.throw(_("Reason for reversal is required."))
         
     # Find ledger_sequence name in SMRITI Wallet Ledger
-    ledger_name = frappe.db.get_value("SMRITI Wallet Ledger", {"ledger_sequence": ledger_seq}, "name")
+    ledger_name = smriti.db.get("SMRITI Wallet Ledger", {"ledger_sequence": ledger_seq}, "name")
     if not ledger_name:
-        if frappe.db.exists("SMRITI Wallet Ledger", ledger_seq):
+        if smriti.db.exists("SMRITI Wallet Ledger", ledger_seq):
             ledger_name = ledger_seq
         else:
             frappe.throw(_("Wallet Ledger entry {0} not found.").format(ledger_seq))
             
-    orig_doc = frappe.get_doc("SMRITI Wallet Ledger", ledger_name)
+    orig_doc = smriti.documents.get("SMRITI Wallet Ledger", ledger_name)
     
     rev_doc = CGEWalletLedger.reverse_transaction(ledger_name, reason)
     
@@ -170,20 +171,20 @@ def get_cge_liability_metrics():
         frappe.throw(_("Not authorized to view CGE liability metrics."), frappe.PermissionError)
 
     # 1. Loyalty points liability (sum of remaining points of all active unexpired entries)
-    loyalty_liability = flt(frappe.db.sql("""
+    loyalty_liability = flt(smriti.db.sql("""
         select sum(remaining_points)
         from `tabLoyalty Point Entry`
         where expiry_date >= %s
     """, (nowdate()))[0][0])
     
     # 2. Wallet liability (total Credit - total Debit)
-    credits = flt(frappe.db.sql("""
+    credits = flt(smriti.db.sql("""
         select sum(amount)
         from `tabSMRITI Wallet Ledger`
         where transaction_type = 'Credit' and is_expired = 0
           and (expiry_date is null or expiry_date >= %s)
     """, (nowdate()))[0][0])
-    debits_res = frappe.db.sql("""
+    debits_res = smriti.db.sql("""
         select sum(amount) from `tabSMRITI Wallet Ledger`
         where transaction_type = 'Debit'
     """)
@@ -191,7 +192,7 @@ def get_cge_liability_metrics():
     cashback_liability = max(0.0, credits - debits)
     
     # 3. Coupon campaign budget reserved (active campaigns)
-    coupon_exposure_res = frappe.db.sql("""
+    coupon_exposure_res = smriti.db.sql("""
         select sum(budget_reserved) from `tabSMRITI Coupon Campaign`
         where status = 'Active'
     """)
@@ -223,7 +224,7 @@ def get_campaigns_with_utilization():
     """
     Returns campaigns with utilization calculations.
     """
-    campaigns = frappe.get_all("SMRITI Coupon Campaign",
+    campaigns = smriti.db.get_list("SMRITI Coupon Campaign",
         fields=[
             "name", "campaign_name", "campaign_type", "start_date", "end_date",
             "budget_limit", "budget_reserved", "budget_consumed", "stop_on_limit", "status"
@@ -250,10 +251,10 @@ def save_coupon_campaign(campaign_data):
         campaign_data = json.loads(campaign_data)
         
     name = campaign_data.get("name")
-    if name and frappe.db.exists("SMRITI Coupon Campaign", name):
-        doc = frappe.get_doc("SMRITI Coupon Campaign", name)
+    if name and smriti.db.exists("SMRITI Coupon Campaign", name):
+        doc = smriti.documents.get("SMRITI Coupon Campaign", name)
     else:
-        doc = frappe.new_doc("SMRITI Coupon Campaign")
+        doc = smriti.documents.new("SMRITI Coupon Campaign")
         
     for key, val in campaign_data.items():
         if key != "name":
@@ -275,10 +276,10 @@ def save_loyalty_rule(rule_data):
         rule_data = json.loads(rule_data)
         
     name = rule_data.get("name")
-    if name and frappe.db.exists("SMRITI Loyalty Rule", name):
-        doc = frappe.get_doc("SMRITI Loyalty Rule", name)
+    if name and smriti.db.exists("SMRITI Loyalty Rule", name):
+        doc = smriti.documents.get("SMRITI Loyalty Rule", name)
     else:
-        doc = frappe.new_doc("SMRITI Loyalty Rule")
+        doc = smriti.documents.new("SMRITI Loyalty Rule")
         
     for key, val in rule_data.items():
         if key != "name":
@@ -300,10 +301,10 @@ def save_loyalty_tier(tier_data):
         tier_data = json.loads(tier_data)
         
     name = tier_data.get("name")
-    if name and frappe.db.exists("SMRITI Loyalty Tier", name):
-        doc = frappe.get_doc("SMRITI Loyalty Tier", name)
+    if name and smriti.db.exists("SMRITI Loyalty Tier", name):
+        doc = smriti.documents.get("SMRITI Loyalty Tier", name)
     else:
-        doc = frappe.new_doc("SMRITI Loyalty Tier")
+        doc = smriti.documents.new("SMRITI Loyalty Tier")
         
     for key, val in tier_data.items():
         if key != "name":
@@ -369,7 +370,7 @@ def get_cge_generic_list(doctype, filters=None, limit=100):
     if "creation" not in fields:
         fields.append("creation")
         
-    return frappe.get_all(doctype,
+    return smriti.db.get_list(doctype,
         filters=filters,
         fields=fields,
         order_by="modified desc" if "modified" in [f.fieldname for f in meta.fields] else "creation desc",
@@ -386,7 +387,7 @@ def get_cge_generic_doc(doctype, name):
     check_store_manager_or_admin()
     check_cge_doctype(doctype)
     
-    doc = frappe.get_doc(doctype, name)
+    doc = smriti.documents.get(doctype, name)
     doc_dict = doc.as_dict()
     
     meta = frappe.get_meta(doctype)
@@ -408,7 +409,7 @@ def save_cge_generic_doc(doctype, doc_data):
     
     from smriti_retail_os.cge.service.cge_service import save_cge_generic_doc_service
     
-    is_new = not frappe.db.exists(doctype, json.loads(doc_data).get("name") if isinstance(doc_data, str) else doc_data.get("name"))
+    is_new = not smriti.db.exists(doctype, json.loads(doc_data).get("name") if isinstance(doc_data, str) else doc_data.get("name"))
     action = "Create" if is_new else "Update"
     
     doc_name = save_cge_generic_doc_service(doctype, doc_data)

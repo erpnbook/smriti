@@ -1,7 +1,8 @@
 # Copyright (c) 2026, AITDL and contributors
 # For license information, please see license.txt
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from frappe.model.document import Document
 
 
@@ -14,7 +15,7 @@ class SMRITITrialActivation(Document):
     def before_save(self):
         """Sync quick-view fields from linked trial lead."""
         if self.trial_lead and (not self.store_name or not self.owner_name):
-            lead = frappe.get_doc('SMRITI Trial Lead', self.trial_lead)
+            lead = smriti.documents.get('SMRITI Trial Lead', self.trial_lead)
             self.store_name  = lead.store_name
             self.owner_name  = lead.owner_name
             self.mobile      = lead.mobile
@@ -24,7 +25,7 @@ def _generate_ref():
     """Return next TA-YYYY-NNNNN reference number."""
     import datetime
     year = datetime.date.today().year
-    last = frappe.db.sql(
+    last = smriti.db.sql(
         """
         SELECT activation_reference
         FROM   `tabSMRITI Trial Activation`

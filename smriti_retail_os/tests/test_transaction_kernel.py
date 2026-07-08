@@ -11,6 +11,7 @@
 #
 
 import frappe
+from smriti_retail_os import smriti
 import json
 import unittest
 from frappe.utils import nowdate
@@ -40,7 +41,7 @@ class TestTransactionKernelHelpers(unittest.TestCase):
     def setUpClass(cls):
         frappe.set_user("Administrator")
         # Resolve a real item for matrix tests (Fix 3 now throws for unknown items)
-        cls.real_item = frappe.db.get_value(
+        cls.real_item = smriti.db.get(
             "Item", {"is_sales_item": 1, "disabled": 0}, "name"
         ) or "_SMRITI_GENERIC_ITEM_"
 
@@ -217,18 +218,18 @@ class TestTransactionKernelIntegration(unittest.TestCase):
         # Resolve company
         cls.company = (
             frappe.defaults.get_user_default("company")
-            or (frappe.get_all("Company", limit=1, pluck="name") or [None])[0]
+            or (smriti.db.get_list("Company", limit=1, pluck="name") or [None])[0]
         )
 
         # Resolve a real item
-        cls.item = frappe.db.get_value(
+        cls.item = smriti.db.get(
             "Item",
             {"is_sales_item": 1, "disabled": 0},
             "name"
         )
 
         # Resolve a real customer
-        cls.customer = frappe.db.get_value(
+        cls.customer = smriti.db.get(
             "Customer",
             {"disabled": 0},
             "name"

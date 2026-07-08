@@ -14,6 +14,7 @@
 # For license information, please see license.txt
 
 import frappe
+from smriti_retail_os import smriti
 from smriti_retail_os.tests.test_psv import TestPSV
 from smriti_retail_os.balance_engine import get_party_balance
 from smriti_retail_os.psv_analysis_service import get_broken_sizes, generate_reorder_suggestions
@@ -21,10 +22,10 @@ from smriti_retail_os.psv_analysis_service import get_broken_sizes, generate_reo
 class TestPSVAnalysis(TestPSV):
     def test_broken_size_detection_logic(self):
         # Ensure Item Attribute "Test Attribute Analysis" exists with correct values
-        if frappe.db.exists("Item Attribute", "Test Attribute Analysis"):
+        if smriti.db.exists("Item Attribute", "Test Attribute Analysis"):
             frappe.delete_doc("Item Attribute", "Test Attribute Analysis", force=True)
 
-        attr = frappe.new_doc("Item Attribute")
+        attr = smriti.documents.new("Item Attribute")
         attr.attribute_name = "Test Attribute Analysis"
         attr.append("item_attribute_values", {"attribute_value": "7", "abbr": "7"})
         attr.append("item_attribute_values", {"attribute_value": "8", "abbr": "8"})
@@ -32,8 +33,8 @@ class TestPSVAnalysis(TestPSV):
 
         # 1. Create a template item
         template_item = "TEST-STYLE-TEMPLATE"
-        if not frappe.db.exists("Item", template_item):
-            itm = frappe.new_doc("Item")
+        if not smriti.db.exists("Item", template_item):
+            itm = smriti.documents.new("Item")
             itm.item_code = template_item
             itm.item_name = "Test Style Template"
             itm.item_group = self.item_group
@@ -45,8 +46,8 @@ class TestPSVAnalysis(TestPSV):
 
         # 2. Create variant items
         var_7 = "TEST-STYLE-7"
-        if not frappe.db.exists("Item", var_7):
-            itm = frappe.new_doc("Item")
+        if not smriti.db.exists("Item", var_7):
+            itm = smriti.documents.new("Item")
             itm.item_code = var_7
             itm.item_name = "Test Style 7"
             itm.item_group = self.item_group
@@ -57,8 +58,8 @@ class TestPSVAnalysis(TestPSV):
             itm.insert(ignore_permissions=True)
 
         var_8 = "TEST-STYLE-8"
-        if not frappe.db.exists("Item", var_8):
-            itm = frappe.new_doc("Item")
+        if not smriti.db.exists("Item", var_8):
+            itm = smriti.documents.new("Item")
             itm.item_code = var_8
             itm.item_name = "Test Style 8"
             itm.item_group = self.item_group
@@ -69,7 +70,7 @@ class TestPSVAnalysis(TestPSV):
             itm.insert(ignore_permissions=True)
 
         # 3. Create a Reorder Rule for var_7
-        rule = frappe.new_doc("SMRITI PSV Reorder Rule")
+        rule = smriti.documents.new("SMRITI PSV Reorder Rule")
         rule.company = self.company
         rule.party_stock_account = self.account_name
         rule.item_variant = var_7
@@ -97,7 +98,7 @@ class TestPSVAnalysis(TestPSV):
         self.assertEqual(bal_before, 10.0)
 
         # 2. Create physical stock snapshot with physical count 8.0 (variance is -2.0)
-        snap = frappe.new_doc("SMRITI Party Physical Snapshot")
+        snap = smriti.documents.new("SMRITI Party Physical Snapshot")
         snap.company = self.company
         snap.party_stock_account = self.account_name
         snap.audit_date = frappe.utils.today()
@@ -118,11 +119,11 @@ class TestPSVAnalysis(TestPSV):
         self.assertEqual(bal_after, 8.0)
 
         # 4. Assert that the SMRITI PSV Transaction has transaction_type = AUDIT_ADJUSTMENT
-        tx_name = frappe.db.get_value("SMRITI PSV Transaction", {
+        tx_name = smriti.db.get("SMRITI PSV Transaction", {
             "reference_doctype": "SMRITI Party Physical Snapshot",
             "reference_name": snap.name,
             "docstatus": 1
         })
         self.assertTrue(tx_name)
-        tx = frappe.get_doc("SMRITI PSV Transaction", tx_name)
+        tx = smriti.documents.get("SMRITI PSV Transaction", tx_name)
         self.assertEqual(tx.transaction_type, "AUDIT_ADJUSTMENT")

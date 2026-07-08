@@ -10,7 +10,8 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 import json
 
 def execute():
@@ -34,25 +35,25 @@ def execute():
     ]
 
     for ev in events:
-        if not frappe.db.exists("SMRITI Telemetry Event Definition", ev["name"]):
+        if not smriti.db.exists("SMRITI Telemetry Event Definition", ev["name"]):
             try:
-                doc = frappe.get_doc({
-                    "doctype": "SMRITI Telemetry Event Definition",
+                doc = smriti.documents.new("TelemetryEventDefinition")
+                doc.update({
                     **ev
                 })
                 doc.insert(ignore_permissions=True)
                 print(f"[SMRITI Telemetry] Seeded Event Definition: {ev['name']}")
             except Exception as e:
-                frappe.log_error(title=f"Error seeding event {ev['name']}", message=str(e))
+                smriti.errors.log_error(title=f"Error seeding event {ev['name']}", message=str(e))
         else:
             # Update existing to align descriptions
             try:
-                doc = frappe.get_doc("SMRITI Telemetry Event Definition", ev["name"])
+                doc = smriti.documents.get("SMRITI Telemetry Event Definition", ev["name"])
                 doc.event_name = ev["event_name"]
                 doc.description = ev["description"]
                 doc.save(ignore_permissions=True)
             except Exception as e:
-                frappe.log_error(title=f"Error updating event {ev['name']}", message=str(e))
+                smriti.errors.log_error(title=f"Error updating event {ev['name']}", message=str(e))
 
     # 2. Seed Scan Reliability Score Formula
     formula = {
@@ -93,27 +94,27 @@ def execute():
         })
     }
 
-    doc_name = frappe.db.get_value(
+    doc_name = smriti.db.get(
         "SMRITI Formula Definition",
         {"formula_id": formula["formula_id"], "formula_version": formula["formula_version"]},
         "name"
     )
     if doc_name:
         try:
-            doc = frappe.get_doc("SMRITI Formula Definition", doc_name)
+            doc = smriti.documents.get("SMRITI Formula Definition", doc_name)
             doc.update(formula)
             doc.save(ignore_permissions=True)
         except Exception as e:
-            frappe.log_error(title="Error updating SMRITI-SCAN-REL-01 formula", message=str(e))
+            smriti.errors.log_error(title="Error updating SMRITI-SCAN-REL-01 formula", message=str(e))
     else:
         try:
-            doc = frappe.get_doc({
-                "doctype": "SMRITI Formula Definition",
+            doc = smriti.documents.new("FormulaDefinition")
+            doc.update({
                 **formula
             })
             doc.insert(ignore_permissions=True)
         except Exception as e:
-            frappe.log_error(title="Error inserting SMRITI-SCAN-REL-01 formula", message=str(e))
+            smriti.errors.log_error(title="Error inserting SMRITI-SCAN-REL-01 formula", message=str(e))
 
-    frappe.db.commit()
+    smriti.db.commit()
     print("[SMRITI Telemetry] Seeded Scan Reliability Score Formula Definition successfully.")

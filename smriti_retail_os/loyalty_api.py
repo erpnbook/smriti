@@ -10,8 +10,9 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.utils import flt, cint, today
 from erpnext.accounts.doctype.loyalty_program.loyalty_program import get_loyalty_program_details_with_points
 
@@ -33,7 +34,7 @@ def get_loyalty_details(customer):
         
     try:
         # Check if customer has an enrolled loyalty program
-        loyalty_program = frappe.db.get_value("Customer", customer, "loyalty_program")
+        loyalty_program = smriti.db.get("Customer", customer, "loyalty_program")
         if not loyalty_program:
             return {
                 "enrolled": False,
@@ -70,7 +71,7 @@ def get_loyalty_details(customer):
             "tier_name": lp.get("tier_name") or "Regular"
         }
     except Exception as e:
-        frappe.log_error(f"SMRITI Loyalty API Error for Customer {customer}: {str(e)}")
+        smriti.errors.log_error(f"SMRITI Loyalty API Error for Customer {customer}: {str(e)}")
         return {
             "enrolled": False,
             "loyalty_program": None,
@@ -86,7 +87,7 @@ def get_loyalty_schemes():
     """
     Returns a list of all active Loyalty Programs for management display.
     """
-    programs = frappe.get_all(
+    programs = smriti.db.get_list(
         "Loyalty Program",
         fields=["name", "loyalty_program_name", "conversion_factor", "auto_opt_in", "from_date", "to_date"],
         order_by="name asc"
@@ -94,7 +95,7 @@ def get_loyalty_schemes():
     
     # Enrich with collection details
     for p in programs:
-        p["collection_rules"] = frappe.get_all(
+        p["collection_rules"] = smriti.db.get_list(
             "Loyalty Program Collection",
             filters={"parent": p.name},
             fields=["tier_name", "min_spent", "collection_factor"]
@@ -110,29 +111,29 @@ def save_loyalty_scheme(doc_name=None, loyalty_program_name=None, conversion_fac
     if not loyalty_program_name:
         frappe.throw(_("Loyalty Program Name is required."))
         
-    company = frappe.defaults.get_user_default("company") or frappe.get_all("Company", limit=1)[0].name
+    company = frappe.defaults.get_user_default("company") or smriti.db.get_list("Company", limit=1)[0].name
     
     # M-11: Prefer a Loyalty-named expense account; arbitrary Expense account picks COGS/Rent etc.
     expense_account = (
-        frappe.db.get_value(
+        smriti.db.get(
             "Account",
             {"account_name": ["like", "%Loyalty%"], "root_type": "Expense", "company": company, "is_group": 0},
             "name"
         )
-        or frappe.db.get_value(
+        or smriti.db.get(
             "Account",
             {"root_type": "Expense", "company": company, "is_group": 0},
             "name",
             order_by="account_name asc"
         )
-        or frappe.db.get_value(
+        or smriti.db.get(
             "Account",
             {"account_type": "Expense Account", "company": company},
             "name"
         )
     )
     
-    cost_center = frappe.db.get_value(
+    cost_center = smriti.db.get(
         "Cost Center", 
         {"company": company, "is_group": 0}, 
         "name"
@@ -141,10 +142,10 @@ def save_loyalty_scheme(doc_name=None, loyalty_program_name=None, conversion_fac
     if not expense_account or not cost_center:
         frappe.throw(_("Please ensure a valid Expense Account and Cost Center exist for Company: {0}").format(company))
         
-    if doc_name and frappe.db.exists("Loyalty Program", doc_name):
-        doc = frappe.get_doc("Loyalty Program", doc_name)
+    if doc_name and smriti.db.exists("Loyalty Program", doc_name):
+        doc = smriti.documents.get("Loyalty Program", doc_name)
     else:
-        doc = frappe.new_doc("Loyalty Program")
+        doc = smriti.documents.new("Loyalty Program")
         doc.from_date = today()
         
     doc.loyalty_program_name = loyalty_program_name
@@ -165,7 +166,7 @@ def save_loyalty_scheme(doc_name=None, loyalty_program_name=None, conversion_fac
     
     # reviewed-ignore-permissions: loyalty logic configuration, gated by marketing administrator
     doc.save(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
     
     return {
         "success": True,
@@ -183,14 +184,14 @@ def enroll_customer(customer, program_name):
     from smriti_retail_os.security_api import check_store_manager_or_admin
     check_store_manager_or_admin()
 
-    if not frappe.db.exists("Customer", customer):
+    if not smriti.db.exists("Customer", customer):
         frappe.throw(_("Customer {0} not found.").format(customer))
 
-    if program_name and not frappe.db.exists("Loyalty Program", program_name):
+    if program_name and not smriti.db.exists("Loyalty Program", program_name):
         frappe.throw(_("Loyalty Program {0} not found.").format(program_name))
 
-    frappe.db.set_value("Customer", customer, "loyalty_program", program_name)
-    frappe.db.commit()
+    smriti.db.set_value("Customer", customer, "loyalty_program", program_name)
+    smriti.db.commit()
 
     return {
         "success": True,

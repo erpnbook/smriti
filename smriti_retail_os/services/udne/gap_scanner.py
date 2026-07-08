@@ -1,20 +1,21 @@
 import re
 import datetime
 import frappe
+from smriti_retail_os import smriti
 
 def scan_gaps(doctype: str, rule_name: str) -> list:
     """
     Scans the database for sequence gaps in the business display numbers.
     Classifies gaps into Explained, Reserved, Pending, or Unexplained.
     """
-    rule = frappe.get_doc("SMRITI Numbering Rule", rule_name)
+    rule = smriti.documents.get("SMRITI Numbering Rule", rule_name)
     template = rule.template
     
     meta = frappe.get_meta(doctype)
     if not meta.has_field("custom_business_display_number"):
         return []
         
-    records = frappe.get_all(
+    records = smriti.db.get_list(
         doctype,
         fields=["name", "custom_business_display_number", "docstatus"],
         order_by="creation"
@@ -57,7 +58,7 @@ def scan_gaps(doctype: str, rule_name: str) -> list:
             explanation = "No naming or document trace found."
             
             # Check for range reservations
-            reservation = frappe.get_all(
+            reservation = smriti.db.get_list(
                 "SMRITI Numbering Reserved Range",
                 fields=["name", "status", "expiry_datetime", "terminal_id"],
                 filters={
@@ -86,7 +87,7 @@ def scan_gaps(doctype: str, rule_name: str) -> list:
                     explanation = f"Reserved range on terminal {res.terminal_id} (Status: {res_status})."
             else:
                 # Check naming audit logs
-                audit = frappe.get_all(
+                audit = smriti.db.get_list(
                     "SMRITI Numbering Audit Log",
                     fields=["name", "timestamp"],
                     filters={

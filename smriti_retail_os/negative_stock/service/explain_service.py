@@ -10,7 +10,8 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from frappe.utils import today
 
 class SMRITINegativeStockExplainService(object):
@@ -29,14 +30,14 @@ class SMRITINegativeStockExplainService(object):
 		policy_name = self.case_doc.matched_policy or "None"
 		scope = self.case_doc.matched_scope or "Global"
 		decision = self.case_doc.decision or "Block"
-		actual_qty = frappe.db.get_value("Bin", {
+		actual_qty = smriti.db.get("Bin", {
 			"item_code": self.case_doc.item_code,
 			"warehouse": self.case_doc.warehouse
 		}, "actual_qty") or 0.0
 
 		p_doc = None
 		if self.case_doc.matched_policy:
-			p_doc = frappe.get_doc("SMRITI Negative Stock Policy", self.case_doc.matched_policy)
+			p_doc = smriti.documents.get("SMRITI Negative Stock Policy", self.case_doc.matched_policy)
 
 		# A. Business Meaning
 		meaning = f"The system tracked a transaction requesting to sell or consume {abs(self.case_doc.negative_qty)} unit(s) of Item '{self.case_doc.item_code}' from Warehouse '{self.case_doc.warehouse}', exceeding the current physical stock balance of {actual_qty}."
@@ -80,10 +81,10 @@ class SMRITINegativeStockExplainService(object):
 		"""
 		Suggests alternative actions (e.g., PSV alternative warehouses).
 		"""
-		item_group = frappe.db.get_value("Item", self.case_doc.item_code, "item_group")
+		item_group = smriti.db.get("Item", self.case_doc.item_code, "item_group")
 		
 		# Find other warehouses with stock of this item
-		other_stocks = frappe.get_all("Bin", filters={
+		other_stocks = smriti.db.get_list("Bin", filters={
 			"item_code": self.case_doc.item_code,
 			"warehouse": ["!=", self.case_doc.warehouse],
 			"actual_qty": [">", 0]

@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from smriti_retail_os.purchase_studio.service.purchase_order_service import PurchaseOrderService
 from smriti_retail_os.purchase_studio.service.purchase_workflow_service import PurchaseWorkflowService
 from smriti_retail_os.purchase_studio.service import purchase_service
 
 def run():
     # Ensure GST HSN Code exists for India Compliance validator
-    hsn_code = frappe.db.get_value("GST HSN Code", {}, "name")
+    hsn_code = smriti.db.get("GST HSN Code", {}, "name")
     if not hsn_code:
         try:
-            hsn = frappe.new_doc("GST HSN Code")
+            hsn = smriti.documents.new("GST HSN Code")
             hsn.name = "999999"
             hsn.hsn_code = "999999"
             hsn.insert(ignore_permissions=True)
@@ -19,8 +20,8 @@ def run():
 
     # Ensure test item exists
     item_code = "SMRITI-TEST-ITEM-1"
-    if not frappe.db.exists("Item", item_code):
-        item = frappe.new_doc("Item")
+    if not smriti.db.exists("Item", item_code):
+        item = smriti.documents.new("Item")
         item.item_code = item_code
         item.item_name = "SMRITI Test Item 1"
         item.item_group = "Products"
@@ -31,13 +32,13 @@ def run():
     else:
         # Ensure HSN is set on existing item
         if hsn_code:
-            frappe.db.set_value("Item", item_code, "gst_hsn_code", hsn_code)
+            smriti.db.set_value("Item", item_code, "gst_hsn_code", hsn_code)
 
     # 1. Create SMRITI Supplier
     sup_name = "SMRITI Test Supplier Cycle"
     # Clean up if exists
-    frappe.db.delete("SMRITI Supplier", {"supplier_name": sup_name})
-    frappe.db.delete("SMRITI Supplier", {"name": sup_name})
+    smriti.db.delete("SMRITI Supplier", {"supplier_name": sup_name})
+    smriti.db.delete("SMRITI Supplier", {"name": sup_name})
 
     sup_id = PurchaseOrderService.create_supplier({
         "supplier_name": sup_name,
@@ -86,7 +87,7 @@ def run():
     print(f"Return: {return_name}")
 
     # Print erpnext_supplier of SMRITI Supplier (Step 7 Verification)
-    smriti_sup = frappe.get_doc("SMRITI Supplier", sup_id)
+    smriti_sup = smriti.documents.get("SMRITI Supplier", sup_id)
     print(f"SMRITI Supplier: {smriti_sup.name}")
     print(f"ERPNext Supplier Link: {smriti_sup.erpnext_supplier}")
 

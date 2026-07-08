@@ -11,6 +11,7 @@
 #
 
 import frappe
+from smriti_retail_os import smriti
 import unittest
 from frappe.utils import add_days, getdate, now_datetime
 from smriti_retail_os.barcode_api import (
@@ -37,24 +38,24 @@ class TestTelemetry(unittest.TestCase):
         clear_barcode_feature_flags_cache()
 
         # Ensure default warehouse exists
-        w_name = frappe.db.get_value("Warehouse", {"warehouse_name": "Test Warehouse - SCN"}, "name")
+        w_name = smriti.db.get("Warehouse", {"warehouse_name": "Test Warehouse - SCN"}, "name")
         if not w_name:
-            w = frappe.get_doc({
-                "doctype": "Warehouse",
+            w = smriti.documents.new("Warehouse")
+            w.update({
                 "warehouse_name": "Test Warehouse - SCN",
                 "is_group": 0,
-                "company": frappe.db.get_value("Company", {}, "name") or "_Test Company"
+                "company": smriti.db.get("Company", {}, "name") or "_Test Company"
             })
             w.insert(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
             w_name = w.name
         self.warehouse = w_name
 
             
         # Create a mock Print Template if not exists
-        if not frappe.db.exists("SMRITI Print Template", "Test Telemetry Template"):
-            tmpl = frappe.get_doc({
-                "doctype": "SMRITI Print Template",
+        if not smriti.db.exists("SMRITI Print Template", "Test Telemetry Template"):
+            tmpl = smriti.documents.new("PrintTemplate")
+            tmpl.update({
                 "name": "Test Telemetry Template",
                 "template_title": "Test Telemetry Template",
                 "label_size": "50x25",
@@ -65,28 +66,28 @@ class TestTelemetry(unittest.TestCase):
                 "status": "Active"
             })
             tmpl.insert(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
 
     def tearDown(self):
         # Cleanup test entries
-        frappe.db.delete("SMRITI Barcode Scan Event")
-        frappe.db.delete("SMRITI Barcode Telemetry Snapshot")
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Barcode Scan Event")
+        smriti.db.delete("SMRITI Barcode Telemetry Snapshot")
+        smriti.db.commit()
         frappe.set_user("Administrator")
 
     def test_doctypes_exist(self):
         """Verifies that custom DocTypes exist and have correct fields."""
-        self.assertTrue(frappe.db.exists("DocType", "SMRITI Telemetry Event Definition"))
-        self.assertTrue(frappe.db.exists("DocType", "SMRITI Barcode Scan Event"))
-        self.assertTrue(frappe.db.exists("DocType", "SMRITI Barcode Telemetry Snapshot"))
+        self.assertTrue(smriti.db.exists("DocType", "SMRITI Telemetry Event Definition"))
+        self.assertTrue(smriti.db.exists("DocType", "SMRITI Barcode Scan Event"))
+        self.assertTrue(smriti.db.exists("DocType", "SMRITI Barcode Telemetry Snapshot"))
 
         # Verify event definition seeds
-        self.assertTrue(frappe.db.exists("SMRITI Telemetry Event Definition", "SCAN-EVT-001"))
-        self.assertTrue(frappe.db.exists("SMRITI Telemetry Event Definition", "SCAN-EVT-002"))
-        self.assertTrue(frappe.db.exists("SMRITI Telemetry Event Definition", "SCAN-EVT-003"))
+        self.assertTrue(smriti.db.exists("SMRITI Telemetry Event Definition", "SCAN-EVT-001"))
+        self.assertTrue(smriti.db.exists("SMRITI Telemetry Event Definition", "SCAN-EVT-002"))
+        self.assertTrue(smriti.db.exists("SMRITI Telemetry Event Definition", "SCAN-EVT-003"))
 
         # Verify formula definition
-        self.assertTrue(frappe.db.exists("SMRITI Formula Definition", {"formula_id": "SMRITI-SCAN-REL-01"}))
+        self.assertTrue(smriti.db.exists("SMRITI Formula Definition", {"formula_id": "SMRITI-SCAN-REL-01"}))
 
     def test_log_scan_event_access_control(self):
         """Verifies role-based access for logging barcode scan events."""
@@ -178,7 +179,7 @@ class TestTelemetry(unittest.TestCase):
             store_id=self.warehouse
         )
         self.assertEqual(doc1.name, doc2.name)
-        count = frappe.db.count("SMRITI Barcode Scan Event", {"event_uuid": "uuid-idem-1"})
+        count = smriti.db.count("SMRITI Barcode Scan Event", {"event_uuid": "uuid-idem-1"})
         self.assertEqual(count, 1)
 
     def test_immutability(self):
@@ -218,8 +219,8 @@ class TestTelemetry(unittest.TestCase):
         ]
         
         for ev in events:
-            doc = frappe.get_doc({
-                "doctype": "SMRITI Barcode Scan Event",
+            doc = smriti.documents.new("BarcodeScanEvent")
+            doc.update({
                 "timestamp": yesterday,
                 "store_id": self.warehouse,
                 "template_id": "Test Telemetry Template",
@@ -230,13 +231,13 @@ class TestTelemetry(unittest.TestCase):
             })
             doc.insert(ignore_permissions=True)
             
-        frappe.db.commit()
+        smriti.db.commit()
 
         # Run aggregation
         aggregate_scan_telemetry(period="Daily", target_date=yesterday)
 
         # Assert snapshot exists
-        snapshots = frappe.get_all(
+        snapshots = smriti.db.get_list(
             "SMRITI Barcode Telemetry Snapshot",
             filters={
                 "snapshot_date": yesterday,
@@ -269,8 +270,8 @@ class TestTelemetry(unittest.TestCase):
         frappe.set_user("Administrator")
         
         # Event 95 days old
-        old_doc = frappe.get_doc({
-            "doctype": "SMRITI Barcode Scan Event",
+        old_doc = smriti.documents.new("BarcodeScanEvent")
+        old_doc.update({
             "event_uuid": "old-event",
             "timestamp": add_days(now_datetime(), -95),
             "store_id": self.warehouse,
@@ -286,8 +287,8 @@ class TestTelemetry(unittest.TestCase):
         old_doc.insert(ignore_permissions=True)
 
         # Event 10 days old
-        new_doc = frappe.get_doc({
-            "doctype": "SMRITI Barcode Scan Event",
+        new_doc = smriti.documents.new("BarcodeScanEvent")
+        new_doc.update({
             "event_uuid": "new-event",
             "timestamp": add_days(now_datetime(), -10),
             "store_id": self.warehouse,
@@ -301,14 +302,14 @@ class TestTelemetry(unittest.TestCase):
             "governance_event_id": "SCAN-EVT-001"
         })
         new_doc.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # Run retention clean
         delete_expired_scan_events()
 
         # Assert old one deleted, new one exists
-        self.assertFalse(frappe.db.exists("SMRITI Barcode Scan Event", old_doc.name))
-        self.assertTrue(frappe.db.exists("SMRITI Barcode Scan Event", new_doc.name))
+        self.assertFalse(smriti.db.exists("SMRITI Barcode Scan Event", old_doc.name))
+        self.assertTrue(smriti.db.exists("SMRITI Barcode Scan Event", new_doc.name))
 
     def test_log_scan_event_disabled(self):
         """Verifies that scan event logging is bypassed when capture is disabled."""
@@ -328,7 +329,7 @@ class TestTelemetry(unittest.TestCase):
         )
         self.assertIsInstance(res, dict)
         self.assertEqual(res.get("status"), "disabled")
-        self.assertFalse(frappe.db.exists("SMRITI Barcode Scan Event", {"event_uuid": "uuid-disabled-1"}))
+        self.assertFalse(smriti.db.exists("SMRITI Barcode Scan Event", {"event_uuid": "uuid-disabled-1"}))
 
     def test_aggregation_disabled(self):
         """Verifies that daily telemetry aggregation is skipped when disabled."""
@@ -351,8 +352,8 @@ class TestTelemetry(unittest.TestCase):
             store_id=self.warehouse
         )
         # Bypassing raw event save constraints for timestamp modification
-        frappe.db.set_value("SMRITI Barcode Scan Event", {"event_uuid": "uuid-agg-dis-1"}, "timestamp", yesterday)
-        frappe.db.commit()
+        smriti.db.set_value("SMRITI Barcode Scan Event", {"event_uuid": "uuid-agg-dis-1"}, "timestamp", yesterday)
+        smriti.db.commit()
 
         # Turn aggregation back to disabled
         frappe.db.set_single_value("SMRITI Barcode Settings", "barcode_telemetry_aggregation_enabled", 0)
@@ -361,7 +362,7 @@ class TestTelemetry(unittest.TestCase):
         aggregate_scan_telemetry(period="Daily", target_date=yesterday)
 
         # Verify no snapshot was created
-        snapshots = frappe.get_all(
+        snapshots = smriti.db.get_list(
             "SMRITI Barcode Telemetry Snapshot",
             filters={"snapshot_date": yesterday}
         )
@@ -369,8 +370,8 @@ class TestTelemetry(unittest.TestCase):
 
     def test_missing_settings_failsafe(self):
         """Verifies fail-safe principle: when settings doc is deleted, all flags default to False."""
-        frappe.db.delete("Singles", {"doctype": "SMRITI Barcode Settings"})
-        frappe.db.commit()
+        smriti.db.delete("Singles", {"doctype": "SMRITI Barcode Settings"})
+        smriti.db.commit()
         clear_barcode_feature_flags_cache()
 
         flags = get_barcode_feature_flags()

@@ -34,11 +34,11 @@ class LookupRepository:
     def new_doc(model_name: str, *args, **kwargs):
         """Create a new unsaved document. Accepts SMRITI model name or raw DocType."""
         # resolve_or_passthrough handles both registered models and legacy DocType names
-        import frappe
-        return frappe.new_doc(resolve_or_passthrough(model_name), *args, **kwargs)
+        import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+        return smriti.documents.new(resolve_or_passthrough(model_name), *args, **kwargs)
 
     @staticmethod
     def get_doc(model_name: str, name=None, *args, **kwargs):
         """Fetch a document. Accepts SMRITI model name or raw DocType."""
         import frappe
-        return frappe.get_doc(resolve_or_passthrough(model_name), name, *args, **kwargs)
+        return frappe.get_doc(resolve_or_passthrough(model_name), name, *args, **kwargs)  # smriti-adapter-boundary

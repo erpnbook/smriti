@@ -10,6 +10,7 @@
 #
 
 import frappe
+from smriti_retail_os import smriti
 import unittest
 from unittest.mock import patch, MagicMock
 from frappe.utils import flt, nowdate
@@ -218,9 +219,9 @@ class TestQuotationToSOIntegration(unittest.TestCase):
         frappe.set_user("Administrator")
 
         # Resolve or create test dependencies
-        cls.company = frappe.db.get_single_value("Global Defaults", "default_company")
+        cls.company = smriti.db.get_single("Global Defaults", "default_company")
         if not cls.company:
-            companies = frappe.get_all("Company", limit=1)
+            companies = smriti.db.get_list("Company", limit=1)
             cls.company = companies[0].name if companies else None
 
         if not cls.company:
@@ -228,15 +229,15 @@ class TestQuotationToSOIntegration(unittest.TestCase):
             raise unittest.SkipTest("No Company found — cannot run integration tests")
 
         # Find a test item
-        items = frappe.get_all("Item", filters={"disabled": 0, "is_sales_item": 1}, fields=["name"], limit=1)
+        items = smriti.db.get_list("Item", filters={"disabled": 0, "is_sales_item": 1}, fields=["name"], limit=1)
         if not items:
-            items = frappe.get_all("Item", filters={"disabled": 0}, fields=["name"], limit=1)
+            items = smriti.db.get_list("Item", filters={"disabled": 0}, fields=["name"], limit=1)
         if not items:
             raise unittest.SkipTest("No Item found — cannot run integration tests")
         cls.test_item = items[0].name
 
         # Find a test customer
-        customers = frappe.get_all("Customer", fields=["name"], limit=1)
+        customers = smriti.db.get_list("Customer", fields=["name"], limit=1)
         if not customers:
             raise unittest.SkipTest("No Customer found — cannot run integration tests")
         cls.test_customer = customers[0].name

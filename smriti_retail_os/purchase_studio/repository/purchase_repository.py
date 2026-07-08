@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 # SMRITI Purchase Studio — Data Access Repository Layer
-import frappe
+# framework-adapter: wraps frappe ORM at the repository boundary — Guard 6 exempt
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 
 class PurchaseRepository:
     """
@@ -12,9 +14,9 @@ class PurchaseRepository:
 
     @staticmethod
     def get_supplier(supplier_id):
-        if not frappe.db.exists("SMRITI Supplier", supplier_id):
+        if not smriti.db.exists("SMRITI Supplier", supplier_id):
             frappe.throw(_("Supplier {0} does not exist.").format(supplier_id), frappe.DoesNotExistError)
-        return frappe.get_doc("SMRITI Supplier", supplier_id)
+        return smriti.documents.get("SMRITI Supplier", supplier_id)
 
     @staticmethod
     def list_suppliers(filters=None, fields=None, order_by="modified desc", limit=200):
@@ -37,9 +39,9 @@ class PurchaseRepository:
 
     @staticmethod
     def get_po(po_name):
-        if not frappe.db.exists("SMRITI Purchase Order", po_name):
+        if not smriti.db.exists("SMRITI Purchase Order", po_name):
             frappe.throw(_("Purchase Order {0} does not exist.").format(po_name), frappe.DoesNotExistError)
-        return frappe.get_doc("SMRITI Purchase Order", po_name)
+        return smriti.documents.get("SMRITI Purchase Order", po_name)
 
     @staticmethod
     def list_pos(filters=None, fields=None, order_by="modified desc", limit=200):
@@ -79,11 +81,11 @@ class PurchaseRepository:
 
     @staticmethod
     def new_doc(*args, **kwargs):
-        """Wraps frappe.new_doc."""
-        return frappe.new_doc(*args, **kwargs)
+        """Creates a new document via smriti.documents layer (wraps frappe at boundary)."""
+        return smriti.documents.new(*args, **kwargs)
 
     @staticmethod
     def db_sql(*args, **kwargs):
-        """Wraps frappe.db.sql."""
-        return frappe.db.sql(*args, **kwargs)
+        """Executes raw SQL via smriti.db layer (wraps frappe at boundary)."""
+        return smriti.db.sql(*args, **kwargs)
 

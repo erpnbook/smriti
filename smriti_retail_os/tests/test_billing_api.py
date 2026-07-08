@@ -11,6 +11,7 @@
 #
 
 import frappe
+from smriti_retail_os import smriti
 import unittest
 from frappe.utils import flt, cint, now_datetime
 from smriti_retail_os.billing_api import (
@@ -36,35 +37,35 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
         super().setUpClass()
         from smriti_retail_os.setup import setup_smriti_retail_os
         setup_smriti_retail_os()
-        frappe.db.commit()
+        smriti.db.commit()
 
     def setUp(self):
         # 1. Resolve or Create basic link dependencies for the isolated test DB
-        self.uom = frappe.db.exists("UOM", "Nos") or frappe.db.get_value("UOM", {}, "name")
+        self.uom = smriti.db.exists("UOM", "Nos") or smriti.db.get("UOM", {}, "name")
         if not self.uom:
-            uom_doc = frappe.new_doc("UOM")
+            uom_doc = smriti.documents.new("UOM")
             uom_doc.uom_name = "Nos"
             uom_doc.insert(ignore_permissions=True)
             self.uom = uom_doc.name
 
-        self.item_group = frappe.db.exists("Item Group", "All Item Groups") or frappe.db.get_value("Item Group", {}, "name")
+        self.item_group = smriti.db.exists("Item Group", "All Item Groups") or smriti.db.get("Item Group", {}, "name")
         if not self.item_group:
-            ig = frappe.new_doc("Item Group")
+            ig = smriti.documents.new("Item Group")
             ig.item_group_name = "All Item Groups"
             ig.is_group = 0
             ig.insert(ignore_permissions=True)
             self.item_group = ig.name
 
-        self.company = frappe.db.exists("Company", "_Test Company")
+        self.company = smriti.db.exists("Company", "_Test Company")
         if not self.company:
             # Create Transit Warehouse Type if missing to support default warehouse creation on Company insert
-            if not frappe.db.exists("Warehouse Type", "Transit"):
-                wt = frappe.new_doc("Warehouse Type")
+            if not smriti.db.exists("Warehouse Type", "Transit"):
+                wt = smriti.documents.new("Warehouse Type")
                 wt.name = "Transit"
                 wt.warehouse_type = "Transit"
                 wt.insert(ignore_permissions=True)
                 
-            comp = frappe.new_doc("Company")
+            comp = smriti.documents.new("Company")
             comp.company_name = "_Test Company"
             comp.country = "India"
             comp.default_currency = "INR"
@@ -72,20 +73,20 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
             self.company = comp.name
 
         # Ensure the test company has a valid GSTIN and registered company address (Required for India Compliance)
-        frappe.db.set_value("Company", self.company, "gstin", "27AAXFT2508H1ZR")
+        smriti.db.set_value("Company", self.company, "gstin", "27AAXFT2508H1ZR")
         
         # Seed Stock Entry Types if missing in isolated test DB
         for et in ["Material Receipt", "Material Issue", "Material Transfer"]:
-            if not frappe.db.exists("Stock Entry Type", et):
-                doc = frappe.new_doc("Stock Entry Type")
+            if not smriti.db.exists("Stock Entry Type", et):
+                doc = smriti.documents.new("Stock Entry Type")
                 doc.name = et
                 doc.purpose = et
                 doc.insert(ignore_permissions=True)
 
         
         addr_name = f"{self.company}-Registered-Test"
-        if not frappe.db.exists("Address", addr_name):
-            addr = frappe.new_doc("Address")
+        if not smriti.db.exists("Address", addr_name):
+            addr = smriti.documents.new("Address")
             addr.address_title = self.company
             addr.address_type = "Office"
             addr.address_line1 = "Test Street"
@@ -99,21 +100,21 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
             addr.gstin = "27AAXFT2508H1ZR"
             addr.append("links", {"link_doctype": "Company", "link_name": self.company})
             addr.insert(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
 
         # Create valid GST HSN Code record for India Compliance
-        self.hsn_code = frappe.db.exists("GST HSN Code", "998311") or frappe.db.get_value("GST HSN Code", {}, "name")
+        self.hsn_code = smriti.db.exists("GST HSN Code", "998311") or smriti.db.get("GST HSN Code", {}, "name")
         if not self.hsn_code:
-            hsn = frappe.new_doc("GST HSN Code")
+            hsn = smriti.documents.new("GST HSN Code")
             hsn.hsn_code = "998311"
             hsn.description = "Test Services"
             hsn.insert(ignore_permissions=True)
             self.hsn_code = hsn.name
 
         # Resolve Warehouse
-        self.warehouse = frappe.db.get_value("Warehouse", {"company": self.company}, "name")
+        self.warehouse = smriti.db.get("Warehouse", {"company": self.company}, "name")
         if not self.warehouse:
-            w = frappe.new_doc("Warehouse")
+            w = smriti.documents.new("Warehouse")
             w.warehouse_name = "Test Warehouse"
             w.company = self.company
             w.warehouse_type = "Transit"
@@ -125,15 +126,15 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
         frappe.defaults.set_user_default("company", self.company, frappe.session.user)
 
         # Resolve Cost Center robustly
-        self.cost_center = frappe.db.get_value("Company", self.company, "cost_center")
+        self.cost_center = smriti.db.get("Company", self.company, "cost_center")
         if not self.cost_center:
-            self.cost_center = frappe.db.get_value("Cost Center", {"company": self.company, "is_group": 0}, "name")
+            self.cost_center = smriti.db.get("Cost Center", {"company": self.company, "is_group": 0}, "name")
         if not self.cost_center:
             # Check if root group cost center exists or create it
             # The root cost center name MUST equal company name to pass parent_cost_center check!
-            parent_cc = frappe.db.get_value("Cost Center", {"cost_center_name": self.company}, "name")
+            parent_cc = smriti.db.get("Cost Center", {"cost_center_name": self.company}, "name")
             if not parent_cc:
-                pcc = frappe.new_doc("Cost Center")
+                pcc = smriti.documents.new("Cost Center")
                 pcc.cost_center_name = self.company
                 pcc.company = self.company
                 pcc.is_group = 1
@@ -141,7 +142,7 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
                 pcc.insert(ignore_permissions=True)
                 parent_cc = pcc.name
                 
-            cc = frappe.new_doc("Cost Center")
+            cc = smriti.documents.new("Cost Center")
             cc.cost_center_name = "Test Cost Center"
             cc.company = self.company
             cc.is_group = 0
@@ -150,11 +151,11 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
             self.cost_center = cc.name
 
         # Resolve Income Account robustly
-        self.income_account = frappe.db.get_value("Account", {"company": self.company, "root_type": "Income", "is_group": 0}, "name")
+        self.income_account = smriti.db.get("Account", {"company": self.company, "root_type": "Income", "is_group": 0}, "name")
         if not self.income_account:
-            parent_account = frappe.db.get_value("Account", {"company": self.company, "root_type": "Income", "is_group": 1}, "name")
+            parent_account = smriti.db.get("Account", {"company": self.company, "root_type": "Income", "is_group": 1}, "name")
             if not parent_account:
-                p_acc = frappe.new_doc("Account")
+                p_acc = smriti.documents.new("Account")
                 p_acc.account_name = "Root Income Group"
                 p_acc.company = self.company
                 p_acc.root_type = "Income"
@@ -162,7 +163,7 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
                 p_acc.insert(ignore_permissions=True)
                 parent_account = p_acc.name
                 
-            acc = frappe.new_doc("Account")
+            acc = smriti.documents.new("Account")
             acc.account_name = "Sales"
             acc.company = self.company
             acc.root_type = "Income"
@@ -173,8 +174,8 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
             
         # Configure Round Off and Cash details on the test Company to support payments precision rounding
         round_off_cost_center = self.cost_center
-        round_off_account = frappe.db.get_value("Account", {"company": self.company, "account_type": "Round Off"}, "name") or self.income_account
-        default_cash_account = frappe.db.get_value("Account", {"company": self.company, "account_type": "Cash"}, "name") or frappe.db.get_value("Account", {"company": self.company, "account_name": "Cash"}, "name")
+        round_off_account = smriti.db.get("Account", {"company": self.company, "account_type": "Round Off"}, "name") or self.income_account
+        default_cash_account = smriti.db.get("Account", {"company": self.company, "account_type": "Cash"}, "name") or smriti.db.get("Account", {"company": self.company, "account_name": "Cash"}, "name")
         
         updates = {
             "round_off_cost_center": round_off_cost_center,
@@ -187,19 +188,19 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
         for field in ["stock_received_but_not_billed", "default_inventory_account", 
                       "stock_adjustment_account", "default_expense_account", 
                       "default_bank_account", "cost_center"]:
-            val = frappe.db.get_value("Company", self.company, field)
+            val = smriti.db.get("Company", self.company, field)
             if val:
                 doctype = "Cost Center" if field == "cost_center" else "Account"
-                if not frappe.db.exists(doctype, val):
+                if not smriti.db.exists(doctype, val):
                     updates[field] = None
                     
-        frappe.db.set_value("Company", self.company, updates)
-        frappe.db.commit()
+        smriti.db.set_value("Company", self.company, updates)
+        smriti.db.commit()
 
         # Create active Fiscal Year robustly if missing or if company is not in it
         fy_name = "2026-2027"
-        if not frappe.db.exists("Fiscal Year", fy_name):
-            fy = frappe.new_doc("Fiscal Year")
+        if not smriti.db.exists("Fiscal Year", fy_name):
+            fy = smriti.documents.new("Fiscal Year")
             fy.year = fy_name
             fy.year_start_date = "2026-04-01"
             fy.year_end_date = "2027-03-31"
@@ -208,43 +209,43 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
             })
             fy.insert(ignore_permissions=True)
         else:
-            fy = frappe.get_doc("Fiscal Year", fy_name)
+            fy = smriti.documents.get("Fiscal Year", fy_name)
             if not any(c.company == self.company for c in fy.companies):
                 fy.append("companies", {
                     "company": self.company
                 })
                 fy.save(ignore_permissions=True)
-                frappe.db.commit()
+                smriti.db.commit()
 
         # Resolve Mode of Payment
-        self.mode_of_payment = frappe.db.get_value("Mode of Payment", {}, "name")
+        self.mode_of_payment = smriti.db.get("Mode of Payment", {}, "name")
         if not self.mode_of_payment:
-            mop = frappe.new_doc("Mode of Payment")
+            mop = smriti.documents.new("Mode of Payment")
             mop.mode_of_payment = "Cash"
             mop.type = "Cash"
             mop.insert(ignore_permissions=True)
             self.mode_of_payment = mop.name
 
         # Ensure Mode of Payment has standard account linked for our test Company
-        mop_doc = frappe.get_doc("Mode of Payment", self.mode_of_payment)
+        mop_doc = smriti.documents.get("Mode of Payment", self.mode_of_payment)
         has_company_account = False
         for acc_row in mop_doc.accounts:
             if acc_row.company == self.company:
                 has_company_account = True
                 break
         if not has_company_account:
-            cash_account = frappe.db.get_value("Account", {"company": self.company, "account_type": "Cash"}, "name") or frappe.db.get_value("Account", {"company": self.company, "account_name": "Cash"}, "name")
+            cash_account = smriti.db.get("Account", {"company": self.company, "account_type": "Cash"}, "name") or smriti.db.get("Account", {"company": self.company, "account_name": "Cash"}, "name")
             if cash_account:
                 mop_doc.append("accounts", {
                     "company": self.company,
                     "default_account": cash_account
                 })
                 mop_doc.save(ignore_permissions=True)
-                frappe.db.commit()
+                smriti.db.commit()
 
         # Resolve standard selling price list
-        if not frappe.db.exists("Price List", "Standard Selling"):
-            pl = frappe.new_doc("Price List")
+        if not smriti.db.exists("Price List", "Standard Selling"):
+            pl = smriti.documents.new("Price List")
             pl.price_list_name = "Standard Selling"
             pl.enabled = 1
             pl.selling = 1
@@ -254,8 +255,8 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
 
         # Create test POS Profile for saving Draft POS Invoices
         self.pos_profile_name = "Test POS Profile"
-        if not frappe.db.exists("POS Profile", self.pos_profile_name):
-            pos_prof = frappe.new_doc("POS Profile")
+        if not smriti.db.exists("POS Profile", self.pos_profile_name):
+            pos_prof = smriti.documents.new("POS Profile")
             pos_prof.name = self.pos_profile_name # Explicitly assign name because of Prompt naming strategy!
             pos_prof.pos_profile_name = self.pos_profile_name
             pos_prof.company = self.company
@@ -275,42 +276,42 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
             pos_prof.insert(ignore_permissions=True)
 
         # Clean up potential old test records including barcodes child table orphans, tax templates and tax account
-        frappe.db.delete("Item Price", {"item_code": "TEST-ITEM-BAR"})
-        frappe.db.delete("Item Barcode", {"parent": "TEST-ITEM-BAR"})
-        frappe.db.delete("Item Barcode", {"barcode": "8901234567890"})
+        smriti.db.delete("Item Price", {"item_code": "TEST-ITEM-BAR"})
+        smriti.db.delete("Item Barcode", {"parent": "TEST-ITEM-BAR"})
+        smriti.db.delete("Item Barcode", {"barcode": "8901234567890"})
         # CRITICAL: purge all child table rows before deleting Item to prevent orphan accumulation
-        # frappe.db.delete("Item", ...) is raw SQL and does NOT cascade to child tables
-        frappe.db.delete("Item Tax", {"parent": "TEST-ITEM-BAR"})
-        frappe.db.delete("Item Supplier", {"parent": "TEST-ITEM-BAR"})
-        frappe.db.delete("Item Variant Attribute", {"parent": "TEST-ITEM-BAR"})
-        frappe.db.delete("Item", {"item_code": "TEST-ITEM-BAR"})
-        frappe.db.delete("Customer", {"customer_name": "Test Billing Customer"})
-        frappe.db.delete("POS Invoice", {"customer": "Test Billing Customer"})
-        frappe.db.delete("Sales Invoice", {"customer": "Test Billing Customer"})
-        frappe.db.delete("GL Entry", {"party": "Test Billing Customer"})
-        frappe.db.delete("Comment", {"reference_doctype": "POS Invoice"})
+        # smriti.db.delete("Item", ...) is raw SQL and does NOT cascade to child tables
+        smriti.db.delete("Item Tax", {"parent": "TEST-ITEM-BAR"})
+        smriti.db.delete("Item Supplier", {"parent": "TEST-ITEM-BAR"})
+        smriti.db.delete("Item Variant Attribute", {"parent": "TEST-ITEM-BAR"})
+        smriti.db.delete("Item", {"item_code": "TEST-ITEM-BAR"})
+        smriti.db.delete("Customer", {"customer_name": "Test Billing Customer"})
+        smriti.db.delete("POS Invoice", {"customer": "Test Billing Customer"})
+        smriti.db.delete("Sales Invoice", {"customer": "Test Billing Customer"})
+        smriti.db.delete("GL Entry", {"party": "Test Billing Customer"})
+        smriti.db.delete("Comment", {"reference_doctype": "POS Invoice"})
         
         # Clean up tax templates via delete_doc to ensure child tables are fully purged
-        for name in frappe.db.get_all("Item Tax Template", filters={"name": ["like", "%18%"]}, pluck="name"):
+        for name in smriti.db.get_list("Item Tax Template", filters={"name": ["like", "%18%"]}, pluck="name"):
             frappe.delete_doc("Item Tax Template", name, ignore_missing=True, force=True)
-        for name in frappe.db.get_all("Sales Taxes and Charges Template", filters={"name": ["like", "%18%"]}, pluck="name"):
+        for name in smriti.db.get_list("Sales Taxes and Charges Template", filters={"name": ["like", "%18%"]}, pluck="name"):
             frappe.delete_doc("Sales Taxes and Charges Template", name, ignore_missing=True, force=True)
             
-        frappe.db.delete("Account", {"account_name": "GST 9+9", "company": self.company})
-        frappe.db.commit()
+        smriti.db.delete("Account", {"account_name": "GST 9+9", "company": self.company})
+        smriti.db.commit()
 
 
         # Resolve or create a single non-group Tax account
-        company_abbr = frappe.db.get_value("Company", self.company, "abbr") or "_C"
+        company_abbr = smriti.db.get("Company", self.company, "abbr") or "_C"
         self.tax_account = f"GST 9+9 - {company_abbr}"
-        if not frappe.db.exists("Account", self.tax_account):
-            parent_account = frappe.db.get_value("Account", {"company": self.company, "account_type": "Tax", "is_group": 1}, "name")
+        if not smriti.db.exists("Account", self.tax_account):
+            parent_account = smriti.db.get("Account", {"company": self.company, "account_type": "Tax", "is_group": 1}, "name")
             if not parent_account:
-                parent_account = frappe.db.get_value("Account", {"company": self.company, "account_name": f"Duties and Taxes - {company_abbr}"}, "name")
+                parent_account = smriti.db.get("Account", {"company": self.company, "account_name": f"Duties and Taxes - {company_abbr}"}, "name")
             if not parent_account:
-                parent_account = frappe.db.get_value("Account", {"company": self.company, "root_type": "Liability", "is_group": 1}, "name")
+                parent_account = smriti.db.get("Account", {"company": self.company, "root_type": "Liability", "is_group": 1}, "name")
             
-            acc = frappe.new_doc("Account")
+            acc = smriti.documents.new("Account")
             acc.account_name = "GST 9+9"
             acc.company = self.company
             acc.root_type = "Liability"
@@ -320,9 +321,9 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
 
         # Create test Item Tax Template for 18% GST
         self.item_tax_template_name = "18% GST"
-        existing_itt = frappe.db.get_value("Item Tax Template", {"title": self.item_tax_template_name, "company": self.company}, "name")
+        existing_itt = smriti.db.get("Item Tax Template", {"title": self.item_tax_template_name, "company": self.company}, "name")
         if not existing_itt:
-            itt = frappe.new_doc("Item Tax Template")
+            itt = smriti.documents.new("Item Tax Template")
             itt.title = self.item_tax_template_name
             itt.company = self.company
             itt.gst_rate = 18.0
@@ -336,9 +337,9 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
 
         # Create test Sales Taxes and Charges Template for 18% GST
         self.sales_tax_template_name = "18% GST Template"
-        existing_stct = frappe.db.get_value("Sales Taxes and Charges Template", {"title": self.sales_tax_template_name, "company": self.company}, "name")
+        existing_stct = smriti.db.get("Sales Taxes and Charges Template", {"title": self.sales_tax_template_name, "company": self.company}, "name")
         if not existing_stct:
-            stct = frappe.new_doc("Sales Taxes and Charges Template")
+            stct = smriti.documents.new("Sales Taxes and Charges Template")
             stct.title = self.sales_tax_template_name
             stct.company = self.company
             stct.is_default = 1
@@ -351,11 +352,11 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
             stct.insert(ignore_permissions=True)
             existing_stct = stct.name
         else:
-            frappe.db.set_value("Sales Taxes and Charges Template", existing_stct, "is_default", 1)
+            smriti.db.set_value("Sales Taxes and Charges Template", existing_stct, "is_default", 1)
         self.sales_tax_template_name = existing_stct
 
         # 2. Setup a test Retail Item
-        self.item = frappe.new_doc("Item")
+        self.item = smriti.documents.new("Item")
         self.item.item_code = "TEST-ITEM-BAR"
         self.item.item_name = "Test Retail Product"
         self.item.item_group = self.item_group
@@ -380,15 +381,15 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
         sync_item_taxes_and_prices(self.item, None)
         after_item_save(self.item, None)
         # 3. Setup a test Customer
-        self.cust = frappe.new_doc("Customer")
+        self.cust = smriti.documents.new("Customer")
         self.cust.customer_name = "Test Billing Customer"
         self.cust.customer_type = "Individual"
         self.cust.mobile_no = "9988776655"
         self.cust.insert(ignore_permissions=True)
         
         # 3b. Setup a test Sales Person
-        if not frappe.db.exists("Sales Person", "Rahul Sharma"):
-            sp = frappe.new_doc("Sales Person")
+        if not smriti.db.exists("Sales Person", "Rahul Sharma"):
+            sp = smriti.documents.new("Sales Person")
             sp.sales_person_name = "Rahul Sharma"
             sp.commission_rate = 5.0
             sp.insert(ignore_permissions=True)
@@ -397,11 +398,11 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
         # Assign Password to current user so we can test validation easily
         from frappe.utils.password import update_password
         update_password(frappe.session.user, "4321", fieldname="custom_smriti_pin")
-        frappe.db.set_value("User", frappe.session.user, "custom_smriti_pin", "4321")
+        smriti.db.set_value("User", frappe.session.user, "custom_smriti_pin", "4321")
         
         # Ensure current user has SMRITI Store Manager role in DB
-        if not frappe.db.exists("Has Role", {"parent": frappe.session.user, "role": "SMRITI Store Manager"}):
-            role_doc = frappe.new_doc("Has Role")
+        if not smriti.db.exists("Has Role", {"parent": frappe.session.user, "role": "SMRITI Store Manager"}):
+            role_doc = smriti.documents.new("Has Role")
             role_doc.parent = frappe.session.user
             role_doc.parenttype = "User"
             role_doc.parentfield = "roles"
@@ -409,7 +410,7 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
             role_doc.insert(ignore_permissions=True)
         
         # Create stock entry to initialize stock for TEST-ITEM-BAR to prevent NegativeStockError on credit sales
-        se = frappe.new_doc("Stock Entry")
+        se = smriti.documents.new("Stock Entry")
         se.purpose = "Material Receipt"
         se.stock_entry_type = "Material Receipt"
         se.company = self.company
@@ -426,52 +427,52 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
         se.insert(ignore_permissions=True)
         se.submit()
         
-        frappe.db.commit()
+        smriti.db.commit()
 
     def tearDown(self):
         # Clean up test records
-        frappe.db.delete("Item", {"item_code": "TEST-ITEM-BAR"})
-        frappe.db.delete("Item Barcode", {"barcode": "8901234567890"})
-        frappe.db.delete("Item Price", {"item_code": "TEST-ITEM-BAR"})
-        frappe.db.delete("Customer", {"customer_name": "Test Billing Customer"})
+        smriti.db.delete("Item", {"item_code": "TEST-ITEM-BAR"})
+        smriti.db.delete("Item Barcode", {"barcode": "8901234567890"})
+        smriti.db.delete("Item Price", {"item_code": "TEST-ITEM-BAR"})
+        smriti.db.delete("Customer", {"customer_name": "Test Billing Customer"})
         
         # Clean up Stock Entries created for this test item
-        se_names = frappe.db.sql_list("SELECT DISTINCT parent FROM `tabStock Entry Detail` WHERE item_code = 'TEST-ITEM-BAR'")
+        se_names = smriti.db.sql_list("SELECT DISTINCT parent FROM `tabStock Entry Detail` WHERE item_code = 'TEST-ITEM-BAR'")
         if se_names:
-            frappe.db.sql("DELETE FROM `tabStock Entry Detail` WHERE parent IN (%s)" % ", ".join(["%s"] * len(se_names)), tuple(se_names))
-            frappe.db.sql("DELETE FROM `tabStock Entry` WHERE name IN (%s)" % ", ".join(["%s"] * len(se_names)), tuple(se_names))
-            frappe.db.sql("DELETE FROM `tabStock Ledger Entry` WHERE item_code = 'TEST-ITEM-BAR'")
-            frappe.db.sql("DELETE FROM `tabBin` WHERE item_code = 'TEST-ITEM-BAR'")
+            smriti.db.sql("DELETE FROM `tabStock Entry Detail` WHERE parent IN (%s)" % ", ".join(["%s"] * len(se_names)), tuple(se_names))
+            smriti.db.sql("DELETE FROM `tabStock Entry` WHERE name IN (%s)" % ", ".join(["%s"] * len(se_names)), tuple(se_names))
+            smriti.db.sql("DELETE FROM `tabStock Ledger Entry` WHERE item_code = 'TEST-ITEM-BAR'")
+            smriti.db.sql("DELETE FROM `tabBin` WHERE item_code = 'TEST-ITEM-BAR'")
             
         # Safely and fully delete POS Invoices and Sales Invoices along with their child table items
         for dt, child_dt in [("POS Invoice", "POS Invoice Item"), ("Sales Invoice", "Sales Invoice Item")]:
-            names = frappe.db.sql_list("SELECT name FROM `tab%s` WHERE customer = %%s" % dt, ("Test Billing Customer",))
+            names = smriti.db.sql_list("SELECT name FROM `tab%s` WHERE customer = %%s" % dt, ("Test Billing Customer",))
             if names:
-                frappe.db.sql("DELETE FROM `tab%s` WHERE parent IN (%s)" % (child_dt, ", ".join(["%s"] * len(names))), tuple(names))
-                frappe.db.sql("DELETE FROM `tab%s` WHERE name IN (%s)" % (dt, ", ".join(["%s"] * len(names))), tuple(names))
+                smriti.db.sql("DELETE FROM `tab%s` WHERE parent IN (%s)" % (child_dt, ", ".join(["%s"] * len(names))), tuple(names))
+                smriti.db.sql("DELETE FROM `tab%s` WHERE name IN (%s)" % (dt, ", ".join(["%s"] * len(names))), tuple(names))
                 
         # Safely and fully delete Payment Entries along with their child table items
-        pe_names = frappe.db.sql_list("SELECT name FROM `tabPayment Entry` WHERE party = %s", ("Test Billing Customer",))
+        pe_names = smriti.db.sql_list("SELECT name FROM `tabPayment Entry` WHERE party = %s", ("Test Billing Customer",))
         if pe_names:
-            frappe.db.sql("DELETE FROM `tabPayment Entry Reference` WHERE parent IN (%s)" % ", ".join(["%s"] * len(pe_names)), tuple(pe_names))
-            frappe.db.sql("DELETE FROM `tabPayment Entry Deduction` WHERE parent IN (%s)" % ", ".join(["%s"] * len(pe_names)), tuple(pe_names))
-            frappe.db.sql("DELETE FROM `tabPayment Entry` WHERE name IN (%s)" % ", ".join(["%s"] * len(pe_names)), tuple(pe_names))
+            smriti.db.sql("DELETE FROM `tabPayment Entry Reference` WHERE parent IN (%s)" % ", ".join(["%s"] * len(pe_names)), tuple(pe_names))
+            smriti.db.sql("DELETE FROM `tabPayment Entry Deduction` WHERE parent IN (%s)" % ", ".join(["%s"] * len(pe_names)), tuple(pe_names))
+            smriti.db.sql("DELETE FROM `tabPayment Entry` WHERE name IN (%s)" % ", ".join(["%s"] * len(pe_names)), tuple(pe_names))
 
-        frappe.db.delete("GL Entry", {"party": "Test Billing Customer"})
-        frappe.db.delete("Comment", {"reference_doctype": "POS Invoice"})
+        smriti.db.delete("GL Entry", {"party": "Test Billing Customer"})
+        smriti.db.delete("Comment", {"reference_doctype": "POS Invoice"})
         
         # Clean up test roles
-        frappe.db.delete("Has Role", {"parent": frappe.session.user, "role": "SMRITI Store Manager"})
+        smriti.db.delete("Has Role", {"parent": frappe.session.user, "role": "SMRITI Store Manager"})
         
         # Clean up test tax templates via delete_doc to ensure child tables are fully purged
-        for item in frappe.db.get_all("Item Tax Template", filters={"title": "18% GST"}):
+        for item in smriti.db.get_list("Item Tax Template", filters={"title": "18% GST"}):
             frappe.delete_doc("Item Tax Template", item.name, ignore_missing=True, force=True)
-        for item in frappe.db.get_all("Sales Taxes and Charges Template", filters={"title": "18% GST Template"}):
+        for item in smriti.db.get_list("Sales Taxes and Charges Template", filters={"title": "18% GST Template"}):
             frappe.delete_doc("Sales Taxes and Charges Template", item.name, ignore_missing=True, force=True)
             
-        frappe.db.delete("Account", {"account_name": "GST 9+9", "company": self.company})
+        smriti.db.delete("Account", {"account_name": "GST 9+9", "company": self.company})
         
-        frappe.db.commit()
+        smriti.db.commit()
 
     def test_add_item_by_barcode(self):
         """
@@ -525,10 +526,10 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
         )
         self.assertIsNotNone(res_hold)
         invoice_name = res_hold["invoice_name"]
-        self.assertTrue(frappe.db.exists("POS Invoice", invoice_name))
+        self.assertTrue(smriti.db.exists("POS Invoice", invoice_name))
 
         # Check in DB that custom hold fields are populated
-        inv = frappe.get_doc("POS Invoice", invoice_name)
+        inv = smriti.documents.get("POS Invoice", invoice_name)
         self.assertEqual(inv.docstatus, 0)
         self.assertEqual(inv.custom_is_held, 1)
         self.assertEqual(inv.custom_held_by, frappe.session.user)
@@ -582,7 +583,7 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
         self.assertEqual(res_valid["manager"], frappe.session.user)
 
         # 3. Check comment audit log creation
-        comments = frappe.db.get_all(
+        comments = smriti.db.get_list(
             "Comment",
             filters={
                 "reference_doctype": "POS Invoice",
@@ -599,8 +600,8 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
         submits a standard Sales Invoice directly, bypassing shift checks.
         """
         # Ensure no open shift exists for the cashier
-        frappe.db.delete("POS Opening Entry", {"user": frappe.session.user})
-        frappe.db.commit()
+        smriti.db.delete("POS Opening Entry", {"user": frappe.session.user})
+        smriti.db.commit()
 
         items_payload = [{
             "item_code": "TEST-ITEM-BAR",
@@ -626,18 +627,18 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
 
         self.assertIsNotNone(res)
         invoice_name = res["invoice"]
-        self.assertTrue(frappe.db.exists("Sales Invoice", invoice_name))
+        self.assertTrue(smriti.db.exists("Sales Invoice", invoice_name))
         
         # Verify it is a standard Sales Invoice and submitted (docstatus=1)
-        invoice = frappe.get_doc("Sales Invoice", invoice_name)
+        invoice = smriti.documents.get("Sales Invoice", invoice_name)
         self.assertEqual(invoice.docstatus, 1)
         self.assertEqual(invoice.is_pos, 0)
         self.assertEqual(flt(invoice.grand_total), 354.0)
 
         # Clean up created Sales Invoice
-        frappe.db.delete("Sales Invoice", {"name": invoice_name})
-        frappe.db.delete("GL Entry", {"voucher_no": invoice_name})
-        frappe.db.commit()
+        smriti.db.delete("Sales Invoice", {"name": invoice_name})
+        smriti.db.delete("GL Entry", {"voucher_no": invoice_name})
+        smriti.db.commit()
 
     def test_submit_bill_on_credit(self):
         """
@@ -645,8 +646,8 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
         outstanding Sales Invoice without payment entries and sets update_stock = 1.
         """
         # Ensure no open shift exists or is isolated for the cashier
-        frappe.db.delete("POS Opening Entry", {"user": frappe.session.user})
-        frappe.db.commit()
+        smriti.db.delete("POS Opening Entry", {"user": frappe.session.user})
+        smriti.db.commit()
 
         items_payload = [{
             "item_code": "TEST-ITEM-BAR",
@@ -669,10 +670,10 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
 
         self.assertIsNotNone(res)
         invoice_name = res["invoice"]
-        self.assertTrue(frappe.db.exists("Sales Invoice", invoice_name))
+        self.assertTrue(smriti.db.exists("Sales Invoice", invoice_name))
         
         # Verify it is a standard Sales Invoice, submitted (docstatus=1) and outstanding matches grand total
-        invoice = frappe.get_doc("Sales Invoice", invoice_name)
+        invoice = smriti.documents.get("Sales Invoice", invoice_name)
         self.assertEqual(invoice.docstatus, 1)
         self.assertEqual(invoice.is_pos, 0)
         self.assertEqual(invoice.update_stock, 1)
@@ -681,9 +682,9 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
         self.assertEqual(len(invoice.payments), 0)
 
         # Clean up created Sales Invoice
-        frappe.db.delete("Sales Invoice", {"name": invoice_name})
-        frappe.db.delete("GL Entry", {"voucher_no": invoice_name})
-        frappe.db.commit()
+        smriti.db.delete("Sales Invoice", {"name": invoice_name})
+        smriti.db.delete("GL Entry", {"voucher_no": invoice_name})
+        smriti.db.commit()
 
     def test_create_return_invoice(self):
         """
@@ -691,8 +692,8 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
         a return Sales Invoice against a submitted Sales Invoice.
         """
         # 1. Create a submitted Sales Invoice
-        frappe.db.delete("POS Opening Entry", {"user": frappe.session.user})
-        frappe.db.commit()
+        smriti.db.delete("POS Opening Entry", {"user": frappe.session.user})
+        smriti.db.commit()
 
         items_payload = [{
             "item_code": "TEST-ITEM-BAR",
@@ -716,35 +717,35 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
         )
 
         invoice_name = res["invoice"]
-        self.assertTrue(frappe.db.exists("Sales Invoice", invoice_name))
+        self.assertTrue(smriti.db.exists("Sales Invoice", invoice_name))
 
         # 2. Call create_return_invoice
         ret_res = create_return_invoice(invoice_name)
 
         self.assertIsNotNone(ret_res)
         ret_name = ret_res["name"]
-        self.assertTrue(frappe.db.exists("Sales Invoice", ret_name))
+        self.assertTrue(smriti.db.exists("Sales Invoice", ret_name))
 
         # 3. Assert properties of the return invoice
-        ret_doc = frappe.get_doc("Sales Invoice", ret_name)
+        ret_doc = smriti.documents.get("Sales Invoice", ret_name)
         self.assertEqual(ret_doc.docstatus, 1)
         self.assertEqual(cint(ret_doc.is_return), 1)
         self.assertEqual(ret_doc.return_against, invoice_name)
         self.assertEqual(flt(ret_doc.items[0].qty), -3.0)
 
         # 4. Clean up both invoices
-        frappe.db.delete("Sales Invoice", {"name": ret_name})
-        frappe.db.delete("GL Entry", {"voucher_no": ret_name})
-        frappe.db.delete("Stock Ledger Entry", {"voucher_no": ret_name})
-        frappe.db.delete("Sales Invoice", {"name": invoice_name})
-        frappe.db.delete("GL Entry", {"voucher_no": invoice_name})
-        frappe.db.delete("Stock Ledger Entry", {"voucher_no": invoice_name})
-        frappe.db.commit()
+        smriti.db.delete("Sales Invoice", {"name": ret_name})
+        smriti.db.delete("GL Entry", {"voucher_no": ret_name})
+        smriti.db.delete("Stock Ledger Entry", {"voucher_no": ret_name})
+        smriti.db.delete("Sales Invoice", {"name": invoice_name})
+        smriti.db.delete("GL Entry", {"voucher_no": invoice_name})
+        smriti.db.delete("Stock Ledger Entry", {"voucher_no": invoice_name})
+        smriti.db.commit()
 
     def test_create_custom_sales_return_single(self):
         # 1. Create a submitted Sales Invoice
-        frappe.db.delete("POS Opening Entry", {"user": frappe.session.user})
-        frappe.db.commit()
+        smriti.db.delete("POS Opening Entry", {"user": frappe.session.user})
+        smriti.db.commit()
 
         items_payload = [{
             "item_code": "TEST-ITEM-BAR",
@@ -773,20 +774,20 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
         )
         self.assertIsNotNone(ret_res)
         draft_name = ret_res["name"]
-        self.assertTrue(frappe.db.exists("Sales Invoice", draft_name))
+        self.assertTrue(smriti.db.exists("Sales Invoice", draft_name))
         
-        draft_doc = frappe.get_doc("Sales Invoice", draft_name)
+        draft_doc = smriti.documents.get("Sales Invoice", draft_name)
         self.assertEqual(draft_doc.docstatus, 0)
         self.assertEqual(cint(draft_doc.is_return), 1)
         self.assertEqual(draft_doc.return_against, invoice_name)
         self.assertEqual(flt(draft_doc.items[0].qty), -2.0)
 
         # Cleanup
-        frappe.db.delete("Sales Invoice", {"name": draft_name})
-        frappe.db.delete("Sales Invoice", {"name": invoice_name})
-        frappe.db.delete("GL Entry", {"voucher_no": invoice_name})
-        frappe.db.delete("Stock Ledger Entry", {"voucher_no": invoice_name})
-        frappe.db.commit()
+        smriti.db.delete("Sales Invoice", {"name": draft_name})
+        smriti.db.delete("Sales Invoice", {"name": invoice_name})
+        smriti.db.delete("GL Entry", {"voucher_no": invoice_name})
+        smriti.db.delete("Stock Ledger Entry", {"voucher_no": invoice_name})
+        smriti.db.commit()
 
     def test_create_custom_sales_return_standalone_and_update(self):
         # Test creating standalone return as Draft
@@ -823,7 +824,7 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
         self.assertEqual(update_res["name"], ret_name)
         self.assertEqual(update_res["docstatus"], 0)
         
-        doc = frappe.get_doc("Sales Invoice", ret_name)
+        doc = smriti.documents.get("Sales Invoice", ret_name)
         self.assertEqual(flt(doc.items[0].qty), -2.0)
         self.assertEqual(flt(doc.items[0].rate), 90.0)
         self.assertEqual(doc.remarks, "Updated qty and rate")
@@ -841,18 +842,18 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
         mgr_user = frappe.session.user
         from frappe.utils.password import update_password
         update_password(mgr_user, "5555", fieldname="custom_smriti_pin")
-        frappe.db.set_value("User", mgr_user, "custom_smriti_pin", "5555")
-        frappe.db.commit()
+        smriti.db.set_value("User", mgr_user, "custom_smriti_pin", "5555")
+        smriti.db.commit()
 
         del_res = delete_sales_return(name=ret_name, manager_pin="5555")
         self.assertEqual(del_res["name"], ret_name)
-        self.assertTrue(frappe.db.exists("Sales Invoice", ret_name))
-        self.assertEqual(frappe.db.get_value("Sales Invoice", ret_name, "docstatus"), 2)
+        self.assertTrue(smriti.db.exists("Sales Invoice", ret_name))
+        self.assertEqual(smriti.db.get("Sales Invoice", ret_name, "docstatus"), 2)
 
-        frappe.db.delete("Sales Invoice", {"name": ret_name})
-        frappe.db.delete("GL Entry", {"voucher_no": ret_name})
-        frappe.db.delete("Stock Ledger Entry", {"voucher_no": ret_name})
-        frappe.db.commit()
+        smriti.db.delete("Sales Invoice", {"name": ret_name})
+        smriti.db.delete("GL Entry", {"voucher_no": ret_name})
+        smriti.db.delete("Stock Ledger Entry", {"voucher_no": ret_name})
+        smriti.db.commit()
 
 
 # =============================================================================
@@ -916,7 +917,7 @@ class TestBillingStabilityGaps(TestSmritiRetailBillingAPI):
         invoice_name = res["invoice_name"]
 
         # Confirm draft grand_total is 0 (the bug this test targets)
-        self.assertEqual(flt(frappe.db.get_value("POS Invoice", invoice_name, "grand_total")), 0.0)
+        self.assertEqual(flt(smriti.db.get("POS Invoice", invoice_name, "grand_total")), 0.0)
 
         held_list = recall_bill(frappe.session.user)
         matched = [b for b in held_list if b["name"] == invoice_name]
@@ -931,8 +932,8 @@ class TestBillingStabilityGaps(TestSmritiRetailBillingAPI):
         GAP-B01: Submitting the same billing_session_id twice must return the
         SAME invoice. Prevents duplicate billing on double-click or network retry.
         """
-        frappe.db.delete("POS Opening Entry", {"user": frappe.session.user})
-        frappe.db.commit()
+        smriti.db.delete("POS Opening Entry", {"user": frappe.session.user})
+        smriti.db.commit()
 
         session_id = "TEST-BSID-IDEMPOTENT-001"
         kwargs = dict(
@@ -951,9 +952,9 @@ class TestBillingStabilityGaps(TestSmritiRetailBillingAPI):
             f"Idempotency violated: two different invoices for session_id={session_id}"
         )
         # Cleanup
-        frappe.db.delete("Sales Invoice", {"name": res1["invoice"]})
-        frappe.db.delete("GL Entry", {"voucher_no": res1["invoice"]})
-        frappe.db.commit()
+        smriti.db.delete("Sales Invoice", {"name": res1["invoice"]})
+        smriti.db.delete("GL Entry", {"voucher_no": res1["invoice"]})
+        smriti.db.commit()
 
     # ── GAP-B03: sales_staff appears in submitted invoice remarks ──
 
@@ -962,8 +963,8 @@ class TestBillingStabilityGaps(TestSmritiRetailBillingAPI):
         GAP-B03: sales_staff must appear in submitted invoice remarks.
         Commission attribution requires staff linkage at invoice level.
         """
-        frappe.db.delete("POS Opening Entry", {"user": frappe.session.user})
-        frappe.db.commit()
+        smriti.db.delete("POS Opening Entry", {"user": frappe.session.user})
+        smriti.db.commit()
 
         staff_name = "Rahul Sharma"
         res = submit_bill(
@@ -974,11 +975,11 @@ class TestBillingStabilityGaps(TestSmritiRetailBillingAPI):
             sales_staff=staff_name
         )
         invoice_name = res["invoice"]
-        remarks = frappe.db.get_value("Sales Invoice", invoice_name, "remarks") or ""
+        remarks = smriti.db.get("Sales Invoice", invoice_name, "remarks") or ""
         self.assertIn(staff_name, remarks,
             f"sales_staff '{staff_name}' must appear in remarks for commission attribution")
 
         # Cleanup
-        frappe.db.delete("Sales Invoice", {"name": invoice_name})
-        frappe.db.delete("GL Entry", {"voucher_no": invoice_name})
-        frappe.db.commit()
+        smriti.db.delete("Sales Invoice", {"name": invoice_name})
+        smriti.db.delete("GL Entry", {"voucher_no": invoice_name})
+        smriti.db.commit()

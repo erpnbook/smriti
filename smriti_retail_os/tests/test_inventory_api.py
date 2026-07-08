@@ -11,6 +11,7 @@
 #
 
 import frappe
+from smriti_retail_os import smriti
 import unittest
 from frappe.utils import flt, cint, nowdate
 from smriti_retail_os.inventory_api import (
@@ -26,26 +27,26 @@ class TestSmritiRetailInventoryAPI(unittest.TestCase):
     
     def setUp(self):
         # Resolve UOM
-        self.uom = frappe.db.exists("UOM", "Nos") or frappe.db.get_value("UOM", {}, "name")
+        self.uom = smriti.db.exists("UOM", "Nos") or smriti.db.get("UOM", {}, "name")
         if not self.uom:
-            uom_doc = frappe.new_doc("UOM")
+            uom_doc = smriti.documents.new("UOM")
             uom_doc.uom_name = "Nos"
             uom_doc.insert(ignore_permissions=True)
             self.uom = uom_doc.name
 
         # Resolve Item Group
-        self.item_group = frappe.db.exists("Item Group", "All Item Groups") or frappe.db.get_value("Item Group", {}, "name")
+        self.item_group = smriti.db.exists("Item Group", "All Item Groups") or smriti.db.get("Item Group", {}, "name")
         if not self.item_group:
-            ig = frappe.new_doc("Item Group")
+            ig = smriti.documents.new("Item Group")
             ig.item_group_name = "All Item Groups"
             ig.is_group = 0
             ig.insert(ignore_permissions=True)
             self.item_group = ig.name
 
         # Resolve Company
-        self.company = frappe.db.exists("Company", "_Test Company")
+        self.company = smriti.db.exists("Company", "_Test Company")
         if not self.company:
-            comp = frappe.new_doc("Company")
+            comp = smriti.documents.new("Company")
             comp.company_name = "_Test Company"
             comp.country = "India"
             comp.default_currency = "INR"
@@ -53,20 +54,20 @@ class TestSmritiRetailInventoryAPI(unittest.TestCase):
             self.company = comp.name
 
         # Ensure the test company has a valid GSTIN and registered company address (Required for India Compliance)
-        frappe.db.set_value("Company", self.company, "gstin", "27AAXFT2508H1ZR")
+        smriti.db.set_value("Company", self.company, "gstin", "27AAXFT2508H1ZR")
         
         # Seed Stock Entry Types if missing in isolated test DB
         for et in ["Material Receipt", "Material Issue", "Material Transfer"]:
-            if not frappe.db.exists("Stock Entry Type", et):
-                doc = frappe.new_doc("Stock Entry Type")
+            if not smriti.db.exists("Stock Entry Type", et):
+                doc = smriti.documents.new("Stock Entry Type")
                 doc.name = et
                 doc.purpose = et
                 doc.insert(ignore_permissions=True)
 
         
         addr_name = f"{self.company}-Registered-Test"
-        if not frappe.db.exists("Address", addr_name):
-            addr = frappe.new_doc("Address")
+        if not smriti.db.exists("Address", addr_name):
+            addr = smriti.documents.new("Address")
             addr.address_title = self.company
             addr.address_type = "Office"
             addr.address_line1 = "Test Street"
@@ -80,36 +81,36 @@ class TestSmritiRetailInventoryAPI(unittest.TestCase):
             addr.gstin = "27AAXFT2508H1ZR"
             addr.append("links", {"link_doctype": "Company", "link_name": self.company})
             addr.insert(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
 
         # Set user default company to align all backend API company lookups to _Test Company
         frappe.defaults.set_user_default("company", self.company, frappe.session.user)
 
         # Resolve Warehouse
-        self.warehouse = frappe.db.get_value("Warehouse", {"company": self.company}, "name")
+        self.warehouse = smriti.db.get("Warehouse", {"company": self.company}, "name")
         if not self.warehouse:
-            w = frappe.new_doc("Warehouse")
+            w = smriti.documents.new("Warehouse")
             w.warehouse_name = "Test Stores"
             w.company = self.company
             w.insert(ignore_permissions=True)
             self.warehouse = w.name
 
         # Resolve Supplier
-        self.supplier = frappe.db.get_value("Supplier", {}, "name")
+        self.supplier = smriti.db.get("Supplier", {}, "name")
         if not self.supplier:
-            sup = frappe.new_doc("Supplier")
+            sup = smriti.documents.new("Supplier")
             sup.supplier_name = "Test Supplier"
-            sup.supplier_group = frappe.db.get_value("Supplier Group", {}, "name") or "All Supplier Groups"
+            sup.supplier_group = smriti.db.get("Supplier Group", {}, "name") or "All Supplier Groups"
             sup.insert(ignore_permissions=True)
             self.supplier = sup.name
         # Resolve Cost Center robustly
-        self.cost_center = frappe.db.get_value("Company", self.company, "cost_center")
+        self.cost_center = smriti.db.get("Company", self.company, "cost_center")
         if not self.cost_center:
-            self.cost_center = frappe.db.get_value("Cost Center", {"company": self.company, "is_group": 0}, "name")
+            self.cost_center = smriti.db.get("Cost Center", {"company": self.company, "is_group": 0}, "name")
         if not self.cost_center:
-            parent_cc = frappe.db.get_value("Cost Center", {"cost_center_name": self.company}, "name")
+            parent_cc = smriti.db.get("Cost Center", {"cost_center_name": self.company}, "name")
             if not parent_cc:
-                pcc = frappe.new_doc("Cost Center")
+                pcc = smriti.documents.new("Cost Center")
                 pcc.cost_center_name = self.company
                 pcc.company = self.company
                 pcc.is_group = 1
@@ -117,7 +118,7 @@ class TestSmritiRetailInventoryAPI(unittest.TestCase):
                 pcc.insert(ignore_permissions=True)
                 parent_cc = pcc.name
                 
-            cc = frappe.new_doc("Cost Center")
+            cc = smriti.documents.new("Cost Center")
             cc.cost_center_name = "Test Cost Center"
             cc.company = self.company
             cc.is_group = 0
@@ -126,11 +127,11 @@ class TestSmritiRetailInventoryAPI(unittest.TestCase):
             self.cost_center = cc.name
 
         # Resolve Expense/Difference Account robustly
-        self.expense_account = frappe.db.get_value("Account", {"company": self.company, "root_type": "Expense", "is_group": 0}, "name")
+        self.expense_account = smriti.db.get("Account", {"company": self.company, "root_type": "Expense", "is_group": 0}, "name")
         if not self.expense_account:
-            parent_account = frappe.db.get_value("Account", {"company": self.company, "root_type": "Expense", "is_group": 1}, "name")
+            parent_account = smriti.db.get("Account", {"company": self.company, "root_type": "Expense", "is_group": 1}, "name")
             if not parent_account:
-                p_acc = frappe.new_doc("Account")
+                p_acc = smriti.documents.new("Account")
                 p_acc.account_name = "Root Expense Group"
                 p_acc.company = self.company
                 p_acc.root_type = "Expense"
@@ -138,7 +139,7 @@ class TestSmritiRetailInventoryAPI(unittest.TestCase):
                 p_acc.insert(ignore_permissions=True)
                 parent_account = p_acc.name
                 
-            acc = frappe.new_doc("Account")
+            acc = smriti.documents.new("Account")
             acc.account_name = "Stock Adjustment"
             acc.company = self.company
             acc.root_type = "Expense"
@@ -148,11 +149,11 @@ class TestSmritiRetailInventoryAPI(unittest.TestCase):
             self.expense_account = acc.name
 
         # Resolve Asset Difference Account robustly for Stock Reconciliation
-        self.asset_account = frappe.db.get_value("Account", {"company": self.company, "root_type": "Asset", "is_group": 0}, "name")
+        self.asset_account = smriti.db.get("Account", {"company": self.company, "root_type": "Asset", "is_group": 0}, "name")
         if not self.asset_account:
-            parent_account = frappe.db.get_value("Account", {"company": self.company, "root_type": "Asset", "is_group": 1}, "name")
+            parent_account = smriti.db.get("Account", {"company": self.company, "root_type": "Asset", "is_group": 1}, "name")
             if not parent_account:
-                p_acc = frappe.new_doc("Account")
+                p_acc = smriti.documents.new("Account")
                 p_acc.account_name = "Root Asset Group"
                 p_acc.company = self.company
                 p_acc.root_type = "Asset"
@@ -160,7 +161,7 @@ class TestSmritiRetailInventoryAPI(unittest.TestCase):
                 p_acc.insert(ignore_permissions=True)
                 parent_account = p_acc.name
                 
-            acc = frappe.new_doc("Account")
+            acc = smriti.documents.new("Account")
             acc.account_name = "Temporary Opening"
             acc.company = self.company
             acc.root_type = "Asset"
@@ -171,16 +172,16 @@ class TestSmritiRetailInventoryAPI(unittest.TestCase):
 
         # Create default Stock Entry Types if missing
         for name in ["Material Transfer", "Material Issue", "Material Receipt"]:
-            if not frappe.db.exists("Stock Entry Type", name):
-                doc = frappe.new_doc("Stock Entry Type")
+            if not smriti.db.exists("Stock Entry Type", name):
+                doc = smriti.documents.new("Stock Entry Type")
                 doc.name = name
                 doc.purpose = name
                 doc.insert(ignore_permissions=True)
 
         # Create active Fiscal Year robustly if missing or if company is not in it
         fy_name = "2026-2027"
-        if not frappe.db.exists("Fiscal Year", fy_name):
-            fy = frappe.new_doc("Fiscal Year")
+        if not smriti.db.exists("Fiscal Year", fy_name):
+            fy = smriti.documents.new("Fiscal Year")
             fy.year = fy_name
             fy.year_start_date = "2026-04-01"
             fy.year_end_date = "2027-03-31"
@@ -189,20 +190,20 @@ class TestSmritiRetailInventoryAPI(unittest.TestCase):
             })
             fy.insert(ignore_permissions=True)
         else:
-            fy = frappe.get_doc("Fiscal Year", fy_name)
+            fy = smriti.documents.get("Fiscal Year", fy_name)
             if not any(c.company == self.company for c in fy.companies):
                 fy.append("companies", {
                     "company": self.company
                 })
                 fy.save(ignore_permissions=True)
-                frappe.db.commit()
+                smriti.db.commit()
 
         # Resolve Liability Account robustly for Stock Received But Not Billed
-        self.liability_account = frappe.db.get_value("Account", {"company": self.company, "root_type": "Liability", "is_group": 0}, "name")
+        self.liability_account = smriti.db.get("Account", {"company": self.company, "root_type": "Liability", "is_group": 0}, "name")
         if not self.liability_account:
-            parent_account = frappe.db.get_value("Account", {"company": self.company, "root_type": "Liability", "is_group": 1}, "name")
+            parent_account = smriti.db.get("Account", {"company": self.company, "root_type": "Liability", "is_group": 1}, "name")
             if not parent_account:
-                p_acc = frappe.new_doc("Account")
+                p_acc = smriti.documents.new("Account")
                 p_acc.account_name = "Root Liability Group"
                 p_acc.company = self.company
                 p_acc.root_type = "Liability"
@@ -210,7 +211,7 @@ class TestSmritiRetailInventoryAPI(unittest.TestCase):
                 p_acc.insert(ignore_permissions=True)
                 parent_account = p_acc.name
                 
-            acc = frappe.new_doc("Account")
+            acc = smriti.documents.new("Account")
             acc.account_name = "Stock Received But Not Billed"
             acc.company = self.company
             acc.root_type = "Liability"
@@ -220,17 +221,17 @@ class TestSmritiRetailInventoryAPI(unittest.TestCase):
             self.liability_account = acc.name
 
         # Update Company defaults
-        frappe.db.set_value("Company", self.company, "default_inventory_account", self.asset_account)
-        frappe.db.set_value("Company", self.company, "stock_adjustment_account", self.expense_account)
-        frappe.db.set_value("Company", self.company, "default_expense_account", self.expense_account)
-        frappe.db.set_value("Company", self.company, "stock_received_but_not_billed", self.liability_account)
-        frappe.db.set_value("Company", self.company, "cost_center", self.cost_center)
-        frappe.db.commit()
+        smriti.db.set_value("Company", self.company, "default_inventory_account", self.asset_account)
+        smriti.db.set_value("Company", self.company, "stock_adjustment_account", self.expense_account)
+        smriti.db.set_value("Company", self.company, "default_expense_account", self.expense_account)
+        smriti.db.set_value("Company", self.company, "stock_received_but_not_billed", self.liability_account)
+        smriti.db.set_value("Company", self.company, "cost_center", self.cost_center)
+        smriti.db.commit()
 
         # Resolve GST HSN Code
-        self.hsn_code = frappe.db.exists("GST HSN Code", "998311") or frappe.db.get_value("GST HSN Code", {}, "name")
+        self.hsn_code = smriti.db.exists("GST HSN Code", "998311") or smriti.db.get("GST HSN Code", {}, "name")
         if not self.hsn_code:
-            hsn = frappe.new_doc("GST HSN Code")
+            hsn = smriti.documents.new("GST HSN Code")
             hsn.hsn_code = "998311"
             hsn.description = "Test Services"
             hsn.insert(ignore_permissions=True)
@@ -238,11 +239,11 @@ class TestSmritiRetailInventoryAPI(unittest.TestCase):
 
         # Clean up any orphaned test item or barcode records to avoid duplicate key errors
         self.item_code = "SM-TEST-INV-ITEM"
-        frappe.db.sql("DELETE FROM `tabItem Barcode` WHERE parent = %s OR barcode = %s", (self.item_code, "9876543210"))
-        frappe.db.commit()
+        smriti.db.sql("DELETE FROM `tabItem Barcode` WHERE parent = %s OR barcode = %s", (self.item_code, "9876543210"))
+        smriti.db.commit()
 
-        if not frappe.db.exists("Item", self.item_code):
-            it = frappe.new_doc("Item")
+        if not smriti.db.exists("Item", self.item_code):
+            it = smriti.documents.new("Item")
             it.item_code = self.item_code
             it.item_name = "Test Inventory Item"
             it.item_group = self.item_group
@@ -254,13 +255,13 @@ class TestSmritiRetailInventoryAPI(unittest.TestCase):
             it.insert(ignore_permissions=True)
             
         # ALWAYS recreate the barcode record since we deleted it above
-        bc = frappe.new_doc("Item Barcode")
+        bc = smriti.documents.new("Item Barcode")
         bc.parent = self.item_code
         bc.parenttype = "Item"
         bc.parentfield = "barcodes"
         bc.barcode = "9876543210"
         bc.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # Set user as Administrator to bypass manager role check in tests
         frappe.set_user("Administrator")
@@ -282,7 +283,7 @@ class TestSmritiRetailInventoryAPI(unittest.TestCase):
         res = create_grn(self.supplier, "INV-001", items)
         self.assertIsNotNone(res)
         self.assertTrue(res["name"])
-        self.assertTrue(frappe.db.exists("Purchase Receipt", res["name"]))
+        self.assertTrue(smriti.db.exists("Purchase Receipt", res["name"]))
 
     def test_stock_transfer(self):
         # Add initial stock first so there is positive inventory to transfer
@@ -295,10 +296,10 @@ class TestSmritiRetailInventoryAPI(unittest.TestCase):
         create_grn(self.supplier, "TEST-GRN-TRANSFER", grn_items)
 
         # Create transit/target warehouse (must belong to same company to avoid InvalidWarehouseCompany)
-        target_wh = frappe.db.get_value("Warehouse", {"name": ["!=", self.warehouse], "company": self.company, "is_group": 0})
+        target_wh = smriti.db.get("Warehouse", {"name": ["!=", self.warehouse], "company": self.company, "is_group": 0})
         if not target_wh:
             # Create a dedicated transit warehouse for this company
-            tw = frappe.new_doc("Warehouse")
+            tw = smriti.documents.new("Warehouse")
             tw.warehouse_name = "Test Transit"
             tw.company = self.company
             tw.insert(ignore_permissions=True)
@@ -311,7 +312,7 @@ class TestSmritiRetailInventoryAPI(unittest.TestCase):
         }]
         res = create_stock_transfer(self.warehouse, target_wh, items)
         self.assertIsNotNone(res)
-        self.assertTrue(frappe.db.exists("Stock Entry", res["name"]))
+        self.assertTrue(smriti.db.exists("Stock Entry", res["name"]))
 
     def test_stock_adjustment(self):
         # Add initial stock first so there is positive inventory to issue
@@ -331,7 +332,7 @@ class TestSmritiRetailInventoryAPI(unittest.TestCase):
         }]
         res = create_stock_adjustment(items, "Stock Damaged")
         self.assertIsNotNone(res)
-        self.assertTrue(frappe.db.exists("Stock Entry", res["name"]))
+        self.assertTrue(smriti.db.exists("Stock Entry", res["name"]))
 
     def test_stock_audit(self):
         items = [{
@@ -341,7 +342,7 @@ class TestSmritiRetailInventoryAPI(unittest.TestCase):
         }]
         res = create_stock_audit(items)
         self.assertIsNotNone(res)
-        self.assertTrue(frappe.db.exists("Stock Reconciliation", res["name"]))
+        self.assertTrue(smriti.db.exists("Stock Reconciliation", res["name"]))
 
     def test_get_stock_summary(self):
         res = get_stock_summary(self.warehouse)
@@ -349,31 +350,31 @@ class TestSmritiRetailInventoryAPI(unittest.TestCase):
 
     def tearDown(self):
         # 100% safe cleanup that ONLY targets test transactions containing our specific test item
-        frappe.db.sql("SET FOREIGN_KEY_CHECKS = 0;")
+        smriti.db.sql("SET FOREIGN_KEY_CHECKS = 0;")
         
         # 1. Clean Purchase Receipts
-        pr_names = frappe.db.sql_list("SELECT DISTINCT parent FROM `tabPurchase Receipt Item` WHERE item_code = %s", (self.item_code,))
+        pr_names = smriti.db.sql_list("SELECT DISTINCT parent FROM `tabPurchase Receipt Item` WHERE item_code = %s", (self.item_code,))
         if pr_names:
-            frappe.db.sql("DELETE FROM `tabPurchase Receipt Item` WHERE parent IN (%s)" % ", ".join(["%s"] * len(pr_names)), tuple(pr_names))
-            frappe.db.sql("DELETE FROM `tabPurchase Receipt` WHERE name IN (%s)" % ", ".join(["%s"] * len(pr_names)), tuple(pr_names))
+            smriti.db.sql("DELETE FROM `tabPurchase Receipt Item` WHERE parent IN (%s)" % ", ".join(["%s"] * len(pr_names)), tuple(pr_names))
+            smriti.db.sql("DELETE FROM `tabPurchase Receipt` WHERE name IN (%s)" % ", ".join(["%s"] * len(pr_names)), tuple(pr_names))
             
         # 2. Clean Stock Entries
-        se_names = frappe.db.sql_list("SELECT DISTINCT parent FROM `tabStock Entry Detail` WHERE item_code = %s", (self.item_code,))
+        se_names = smriti.db.sql_list("SELECT DISTINCT parent FROM `tabStock Entry Detail` WHERE item_code = %s", (self.item_code,))
         if se_names:
-            frappe.db.sql("DELETE FROM `tabStock Entry Detail` WHERE parent IN (%s)" % ", ".join(["%s"] * len(se_names)), tuple(se_names))
-            frappe.db.sql("DELETE FROM `tabStock Entry` WHERE name IN (%s)" % ", ".join(["%s"] * len(se_names)), tuple(se_names))
+            smriti.db.sql("DELETE FROM `tabStock Entry Detail` WHERE parent IN (%s)" % ", ".join(["%s"] * len(se_names)), tuple(se_names))
+            smriti.db.sql("DELETE FROM `tabStock Entry` WHERE name IN (%s)" % ", ".join(["%s"] * len(se_names)), tuple(se_names))
             
         # 3. Clean Stock Reconciliations
-        sr_names = frappe.db.sql_list("SELECT DISTINCT parent FROM `tabStock Reconciliation Item` WHERE item_code = %s", (self.item_code,))
+        sr_names = smriti.db.sql_list("SELECT DISTINCT parent FROM `tabStock Reconciliation Item` WHERE item_code = %s", (self.item_code,))
         if sr_names:
-            frappe.db.sql("DELETE FROM `tabStock Reconciliation Item` WHERE parent IN (%s)" % ", ".join(["%s"] * len(sr_names)), tuple(sr_names))
-            frappe.db.sql("DELETE FROM `tabStock Reconciliation` WHERE name IN (%s)" % ", ".join(["%s"] * len(sr_names)), tuple(sr_names))
+            smriti.db.sql("DELETE FROM `tabStock Reconciliation Item` WHERE parent IN (%s)" % ", ".join(["%s"] * len(sr_names)), tuple(sr_names))
+            smriti.db.sql("DELETE FROM `tabStock Reconciliation` WHERE name IN (%s)" % ", ".join(["%s"] * len(sr_names)), tuple(sr_names))
             
         # 4. Clean Ledger entries & Bin for the test item
-        frappe.db.sql("DELETE FROM `tabGL Entry` WHERE voucher_no IN (SELECT DISTINCT parent FROM `tabPurchase Receipt Item` WHERE item_code = %s union SELECT DISTINCT parent FROM `tabStock Entry Detail` WHERE item_code = %s union SELECT DISTINCT parent FROM `tabStock Reconciliation Item` WHERE item_code = %s)", (self.item_code, self.item_code, self.item_code))
-        frappe.db.sql("DELETE FROM `tabStock Ledger Entry` WHERE item_code = %s", (self.item_code,))
-        frappe.db.sql("DELETE FROM `tabBin` WHERE item_code = %s", (self.item_code,))
+        smriti.db.sql("DELETE FROM `tabGL Entry` WHERE voucher_no IN (SELECT DISTINCT parent FROM `tabPurchase Receipt Item` WHERE item_code = %s union SELECT DISTINCT parent FROM `tabStock Entry Detail` WHERE item_code = %s union SELECT DISTINCT parent FROM `tabStock Reconciliation Item` WHERE item_code = %s)", (self.item_code, self.item_code, self.item_code))
+        smriti.db.sql("DELETE FROM `tabStock Ledger Entry` WHERE item_code = %s", (self.item_code,))
+        smriti.db.sql("DELETE FROM `tabBin` WHERE item_code = %s", (self.item_code,))
         
-        frappe.db.sql("SET FOREIGN_KEY_CHECKS = 1;")
-        frappe.db.commit()
+        smriti.db.sql("SET FOREIGN_KEY_CHECKS = 1;")
+        smriti.db.commit()
 

@@ -14,6 +14,7 @@
 # For license information, please see license.txt
 
 import frappe
+from smriti_retail_os import smriti
 import json
 import unittest
 from smriti_retail_os.services.knowledge_service import (
@@ -27,18 +28,18 @@ from smriti_retail_os.services.knowledge_service import (
 class TestKnowledgeCenter(unittest.TestCase):
     def setUp(self):
         # Clean up test terms and formulas to avoid collision
-        frappe.db.delete("SMRITI Business Term", {"term_id": ["in", ["TST-T-001", "TST-T-002", "TST-TERM-RANK-MATCH"]]})
-        frappe.db.delete("SMRITI Formula Definition", {"formula_id": ["in", ["TST-F-001", "TST-F-002", "TST-FORM-RANK-MATCH"]]})
-        frappe.db.delete("SMRITI Knowledge Asset", {"asset_code": ["in", ["TST-T-001", "TST-T-002", "TST-F-001", "TST-F-002", "TST-TERM-RANK-MATCH", "TST-FORM-RANK-MATCH"]]})
-        frappe.db.delete("SMRITI PSV Activity Log", {"reference_name": ["in", ["TST-T-001", "TST-F-001"]]})
-        frappe.db.delete("SMRITI PSV Exam Attempt", {"user": ["in", ["test@example.com", "Administrator"]]})
-        frappe.db.delete("SMRITI Certification Exam", {"exam_id": "level_1"})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Business Term", {"term_id": ["in", ["TST-T-001", "TST-T-002", "TST-TERM-RANK-MATCH"]]})
+        smriti.db.delete("SMRITI Formula Definition", {"formula_id": ["in", ["TST-F-001", "TST-F-002", "TST-FORM-RANK-MATCH"]]})
+        smriti.db.delete("SMRITI Knowledge Asset", {"asset_code": ["in", ["TST-T-001", "TST-T-002", "TST-F-001", "TST-F-002", "TST-TERM-RANK-MATCH", "TST-FORM-RANK-MATCH"]]})
+        smriti.db.delete("SMRITI PSV Activity Log", {"reference_name": ["in", ["TST-T-001", "TST-F-001"]]})
+        smriti.db.delete("SMRITI PSV Exam Attempt", {"user": ["in", ["test@example.com", "Administrator"]]})
+        smriti.db.delete("SMRITI Certification Exam", {"exam_id": "level_1"})
+        smriti.db.commit()
         frappe.cache().delete_value(REDIS_INDEX_KEY)
 
         # Seed test exam level_1
-        doc = frappe.get_doc({
-            "doctype": "SMRITI Certification Exam",
+        doc = smriti.documents.new("CertificationExam")
+        doc.update({
             "exam_id": "level_1",
             "title": "PSV Certified Planner Exam",
             "source_document": "psv_certified_planner_guide",
@@ -47,22 +48,22 @@ class TestKnowledgeCenter(unittest.TestCase):
             "active": 1
         })
         doc.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
     def tearDown(self):
-        frappe.db.delete("SMRITI Business Term", {"term_id": ["in", ["TST-T-001", "TST-T-002", "TST-TERM-RANK-MATCH"]]})
-        frappe.db.delete("SMRITI Formula Definition", {"formula_id": ["in", ["TST-F-001", "TST-F-002", "TST-FORM-RANK-MATCH"]]})
-        frappe.db.delete("SMRITI Knowledge Asset", {"asset_code": ["in", ["TST-T-001", "TST-T-002", "TST-F-001", "TST-F-002", "TST-TERM-RANK-MATCH", "TST-FORM-RANK-MATCH"]]})
-        frappe.db.delete("SMRITI PSV Activity Log", {"reference_name": ["in", ["TST-T-001", "TST-F-001"]]})
-        frappe.db.delete("SMRITI PSV Exam Attempt", {"user": ["in", ["test@example.com", "Administrator"]]})
-        frappe.db.delete("SMRITI Certification Exam", {"exam_id": "level_1"})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Business Term", {"term_id": ["in", ["TST-T-001", "TST-T-002", "TST-TERM-RANK-MATCH"]]})
+        smriti.db.delete("SMRITI Formula Definition", {"formula_id": ["in", ["TST-F-001", "TST-F-002", "TST-FORM-RANK-MATCH"]]})
+        smriti.db.delete("SMRITI Knowledge Asset", {"asset_code": ["in", ["TST-T-001", "TST-T-002", "TST-F-001", "TST-F-002", "TST-TERM-RANK-MATCH", "TST-FORM-RANK-MATCH"]]})
+        smriti.db.delete("SMRITI PSV Activity Log", {"reference_name": ["in", ["TST-T-001", "TST-F-001"]]})
+        smriti.db.delete("SMRITI PSV Exam Attempt", {"user": ["in", ["test@example.com", "Administrator"]]})
+        smriti.db.delete("SMRITI Certification Exam", {"exam_id": "level_1"})
+        smriti.db.commit()
         frappe.cache().delete_value(REDIS_INDEX_KEY)
 
     def test_rebuild_and_search_index(self):
         # 1. Insert test business term
-        t_doc = frappe.get_doc({
-            "doctype": "SMRITI Business Term",
+        t_doc = smriti.documents.new("BusinessTerm")
+        t_doc.update({
             "term_id": "TST-T-001",
             "term_name": "Test Glossary Term One",
             "term_category": "Inventory",
@@ -77,8 +78,8 @@ class TestKnowledgeCenter(unittest.TestCase):
         t_doc.insert(ignore_permissions=True)
 
         # 2. Insert test formula definition
-        f_doc = frappe.get_doc({
-            "doctype": "SMRITI Formula Definition",
+        f_doc = smriti.documents.new("FormulaDefinition")
+        f_doc.update({
             "formula_id": "TST-F-001",
             "formula_name": "Test Formula One",
             "formula_version": "1.0.0",
@@ -93,7 +94,7 @@ class TestKnowledgeCenter(unittest.TestCase):
             "recommended_action": "Do nothing"
         })
         f_doc.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # Rebuild index manually (though triggers would have run)
         count = rebuild_knowledge_index()
@@ -122,8 +123,8 @@ class TestKnowledgeCenter(unittest.TestCase):
         # Insert a term and a formula sharing the same keyword in title/content
         # Term has weight 100, Formula has weight 90
         # When searched, they should score the same on matching, but term should be ordered first
-        t_doc = frappe.get_doc({
-            "doctype": "SMRITI Business Term",
+        t_doc = smriti.documents.new("BusinessTerm")
+        t_doc.update({
             "term_id": "TST-TERM-RANK-MATCH",
             "term_name": "SharedKeyword Term",
             "term_category": "Inventory",
@@ -137,8 +138,8 @@ class TestKnowledgeCenter(unittest.TestCase):
         })
         t_doc.insert(ignore_permissions=True)
 
-        f_doc = frappe.get_doc({
-            "doctype": "SMRITI Formula Definition",
+        f_doc = smriti.documents.new("FormulaDefinition")
+        f_doc.update({
             "formula_id": "TST-FORM-RANK-MATCH",
             "formula_name": "SharedKeyword Formula",
             "formula_version": "1.0.0",
@@ -153,7 +154,7 @@ class TestKnowledgeCenter(unittest.TestCase):
             "recommended_action": "Action"
         })
         f_doc.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         rebuild_knowledge_index()
 
@@ -171,12 +172,12 @@ class TestKnowledgeCenter(unittest.TestCase):
 
     def test_knowledge_coverage_calculation(self):
         # Delete existing terms so we control the math completely
-        frappe.db.delete("SMRITI Business Term")
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Business Term")
+        smriti.db.commit()
 
         # 1. Complete Term
-        c_term = frappe.get_doc({
-            "doctype": "SMRITI Business Term",
+        c_term = smriti.documents.new("BusinessTerm")
+        c_term.update({
             "term_id": "TST-T-001",
             "term_name": "Complete Glossary Term",
             "term_category": "Inventory",
@@ -193,8 +194,8 @@ class TestKnowledgeCenter(unittest.TestCase):
         c_term.insert(ignore_permissions=True)
 
         # 2. Incomplete Term (Missing FAQ/Refs)
-        i_term = frappe.get_doc({
-            "doctype": "SMRITI Business Term",
+        i_term = smriti.documents.new("BusinessTerm")
+        i_term.update({
             "term_id": "TST-T-002",
             "term_name": "Incomplete Glossary Term",
             "term_category": "Inventory",
@@ -209,7 +210,7 @@ class TestKnowledgeCenter(unittest.TestCase):
             "training_reference": ""
         })
         i_term.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         coverage = calculate_knowledge_coverage()
         # 1 complete out of 2 total active terms = 50.0%
@@ -217,8 +218,8 @@ class TestKnowledgeCenter(unittest.TestCase):
 
     def test_governance_stats(self):
         # Ensure we have some terms and formulas
-        t_doc = frappe.get_doc({
-            "doctype": "SMRITI Business Term",
+        t_doc = smriti.documents.new("BusinessTerm")
+        t_doc.update({
             "term_id": "TST-T-001",
             "term_name": "Test Glossary Term One",
             "term_category": "Inventory",
@@ -231,8 +232,8 @@ class TestKnowledgeCenter(unittest.TestCase):
         })
         t_doc.insert(ignore_permissions=True)
 
-        f_doc = frappe.get_doc({
-            "doctype": "SMRITI Formula Definition",
+        f_doc = smriti.documents.new("FormulaDefinition")
+        f_doc.update({
             "formula_id": "TST-F-001",
             "formula_name": "Test Formula One",
             "formula_version": "1.0.0",
@@ -244,12 +245,12 @@ class TestKnowledgeCenter(unittest.TestCase):
             "business_meaning": "Formula to test index search logic."
         })
         f_doc.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # Simulate access logs
         # Dictionary Accessed log
-        log_term = frappe.get_doc({
-            "doctype": "SMRITI PSV Activity Log",
+        log_term = smriti.documents.new("PSVActivityLog")
+        log_term.update({
             "timestamp": frappe.utils.now_datetime(),
             "event_type": "DICTIONARY_ACCESSED",
             "action_type": "Dictionary Accessed",
@@ -260,8 +261,8 @@ class TestKnowledgeCenter(unittest.TestCase):
         log_term.insert(ignore_permissions=True)
 
         # Formula Explained log
-        log_formula = frappe.get_doc({
-            "doctype": "SMRITI PSV Activity Log",
+        log_formula = smriti.documents.new("PSVActivityLog")
+        log_formula.update({
             "timestamp": frappe.utils.now_datetime(),
             "event_type": "FORMULA_EXPLAINED",
             "action_type": "Formula Explained",
@@ -270,7 +271,7 @@ class TestKnowledgeCenter(unittest.TestCase):
             "details": "Version: 1.0.0"
         })
         log_formula.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         stats = get_governance_stats()
         self.assertGreaterEqual(stats["terms_count"], 1)
@@ -336,8 +337,8 @@ class TestKnowledgeCenter(unittest.TestCase):
         from smriti_retail_os.services.formula_service import get_formula_detail
 
         # Create approved test formula
-        f_approved = frappe.get_doc({
-            "doctype": "SMRITI Formula Definition",
+        f_approved = smriti.documents.new("FormulaDefinition")
+        f_approved.update({
             "formula_id": "TST-F-001",
             "formula_name": "Test Approved Formula",
             "formula_version": "1.0.0",
@@ -350,8 +351,8 @@ class TestKnowledgeCenter(unittest.TestCase):
         f_approved.insert(ignore_permissions=True)
 
         # Create draft test formula
-        f_draft = frappe.get_doc({
-            "doctype": "SMRITI Formula Definition",
+        f_draft = smriti.documents.new("FormulaDefinition")
+        f_draft.update({
             "formula_id": "TST-F-002",
             "formula_name": "Test Draft Formula",
             "formula_version": "1.0.0",
@@ -362,7 +363,7 @@ class TestKnowledgeCenter(unittest.TestCase):
             "formula_expression": "x + y",
         })
         f_draft.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # 1. System Manager role can view both
         frappe.set_user('Administrator')
@@ -554,8 +555,8 @@ class TestKnowledgeCenter(unittest.TestCase):
 
         # Let's try creating a document directly to test block in validate() hook
         from frappe.exceptions import ValidationError
-        attempt_doc = frappe.get_doc({
-            "doctype": "SMRITI PSV Exam Attempt",
+        attempt_doc = smriti.documents.new("PSVExamAttempt")
+        attempt_doc.update({
             "user": frappe.session.user,
             "exam_id": "level_1",
             "start_time": frappe.utils.now_datetime(),
@@ -583,15 +584,15 @@ class TestKnowledgeCenter(unittest.TestCase):
         from datetime import timedelta
         start_time = frappe.utils.now_datetime() - timedelta(minutes=65)
         
-        attempt = frappe.get_doc({
-            "doctype": "SMRITI PSV Exam Attempt",
+        attempt = smriti.documents.new("PSVExamAttempt")
+        attempt.update({
             "user": frappe.session.user,
             "exam_id": "level_1",
             "start_time": start_time,
             "status": "In Progress"
         })
         attempt.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         
         # Submit this expired attempt
         res = submit_psv_exam(attempt_id=attempt.name, answers_json=json.dumps({"1": "A"}))

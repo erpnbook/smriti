@@ -10,9 +10,10 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe.utils import flt, cint
 from frappe import _
+from smriti_retail_os import smriti
 
 @frappe.whitelist()
 def quick_create_item(item_name, barcode, rate, mrp, gst_percentage, style_code=None):
@@ -24,7 +25,7 @@ def quick_create_item(item_name, barcode, rate, mrp, gst_percentage, style_code=
         frappe.throw(_("Item Name and Barcode are required."))
 
     # 1. Create the Item
-    item = frappe.new_doc("Item")
+    item = smriti.documents.new("Item")
     item.item_code = barcode # For retail, item_code = barcode is the simplest way
     item.item_name = item_name
     item.item_group = "Products"
@@ -57,7 +58,7 @@ def quick_create_item(item_name, barcode, rate, mrp, gst_percentage, style_code=
     # Set default HSN code for India Compliance
     # Domain-neutral: reads from SMRITI Settings.default_hsn_code (C-2 remediation 2026-07-03)
     try:
-        default_hsn = frappe.db.get_single_value("SMRITI Settings", "default_hsn_code") or ""
+        default_hsn = smriti.db.get_single("SMRITI Settings", "default_hsn_code") or ""
         if not default_hsn:
             # No domain-specific HSN configured — skip HSN assignment rather than use a wrong default
             frappe.logger().warning(
@@ -65,8 +66,8 @@ def quick_create_item(item_name, barcode, rate, mrp, gst_percentage, style_code=
                 "Configure it to auto-assign HSN codes on item creation."
             )
         else:
-            if not frappe.db.exists("GST HSN Code", default_hsn):
-                hsn_doc = frappe.new_doc("GST HSN Code")
+            if not smriti.db.exists("GST HSN Code", default_hsn):
+                hsn_doc = smriti.documents.new("GST HSN Code")
                 hsn_doc.name = default_hsn
                 hsn_doc.hsn_code = default_hsn
                 hsn_doc.description = "Auto-created default HSN"
@@ -81,7 +82,7 @@ def quick_create_item(item_name, barcode, rate, mrp, gst_percentage, style_code=
         if _frappe: _frappe.logger().warning(f"SMRITI Warning: exception setting default HSN code in master_api.py: {sys.exc_info()[1]}")
     
     # Auto-resolve Item Tax Template from percentage
-    template_name = frappe.db.get_value(
+    template_name = smriti.db.get(
         "Item Tax Template", 
         {"name": ["like", f"%{gst_percentage}%"]}, 
         "name"
@@ -107,7 +108,7 @@ def quick_create_item(item_name, barcode, rate, mrp, gst_percentage, style_code=
     create_item_price(item.name, "Standard Selling", rate)
     create_item_price(item.name, "MRP", mrp)
 
-    frappe.db.commit()
+    smriti.db.commit()
 
     return {
         "item_code": item.name,
@@ -119,23 +120,23 @@ def quick_create_item(item_name, barcode, rate, mrp, gst_percentage, style_code=
     }
 
 def create_item_price(item_code, price_list, rate):
-    if not frappe.db.exists("Price List", price_list):
-        pl = frappe.new_doc("Price List")
+    if not smriti.db.exists("Price List", price_list):
+        pl = smriti.documents.new("Price List")
         pl.price_list_name = price_list
         pl.enabled = 1
         pl.selling = 1
         pl.currency = "INR"
         pl.insert(ignore_permissions=True)
 
-    existing = frappe.db.get_value(
+    existing = smriti.db.get(
         "Item Price",
         {"item_code": item_code, "price_list": price_list},
         "name"
     )
     if existing:
-        frappe.db.set_value("Item Price", existing, "price_list_rate", flt(rate))
+        smriti.db.set_value("Item Price", existing, "price_list_rate", flt(rate))
     else:
-        ip = frappe.new_doc("Item Price")
+        ip = smriti.documents.new("Item Price")
         ip.item_code = item_code
         ip.price_list = price_list
         ip.price_list_rate = flt(rate)
@@ -151,21 +152,21 @@ def quick_create_customer(customer_name, mobile_no):
     if not customer_name:
         frappe.throw(_("Customer Name is required."))
 
-    cust = frappe.new_doc("Customer")
+    cust = smriti.documents.new("Customer")
     cust.customer_name = customer_name
     cust.mobile_no = mobile_no
     
     # Robust Customer Group auto-resolution
     customer_group = "Individual"
-    if not frappe.db.exists("Customer Group", customer_group):
-        if frappe.db.exists("Customer Group", "All Customer Groups"):
+    if not smriti.db.exists("Customer Group", customer_group):
+        if smriti.db.exists("Customer Group", "All Customer Groups"):
             customer_group = "All Customer Groups"
         else:
-            existing = frappe.db.get_all("Customer Group", order_by="creation asc", pluck="name", limit=1)
+            existing = smriti.db.get_list("Customer Group", order_by="creation asc", pluck="name", limit=1)
             if existing:
                 customer_group = existing[0]
             else:
-                cg = frappe.new_doc("Customer Group")
+                cg = smriti.documents.new("Customer Group")
                 cg.customer_group_name = "Individual"
                 # reviewed-ignore-permissions: no role restriction — any authenticated user may create a customer record, by design
                 cg.insert(ignore_permissions=True)
@@ -174,12 +175,12 @@ def quick_create_customer(customer_name, mobile_no):
 
     # Robust Territory auto-resolution
     territory = "All Territories"
-    if not frappe.db.exists("Territory", territory):
-        existing = frappe.db.get_all("Territory", order_by="creation asc", pluck="name", limit=1)
+    if not smriti.db.exists("Territory", territory):
+        existing = smriti.db.get_list("Territory", order_by="creation asc", pluck="name", limit=1)
         if existing:
             territory = existing[0]
         else:
-            t = frappe.new_doc("Territory")
+            t = smriti.documents.new("Territory")
             t.territory_name = "All Territories"
             # reviewed-ignore-permissions: no role restriction — any authenticated user may create a customer record, by design
             t.insert(ignore_permissions=True)
@@ -190,7 +191,7 @@ def quick_create_customer(customer_name, mobile_no):
     # reviewed-ignore-permissions: no role restriction — any authenticated user may create a customer record, by design
     cust.insert(ignore_permissions=True)
     
-    frappe.db.commit()
+    smriti.db.commit()
     
     return {
         "name": cust.name,
@@ -206,20 +207,20 @@ def quick_create_supplier(supplier_name, mobile_no=None):
     if not supplier_name:
         frappe.throw(_("Supplier Name is required."))
 
-    supp = frappe.new_doc("Supplier")
+    supp = smriti.documents.new("Supplier")
     supp.supplier_name = supplier_name
     
     # Robust Supplier Group auto-resolution
     supplier_group = "Local"
-    if not frappe.db.exists("Supplier Group", supplier_group):
-        if frappe.db.exists("Supplier Group", "All Supplier Groups"):
+    if not smriti.db.exists("Supplier Group", supplier_group):
+        if smriti.db.exists("Supplier Group", "All Supplier Groups"):
             supplier_group = "All Supplier Groups"
         else:
-            existing_groups = frappe.db.get_all("Supplier Group", order_by="creation asc", pluck="name", limit=1)
+            existing_groups = smriti.db.get_list("Supplier Group", order_by="creation asc", pluck="name", limit=1)
             if existing_groups:
                 supplier_group = existing_groups[0]
             else:
-                sg = frappe.new_doc("Supplier Group")
+                sg = smriti.documents.new("Supplier Group")
                 sg.supplier_group_name = "Local"
                 # reviewed-ignore-permissions: no role restriction — any authenticated user may create suppliers, by design
                 sg.insert(ignore_permissions=True)
@@ -232,7 +233,7 @@ def quick_create_supplier(supplier_name, mobile_no=None):
     # reviewed-ignore-permissions: no role restriction — any authenticated user may create suppliers, by design
     supp.insert(ignore_permissions=True)
     
-    frappe.db.commit()
+    smriti.db.commit()
     
     return {
         "name": supp.name,
@@ -249,29 +250,29 @@ def save_supplier_on_fly(supplier_name, supplier_group, supplier_type, name=None
         frappe.throw(_("Supplier Name is required."))
 
     if name:
-        doc = frappe.get_doc("Supplier", name)
+        doc = smriti.documents.get("Supplier", name)
         doc.supplier_name = supplier_name
         doc.supplier_group = supplier_group
         doc.supplier_type = supplier_type
         # reviewed-ignore-permissions: no role restriction — any authenticated user may create suppliers, by design
         doc.save(ignore_permissions=True)
     else:
-        doc = frappe.new_doc("Supplier")
+        doc = smriti.documents.new("Supplier")
         doc.supplier_name = supplier_name
         doc.supplier_type = supplier_type
         # Robust group resolution — same as quick_create_supplier
         resolved_group = supplier_group
-        if not frappe.db.exists("Supplier Group", resolved_group):
-            if frappe.db.exists("Supplier Group", "All Supplier Groups"):
+        if not smriti.db.exists("Supplier Group", resolved_group):
+            if smriti.db.exists("Supplier Group", "All Supplier Groups"):
                 resolved_group = "All Supplier Groups"
             else:
-                existing = frappe.db.get_all("Supplier Group", pluck="name", limit=1)
+                existing = smriti.db.get_list("Supplier Group", pluck="name", limit=1)
                 resolved_group = existing[0] if existing else "Local"
         doc.supplier_group = resolved_group
         # reviewed-ignore-permissions: no role restriction — any authenticated user may create suppliers, by design
         doc.insert(ignore_permissions=True)
 
-    frappe.db.commit()
+    smriti.db.commit()
 
     return {
         "name": doc.name,
@@ -284,10 +285,10 @@ def get_customer_detail(name):
     """
     Retrieves all details for a Customer, including dynamic custom fields.
     """
-    if not frappe.db.exists("Customer", name):
+    if not smriti.db.exists("Customer", name):
         frappe.throw(_("Customer {0} not found.").format(name))
     
-    doc = frappe.get_doc("Customer", name)
+    doc = smriti.documents.get("Customer", name)
     return {
         "name": doc.name,
         "customer_name": doc.customer_name,
@@ -310,16 +311,16 @@ def get_supplier_detail(name):
     """
     Retrieves all details for a Supplier, including standard and advanced fields.
     """
-    if not frappe.db.exists("Supplier", name):
+    if not smriti.db.exists("Supplier", name):
         frappe.throw(_("Supplier {0} not found.").format(name))
     
-    doc = frappe.get_doc("Supplier", name)
+    doc = smriti.documents.get("Supplier", name)
     
     # Resolve Contact Person
     contact_person = None
-    contact_link = frappe.db.get_value("Dynamic Link", {"link_doctype": "Supplier", "link_name": doc.name, "parenttype": "Contact"}, "parent")
+    contact_link = smriti.db.get("Dynamic Link", {"link_doctype": "Supplier", "link_name": doc.name, "parenttype": "Contact"}, "parent")
     if contact_link:
-        contact_person = frappe.db.get_value("Contact", contact_link, "first_name")
+        contact_person = smriti.db.get("Contact", contact_link, "first_name")
 
     # Resolve Status
     status = "Active"
@@ -380,9 +381,9 @@ def save_supplier_detail(**kwargs):
 
     name = kwargs.get("name")
     if name:
-        doc = frappe.get_doc("Supplier", name)
+        doc = smriti.documents.get("Supplier", name)
     else:
-        doc = frappe.new_doc("Supplier")
+        doc = smriti.documents.new("Supplier")
 
     # Basic fields
     if kwargs.get("naming_series"):
@@ -448,8 +449,8 @@ def save_supplier_detail(**kwargs):
     doc.supplier_details = kwargs.get("supplier_details")
 
     # Defensive group check for fresh installs
-    if not frappe.db.exists("Supplier Group", doc.supplier_group):
-        sg = frappe.new_doc("Supplier Group")
+    if not smriti.db.exists("Supplier Group", doc.supplier_group):
+        sg = smriti.documents.new("Supplier Group")
         sg.supplier_group_name = doc.supplier_group
         # reviewed-ignore-permissions: no role restriction — any authenticated user may update supplier records, by design
         sg.insert(ignore_permissions=True)
@@ -460,9 +461,9 @@ def save_supplier_detail(**kwargs):
     # Contact Person processing
     contact_person = kwargs.get("contact_person")
     if contact_person:
-        contact_link = frappe.db.get_value("Dynamic Link", {"link_doctype": "Supplier", "link_name": doc.name, "parenttype": "Contact"}, "parent")
+        contact_link = smriti.db.get("Dynamic Link", {"link_doctype": "Supplier", "link_name": doc.name, "parenttype": "Contact"}, "parent")
         if contact_link:
-            contact = frappe.get_doc("Contact", contact_link)
+            contact = smriti.documents.get("Contact", contact_link)
             contact.first_name = contact_person
             if doc.mobile_no:
                 contact.mobile_no = doc.mobile_no
@@ -471,7 +472,7 @@ def save_supplier_detail(**kwargs):
             # reviewed-ignore-permissions: no role restriction — any authenticated user may update supplier records, by design
             contact.save(ignore_permissions=True)
         else:
-            contact = frappe.new_doc("Contact")
+            contact = smriti.documents.new("Contact")
             contact.first_name = contact_person
             if doc.mobile_no:
                 contact.mobile_no = doc.mobile_no
@@ -484,7 +485,7 @@ def save_supplier_detail(**kwargs):
             # reviewed-ignore-permissions: no role restriction — any authenticated user may update supplier records, by design
             contact.insert(ignore_permissions=True)
 
-    frappe.db.commit()
+    smriti.db.commit()
 
     return {
         "name": doc.name,
@@ -502,9 +503,9 @@ def save_customer_detail(customer_name, customer_type, customer_group, territory
         frappe.throw(_("Customer Name is required."))
 
     if name:
-        doc = frappe.get_doc("Customer", name)
+        doc = smriti.documents.get("Customer", name)
     else:
-        doc = frappe.new_doc("Customer")
+        doc = smriti.documents.new("Customer")
 
     doc.customer_name = customer_name
     doc.customer_type = customer_type
@@ -520,21 +521,21 @@ def save_customer_detail(customer_name, customer_type, customer_group, territory
     doc.custom_tax_inclusive_override = custom_tax_inclusive_override
 
     # Defensive group and territory check for fresh installs
-    if not frappe.db.exists("Customer Group", doc.customer_group):
-        cg = frappe.new_doc("Customer Group")
+    if not smriti.db.exists("Customer Group", doc.customer_group):
+        cg = smriti.documents.new("Customer Group")
         cg.customer_group_name = doc.customer_group
         # reviewed-ignore-permissions: no role restriction — any authenticated user may update customer records, by design
         cg.insert(ignore_permissions=True)
 
-    if not frappe.db.exists("Territory", doc.territory):
-        t = frappe.new_doc("Territory")
+    if not smriti.db.exists("Territory", doc.territory):
+        t = smriti.documents.new("Territory")
         t.territory_name = doc.territory
         # reviewed-ignore-permissions: no role restriction — any authenticated user may update customer records, by design
         t.insert(ignore_permissions=True)
 
     # reviewed-ignore-permissions: no role restriction — any authenticated user may update customer records, by design
     doc.save(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
 
     return {
         "name": doc.name,
@@ -594,7 +595,7 @@ def save_size_groups(size_groups):
     _check_config_permission()
     data = frappe.parse_json(size_groups) if isinstance(size_groups, str) else size_groups
     frappe.db.set_default("smriti_size_groups", frappe.as_json(data))
-    frappe.db.commit()
+    smriti.db.commit()
     return {"success": True, "count": len(data)}
 
 
@@ -620,7 +621,7 @@ def save_destinationwise_taxes(mappings):
     _check_config_permission()
     data = frappe.parse_json(mappings) if isinstance(mappings, str) else mappings
     frappe.db.set_default("smriti_destinationwise_taxes", frappe.as_json(data))
-    frappe.db.commit()
+    smriti.db.commit()
     return {"success": True, "count": len(data)}
 
 
@@ -631,14 +632,14 @@ def get_item_tax_templates():
     """Returns all Item Tax Templates with their tax account details."""
     from smriti_retail_os.company_api import get_active_company
     company = get_active_company()
-    templates = frappe.get_all(
+    templates = smriti.db.get_list(
         "Item Tax Template",
         filters={"company": company} if company else {},
         fields=["name", "title", "company", "gst_rate", "gst_treatment"],
         order_by="creation asc"
     )
     for t in templates:
-        t["taxes"] = frappe.get_all(
+        t["taxes"] = smriti.db.get_list(
             "Item Tax Template Detail",
             filters={"parent": t["name"]},
             fields=["tax_type", "tax_rate"],
@@ -662,17 +663,17 @@ def create_item_tax_template(title, gst_rate, taxes):
 
     # Check if already exists
     full_title = f"{title} - {company}"
-    existing = frappe.db.get_value("Item Tax Template", {"title": full_title, "company": company}, "name")
+    existing = smriti.db.get("Item Tax Template", {"title": full_title, "company": company}, "name")
     if existing:
         frappe.throw(_(f"Item Tax Template '{full_title}' already exists. Edit it directly in ERPNext."))
 
-    doc = frappe.new_doc("Item Tax Template")
+    doc = smriti.documents.new("Item Tax Template")
     doc.title = full_title
     doc.company = company
     doc.gst_rate = gst_rate
     doc.gst_treatment = "Taxable"
     for row in taxes_data:
-        if row.get("tax_type") and frappe.db.exists("Account", row["tax_type"]):
+        if row.get("tax_type") and smriti.db.exists("Account", row["tax_type"]):
             doc.append("taxes", {
                 "tax_type": row["tax_type"],
                 "tax_rate": flt(row.get("tax_rate", 0))
@@ -680,7 +681,7 @@ def create_item_tax_template(title, gst_rate, taxes):
 
     # reviewed-ignore-permissions: tax configuration creation, gated by SMRITI Store Manager or System Manager roles
     doc.insert(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
     return {"name": doc.name, "title": doc.title}
 
 
@@ -690,7 +691,7 @@ def create_item_tax_template(title, gst_rate, taxes):
 def get_brands():
     """Returns all Brands registered in ERPNext."""
     # Note: ERPNext v16 Brand DocType uses 'description' not 'brand_description'.
-    brands = frappe.get_all(
+    brands = smriti.db.get_list(
         "Brand",
         fields=["name", "brand", "description", "image"],
         order_by="brand asc"
@@ -706,10 +707,10 @@ def create_brand(brand_name, brand_description=None):
     if not brand_name:
         frappe.throw(_("Brand name is required."))
 
-    if frappe.db.exists("Brand", brand_name):
+    if smriti.db.exists("Brand", brand_name):
         frappe.throw(_(f"Brand '{brand_name}' already exists."))
 
-    doc = frappe.new_doc("Brand")
+    doc = smriti.documents.new("Brand")
     doc.brand = brand_name
     if brand_description:
         # ERPNext v16 uses 'description'; older versions used 'brand_description'.
@@ -721,7 +722,7 @@ def create_brand(brand_name, brand_description=None):
             if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in master_api.py:648: {sys.exc_info()[1]}")
     # reviewed-ignore-permissions: catalog brand creation, gated by SMRITI Store Manager or System Manager roles
     doc.insert(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
     return {"name": doc.name, "brand": doc.brand}
 
 
@@ -729,14 +730,14 @@ def create_brand(brand_name, brand_description=None):
 def delete_brand(brand_name):
     """Deletes a Brand document. Fails if items are linked to it."""
     _check_config_permission()
-    if not frappe.db.exists("Brand", brand_name):
+    if not smriti.db.exists("Brand", brand_name):
         frappe.throw(_(f"Brand '{brand_name}' not found."))
-    linked = frappe.db.count("Item", {"brand": brand_name})
+    linked = smriti.db.count("Item", {"brand": brand_name})
     if linked:
         frappe.throw(_(f"Cannot delete brand '{brand_name}': {linked} item(s) are linked to it."))
     # reviewed-ignore-permissions: catalog brand deletion, gated by SMRITI Store Manager or System Manager roles
     frappe.delete_doc("Brand", brand_name, ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
     return {"success": True}
 
 
@@ -747,7 +748,7 @@ def get_tax_accounts():
     """Returns CGST, SGST, IGST tax accounts for the active company."""
     from smriti_retail_os.company_api import get_active_company
     company = get_active_company()
-    accounts = frappe.get_all(
+    accounts = smriti.db.get_list(
         "Account",
         filters={"company": company, "account_type": "Tax", "is_group": 0},
         fields=["name", "account_name"],

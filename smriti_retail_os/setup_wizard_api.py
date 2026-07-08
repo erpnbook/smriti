@@ -7,8 +7,9 @@
 #
 
 import re
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.utils import flt, nowdate
 
 
@@ -57,7 +58,7 @@ def _validate_company_abbr(abbr, current_company=None):
     filters = {"abbr": abbr}
     if current_company:
         filters["name"] = ("!=", current_company)
-    existing = frappe.db.get_value("Company", filters, "name")
+    existing = smriti.db.get("Company", filters, "name")
     if existing:
         frappe.throw(
             _("Company abbreviation {0} is already in use by another company.").format(frappe.bold(abbr)),
@@ -73,11 +74,11 @@ def get_setup_wizard_initial_data():
     # Verify permission
     verify_setup_wizard_access()
 
-    companies = frappe.get_all("Company", fields=["name", "company_name", "abbr"])
+    companies = smriti.db.get_list("Company", fields=["name", "company_name", "abbr"])
     has_company = len(companies) > 0
 
     # Get admin user details
-    admin_user = frappe.db.get_value("User", "Administrator", ["full_name", "email"], as_dict=True) or {}
+    admin_user = smriti.db.get("User", "Administrator", ["full_name", "email"], as_dict=True) or {}
 
     # Standard Indian states
     states = [
@@ -158,7 +159,7 @@ def run_setup_wizard(setup_data):
         admin_fullname = setup_data.get("admin_fullname")
         admin_password = setup_data.get("admin_password")
         
-        admin_doc = frappe.get_doc("User", "Administrator")
+        admin_doc = smriti.documents.get("User", "Administrator")
         if admin_fullname:
             admin_doc.full_name = admin_fullname
         if admin_password:
@@ -180,19 +181,19 @@ def run_setup_wizard(setup_data):
         # ── Validate inputs before touching the database ──
         gstin = _validate_gstin(gstin)
         _validate_pincode(setup_data.get("store_pincode"))
-        company_exists = frappe.db.exists("Company", company_name)
+        company_exists = smriti.db.exists("Company", company_name)
         _validate_company_abbr(company_abbr, current_company=company_name if company_exists else None)
 
         log("Ensuring standard Warehouse Types exist...")
         for w_type in ["Transit", "Standard", "Subcontracted"]:
-            if not frappe.db.exists("Warehouse Type", w_type):
+            if not smriti.db.exists("Warehouse Type", w_type):
                 # reviewed-ignore-permissions: system configuration setup wizard execution, runs before roles exist
-                frappe.get_doc({"doctype": "Warehouse Type", "name": w_type}).insert(ignore_permissions=True)
+                smriti.documents.new("WarehouseType").update({"name": w_type}).insert(ignore_permissions=True)
                 log(f"Created standard Warehouse Type: {w_type}")
 
         log(f"Configuring Company: {company_name} ({company_abbr})...")
         if not company_exists:
-            co = frappe.new_doc("Company")
+            co = smriti.documents.new("Company")
             co.company_name = company_name
             co.abbr = company_abbr
             co.default_currency = currency
@@ -206,7 +207,7 @@ def run_setup_wizard(setup_data):
             co.insert(ignore_permissions=True)
             log(f"Company '{company_name}' created.")
         else:
-            co = frappe.get_doc("Company", company_name)
+            co = smriti.documents.get("Company", company_name)
             co.custom_smriti_store_type = store_type
             co.custom_smriti_gstin_state = state_code
             if gstin:
@@ -223,13 +224,13 @@ def run_setup_wizard(setup_data):
         # Set default company globally
         frappe.defaults.set_global_default("company", company_name)
         frappe.defaults.set_user_default("company", company_name, "Administrator")
-        frappe.db.commit()
+        smriti.db.commit()
 
         # Create/Update Registered Office Address
         store_trade_name = setup_data.get("store_trade_name") or company_name
         address_name = f"{company_name}-Registered"
-        if not frappe.db.exists("Address", address_name):
-            addr = frappe.new_doc("Address")
+        if not smriti.db.exists("Address", address_name):
+            addr = smriti.documents.new("Address")
             addr.address_title = store_trade_name
             addr.address_type = "Office"
             addr.address_line1 = setup_data.get("store_address_line1") or "Primary Store Location"
@@ -261,7 +262,7 @@ def run_setup_wizard(setup_data):
             addr.insert(ignore_permissions=True)
             log("Company Office Address created and linked using user-provided details.")
         else:
-            addr = frappe.get_doc("Address", address_name)
+            addr = smriti.documents.get("Address", address_name)
             addr.address_title = store_trade_name
             addr.address_line1 = setup_data.get("store_address_line1") or "Primary Store Location"
             addr.address_line2 = setup_data.get("store_area_locality")
@@ -293,12 +294,12 @@ def run_setup_wizard(setup_data):
         full_warehouse_name = f"{warehouse_name} - {company_abbr}"
         log(f"Configuring default warehouse: {full_warehouse_name}...")
         
-        if not frappe.db.exists("Warehouse", full_warehouse_name):
+        if not smriti.db.exists("Warehouse", full_warehouse_name):
             # Check if parent warehouse exists
             parent_warehouse = f"All Warehouses - {company_abbr}"
-            if not frappe.db.exists("Warehouse", parent_warehouse):
+            if not smriti.db.exists("Warehouse", parent_warehouse):
                 # Create standard parent
-                pw = frappe.new_doc("Warehouse")
+                pw = smriti.documents.new("Warehouse")
                 pw.warehouse_name = "All Warehouses"
                 pw.company = company_name
                 pw.is_group = 1
@@ -306,7 +307,7 @@ def run_setup_wizard(setup_data):
                 pw.insert(ignore_permissions=True)
                 parent_warehouse = pw.name
             
-            wh = frappe.new_doc("Warehouse")
+            wh = smriti.documents.new("Warehouse")
             wh.warehouse_name = warehouse_name
             wh.company = company_name
             wh.parent_warehouse = parent_warehouse
@@ -324,17 +325,16 @@ def run_setup_wizard(setup_data):
         log(f"Configuring default customer: {customer_name}...")
         
         # Ensure Customer Group exists (must be is_group=0)
-        existing_cgs = frappe.get_all("Customer Group", filters={"is_group": 0}, limit=1, pluck="name")
+        existing_cgs = smriti.db.get_list("Customer Group", filters={"is_group": 0}, limit=1, pluck="name")
         if existing_cgs:
             cg = existing_cgs[0]
         else:
-            if not frappe.db.exists("Customer Group", "All Customer Groups"):
+            if not smriti.db.exists("Customer Group", "All Customer Groups"):
                 # reviewed-ignore-permissions: system configuration setup wizard execution, runs before roles exist
-                frappe.get_doc({"doctype": "Customer Group", "customer_group_name": "All Customer Groups", "is_group": 1}).insert(ignore_permissions=True)
+                smriti.documents.new("CustomerGroup").update({"customer_group_name": "All Customer Groups", "is_group": 1}).insert(ignore_permissions=True)
             cg = "Retail Customers"
-            if not frappe.db.exists("Customer Group", cg):
-                frappe.get_doc({
-                    "doctype": "Customer Group",
+            if not smriti.db.exists("Customer Group", cg):
+                smriti.documents.new("CustomerGroup").update({
                     "customer_group_name": cg,
                     "parent_customer_group": "All Customer Groups",
                     "is_group": 0
@@ -342,26 +342,25 @@ def run_setup_wizard(setup_data):
                 }).insert(ignore_permissions=True)
                 
         # Ensure Territory exists (must be is_group=0)
-        existing_terrs = frappe.get_all("Territory", filters={"is_group": 0}, limit=1, pluck="name")
+        existing_terrs = smriti.db.get_list("Territory", filters={"is_group": 0}, limit=1, pluck="name")
         if existing_terrs:
             terr = existing_terrs[0]
         else:
-            if not frappe.db.exists("Territory", "All Territories"):
+            if not smriti.db.exists("Territory", "All Territories"):
                 # reviewed-ignore-permissions: system configuration setup wizard execution, runs before roles exist
-                frappe.get_doc({"doctype": "Territory", "territory_name": "All Territories", "is_group": 1}).insert(ignore_permissions=True)
+                smriti.documents.new("Territory").update({"territory_name": "All Territories", "is_group": 1}).insert(ignore_permissions=True)
             terr = "Retail Territory"
-            if not frappe.db.exists("Territory", terr):
-                frappe.get_doc({
-                    "doctype": "Territory",
+            if not smriti.db.exists("Territory", terr):
+                smriti.documents.new("Territory").update({
                     "territory_name": terr,
                     "parent_territory": "All Territories",
                     "is_group": 0
                 # reviewed-ignore-permissions: system configuration setup wizard execution, runs before roles exist
                 }).insert(ignore_permissions=True)
 
-        customer_id = frappe.db.get_value("Customer", {"customer_name": customer_name}, "name")
+        customer_id = smriti.db.get("Customer", {"customer_name": customer_name}, "name")
         if not customer_id:
-            cust = frappe.new_doc("Customer")
+            cust = smriti.documents.new("Customer")
             cust.customer_name = customer_name
             cust.customer_type = "Individual"
             cust.customer_group = cg
@@ -375,11 +374,11 @@ def run_setup_wizard(setup_data):
 
         # 5. Create default Duties and Taxes accounts if missing
         parent_tax_account = f"Duties and Taxes - {company_abbr}"
-        if not frappe.db.exists("Account", parent_tax_account):
+        if not smriti.db.exists("Account", parent_tax_account):
             # Check if Current Liabilities exists
             liabilities_parent = f"Current Liabilities - {company_abbr}"
-            if frappe.db.exists("Account", liabilities_parent):
-                ta = frappe.new_doc("Account")
+            if smriti.db.exists("Account", liabilities_parent):
+                ta = smriti.documents.new("Account")
                 ta.account_name = "Duties and Taxes"
                 ta.parent_account = liabilities_parent
                 ta.company = company_name
@@ -393,9 +392,9 @@ def run_setup_wizard(setup_data):
         created_accounts = {}
         for ta_name in tax_accounts:
             full_acc_name = f"{ta_name} - {company_abbr}"
-            if not frappe.db.exists("Account", full_acc_name):
-                if frappe.db.exists("Account", parent_tax_account):
-                    acc = frappe.new_doc("Account")
+            if not smriti.db.exists("Account", full_acc_name):
+                if smriti.db.exists("Account", parent_tax_account):
+                    acc = smriti.documents.new("Account")
                     acc.account_name = ta_name
                     acc.parent_account = parent_tax_account
                     acc.company = company_name
@@ -424,8 +423,8 @@ def run_setup_wizard(setup_data):
             if rate_flt == 0:
                 # Exempt or Zero Tax template
                 intra_name = f"GST 0% - {company_abbr}"
-                if not frappe.db.exists("Sales Taxes and Charges Template", intra_name):
-                    tpl = frappe.new_doc("Sales Taxes and Charges Template")
+                if not smriti.db.exists("Sales Taxes and Charges Template", intra_name):
+                    tpl = smriti.documents.new("Sales Taxes and Charges Template")
                     tpl.title = f"GST 0%"
                     tpl.company = company_name
                     tpl.is_default = 0
@@ -438,8 +437,8 @@ def run_setup_wizard(setup_data):
             
             # Intrastate: CGST + SGST
             intra_name = f"CGST+SGST {rate}% - {company_abbr}"
-            if not frappe.db.exists("Sales Taxes and Charges Template", intra_name):
-                tpl = frappe.new_doc("Sales Taxes and Charges Template")
+            if not smriti.db.exists("Sales Taxes and Charges Template", intra_name):
+                tpl = smriti.documents.new("Sales Taxes and Charges Template")
                 tpl.title = f"CGST+SGST {rate}%"
                 tpl.company = company_name
                 
@@ -469,8 +468,8 @@ def run_setup_wizard(setup_data):
 
             # Interstate: IGST
             inter_name = f"IGST {rate}% - {company_abbr}"
-            if not frappe.db.exists("Sales Taxes and Charges Template", inter_name):
-                tpl = frappe.new_doc("Sales Taxes and Charges Template")
+            if not smriti.db.exists("Sales Taxes and Charges Template", inter_name):
+                tpl = smriti.documents.new("Sales Taxes and Charges Template")
                 tpl.title = f"IGST {rate}%"
                 tpl.company = company_name
                 
@@ -496,18 +495,18 @@ def run_setup_wizard(setup_data):
         
         # Fetch or create Cash & Bank ledgers for Mode of Payment mapping
         cash_ledger = f"Cash - {company_abbr}"
-        if not frappe.db.exists("Account", cash_ledger):
-            cash_ledger = frappe.db.get_value("Account", {"account_name": "Cash", "company": company_name})
+        if not smriti.db.exists("Account", cash_ledger):
+            cash_ledger = smriti.db.get("Account", {"account_name": "Cash", "company": company_name})
         
         bank_ledger = f"Bank - {company_abbr}"
-        if not frappe.db.exists("Account", bank_ledger):
-            bank_ledger = frappe.db.get_value("Account", {"account_type": "Bank", "company": company_name})
+        if not smriti.db.exists("Account", bank_ledger):
+            bank_ledger = smriti.db.get("Account", {"account_type": "Bank", "company": company_name})
             if not bank_ledger:
                 parent_bank = f"Bank Accounts - {company_abbr}"
-                if not frappe.db.exists("Account", parent_bank):
+                if not smriti.db.exists("Account", parent_bank):
                     parent_bank = f"Current Assets - {company_abbr}"
-                if frappe.db.exists("Account", parent_bank):
-                    acc = frappe.new_doc("Account")
+                if smriti.db.exists("Account", parent_bank):
+                    acc = smriti.documents.new("Account")
                     acc.account_name = "Bank"
                     acc.parent_account = parent_bank
                     acc.company = company_name
@@ -521,15 +520,15 @@ def run_setup_wizard(setup_data):
         from smriti_retail_os.config.business_defaults import DEFAULT_PAYMENT_MODES
         mops = DEFAULT_PAYMENT_MODES
         for mop in mops:
-            if not frappe.db.exists("Mode of Payment", mop):
-                doc = frappe.new_doc("Mode of Payment")
+            if not smriti.db.exists("Mode of Payment", mop):
+                doc = smriti.documents.new("Mode of Payment")
                 doc.mode_of_payment = mop
                 # reviewed-ignore-permissions: system configuration setup wizard execution, runs before roles exist
                 doc.insert(ignore_permissions=True)
                 log(f"Created Mode of Payment: {mop}")
             
             # Map accounts in Mode of Payment (Defensively guard against duplicate entries)
-            mop_doc = frappe.get_doc("Mode of Payment", mop)
+            mop_doc = smriti.documents.get("Mode of Payment", mop)
             existing_companies = [acc.company for acc in mop_doc.accounts]
             has_mapping = False
             for acc in mop_doc.accounts:
@@ -561,7 +560,7 @@ def run_setup_wizard(setup_data):
             # "Could not find Row #N: Company: <name>" errors.
             clean_accounts = []
             for acc in unique_accounts:
-                if frappe.db.exists("Company", acc.company):
+                if smriti.db.exists("Company", acc.company):
                     clean_accounts.append(acc)
                 else:
                     log(f"  [cleanup] Removed stale MoP account row for deleted company: {acc.company}")
@@ -576,10 +575,10 @@ def run_setup_wizard(setup_data):
 
         # Fetch or create Cost Center for POS
         cost_center = f"Main - {company_abbr}"
-        if not frappe.db.exists("Cost Center", cost_center):
-            cost_center = frappe.db.get_value("Cost Center", {"company": company_name})
+        if not smriti.db.exists("Cost Center", cost_center):
+            cost_center = smriti.db.get("Cost Center", {"company": company_name})
             if not cost_center:
-                cc = frappe.new_doc("Cost Center")
+                cc = smriti.documents.new("Cost Center")
                 cc.cost_center_name = "Main"
                 cc.company = company_name
                 # reviewed-ignore-permissions: system configuration setup wizard execution, runs before roles exist
@@ -588,17 +587,17 @@ def run_setup_wizard(setup_data):
 
         # Fetch or create Write Off Account for POS
         write_off_account = f"Write Off - {company_abbr}"
-        if not frappe.db.exists("Account", write_off_account):
-            write_off_account = frappe.db.get_value("Account", {"account_name": ["like", "%Write Off%"], "company": company_name})
+        if not smriti.db.exists("Account", write_off_account):
+            write_off_account = smriti.db.get("Account", {"account_name": ["like", "%Write Off%"], "company": company_name})
             if not write_off_account:
-                parent_expense = frappe.db.get_value("Account", {"account_name": "Indirect Expenses", "company": company_name})
+                parent_expense = smriti.db.get("Account", {"account_name": "Indirect Expenses", "company": company_name})
                 if not parent_expense:
-                    parent_expense = frappe.db.get_value("Account", {"account_name": "Direct Expenses", "company": company_name})
+                    parent_expense = smriti.db.get("Account", {"account_name": "Direct Expenses", "company": company_name})
                 if not parent_expense:
-                    parent_expense = frappe.db.get_value("Account", {"is_group": 1, "root_type": "Expense", "company": company_name})
+                    parent_expense = smriti.db.get("Account", {"is_group": 1, "root_type": "Expense", "company": company_name})
                 
                 if parent_expense:
-                    acc = frappe.new_doc("Account")
+                    acc = smriti.documents.new("Account")
                     acc.account_name = "Write Off"
                     acc.parent_account = parent_expense
                     acc.company = company_name
@@ -607,8 +606,8 @@ def run_setup_wizard(setup_data):
                     acc.insert(ignore_permissions=True)
                     write_off_account = acc.name
 
-        if not frappe.db.exists("POS Profile", pos_profile_name):
-            pp = frappe.new_doc("POS Profile")
+        if not smriti.db.exists("POS Profile", pos_profile_name):
+            pp = smriti.documents.new("POS Profile")
             pp.name = pos_profile_name
             pp.company = company_name
             pp.warehouse = warehouse_id
@@ -645,7 +644,7 @@ def run_setup_wizard(setup_data):
         else:
             pos_profile_id = pos_profile_name
             log(f"POS Profile '{pos_profile_name}' already exists. Updating settings defensively...")
-            pp = frappe.get_doc("POS Profile", pos_profile_name)
+            pp = smriti.documents.get("POS Profile", pos_profile_name)
             pp.company = company_name
             pp.warehouse = warehouse_id
             pp.customer = customer_id
@@ -724,8 +723,8 @@ def run_setup_wizard(setup_data):
         except Exception:
             store_longitude = None
 
-        if not frappe.db.exists("SMRITI Company Settings", settings_name):
-            scs = frappe.new_doc("SMRITI Company Settings")
+        if not smriti.db.exists("SMRITI Company Settings", settings_name):
+            scs = smriti.documents.new("SMRITI Company Settings")
             scs.company = company_name
             scs.store_trade_name = store_trade_name
             scs.brand_color = "#1a73e8"
@@ -743,7 +742,7 @@ def run_setup_wizard(setup_data):
             scs.insert(ignore_permissions=True)
             log("SMRITI Company Settings initialized.")
         else:
-            scs = frappe.get_doc("SMRITI Company Settings", settings_name)
+            scs = smriti.documents.get("SMRITI Company Settings", settings_name)
             scs.default_warehouse = warehouse_id
             scs.default_pos_profile = pos_profile_id
             scs.default_walk_in_customer = customer_id
@@ -759,13 +758,13 @@ def run_setup_wizard(setup_data):
             log("SMRITI Company Settings updated.")
 
         # Set Company Settings configured flag
-        frappe.db.set_value("Company", company_name, "custom_smriti_settings_configured", 1)
+        smriti.db.set_value("Company", company_name, "custom_smriti_settings_configured", 1)
 
         # Set System Settings flags
         frappe.db.set_single_value("System Settings", "setup_complete", 1)
         frappe.db.set_single_value("System Settings", "custom_smriti_frontend_enabled", 1)
 
-        frappe.db.commit()
+        smriti.db.commit()
 
         # Clear Cache
         log("Clearing cache to apply initial configuration...")
@@ -779,9 +778,9 @@ def run_setup_wizard(setup_data):
         }
 
     except Exception as e:
-        frappe.db.rollback()
+        smriti.db.rollback()
         err_msg = str(e)
-        frappe.log_error(f"Setup Wizard Error: {err_msg}")
+        smriti.errors.log_error(f"Setup Wizard Error: {err_msg}")
         log(f"CRITICAL ERROR: {err_msg}")
         return {
             "success": False,
@@ -797,7 +796,7 @@ def verify_setup_wizard_access():
     - 'Administrator' or any user with the 'System Manager' role otherwise.
     Emits a warning (non-blocking) if the system has already been configured.
     """
-    companies = frappe.get_all("Company", limit=1)
+    companies = smriti.db.get_list("Company", limit=1)
     if not companies:
         # First-time initialization — allow access to anyone
         return
@@ -811,7 +810,7 @@ def verify_setup_wizard_access():
         frappe.throw(_("Permission Denied: Only Administrators or System Managers can access this portal."), frappe.PermissionError)
 
     # Warn (non-blocking) that setup has already been completed
-    already_configured = frappe.db.get_value("Company", companies[0]["name"], "custom_smriti_settings_configured")
+    already_configured = smriti.db.get("Company", companies[0]["name"], "custom_smriti_settings_configured")
     if already_configured:
         frappe.msgprint(
             _("Setup Wizard has already been completed. Re-running will update existing settings without deleting data."),

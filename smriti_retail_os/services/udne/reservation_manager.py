@@ -1,6 +1,7 @@
 import datetime
 import json
 import frappe
+from smriti_retail_os import smriti
 from smriti_retail_os.services.udne.exceptions import UDNEExhaustedError
 
 def reserve_range(doctype: str, terminal_id: str, count: int, rule_name: str, reset_rule: str, context_dict: dict, expiry_hours: int = 24) -> dict:
@@ -14,10 +15,10 @@ def reserve_range(doctype: str, terminal_id: str, count: int, rule_name: str, re
     context_hash, details = get_context_hash(rule_name, reset_rule, context_dict)
     counter_name = context_hash
     
-    if not frappe.db.exists("SMRITI Numbering Counter", counter_name):
+    if not smriti.db.exists("SMRITI Numbering Counter", counter_name):
         try:
-            doc = frappe.get_doc({
-                "doctype": "SMRITI Numbering Counter",
+            doc = smriti.documents.new("NumberingCounter")
+            doc.update({
                 "name": counter_name,
                 "rule": rule_name,
                 "context_hash": context_hash,
@@ -25,12 +26,12 @@ def reserve_range(doctype: str, terminal_id: str, count: int, rule_name: str, re
                 "current_value": 0
             })
             doc.insert(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
         except Exception:
-            frappe.db.rollback()
+            smriti.db.rollback()
             
     # Row lock for counter block allocation
-    res = frappe.db.sql(
+    res = smriti.db.sql(
         "select current_value from `tabSMRITI Numbering Counter` where name = %s for update",
         (counter_name,)
     )
@@ -38,15 +39,15 @@ def reserve_range(doctype: str, terminal_id: str, count: int, rule_name: str, re
     start_number = current_val + 1
     end_number = current_val + count
     
-    frappe.db.sql(
+    smriti.db.sql(
         "update `tabSMRITI Numbering Counter` set current_value = %s where name = %s",
         (end_number, counter_name)
     )
     
     expiry_datetime = datetime.datetime.now() + datetime.timedelta(hours=expiry_hours)
     
-    res_doc = frappe.get_doc({
-        "doctype": "SMRITI Numbering Reserved Range",
+    res_doc = smriti.documents.new("NumberingReservedRange")
+    res_doc.update({
         "document_type": doctype,
         "terminal_id": terminal_id,
         "start_number": start_number,
@@ -56,7 +57,7 @@ def reserve_range(doctype: str, terminal_id: str, count: int, rule_name: str, re
         "expiry_datetime": expiry_datetime
     })
     res_doc.insert(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
     
     return {
         "reservation_id": res_doc.name,
@@ -70,7 +71,7 @@ def reclaim_expired_reservations():
     Scans and transitions expired Allocated/Active ranges to Expired.
     """
     now = datetime.datetime.now()
-    expired = frappe.get_all(
+    expired = smriti.db.get_list(
         "SMRITI Numbering Reserved Range",
         filters={
             "expiry_datetime": ["<", now],
@@ -78,6 +79,6 @@ def reclaim_expired_reservations():
         }
     )
     for row in expired:
-        frappe.db.set_value("SMRITI Numbering Reserved Range", row.name, "status", "Expired")
+        smriti.db.set_value("SMRITI Numbering Reserved Range", row.name, "status", "Expired")
     if expired:
-        frappe.db.commit()
+        smriti.db.commit()

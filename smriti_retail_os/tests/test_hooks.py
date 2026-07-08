@@ -11,6 +11,7 @@
 #
 
 import frappe
+from smriti_retail_os import smriti
 import unittest
 from frappe.utils import flt, cint
 
@@ -21,38 +22,38 @@ class TestSmritiRetailHooks(unittest.TestCase):
         super().setUpClass()
         from smriti_retail_os.setup import setup_smriti_retail_os
         setup_smriti_retail_os()
-        frappe.db.commit()
+        smriti.db.commit()
 
     def setUp(self):
         # Clean up any test records
-        frappe.db.delete("Item", {"item_code": "TEST-SHIRT"})
-        frappe.db.delete("Customer", {"customer_name": "Test Rajesh Kumar"})
-        frappe.db.delete("Supplier", {"supplier_name": "Test ABC Wholesalers"})
-        frappe.db.delete("Address", {"address_title": ["like", "Test%"]})
-        frappe.db.commit()
+        smriti.db.delete("Item", {"item_code": "TEST-SHIRT"})
+        smriti.db.delete("Customer", {"customer_name": "Test Rajesh Kumar"})
+        smriti.db.delete("Supplier", {"supplier_name": "Test ABC Wholesalers"})
+        smriti.db.delete("Address", {"address_title": ["like", "Test%"]})
+        smriti.db.commit()
 
         # Ensure a default Supplier Group exists and fetch it
-        self.supplier_group = frappe.db.get_value("Supplier Group", {}, "name")
+        self.supplier_group = smriti.db.get("Supplier Group", {}, "name")
         if not self.supplier_group:
-            sg = frappe.new_doc("Supplier Group")
+            sg = smriti.documents.new("Supplier Group")
             sg.supplier_group_name = "Test Local"
             sg.insert(ignore_permissions=True)
             self.supplier_group = sg.name
 
     def tearDown(self):
         # Clean up test records
-        frappe.db.delete("Item", {"item_code": "TEST-SHIRT"})
-        frappe.db.delete("Customer", {"customer_name": "Test Rajesh Kumar"})
-        frappe.db.delete("Supplier", {"supplier_name": "Test ABC Wholesalers"})
-        frappe.db.delete("Address", {"address_title": ["like", "Test%"]})
-        frappe.db.commit()
+        smriti.db.delete("Item", {"item_code": "TEST-SHIRT"})
+        smriti.db.delete("Customer", {"customer_name": "Test Rajesh Kumar"})
+        smriti.db.delete("Supplier", {"supplier_name": "Test ABC Wholesalers"})
+        smriti.db.delete("Address", {"address_title": ["like", "Test%"]})
+        smriti.db.commit()
 
     def test_customer_address_sync(self):
         """
         Tests that saving a Customer with custom_address_text auto-generates
         a standard linked Address record.
         """
-        cust = frappe.new_doc("Customer")
+        cust = smriti.documents.new("Customer")
         cust.customer_name = "Test Rajesh Kumar"
         cust.customer_type = "Individual"
         cust.primary_mobile_no = "9876543210"
@@ -61,7 +62,7 @@ class TestSmritiRetailHooks(unittest.TestCase):
         cust.insert(ignore_permissions=True)
         
         # Verify that Address record was created in the database and linked
-        addr_name = frappe.db.get_value(
+        addr_name = smriti.db.get(
             "Address", 
             {
                 "links.link_doctype": "Customer",
@@ -72,7 +73,7 @@ class TestSmritiRetailHooks(unittest.TestCase):
         )
         self.assertIsNotNone(addr_name)
         
-        addr = frappe.get_doc("Address", addr_name)
+        addr = smriti.documents.get("Address", addr_name)
         self.assertEqual(addr.address_line1, "Flat 402, Green Glen Layout")
         self.assertEqual(addr.address_line2, "Bangalore, 560103")
         self.assertEqual(addr.country, "India")
@@ -83,7 +84,7 @@ class TestSmritiRetailHooks(unittest.TestCase):
         Tests that saving a Supplier auto-generates linked Address
         and creates/links a Payment Terms Template matching custom_credit_days.
         """
-        supp = frappe.new_doc("Supplier")
+        supp = smriti.documents.new("Supplier")
         supp.supplier_name = "Test ABC Wholesalers"
         supp.supplier_group = self.supplier_group
         supp.gstin = "29AABCR1718E1ZL"
@@ -92,7 +93,7 @@ class TestSmritiRetailHooks(unittest.TestCase):
         supp.insert(ignore_permissions=True)
         
         # 1. Verify address sync
-        addr_name = frappe.db.get_value(
+        addr_name = smriti.db.get(
             "Address", 
             {
                 "links.link_doctype": "Supplier",
@@ -102,20 +103,20 @@ class TestSmritiRetailHooks(unittest.TestCase):
             "name"
         )
         self.assertIsNotNone(addr_name)
-        addr = frappe.get_doc("Address", addr_name)
+        addr = smriti.documents.get("Address", addr_name)
         self.assertEqual(addr.address_line1, "Shed 4B, Peenya Industrial Area")
         self.assertEqual(addr.state, "Karnataka") # Resolved from GSTIN!
         
         # 2. Verify Payment Term generation & linking
-        supp_reload = frappe.get_doc("Supplier", supp.name)
+        supp_reload = smriti.documents.get("Supplier", supp.name)
         self.assertEqual(supp_reload.payment_terms, "Credit Term - 45 Days")
         
         # Verify Payment Term template exists
-        ptt_exists = frappe.db.exists("Payment Terms Template", "Credit Term - 45 Days")
+        ptt_exists = smriti.db.exists("Payment Terms Template", "Credit Term - 45 Days")
         self.assertTrue(ptt_exists)
         
         # Inspect terms
-        ptt = frappe.get_doc("Payment Terms Template", "Credit Term - 45 Days")
+        ptt = smriti.documents.get("Payment Terms Template", "Credit Term - 45 Days")
         self.assertEqual(len(ptt.terms), 1)
         self.assertEqual(ptt.terms[0].credit_days, 45)
 
@@ -125,7 +126,7 @@ class TestSmritiRetailHooks(unittest.TestCase):
         address sync triggers, and tax inclusive overrides.
         """
         # 1. Customer Rich CRUD
-        cust = frappe.new_doc("Customer")
+        cust = smriti.documents.new("Customer")
         cust.customer_name = "Test Rajesh Kumar"
         cust.customer_type = "Company"
         cust.tax_id = "27AAXFT2508H1ZR" # Maharashtra GSTIN
@@ -135,16 +136,16 @@ class TestSmritiRetailHooks(unittest.TestCase):
         cust.insert(ignore_permissions=True)
 
         # Check billing address
-        bill_addr = frappe.db.get_value("Address", {"links.link_name": cust.name, "address_type": "Billing"}, "name")
+        bill_addr = smriti.db.get("Address", {"links.link_name": cust.name, "address_type": "Billing"}, "name")
         self.assertIsNotNone(bill_addr)
-        b_addr = frappe.get_doc("Address", bill_addr)
+        b_addr = smriti.documents.get("Address", bill_addr)
         self.assertEqual(b_addr.address_line1, "Billing Street 1")
         self.assertEqual(b_addr.state, "Maharashtra")
 
         # Check shipping address
-        ship_addr = frappe.db.get_value("Address", {"links.link_name": cust.name, "address_type": "Shipping"}, "name")
+        ship_addr = smriti.db.get("Address", {"links.link_name": cust.name, "address_type": "Shipping"}, "name")
         self.assertIsNotNone(ship_addr)
-        s_addr = frappe.get_doc("Address", ship_addr)
+        s_addr = smriti.documents.get("Address", ship_addr)
         self.assertEqual(s_addr.address_line1, "Shipping Street 1")
         self.assertEqual(s_addr.state, "Karnataka") # Resolved from shipping text if state hook is active
 
@@ -152,7 +153,7 @@ class TestSmritiRetailHooks(unittest.TestCase):
         self.assertEqual(cust.custom_tax_inclusive_override, "Inclusive")
 
         # 2. Supplier Rich CRUD
-        supp = frappe.new_doc("Supplier")
+        supp = smriti.documents.new("Supplier")
         supp.supplier_name = "Test ABC Wholesalers"
         supp.supplier_group = self.supplier_group
         supp.gstin = "27AAXFT2508H1ZR"
@@ -162,13 +163,13 @@ class TestSmritiRetailHooks(unittest.TestCase):
         supp.insert(ignore_permissions=True)
 
         # Check billing and shipping addresses linked to supplier
-        s_bill = frappe.db.get_value("Address", {"links.link_name": supp.name, "address_type": "Billing"}, "name")
-        s_ship = frappe.db.get_value("Address", {"links.link_name": supp.name, "address_type": "Shipping"}, "name")
+        s_bill = smriti.db.get("Address", {"links.link_name": supp.name, "address_type": "Billing"}, "name")
+        s_ship = smriti.db.get("Address", {"links.link_name": supp.name, "address_type": "Shipping"}, "name")
         self.assertIsNotNone(s_bill)
         self.assertIsNotNone(s_ship)
 
         # Check payment terms template link
-        supp_reload = frappe.get_doc("Supplier", supp.name)
+        supp_reload = smriti.documents.get("Supplier", supp.name)
         self.assertEqual(supp_reload.payment_terms, "Credit Term - 60 Days")
 
     def test_desk_access_redirection(self):

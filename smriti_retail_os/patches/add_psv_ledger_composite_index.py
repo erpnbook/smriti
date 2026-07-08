@@ -22,7 +22,8 @@
 #               Safe to run multiple times — checks if index exists before adding.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 
 
 def execute():
@@ -38,7 +39,7 @@ def execute():
     index_name = "idx_psv_ledger_psa_item_dt"
 
     # Check if the index already exists
-    existing = frappe.db.sql(
+    existing = smriti.db.sql(
         """
         SELECT COUNT(*) 
         FROM information_schema.statistics
@@ -59,7 +60,7 @@ def execute():
         f"[PSV Index Patch] Creating composite index `{index_name}` on `{table_name}`..."
     )
 
-    frappe.db.sql(
+    smriti.db.sql(
         f"""
         ALTER TABLE `{table_name}`
         ADD INDEX `{index_name}` (party_stock_account, item_code, posting_datetime)
@@ -73,7 +74,7 @@ def execute():
     # Also add a separate index on voucher_no to speed up the orphaned invoice
     # NOT EXISTS check in psv_service.run_psv_daily_health_check()
     voucher_index_name = "idx_psv_ledger_voucher_no"
-    existing_voucher = frappe.db.sql(
+    existing_voucher = smriti.db.sql(
         """
         SELECT COUNT(*)
         FROM information_schema.statistics
@@ -85,7 +86,7 @@ def execute():
     )
 
     if not existing_voucher or existing_voucher[0][0] == 0:
-        frappe.db.sql(
+        smriti.db.sql(
             f"""
             ALTER TABLE `{table_name}`
             ADD INDEX `{voucher_index_name}` (voucher_no)

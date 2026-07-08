@@ -4,6 +4,7 @@
 
 import frappe
 from frappe import _
+from smriti_retail_os import smriti
 import time
 import datetime
 from smriti_retail_os.smriti_retail_os.services.adapters.base_adapter import BaseAdapter
@@ -45,7 +46,7 @@ class TallyAdapter(BaseAdapter):
 	def create_ledger_in_tally(self, ledger_name, parent_group="Sundry Debtors", settings=None):
 		"""Helper to create ledger in Tally if missing."""
 		if not settings:
-			settings = frappe.get_doc("SMRITI Tally Settings")
+			settings = smriti.documents.get_single("TallySettings")
 		xml_lines = [
 			"<ENVELOPE>",
 			"  <HEADER>",
@@ -93,7 +94,7 @@ class TallyAdapter(BaseAdapter):
 			doc_name = v.get("name")
 			
 			# Check zero-value vouchers
-			doc = frappe.get_doc(doctype, doc_name)
+			doc = smriti.documents.get(doctype, doc_name)
 			total_amt = float(doc.grand_total if doctype != "Payment Entry" else doc.paid_amount)
 			if total_amt == 0.0:
 				skipped += 1
@@ -207,8 +208,8 @@ class TallyAdapter(BaseAdapter):
 
 	def _log_sync_status(self, doc, status, response, started_at):
 		"""Helper to log execution status to SMRITI Tally Sync Log."""
-		log = frappe.get_doc({
-			"doctype": "SMRITI Tally Sync Log",
+		log = smriti.documents.new("TallySyncLog")
+		log.update({
 			"posting_date": doc.posting_date,
 			"voucher_type": "Sales" if doc.doctype == "Sales Invoice" else ("Purchase" if doc.doctype == "Purchase Invoice" else doc.doctype),
 			"reference_name": doc.name,
@@ -216,4 +217,4 @@ class TallyAdapter(BaseAdapter):
 			"response": response[:1000]
 		})
 		log.insert(ignore_permissions=True)
-		frappe.db.commit()
+		smriti.db.commit()

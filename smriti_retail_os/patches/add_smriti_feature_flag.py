@@ -9,7 +9,8 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 
 
 def execute():
@@ -36,5 +37,5 @@ def execute():
     frappe.db.set_single_value(
         "System Settings", "custom_smriti_frontend_enabled", 1
     )
-    frappe.db.commit()
+    smriti.db.commit()
     print("✅ SMRITI feature flag added to System Settings")

@@ -15,6 +15,7 @@ import unittest
 from frappe.tests.utils import FrappeTestCase
 from frappe.utils import flt
 from frappe import _
+from smriti_retail_os import smriti
 from smriti_retail_os.clienteling.service import clienteling_service, walk_in_service
 from smriti_retail_os.clienteling.api import clienteling_api
 
@@ -25,36 +26,36 @@ class TestClienteling(FrappeTestCase):
         
         # 1. Create a Test Customer
         cls.customer_name = "_Test Clienteling Cust"
-        if not frappe.db.exists("Customer", {"customer_name": cls.customer_name}):
-            cust = frappe.new_doc("Customer")
+        if not smriti.db.exists("Customer", {"customer_name": cls.customer_name}):
+            cust = smriti.documents.new("Customer")
             cust.customer_name = cls.customer_name
             cust.customer_group = "Individual"
             cust.customer_type = "Individual"
             cust.insert(ignore_permissions=True)
             cls.customer = cust.name
         else:
-            cls.customer = frappe.db.get_value("Customer", {"customer_name": cls.customer_name})
+            cls.customer = smriti.db.get("Customer", {"customer_name": cls.customer_name})
             
         # 2. Create a Test Store Warehouse
         cls.store = "_Test Clienteling Store"
-        if not frappe.db.exists("Warehouse", {"warehouse_name": cls.store}):
-            wh = frappe.new_doc("Warehouse")
+        if not smriti.db.exists("Warehouse", {"warehouse_name": cls.store}):
+            wh = smriti.documents.new("Warehouse")
             wh.warehouse_name = cls.store
             wh.is_group = 0
             wh.insert(ignore_permissions=True)
             cls.warehouse = wh.name
         else:
-            cls.warehouse = frappe.db.get_value("Warehouse", {"warehouse_name": cls.store})
+            cls.warehouse = smriti.db.get("Warehouse", {"warehouse_name": cls.store})
             
         # 3. Create a Test Employee (Executive)
-        if not frappe.db.exists("Gender", "Male"):
-            gender = frappe.new_doc("Gender")
+        if not smriti.db.exists("Gender", "Male"):
+            gender = smriti.documents.new("Gender")
             gender.gender = "Male"
             gender.insert(ignore_permissions=True)
 
         cls.employee_name = "_Test Clienteling Executive"
-        if not frappe.db.exists("Employee", {"first_name": cls.employee_name}):
-            emp = frappe.new_doc("Employee")
+        if not smriti.db.exists("Employee", {"first_name": cls.employee_name}):
+            emp = smriti.documents.new("Employee")
             emp.first_name = cls.employee_name
             emp.status = "Active"
             emp.gender = "Male"
@@ -63,27 +64,27 @@ class TestClienteling(FrappeTestCase):
             emp.insert(ignore_permissions=True)
             cls.employee = emp.name
         else:
-            cls.employee = frappe.db.get_value("Employee", {"first_name": cls.employee_name})
+            cls.employee = smriti.db.get("Employee", {"first_name": cls.employee_name})
 
     def setUp(self):
         # Clear existing telemetry and logs to isolate tests
-        frappe.db.delete("SMRITI Customer Graph", {"customer": self.customer})
-        frappe.db.delete("SMRITI Customer Profile", {"customer": self.customer})
-        frappe.db.delete("SMRITI Walk In Visit", {"store": self.warehouse})
-        frappe.db.delete("SMRITI Walk In Analytics", {"store": self.warehouse})
-        frappe.db.delete("SMRITI Customer Interaction", {"customer": self.customer})
-        frappe.db.delete("SMRITI Formula Definition", {"formula_id": ["in", ["TST-ABV", "TST-LTV", "TST-VIP"]]})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Customer Graph", {"customer": self.customer})
+        smriti.db.delete("SMRITI Customer Profile", {"customer": self.customer})
+        smriti.db.delete("SMRITI Walk In Visit", {"store": self.warehouse})
+        smriti.db.delete("SMRITI Walk In Analytics", {"store": self.warehouse})
+        smriti.db.delete("SMRITI Customer Interaction", {"customer": self.customer})
+        smriti.db.delete("SMRITI Formula Definition", {"formula_id": ["in", ["TST-ABV", "TST-LTV", "TST-VIP"]]})
+        smriti.db.commit()
 
     def tearDown(self):
         # Clean up formulas to keep database clean
-        frappe.db.delete("SMRITI Formula Definition", {"formula_id": ["in", ["TST-ABV", "TST-LTV", "TST-VIP"]]})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Formula Definition", {"formula_id": ["in", ["TST-ABV", "TST-LTV", "TST-VIP"]]})
+        smriti.db.commit()
 
     def test_materialization_invariant(self):
         """Asserts that direct database writes to Customer Graph/Profile by standard users throw PermissionError."""
         # 1. Test Profile write rejection
-        profile = frappe.new_doc("SMRITI Customer Profile")
+        profile = smriti.documents.new("SMRITI Customer Profile")
         profile.customer = self.customer
         
         # Simulate standard session (Administrator session bypassed but flags are checked)
@@ -104,7 +105,7 @@ class TestClienteling(FrappeTestCase):
             customer=self.customer,
             status="Registered"
         )
-        self.assertTrue(frappe.db.exists("SMRITI Walk In Visit", visit.name))
+        self.assertTrue(smriti.db.exists("SMRITI Walk In Visit", visit.name))
         self.assertEqual(visit.status, "Registered")
 
         # 2. Transition: Registered -> Browsing
@@ -156,10 +157,10 @@ class TestClienteling(FrappeTestCase):
         )
         
         # 3. Verify dirty markers are physically persisted
-        graph_dirty = frappe.db.get_value("SMRITI Customer Graph", self.customer, "is_dirty")
-        profile_dirty = frappe.db.get_value("SMRITI Customer Profile", self.customer, "is_dirty")
-        source = frappe.db.get_value("SMRITI Customer Graph", self.customer, "dirty_source")
-        doc_id = frappe.db.get_value("SMRITI Customer Graph", self.customer, "dirty_document")
+        graph_dirty = smriti.db.get("SMRITI Customer Graph", self.customer, "is_dirty")
+        profile_dirty = smriti.db.get("SMRITI Customer Profile", self.customer, "is_dirty")
+        source = smriti.db.get("SMRITI Customer Graph", self.customer, "dirty_source")
+        doc_id = smriti.db.get("SMRITI Customer Graph", self.customer, "dirty_document")
         
         self.assertEqual(graph_dirty, 1)
         self.assertEqual(profile_dirty, 1)
@@ -169,13 +170,13 @@ class TestClienteling(FrappeTestCase):
     def test_formula_registry_fallback(self):
         """Checks that if Formula definitions are missing, the calculations fallback gracefully without crash."""
         # Ensure TST-ABV and TST-LTV are deleted
-        frappe.db.delete("SMRITI Formula Definition", {"formula_name": ["in", ["Average Basket Value", "Lifetime Value"]]})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Formula Definition", {"formula_name": ["in", ["Average Basket Value", "Lifetime Value"]]})
+        smriti.db.commit()
 
         # Execute regeneration
         try:
             clienteling_service.regenerate_customer_data(self.customer)
-            profile = frappe.get_doc("SMRITI Customer Profile", self.customer)
+            profile = smriti.documents.get("SMRITI Customer Profile", self.customer)
             self.assertEqual(profile.calculation_status, "Completed")
             self.assertEqual(profile.lifetime_value, 0.0)
             self.assertEqual(profile.average_basket_value, 0.0)
@@ -189,9 +190,8 @@ class TestClienteling(FrappeTestCase):
             ("TST-ABV", "Average Basket Value", "net_revenue / purchases_count"),
             ("TST-LTV", "Lifetime Value", "net_revenue")
         ]:
-            if not frappe.db.exists("SMRITI Formula Definition", {"formula_id": fid}):
-                frappe.get_doc({
-                    "doctype": "SMRITI Formula Definition",
+            if not smriti.db.exists("SMRITI Formula Definition", {"formula_id": fid}):
+                smriti.documents.new("FormulaDefinition").update({
                     "formula_id": fid,
                     "formula_name": fname,
                     "formula_version": "1.0.0",
@@ -201,13 +201,13 @@ class TestClienteling(FrappeTestCase):
                     "effective_date": "2026-06-19",
                     "formula_expression": expr
                 }).insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # 2. Recalculate
         clienteling_service.regenerate_customer_data(self.customer)
         
-        graph = frappe.get_doc("SMRITI Customer Graph", self.customer)
-        profile = frappe.get_doc("SMRITI Customer Profile", self.customer)
+        graph = smriti.documents.get("SMRITI Customer Graph", self.customer)
+        profile = smriti.documents.get("SMRITI Customer Profile", self.customer)
         
         # 3. Assert values are consistent
         self.assertEqual(graph.preferred_brand, profile.preferred_brand)
@@ -220,17 +220,17 @@ class TestClienteling(FrappeTestCase):
         self.assertEqual(flt(graph.net_revenue), flt(profile.lifetime_value))
         
         # Clean up seeded formulas
-        frappe.db.delete("SMRITI Formula Definition", {"formula_id": ["in", ["TST-ABV", "TST-LTV"]]})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Formula Definition", {"formula_id": ["in", ["TST-ABV", "TST-LTV"]]})
+        smriti.db.commit()
 
     def test_formula_version_tracking(self):
         """Asserts that when a formula version changes in SMRITI Formula Definition, the recalculated intelligence graph records the new version snapshot."""
         # 1. Setup/Verify formula TST-VIP exists
         formula_id = "TST-VIP"
-        doc_name = frappe.db.get_value("SMRITI Formula Definition", {"formula_id": formula_id}, "name")
+        doc_name = smriti.db.get("SMRITI Formula Definition", {"formula_id": formula_id}, "name")
         if not doc_name:
-            f_doc = frappe.get_doc({
-                "doctype": "SMRITI Formula Definition",
+            f_doc = smriti.documents.new("FormulaDefinition")
+            f_doc.update({
                 "formula_id": formula_id,
                 "formula_name": "VIP Candidate Score",
                 "formula_version": "1.0.0",
@@ -241,26 +241,26 @@ class TestClienteling(FrappeTestCase):
                 "formula_expression": "(net_revenue / 50000 * 50) + (abv / 5000 * 30) + min(20, purchases_count * 2.0)"
             }).insert(ignore_permissions=True)
         else:
-            f_doc = frappe.get_doc("SMRITI Formula Definition", doc_name)
+            f_doc = smriti.documents.get("SMRITI Formula Definition", doc_name)
             f_doc.formula_version = "1.0.0"
             f_doc.is_active = 1
             f_doc.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # 2. Run calculation
         clienteling_service.regenerate_customer_data(self.customer)
-        intel = frappe.get_doc("SMRITI Customer Intelligence Graph", self.customer)
+        intel = smriti.documents.get("SMRITI Customer Intelligence Graph", self.customer)
         self.assertEqual(intel.vip_formula_version, "1.0.0")
 
         # 3. Change version
-        f_doc = frappe.get_doc("SMRITI Formula Definition", f_doc.name)
+        f_doc = smriti.documents.get("SMRITI Formula Definition", f_doc.name)
         f_doc.formula_version = "2.0.0"
         f_doc.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # 4. Recalculate and assert version snapshot updated
         clienteling_service.regenerate_customer_data(self.customer)
-        intel = frappe.get_doc("SMRITI Customer Intelligence Graph", self.customer)
+        intel = smriti.documents.get("SMRITI Customer Intelligence Graph", self.customer)
         self.assertEqual(intel.vip_formula_version, "2.0.0")
 
     def test_prediction_confidence_bounds(self):
@@ -277,7 +277,7 @@ class TestClienteling(FrappeTestCase):
                 "next_visit_confidence": 200.0
             }
             clienteling_service.regenerate_customer_data(self.customer)
-            intel = frappe.get_doc("SMRITI Customer Intelligence Graph", self.customer)
+            intel = smriti.documents.get("SMRITI Customer Intelligence Graph", self.customer)
             self.assertEqual(intel.next_purchase_confidence, 100.0)
             self.assertEqual(intel.next_visit_confidence, 100.0)
 
@@ -290,7 +290,7 @@ class TestClienteling(FrappeTestCase):
                 "next_visit_confidence": -10.0
             }
             clienteling_service.regenerate_customer_data(self.customer)
-            intel = frappe.get_doc("SMRITI Customer Intelligence Graph", self.customer)
+            intel = smriti.documents.get("SMRITI Customer Intelligence Graph", self.customer)
             self.assertEqual(intel.next_purchase_confidence, 0.0)
             self.assertEqual(intel.next_visit_confidence, 0.0)
 
@@ -300,7 +300,7 @@ class TestClienteling(FrappeTestCase):
         settings = frappe.get_single("SMRITI Clienteling Settings")
         settings.vip_threshold = 80.0
         settings.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # Build initial graph/profile
         clienteling_service.regenerate_customer_data(self.customer)
@@ -311,11 +311,11 @@ class TestClienteling(FrappeTestCase):
         # purchases_count = 10 (gives 20)
         # abv = 3500 (gives 3500/5000 * 30 = 21)
         # Total = 35 + 20 + 21 = 76
-        graph = frappe.get_doc("SMRITI Customer Graph", self.customer)
+        graph = smriti.documents.get("SMRITI Customer Graph", self.customer)
         graph.net_revenue = 35000.0
         graph.purchases_count = 10
         graph.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # 3. Calculate and verify VIP Candidate Score is 76% and is_vip is 0
         from unittest import mock
@@ -323,8 +323,8 @@ class TestClienteling(FrappeTestCase):
             mock_graph.return_value = graph
             clienteling_service.regenerate_customer_data(self.customer)
             
-        intel = frappe.get_doc("SMRITI Customer Intelligence Graph", self.customer)
-        profile = frappe.get_doc("SMRITI Customer Profile", self.customer)
+        intel = smriti.documents.get("SMRITI Customer Intelligence Graph", self.customer)
+        profile = smriti.documents.get("SMRITI Customer Profile", self.customer)
         self.assertEqual(intel.vip_candidate_score, 76.0)
         self.assertEqual(intel.is_vip, 0)
         self.assertEqual(profile.is_vip, 0)
@@ -333,15 +333,15 @@ class TestClienteling(FrappeTestCase):
         settings = frappe.get_single("SMRITI Clienteling Settings")
         settings.vip_threshold = 70.0
         settings.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # 5. Recalculate and assert is_vip updates to 1
         with mock.patch("smriti_retail_os.clienteling.service.clienteling_service.update_customer_graph") as mock_graph:
             mock_graph.return_value = graph
             clienteling_service.regenerate_customer_data(self.customer)
             
-        intel = frappe.get_doc("SMRITI Customer Intelligence Graph", self.customer)
-        profile = frappe.get_doc("SMRITI Customer Profile", self.customer)
+        intel = smriti.documents.get("SMRITI Customer Intelligence Graph", self.customer)
+        profile = smriti.documents.get("SMRITI Customer Profile", self.customer)
         self.assertEqual(intel.is_vip, 1)
         self.assertEqual(profile.is_vip, 1)
 
@@ -351,17 +351,17 @@ class TestClienteling(FrappeTestCase):
         settings = frappe.get_single("SMRITI Clienteling Settings")
         settings.dormancy_days = 90
         settings.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # Build initial graph/profile
         clienteling_service.regenerate_customer_data(self.customer)
 
         # 2. Setup customer graph with last_visit_date 80 days ago
         from frappe.utils import add_days, today
-        graph = frappe.get_doc("SMRITI Customer Graph", self.customer)
+        graph = smriti.documents.get("SMRITI Customer Graph", self.customer)
         graph.last_visit_date = add_days(today(), -80)
         graph.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # 3. Recalculate and verify is_dormant is 0
         from unittest import mock
@@ -369,27 +369,26 @@ class TestClienteling(FrappeTestCase):
             mock_graph.return_value = graph
             clienteling_service.regenerate_customer_data(self.customer)
             
-        intel = frappe.get_doc("SMRITI Customer Intelligence Graph", self.customer)
+        intel = smriti.documents.get("SMRITI Customer Intelligence Graph", self.customer)
         self.assertEqual(intel.is_dormant, 0)
 
         # 4. Setup customer graph with last_visit_date 100 days ago
-        graph = frappe.get_doc("SMRITI Customer Graph", self.customer)
+        graph = smriti.documents.get("SMRITI Customer Graph", self.customer)
         graph.last_visit_date = add_days(today(), -100)
         graph.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # 5. Recalculate and verify is_dormant is 1
         with mock.patch("smriti_retail_os.clienteling.service.clienteling_service.update_customer_graph") as mock_graph:
             mock_graph.return_value = graph
             clienteling_service.regenerate_customer_data(self.customer)
             
-        intel = frappe.get_doc("SMRITI Customer Intelligence Graph", self.customer)
+        intel = smriti.documents.get("SMRITI Customer Intelligence Graph", self.customer)
         self.assertEqual(intel.is_dormant, 1)
 
     def test_health_score_clamping(self):
         """Verify that health score is clamped to 100.0 when evaluated formula returns extreme values (TEST-04)."""
-        frappe.get_doc({
-            "doctype": "SMRITI Formula Definition",
+        smriti.documents.new("FormulaDefinition").update({
             "formula_id": "TST-HEALTH",
             "formula_name": "Customer Health Score",
             "formula_version": "1.0.0",
@@ -399,24 +398,24 @@ class TestClienteling(FrappeTestCase):
             "effective_date": "2026-06-22",
             "formula_expression": "(100 - churn_risk_score) * 10.0"
         }).insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         try:
             clienteling_service.regenerate_customer_data(self.customer)
-            intel = frappe.get_doc("SMRITI Customer Intelligence Graph", self.customer)
-            profile = frappe.get_doc("SMRITI Customer Profile", self.customer)
+            intel = smriti.documents.get("SMRITI Customer Intelligence Graph", self.customer)
+            profile = smriti.documents.get("SMRITI Customer Profile", self.customer)
             self.assertEqual(intel.customer_health_score, 100.0)
             self.assertEqual(profile.customer_health_score, 100.0)
         finally:
-            frappe.db.delete("SMRITI Formula Definition", {"formula_id": "TST-HEALTH"})
-            frappe.db.commit()
+            smriti.db.delete("SMRITI Formula Definition", {"formula_id": "TST-HEALTH"})
+            smriti.db.commit()
 
     def test_version_propagation(self):
         """Verify CIG governance versions are correctly seeded and populated post-regeneration (TEST-05)."""
         clienteling_service.regenerate_customer_data(self.customer)
         
-        intel = frappe.get_doc("SMRITI Customer Intelligence Graph", self.customer)
-        graph = frappe.get_doc("SMRITI Customer Graph", self.customer)
+        intel = smriti.documents.get("SMRITI Customer Intelligence Graph", self.customer)
+        graph = smriti.documents.get("SMRITI Customer Graph", self.customer)
         
         self.assertEqual(intel.graph_version, "CIG-1.1")
         self.assertEqual(intel.scoring_model_version, "SCORING-1.0")
@@ -436,19 +435,19 @@ class TestClienteling(FrappeTestCase):
                 customer=self.customer
             )
             
-        graph = frappe.get_doc("SMRITI Customer Graph", self.customer)
+        graph = smriti.documents.get("SMRITI Customer Graph", self.customer)
         self.assertEqual(graph.graph_status, "Failed")
         self.assertIn("PDT prediction failure mock exception", graph.graph_generation_error)
 
     def test_explain_audit_log(self):
         """Verifies that log_explain_audit API inserts correct audit logs securely (GAP-02)."""
-        frappe.db.delete("SMRITI Explain Audit Event", {"customer": self.customer})
-        frappe.db.delete("SMRITI Formula Definition", {"formula_id": "TST-VIP"})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Explain Audit Event", {"customer": self.customer})
+        smriti.db.delete("SMRITI Formula Definition", {"formula_id": "TST-VIP"})
+        smriti.db.commit()
         
         # Seed TST-VIP formula definition
-        f_doc = frappe.get_doc({
-            "doctype": "SMRITI Formula Definition",
+        f_doc = smriti.documents.new("FormulaDefinition")
+        f_doc.update({
             "formula_id": "TST-VIP",
             "formula_name": "VIP Candidate Score",
             "formula_version": "1.0.0",
@@ -458,7 +457,7 @@ class TestClienteling(FrappeTestCase):
             "effective_date": "2026-06-22",
             "formula_expression": "net_revenue * 2"
         }).insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         
         try:
             res = clienteling_api.log_explain_audit(
@@ -469,13 +468,13 @@ class TestClienteling(FrappeTestCase):
                 source_screen="Customer Profile Drawer"
             )
             
-            self.assertTrue(frappe.db.exists("SMRITI Explain Audit Event", res["name"]))
-            doc = frappe.get_doc("SMRITI Explain Audit Event", res["name"])
+            self.assertTrue(smriti.db.exists("SMRITI Explain Audit Event", res["name"]))
+            doc = smriti.documents.get("SMRITI Explain Audit Event", res["name"])
             self.assertEqual(doc.customer, self.customer)
             self.assertEqual(doc.metric, "VIP Candidate Score")
             self.assertEqual(doc.formula_id, f_doc.name)
             self.assertEqual(doc.session_id, "MOCK_SESSION_123")
             self.assertEqual(doc.source_screen, "Customer Profile Drawer")
         finally:
-            frappe.db.delete("SMRITI Formula Definition", {"formula_id": "TST-VIP"})
-            frappe.db.commit()
+            smriti.db.delete("SMRITI Formula Definition", {"formula_id": "TST-VIP"})
+            smriti.db.commit()

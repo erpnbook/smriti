@@ -17,10 +17,11 @@
 # @version: 1.8.6
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 import uuid
 from frappe.model.document import Document
 from frappe import _
+from smriti_retail_os import smriti
 
 
 class SMRITILicense(Document):
@@ -58,7 +59,7 @@ class SMRITILicense(Document):
         set_only_once in the JSON handles UI/API; this guard handles .save() patches.
         """
         if not self.is_new():
-            original = frappe.db.get_value("SMRITI License", self.name, "installation_id")
+            original = smriti.db.get("SMRITI License", self.name, "installation_id")
             if original and self.installation_id != original:
                 frappe.throw(
                     _("installation_id is immutable. It cannot be changed after initial creation."),
@@ -75,8 +76,8 @@ class SMRITILicense(Document):
         """
         if self.is_new():
             return
-        original_health  = frappe.db.get_value("SMRITI License", self.name, "license_health")
-        original_status  = frappe.db.get_value("SMRITI License", self.name, "license_status")
+        original_health  = smriti.db.get("SMRITI License", self.name, "license_health")
+        original_status  = smriti.db.get("SMRITI License", self.name, "license_status")
         health_changed   = self.license_health != original_health
         status_unchanged = self.license_status == original_status
         if health_changed and status_unchanged:
@@ -184,7 +185,7 @@ class SMRITILicense(Document):
         """
         On first insert, populate the features child table with the
         confirmed v1 feature mapping from architecture §4a.
-        Uses frappe.get_doc().db_insert() to bypass hooks and avoid recursive validate().
+        Uses smriti.documents.get().db_insert() to bypass hooks and avoid recursive validate().
         """
         DEFAULT_FEATURES = [
             {"feature_code": "POS_BILLING",        "feature_name": "POS Billing",        "enabled": 1, "tier_minimum": "Starter",      "restriction_level": "NONE"},
@@ -196,8 +197,8 @@ class SMRITILicense(Document):
             {"feature_code": "WHATSAPP_CAMPAIGNS", "feature_name": "WhatsApp Campaigns", "enabled": 1, "tier_minimum": "Enterprise",    "restriction_level": "BLOCKED"},
         ]
         for idx, f in enumerate(DEFAULT_FEATURES, start=1):
-            child = frappe.get_doc({
-                "doctype":     "SMRITI License Features",
+            child = smriti.documents.new("LicenseFeatures")
+            child.update({
                 "parenttype":  "SMRITI License",
                 "parentfield": "features",
                 "parent":      self.name,
@@ -205,19 +206,19 @@ class SMRITILicense(Document):
                 **f
             })
             child.db_insert()
-        frappe.db.commit()
+        smriti.db.commit()
 
     # ── Activity logging ──────────────────────────────────────────────────────
 
     def _log_activity(self, action, remarks="", result="Success"):
         """Inserts activity log row via db_insert() to bypass hooks and avoid recursive validate()."""
         from frappe.utils import now_datetime
-        child = frappe.get_doc({
-            "doctype":      "SMRITI License Activity Log",
+        child = smriti.documents.new("LicenseActivityLog")
+        child.update({
             "parenttype":   "SMRITI License",
             "parentfield":  "activity_log",
             "parent":       self.name,
-            "idx":          (frappe.db.count("SMRITI License Activity Log", {"parent": self.name}) or 0) + 1,
+            "idx":          (smriti.db.count("SMRITI License Activity Log", {"parent": self.name}) or 0) + 1,
             "timestamp":    now_datetime(),
             "action":       action,
             "performed_by": frappe.session.user,
@@ -225,17 +226,17 @@ class SMRITILicense(Document):
             "remarks":      remarks,
         })
         child.db_insert()
-        frappe.db.commit()
+        smriti.db.commit()
 
     def _log_validation(self, validation_type, result, sig_result="Not Checked", remarks=""):
         """Inserts validation history row via db_insert() to bypass hooks and avoid recursive validate()."""
         from frappe.utils import now_datetime
-        child = frappe.get_doc({
-            "doctype":               "SMRITI License Validation History",
+        child = smriti.documents.new("LicenseValidationHistory")
+        child.update({
             "parenttype":            "SMRITI License",
             "parentfield":           "validation_history",
             "parent":                self.name,
-            "idx":                   (frappe.db.count("SMRITI License Validation History", {"parent": self.name}) or 0) + 1,
+            "idx":                   (smriti.db.count("SMRITI License Validation History", {"parent": self.name}) or 0) + 1,
             "timestamp":             now_datetime(),
             "validation_type":       validation_type,
             "result":                result,
@@ -243,5 +244,5 @@ class SMRITILicense(Document):
             "remarks":               remarks,
         })
         child.db_insert()
-        frappe.db.commit()
+        smriti.db.commit()
 

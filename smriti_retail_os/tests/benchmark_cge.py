@@ -18,6 +18,7 @@
 import time
 import os
 import frappe
+from smriti_retail_os import smriti
 from frappe.utils import nowdate, add_to_date, flt
 from smriti_retail_os.cge.service.cge_service import (
     CGERuleEvaluator,
@@ -44,21 +45,21 @@ def run_benchmark():
     
     # 1. Setup mock load data
     customer_name = "_Test Bench Customer"
-    if not frappe.db.exists("Customer", customer_name):
-        cust = frappe.new_doc("Customer")
+    if not smriti.db.exists("Customer", customer_name):
+        cust = smriti.documents.new("Customer")
         cust.customer_name = customer_name
         cust.customer_group = "Individual"
         cust.insert(ignore_permissions=True)
 
     brand_name = "Raymond Bench"
-    if not frappe.db.exists("Brand", brand_name):
-        b = frappe.new_doc("Brand")
+    if not smriti.db.exists("Brand", brand_name):
+        b = smriti.documents.new("Brand")
         b.brand = brand_name
         b.insert(ignore_permissions=True)
 
     item_code = "_Test Bench Item"
-    if not frappe.db.exists("Item", item_code):
-        item = frappe.new_doc("Item")
+    if not smriti.db.exists("Item", item_code):
+        item = smriti.documents.new("Item")
         item.item_code = item_code
         item.item_name = item_code
         item.item_group = "All Item Groups"
@@ -67,20 +68,20 @@ def run_benchmark():
         item.insert(ignore_permissions=True)
 
     # Setup standard tier
-    frappe.db.delete("SMRITI Loyalty Tier")
-    tier = frappe.new_doc("SMRITI Loyalty Tier")
+    smriti.db.delete("SMRITI Loyalty Tier")
+    tier = smriti.documents.new("SMRITI Loyalty Tier")
     tier.tier_name = "Platinum Tier"
     tier.min_points = 0.0
     tier.tier_multiplier = 2.0
     tier.active = 1
     tier.insert(ignore_permissions=True)
     
-    frappe.db.commit()
+    smriti.db.commit()
 
     # Create mockup invoice
-    invoice_doc = frappe.new_doc("Sales Invoice")
+    invoice_doc = smriti.documents.new("Sales Invoice")
     invoice_doc.customer = customer_name
-    invoice_doc.company = frappe.get_all("Company", limit=1)[0].name
+    invoice_doc.company = smriti.db.get_list("Company", limit=1)[0].name
     invoice_doc.posting_date = nowdate()
     invoice_doc.append("items", {
         "item_code": item_code,
@@ -95,11 +96,11 @@ def run_benchmark():
 
     for size in scale_tiers:
         print(f"\nPopulating database with {size} active loyalty rules...")
-        frappe.db.delete("SMRITI Loyalty Rule")
+        smriti.db.delete("SMRITI Loyalty Rule")
         
         # Generate rules in bulk for faster insertion
         for i in range(size):
-            rule = frappe.new_doc("SMRITI Loyalty Rule")
+            rule = smriti.documents.new("SMRITI Loyalty Rule")
             rule.rule_name = f"Bench Rule {i+1}"
             rule.rule_type = "Multiplier"
             rule.dimension = "Brand"
@@ -112,9 +113,9 @@ def run_benchmark():
             
             # Commit periodically to keep transactions light
             if i % 1000 == 0:
-                frappe.db.commit()
+                smriti.db.commit()
                 
-        frappe.db.commit()
+        smriti.db.commit()
         
         print(f"Executing load loops for {size} rules...")
         
@@ -169,12 +170,12 @@ def run_benchmark():
     print("==========================================================")
 
     # Cleanup
-    frappe.db.delete("SMRITI Loyalty Rule")
-    frappe.db.delete("SMRITI Loyalty Tier")
-    frappe.db.delete("Customer", {"name": customer_name})
-    frappe.db.delete("Item", {"name": item_code})
-    frappe.db.delete("Brand", {"name": brand_name})
-    frappe.db.commit()
+    smriti.db.delete("SMRITI Loyalty Rule")
+    smriti.db.delete("SMRITI Loyalty Tier")
+    smriti.db.delete("Customer", {"name": customer_name})
+    smriti.db.delete("Item", {"name": item_code})
+    smriti.db.delete("Brand", {"name": brand_name})
+    smriti.db.commit()
 
 if __name__ == "__main__":
     run_benchmark()

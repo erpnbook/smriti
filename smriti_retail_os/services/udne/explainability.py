@@ -1,4 +1,5 @@
 import frappe
+from smriti_retail_os import smriti
 import json
 
 def explain_generation(doc_name: str) -> dict:
@@ -6,7 +7,7 @@ def explain_generation(doc_name: str) -> dict:
     Retrieves and constructs a standardized explanation payload for a document number generation.
     Conforms to the SMRITI Unified Explainability Contract.
     """
-    audit = frappe.get_all(
+    audit = smriti.db.get_list(
         "SMRITI Numbering Audit Log",
         fields=["name", "document_type", "generated_number", "rule", "template", "rule_version", "context_details", "generation_mode", "generation_duration_ms", "terminal_id", "branch", "user", "timestamp"],
         filters={"document_name": doc_name},
@@ -15,7 +16,7 @@ def explain_generation(doc_name: str) -> dict:
     
     if not audit:
         # Check if the doc_name itself is the business display number
-        audit = frappe.get_all(
+        audit = smriti.db.get_list(
             "SMRITI Numbering Audit Log",
             fields=["name", "document_name", "document_type", "generated_number", "rule", "template", "rule_version", "context_details", "generation_mode", "generation_duration_ms", "terminal_id", "branch", "user", "timestamp"],
             filters={"generated_number": doc_name},
@@ -51,7 +52,7 @@ def explain_generation(doc_name: str) -> dict:
     rule_priority_value = ""
     allow_manual = 0
     if log.rule:
-        res = frappe.db.get_value("SMRITI Numbering Rule", log.rule, ["priority", "priority_value", "allow_manual_override"])
+        res = smriti.db.get("SMRITI Numbering Rule", log.rule, ["priority", "priority_value", "allow_manual_override"])
         if res:
             rule_priority, rule_priority_value, allow_manual = res
             

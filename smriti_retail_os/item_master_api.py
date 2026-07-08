@@ -10,9 +10,10 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe.utils import flt, cint
 from frappe import _
+from smriti_retail_os import smriti
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -120,7 +121,7 @@ def _build_import_lookup_cache():
     """
     Pre-loads all lookup sets needed by validate_import_rows and import_item_master
     in a single bulk query pass. This eliminates the N+1 DB query pattern where
-    every row in the import grid triggered individual frappe.db.exists() calls.
+    every row in the import grid triggered individual smriti.db.exists() calls.
 
     Returns a dict with:
       barcode_to_item   : {barcode: parent_item_code}  — from Item Barcode table
@@ -130,18 +131,18 @@ def _build_import_lookup_cache():
       attr_doctypes     : set of DocType names that exist on this instance
     """
     # 1. Barcode → parent item mapping (covers duplicate barcode check)
-    raw_barcodes = frappe.db.sql(
+    raw_barcodes = smriti.db.sql(
         "SELECT barcode, parent FROM `tabItem Barcode`", as_dict=True
     )
     barcode_to_item = {r.barcode: r.parent for r in raw_barcodes}
 
     # 2. All item codes (covers item_code namespace collision check)
     existing_items = set(
-        r[0] for r in frappe.db.sql("SELECT name FROM `tabItem`")
+        r[0] for r in smriti.db.sql("SELECT name FROM `tabItem`")
     )
 
     # 3. All vendor codes (covers supplier hard check)
-    vendor_rows = frappe.db.sql(
+    vendor_rows = smriti.db.sql(
         "SELECT custom_vendor_code FROM `tabSupplier` WHERE custom_vendor_code IS NOT NULL AND custom_vendor_code != ''",
         as_dict=True
     )
@@ -149,7 +150,7 @@ def _build_import_lookup_cache():
 
     # 4. All brand names (covers brand soft check)
     existing_brands = set(
-        normalize_lookup(r[0]) for r in frappe.db.sql("SELECT name FROM `tabBrand`")
+        normalize_lookup(r[0]) for r in smriti.db.sql("SELECT name FROM `tabBrand`")
     )
 
     # 5. Which attribute DocTypes exist on this install (avoids 7×N DocType exists() checks)
@@ -158,7 +159,7 @@ def _build_import_lookup_cache():
         "SMRITI Sub Category", "SMRITI Upper Material", "SMRITI Outsole", "SMRITI Heel Type"
     ]
     existing_doctypes = set(
-        r[0] for r in frappe.db.sql(
+        r[0] for r in smriti.db.sql(
             f"SELECT name FROM `tabDocType` WHERE name IN ({','.join(['%s']*len(attr_doctype_names))})",
             attr_doctype_names
         )
@@ -201,7 +202,7 @@ def validate_import_rows(rows_json):
     rows = frappe.parse_json(rows_json)
     results = []
 
-    companies = frappe.get_all("Company", limit=1)
+    companies = smriti.db.get_list("Company", limit=1)
     company = (
         frappe.defaults.get_user_default("company") or
         (companies[0].name if companies else None)
@@ -332,7 +333,7 @@ def validate_import_rows(rows_json):
                 # Single per-value lookup is still needed here — we can't pre-load all values
                 # for every custom attribute, but DocType existence check is now cache-free
                 try:
-                    if not frappe.db.exists(doctype_name, val):
+                    if not smriti.db.exists(doctype_name, val):
                         warnings.append(f"{label} '{val}' not found — will be auto-created")
                 except Exception:
                     import sys
@@ -370,7 +371,7 @@ def import_item_master(rows_json):
     skipped_duplicates = []
     failed = []
 
-    companies = frappe.get_all("Company", limit=1)
+    companies = smriti.db.get_list("Company", limit=1)
     company = (
         frappe.defaults.get_user_default("company") or
         (companies[0].name if companies else None)
@@ -431,8 +432,8 @@ def import_item_master(rows_json):
                 max_retries = 5
                 for attempt in range(max_retries):
                     generated = generate_ean13_barcode()
-                    duplicate = frappe.db.get_value("Item Barcode", {"barcode": generated}, "parent")
-                    collides = frappe.db.exists("Item", generated) and generated != variant_code_early
+                    duplicate = smriti.db.get("Item Barcode", {"barcode": generated}, "parent")
+                    collides = smriti.db.exists("Item", generated) and generated != variant_code_early
                     if not duplicate and not collides:
                         barcode = generated
                         break
@@ -451,7 +452,7 @@ def import_item_master(rows_json):
                     })
                     continue
 
-                existing_on_system = frappe.db.get_value(
+                existing_on_system = smriti.db.get(
                     "Item Barcode", {"barcode": barcode}, "parent"
                 )
                 # Allow re-import: if barcode already belongs to THIS exact variant, it's fine
@@ -464,7 +465,7 @@ def import_item_master(rows_json):
                     continue
 
                 # Prevent barcode from colliding with a DIFFERENT item's item_code
-                collides_with_item = frappe.db.exists("Item", barcode)
+                collides_with_item = smriti.db.exists("Item", barcode)
                 if collides_with_item and barcode != variant_code_early:
                     skipped_duplicates.append({
                         "row": idx + 1,
@@ -476,15 +477,15 @@ def import_item_master(rows_json):
                 batch_barcodes.add(barcode)
 
             # ── Ensure Item Group exists ───────────────────────────────────
-            if not frappe.db.exists("Item Group", item_group):
+            if not smriti.db.exists("Item Group", item_group):
                 item_group = "Products"
             # Also guard the fallback — "Products" may not exist either
-            if not frappe.db.exists("Item Group", item_group):
-                existing_group = frappe.db.get_all("Item Group", pluck="name", limit=1)
+            if not smriti.db.exists("Item Group", item_group):
+                existing_group = smriti.db.get_list("Item Group", pluck="name", limit=1)
                 if existing_group:
                     item_group = existing_group[0]
                 else:
-                    ig = frappe.new_doc("Item Group")
+                    ig = smriti.documents.new("Item Group")
                     ig.item_group_name = "Products"
                     ig.is_group = 0
                     # reviewed-ignore-permissions: excel import of products, gated by SMRITI Store Manager or System Manager roles
@@ -522,8 +523,8 @@ def import_item_master(rows_json):
 
             # ── Create Variant ─────────────────────────────────────────────
             variant_code = f"{style_code}-{color}-{size}"
-            if not frappe.db.exists("Item", variant_code):
-                variant = frappe.new_doc("Item")
+            if not smriti.db.exists("Item", variant_code):
+                variant = smriti.documents.new("Item")
                 variant.item_code    = variant_code
                 variant.item_name    = f"{item_name} ({color} / {size})"
                 variant.variant_of   = style_code
@@ -548,10 +549,10 @@ def import_item_master(rows_json):
                 # reviewed-ignore-permissions: excel import of products, gated by SMRITI Store Manager or System Manager roles
                 variant.insert(ignore_permissions=True)
             else:
-                variant = frappe.get_doc("Item", variant_code)
+                variant = smriti.documents.get("Item", variant_code)
 
             # ── Attach barcode to variant (enforcing single primary, preserving secondary barcodes) ──
-            var_doc = frappe.get_doc("Item", variant_code)
+            var_doc = smriti.documents.get("Item", variant_code)
             _safe_set(var_doc, "custom_style_code", style_code)
 
             if barcode:
@@ -583,12 +584,12 @@ def import_item_master(rows_json):
                     current_barcodes = {b.barcode for b in var_doc.barcodes}
                     for sb in sec_barcodes:
                         if sb and sb not in current_barcodes:
-                            dup_parent = frappe.db.get_value(
+                            dup_parent = smriti.db.get(
                                 "Item Barcode",
                                 {"barcode": sb, "parent": ["!=", variant_code]},
                                 "parent"
                             )
-                            sb_collides = frappe.db.exists("Item", sb) and sb != variant_code
+                            sb_collides = smriti.db.exists("Item", sb) and sb != variant_code
                             if not dup_parent and not sb_collides:
                                 var_doc.append("barcodes", {
                                     "barcode": sb,
@@ -612,12 +613,12 @@ def import_item_master(rows_json):
                 "style_code": row.get("PRODUCT STYLE CODE", ""),
                 "error": frappe.get_traceback()
             })
-            frappe.log_error(
+            smriti.errors.log_error(
                 title=f"SMRITI Item Import — Row {idx + 1}",
                 message=frappe.get_traceback()
             )
 
-    frappe.db.commit()
+    smriti.db.commit()
 
     return {
         "created": created,
@@ -639,7 +640,7 @@ def _validate_vendor_code(vendor_code):
     
     vendor_code = str(vendor_code).strip()
     
-    exists = frappe.db.exists(
+    exists = smriti.db.exists(
         "Supplier",
         {"custom_vendor_code": vendor_code}
     )
@@ -681,13 +682,13 @@ def _ensure_uom(uom_name):
     if not uom_clean:
         return
     try:
-        if not frappe.db.exists("UOM", uom_clean):
-            doc = frappe.new_doc("UOM")
+        if not smriti.db.exists("UOM", uom_clean):
+            doc = smriti.documents.new("UOM")
             doc.uom_name = uom_clean
             doc.insert(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
     except Exception as e:
-        frappe.log_error(f"Failed to auto-create UOM {uom_clean}: {str(e)}")
+        smriti.errors.log_error(f"Failed to auto-create UOM {uom_clean}: {str(e)}")
 
 
 def _ensure_hsn_code(hsn_code):
@@ -698,15 +699,15 @@ def _ensure_hsn_code(hsn_code):
     if not hsn_str:
         return
     try:
-        if not frappe.db.exists("GST HSN Code", hsn_str):
-            hsn_doc = frappe.new_doc("GST HSN Code")
+        if not smriti.db.exists("GST HSN Code", hsn_str):
+            hsn_doc = smriti.documents.new("GST HSN Code")
             hsn_doc.name = hsn_str
             hsn_doc.hsn_code = hsn_str
             hsn_doc.description = "Auto-created HSN"
             hsn_doc.insert(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
     except Exception as e:
-        frappe.log_error(f"HSN auto-create failed for {hsn_str}: {e}")
+        smriti.errors.log_error(f"HSN auto-create failed for {hsn_str}: {e}")
 
 
 def _resolve_hsn_code(hsn_code):
@@ -726,7 +727,7 @@ def _resolve_hsn_code(hsn_code):
 
     # If empty or non-numeric — try configured default, never a domain-specific literal
     if not hsn_digits:
-        configured_default = frappe.db.get_single_value("SMRITI Settings", "default_hsn_code") or ""
+        configured_default = smriti.db.get_single("SMRITI Settings", "default_hsn_code") or ""
         if not configured_default:
             frappe.logger().warning(
                 "SMRITI _resolve_hsn_code: HSN code is missing and no default_hsn_code is "
@@ -796,10 +797,10 @@ def _ensure_master_value(doctype_name, value):
         return ""
     try:
         # Guard: DocType may not exist on fresh installations
-        if not frappe.db.exists("DocType", doctype_name):
+        if not smriti.db.exists("DocType", doctype_name):
             return val_clean
-        if not frappe.db.exists(doctype_name, val_clean):
-            doc = frappe.new_doc(doctype_name)
+        if not smriti.db.exists(doctype_name, val_clean):
+            doc = smriti.documents.new(doctype_name)
             # Try common field names used in SMRITI master doctypes
             for field in ("attribute_value", "name", doctype_name.lower().replace(" ", "_")):
                 try:
@@ -810,9 +811,9 @@ def _ensure_master_value(doctype_name, value):
                     _frappe = sys.modules.get('frappe')
                     if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in item_master_api.py:666: {sys.exc_info()[1]}")
             doc.insert(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
     except Exception as e:
-        frappe.log_error(f"Failed to auto-create {val_clean} in {doctype_name}: {str(e)}")
+        smriti.errors.log_error(f"Failed to auto-create {val_clean} in {doctype_name}: {str(e)}")
     return val_clean
 
 
@@ -820,34 +821,34 @@ def _get_or_create_template(style_code, item_name, item_group, brand, mrp, cost,
                              gst_pct, hsn_code, image_link, gender, upper_material,
                              outsole, heel_type, purchase_class, merch_cat, sub_cat,
                              tax_group, vendor_code, company):
-    if frappe.db.exists("Item", style_code):
-        item = frappe.get_doc("Item", style_code)
+    if smriti.db.exists("Item", style_code):
+        item = smriti.documents.get("Item", style_code)
         if not item.get("custom_style_code"):
             _safe_set(item, "custom_style_code", style_code)
             item.save(ignore_permissions=True)
     else:
         # Auto-create brand if missing
-        if brand and not frappe.db.exists("Brand", brand):
-            b = frappe.new_doc("Brand")
+        if brand and not smriti.db.exists("Brand", brand):
+            b = smriti.documents.new("Brand")
             b.brand = brand
             b.insert(ignore_permissions=True)
 
         # Ensure Item Group exists
-        if not item_group or not frappe.db.exists("Item Group", item_group):
+        if not item_group or not smriti.db.exists("Item Group", item_group):
             item_group = "Products"
-        if not frappe.db.exists("Item Group", item_group):
-            existing_group = frappe.db.get_all("Item Group", pluck="name", limit=1)
+        if not smriti.db.exists("Item Group", item_group):
+            existing_group = smriti.db.get_list("Item Group", pluck="name", limit=1)
             if existing_group:
                 item_group = existing_group[0]
             else:
-                ig = frappe.new_doc("Item Group")
+                ig = smriti.documents.new("Item Group")
                 ig.item_group_name = "Products"
                 ig.is_group = 0
                 ig.insert(ignore_permissions=True)
                 item_group = "Products"
 
 
-        item = frappe.new_doc("Item")
+        item = smriti.documents.new("Item")
         item.item_code              = style_code
         item.item_name              = item_name
         item.item_group             = item_group
@@ -896,7 +897,7 @@ def _get_or_create_template(style_code, item_name, item_group, brand, mrp, cost,
         vendor_code_clean = str(vendor_code).strip()
         vendor_code_clean_upper = vendor_code_clean.upper()
         if vendor_code_clean_upper not in ("", "NA", "N/A", "NONE", "NULL", "NAN", "DV"):
-            supplier_name = frappe.db.get_value(
+            supplier_name = smriti.db.get(
                 "Supplier",
                 {"custom_vendor_code": vendor_code_clean},
                 "name"
@@ -914,8 +915,8 @@ def _get_or_create_template(style_code, item_name, item_group, brand, mrp, cost,
 
 def _ensure_item_attribute(attribute_name):
     """Create Item Attribute doctype record if it doesn't exist yet."""
-    if not frappe.db.exists("Item Attribute", attribute_name):
-        attr = frappe.new_doc("Item Attribute")
+    if not smriti.db.exists("Item Attribute", attribute_name):
+        attr = smriti.documents.new("Item Attribute")
         attr.attribute_name = attribute_name
         attr.insert(ignore_permissions=True)
 
@@ -925,13 +926,13 @@ def _ensure_attribute_value(attribute, value):
     """Add a new value to an Item Attribute if it is not already present."""
     if not value:
         return
-    exists = frappe.db.get_value(
+    exists = smriti.db.get(
         "Item Attribute Value",
         {"parent": attribute, "attribute_value": value},
         "name"
     )
     if not exists:
-        attr_doc = frappe.get_doc("Item Attribute", attribute)
+        attr_doc = smriti.documents.get("Item Attribute", attribute)
         # Build a unique abbr — use full value shortened, with collision avoidance
         base_abbr = value[:6].upper().replace(" ", "").replace("-", "")
         abbr = base_abbr
@@ -953,13 +954,13 @@ def _attach_tax_template(item, tax_group, gst_pct, company):
         return
     template_name = None
     if tax_group:
-        template_name = frappe.db.get_value(
+        template_name = smriti.db.get(
             "Item Tax Template",
             {"name": ["like", f"%{tax_group}%"], "company": company},
             "name"
         )
     if not template_name and gst_pct:
-        template_name = frappe.db.get_value(
+        template_name = smriti.db.get(
             "Item Tax Template",
             {"name": ["like", f"%{gst_pct}%"], "company": company},
             "name"
@@ -972,23 +973,23 @@ def _upsert_item_price(item_code, price_list, rate):
     """Create price list entry; update if already exists."""
     if not rate:
         return
-    if not frappe.db.exists("Price List", price_list):
-        pl = frappe.new_doc("Price List")
+    if not smriti.db.exists("Price List", price_list):
+        pl = smriti.documents.new("Price List")
         pl.price_list_name = price_list
         pl.enabled  = 1
         pl.selling  = 1
         pl.currency = "INR"
         pl.insert(ignore_permissions=True)
 
-    existing = frappe.db.get_value(
+    existing = smriti.db.get(
         "Item Price",
         {"item_code": item_code, "price_list": price_list},
         "name"
     )
     if existing:
-        frappe.db.set_value("Item Price", existing, "price_list_rate", flt(rate))
+        smriti.db.set_value("Item Price", existing, "price_list_rate", flt(rate))
     else:
-        ip = frappe.new_doc("Item Price")
+        ip = smriti.documents.new("Item Price")
         ip.item_code       = item_code
         ip.price_list      = price_list
         ip.price_list_rate = flt(rate)
@@ -1025,8 +1026,8 @@ def generate_ean13_barcode():
         barcode = f"{body}{check_digit}"
 
         # Check both Item Barcode table and Item master (to avoid item_code collisions)
-        if (not frappe.db.exists("Item Barcode", {"barcode": barcode})
-                and not frappe.db.exists("Item", barcode)):
+        if (not smriti.db.exists("Item Barcode", {"barcode": barcode})
+                and not smriti.db.exists("Item", barcode)):
             return barcode
 
     frappe.throw(
@@ -1037,11 +1038,11 @@ def generate_ean13_barcode():
 
 @frappe.whitelist()
 def get_style_details(article_no):
-    if not frappe.db.exists("Item", article_no):
+    if not smriti.db.exists("Item", article_no):
         return {"exists": False}
         
-    doc = frappe.get_doc("Item", article_no)
-    variants = frappe.get_all("Item", filters={"variant_of": article_no}, fields=["name", "item_name", "custom_mrp", "valuation_rate"])
+    doc = smriti.documents.get("Item", article_no)
+    variants = smriti.db.get_list("Item", filters={"variant_of": article_no}, fields=["name", "item_name", "custom_mrp", "valuation_rate"])
     
     sizes = []
     color_val = ""
@@ -1050,7 +1051,7 @@ def get_style_details(article_no):
         variant_names = [v.name for v in variants]
 
         # Bulk fetch all Size + Color attributes for all variants (1 query instead of 2×N)
-        all_attrs = frappe.get_all(
+        all_attrs = smriti.db.get_list(
             "Item Variant Attribute",
             filters={
                 "parent": ["in", variant_names],
@@ -1063,7 +1064,7 @@ def get_style_details(article_no):
             attr_map.setdefault(a.parent, {})[a.attribute] = a.attribute_value
 
         # Bulk fetch primary barcodes for all variants (1 query instead of N)
-        all_barcodes = frappe.get_all(
+        all_barcodes = smriti.db.get_list(
             "Item Barcode",
             filters={"parent": ["in", variant_names]},
             fields=["parent", "barcode"],
@@ -1108,7 +1109,7 @@ def get_style_details(article_no):
         "purchase_class": doc.custom_purchase_class or "",
         "merchandise_category": doc.custom_merchandise_category or "",
         "sub_category": doc.custom_sub_category or "",
-        "vendor_code": frappe.db.get_value("Item Supplier", {"parent": article_no}, "supplier_part_no") or "",
+        "vendor_code": smriti.db.get("Item Supplier", {"parent": article_no}, "supplier_part_no") or "",
         "color": color_val or "UNKNOWN",
         "sizes": sizes
     }
@@ -1136,7 +1137,7 @@ def create_style_with_variants(base_details, sizes_config):
     hsn_code = bd.get("hsn_code")
     
     # Resolve company first — needed for HSN GST rate derivation below
-    company = frappe.defaults.get_user_default("company") or frappe.get_all("Company", limit=1)[0].name
+    company = frappe.defaults.get_user_default("company") or smriti.db.get_list("Company", limit=1)[0].name
 
     # Derive GST percentage (HSN-first)
     resolved_hsn = _resolve_hsn_code_cached(hsn_code) if hsn_code else None
@@ -1193,7 +1194,7 @@ def create_style_with_variants(base_details, sizes_config):
             template.gst_hsn_code = resolved_hsn
         # reviewed-ignore-permissions: bulk variant creation, gated by SMRITI Store Manager or System Manager roles
         template.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
     created_count = 0
     updated_count = 0
@@ -1225,21 +1226,21 @@ def create_style_with_variants(base_details, sizes_config):
                 validate_barcode(manual_barcode, raise_exception=True)
                 barcode = manual_barcode
             else:
-                existing_barcode = frappe.db.get_value("Item Barcode", {"parent": variant_code, "custom_is_primary": 1}, "barcode")
+                existing_barcode = smriti.db.get("Item Barcode", {"parent": variant_code, "custom_is_primary": 1}, "barcode")
                 if existing_barcode:
                     barcode = existing_barcode
                 else:
                     barcode = generate_ean13_barcode()
             
             # Check barcode uniqueness
-            duplicate = frappe.db.get_value("Item Barcode", {"barcode": barcode, "parent": ["!=", variant_code]}, "parent")
+            duplicate = smriti.db.get("Item Barcode", {"barcode": barcode, "parent": ["!=", variant_code]}, "parent")
             if duplicate:
                 if barcode_mode == "manual":
                     frappe.throw(frappe._("Barcode '{0}' is already registered on item '{1}'!").format(barcode, duplicate))
                 else:
                     continue  # generated barcode collided, try again
             
-            if frappe.db.exists("Item", barcode) and barcode != variant_code:
+            if smriti.db.exists("Item", barcode) and barcode != variant_code:
                 if barcode_mode == "manual":
                     frappe.throw(frappe._("Barcode '{0}' collides with an existing Item Code in the system!").format(barcode))
                 else:
@@ -1251,8 +1252,8 @@ def create_style_with_variants(base_details, sizes_config):
             frappe.throw(frappe._("Could not generate a unique barcode for size {0} after 10 attempts.").format(size))
             
         # Create or update variant Item doc
-        if not frappe.db.exists("Item", variant_code):
-            var = frappe.new_doc("Item")
+        if not smriti.db.exists("Item", variant_code):
+            var = smriti.documents.new("Item")
             var.item_code = variant_code
             var.item_name = f"{item_name} ({color} / {size})"
             var.variant_of = style_code
@@ -1276,7 +1277,7 @@ def create_style_with_variants(base_details, sizes_config):
             var.insert(ignore_permissions=True)
             created_count += 1
         else:
-            var = frappe.get_doc("Item", variant_code)
+            var = smriti.documents.get("Item", variant_code)
             var.item_name = f"{item_name} ({color} / {size})"
             _safe_set(var, "custom_mrp", mrp)
             _safe_set(var, "custom_gst_percentage", gst_pct)
@@ -1290,7 +1291,7 @@ def create_style_with_variants(base_details, sizes_config):
             updated_count += 1
             
         # Force set barcode child table row (preserving secondary barcodes)
-        var_doc = frappe.get_doc("Item", variant_code)
+        var_doc = smriti.documents.get("Item", variant_code)
         secondaries = [b for b in var_doc.barcodes if not b.custom_is_primary]
         
         var_doc.barcodes = []
@@ -1319,7 +1320,7 @@ def create_style_with_variants(base_details, sizes_config):
             "barcode": barcode
         })
         
-    frappe.db.commit()
+    smriti.db.commit()
     
     return {
         "success": True,
@@ -1333,13 +1334,13 @@ def create_style_with_variants(base_details, sizes_config):
 @frappe.whitelist()
 def delete_size_variant(variant_code):
     check_store_manager_role()
-    if not frappe.db.exists("Item", variant_code):
+    if not smriti.db.exists("Item", variant_code):
         return {"success": False, "message": "Variant not found"}
         
-    frappe.db.delete("Item Barcode", {"parent": variant_code})
-    frappe.db.delete("Item Price", {"item_code": variant_code})
+    smriti.db.delete("Item Barcode", {"parent": variant_code})
+    smriti.db.delete("Item Price", {"item_code": variant_code})
     frappe.delete_doc("Item", variant_code, ignore_missing=True, force=True)
-    frappe.db.commit()
+    smriti.db.commit()
     return {"success": True, "message": frappe._("Size variant {0} deleted successfully.").format(variant_code)}
 
 
@@ -1348,11 +1349,11 @@ def delete_style_and_variants(style_code):
     """Delete style template + all variants + barcodes + prices."""
     check_store_manager_role()
 
-    if not frappe.db.exists("Item", style_code):
+    if not smriti.db.exists("Item", style_code):
         frappe.throw(_("Item '{0}' not found").format(style_code))
 
     # Find all variants of this style
-    variants = frappe.get_all("Item",
+    variants = smriti.db.get_list("Item",
         filters={"variant_of": style_code},
         pluck="name"
     )
@@ -1360,22 +1361,22 @@ def delete_style_and_variants(style_code):
     deleted_variants = 0
     for variant in variants:
         # Delete prices for this variant
-        frappe.db.delete("Item Price", {"item_code": variant})
+        smriti.db.delete("Item Price", {"item_code": variant})
         # Delete barcodes for this variant
-        frappe.db.delete("Item Barcode", {"parent": variant})
+        smriti.db.delete("Item Barcode", {"parent": variant})
         # Delete the variant item itself
         # reviewed-ignore-permissions: bulk variant removal, gated by SMRITI Store Manager or System Manager roles
         frappe.delete_doc("Item", variant, ignore_permissions=True, force=True)
         deleted_variants += 1
 
     # Delete prices for the template itself
-    frappe.db.delete("Item Price", {"item_code": style_code})
+    smriti.db.delete("Item Price", {"item_code": style_code})
     # Delete barcodes for the template itself
-    frappe.db.delete("Item Barcode", {"parent": style_code})
+    smriti.db.delete("Item Barcode", {"parent": style_code})
     # Delete the template item
     # reviewed-ignore-permissions: bulk variant removal, gated by SMRITI Store Manager or System Manager roles
     frappe.delete_doc("Item", style_code, ignore_permissions=True, force=True)
-    frappe.db.commit()
+    smriti.db.commit()
 
     return {
         "success": True,
@@ -1408,7 +1409,7 @@ def validate_pivot_values(styles_json):
         if sub:   sub_cats.add(sub)
 
     # ── Item Groups ────────────────────────────────────────────────────────
-    all_groups = frappe.db.get_all(
+    all_groups = smriti.db.get_list(
         "Item Group", fields=["name", "is_group"], order_by="name"
     )
     existing_group_names = {normalize_lookup(g.name) for g in all_groups}
@@ -1421,8 +1422,8 @@ def validate_pivot_values(styles_json):
 
     # ── Colors (Item Attribute Values) ─────────────────────────────────────
     existing_colors = []
-    if frappe.db.exists("Item Attribute", "Color"):
-        existing_colors = frappe.db.get_all(
+    if smriti.db.exists("Item Attribute", "Color"):
+        existing_colors = smriti.db.get_list(
             "Item Attribute Value",
             filters={"parent": "Color"},
             pluck="attribute_value",
@@ -1438,9 +1439,9 @@ def validate_pivot_values(styles_json):
     # ── Sub-Categories (SMRITI Sub Category if doctype exists) ─────────────
     existing_sub_cats = []
     new_sub_cats = []
-    if frappe.db.exists("DocType", "SMRITI Sub Category"):
+    if smriti.db.exists("DocType", "SMRITI Sub Category"):
         try:
-            existing_sub_cats = frappe.db.get_all(
+            existing_sub_cats = smriti.db.get_list(
                 "SMRITI Sub Category", pluck="name", order_by="name"
             )
             existing_sub_norm = {normalize_lookup(s) for s in existing_sub_cats}
@@ -1479,7 +1480,7 @@ def import_pivot_item_master(styles_json):
     updated_count = 0
     errors = []
     
-    companies = frappe.get_all("Company", limit=1)
+    companies = smriti.db.get_list("Company", limit=1)
     company = (
         frappe.defaults.get_user_default("company") or
         (companies[0].name if companies else None)
@@ -1517,10 +1518,10 @@ def import_pivot_item_master(styles_json):
             color = bd.get("color", "UNKNOWN").strip().upper()
             
             # Ensure Item Group exists
-            if not frappe.db.exists("Item Group", item_group):
+            if not smriti.db.exists("Item Group", item_group):
                 item_group = "Products"
-            if not frappe.db.exists("Item Group", item_group):
-                existing_group = frappe.db.get_all("Item Group", pluck="name", limit=1)
+            if not smriti.db.exists("Item Group", item_group):
+                existing_group = smriti.db.get_list("Item Group", pluck="name", limit=1)
                 item_group = existing_group[0] if existing_group else "Products"
 
             # Ensure attributes and values exist
@@ -1576,7 +1577,7 @@ def import_pivot_item_master(styles_json):
                 variant_code = f"{style_code}-{color}-{size}"
                 
                 # Check for existing barcode, or generate mock (ARCH-ITEM-001)
-                existing_barcode = frappe.db.get_value("Item Barcode", {"parent": variant_code, "custom_is_primary": 1}, "barcode")
+                existing_barcode = smriti.db.get("Item Barcode", {"parent": variant_code, "custom_is_primary": 1}, "barcode")
                 if existing_barcode:
                     barcode = existing_barcode
                 else:
@@ -1584,15 +1585,15 @@ def import_pivot_item_master(styles_json):
                     barcode = None
                     for attempt in range(max_retries):
                         barcode = generate_ean13_barcode()
-                        duplicate = frappe.db.get_value("Item Barcode", {"barcode": barcode, "parent": ["!=", variant_code]}, "parent")
-                        collides = frappe.db.exists("Item", barcode) and barcode != variant_code
+                        duplicate = smriti.db.get("Item Barcode", {"barcode": barcode, "parent": ["!=", variant_code]}, "parent")
+                        collides = smriti.db.exists("Item", barcode) and barcode != variant_code
                         if not duplicate and not collides:
                             break
                     else:
                         frappe.throw(frappe._("Could not generate a unique barcode for size {0} after 10 attempts.").format(size))
                     
-                if not frappe.db.exists("Item", variant_code):
-                    var = frappe.new_doc("Item")
+                if not smriti.db.exists("Item", variant_code):
+                    var = smriti.documents.new("Item")
                     var.item_code = variant_code
                     var.item_name = f"{item_name} ({color} / {size})"
                     var.variant_of = style_code
@@ -1616,7 +1617,7 @@ def import_pivot_item_master(styles_json):
                     var.insert(ignore_permissions=True)
                     created_count += 1
                 else:
-                    var = frappe.get_doc("Item", variant_code)
+                    var = smriti.documents.get("Item", variant_code)
                     var.item_name = f"{item_name} ({color} / {size})"
                     _safe_set(var, "custom_mrp", mrp)
                     _safe_set(var, "custom_gst_percentage", gst_pct)
@@ -1630,7 +1631,7 @@ def import_pivot_item_master(styles_json):
                     updated_count += 1
                     
                 # Link Barcode (preserving secondary barcodes)
-                var_doc = frappe.get_doc("Item", variant_code)
+                var_doc = smriti.documents.get("Item", variant_code)
                 secondaries = [b for b in var_doc.barcodes if not b.custom_is_primary]
                 
                 var_doc.barcodes = []
@@ -1661,12 +1662,12 @@ def import_pivot_item_master(styles_json):
                 "error": str(e),
                 "detail": traceback.format_exc()
             })
-            frappe.log_error(
+            smriti.errors.log_error(
                 title=f"SMRITI Pivot Import — Row {idx + 1}: {s.get('base_details', {}).get('article_no', '')}",
                 message=traceback.format_exc()
             )
             
-    frappe.db.commit()
+    smriti.db.commit()
     
     return {
         "success": True,
@@ -1722,11 +1723,11 @@ def reset_all_transactions():
     deleted = []
     for doctype in tables:
         if doctype not in _FACTORY_RESET_TRANSACTION_DOCTYPES:
-            frappe.log_error(title="SMRITI: Rejected unexpected TRUNCATE", message=f"Refused to truncate unlisted doctype: {doctype}")
+            smriti.errors.log_error(title="SMRITI: Rejected unexpected TRUNCATE", message=f"Refused to truncate unlisted doctype: {doctype}")
             continue
         table_name = f"tab{doctype}"
         try:
-            frappe.db.sql(f"TRUNCATE `{table_name}`")
+            smriti.db.sql(f"TRUNCATE `{table_name}`")
             deleted.append(doctype)
         except Exception:
             import sys
@@ -1735,13 +1736,13 @@ def reset_all_transactions():
             
     # Reset Naming Series
     try:
-        frappe.db.sql("TRUNCATE `tabSeries`")
+        smriti.db.sql("TRUNCATE `tabSeries`")
     except Exception:
         import sys
         _frappe = sys.modules.get('frappe')
         if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in item_master_api.py:1507: {sys.exc_info()[1]}")
         
-    frappe.db.commit()
+    smriti.db.commit()
     
     from smriti_retail_os.backup_api import log_audit_event
     log_audit_event("Factory Reset", f"Wiped all transaction history (cleared: {', '.join(deleted)}). User: {frappe.session.user}")
@@ -1784,7 +1785,7 @@ def reset_all_items():
         "GL Entry"
     ]
     for dt in transaction_doctypes:
-        if frappe.db.count(dt) > 0:
+        if smriti.db.count(dt) > 0:
             frappe.throw(
                 _("Cannot reset Item Master because active transactions exist in {0}. Please reset all transactions first.").format(dt),
                 title=_("Active Transactions Found")
@@ -1805,18 +1806,18 @@ def reset_all_items():
     deleted = []
     for doctype in tables:
         if doctype not in _FACTORY_RESET_ITEM_DOCTYPES:
-            frappe.log_error(title="SMRITI: Rejected unexpected TRUNCATE", message=f"Refused to truncate unlisted doctype: {doctype}")
+            smriti.errors.log_error(title="SMRITI: Rejected unexpected TRUNCATE", message=f"Refused to truncate unlisted doctype: {doctype}")
             continue
         table_name = f"tab{doctype}"
         try:
-            frappe.db.sql(f"TRUNCATE `{table_name}`")
+            smriti.db.sql(f"TRUNCATE `{table_name}`")
             deleted.append(doctype)
         except Exception:
             import sys
             _frappe = sys.modules.get('frappe')
             if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in item_master_api.py:1546: {sys.exc_info()[1]}")
             
-    frappe.db.commit()
+    smriti.db.commit()
     
     from smriti_retail_os.backup_api import log_audit_event
     log_audit_event("Factory Reset", f"Wiped all Item Master data (cleared: {', '.join(deleted)}). User: {frappe.session.user}")
@@ -1837,7 +1838,7 @@ def get_items_missing_barcodes():
     check_store_manager_role()
     
     # Query active items that are not template items (i.e. has_variants = 0)
-    items = frappe.db.get_all(
+    items = smriti.db.get_list(
         "Item",
         filters={
             "disabled": 0,
@@ -1847,7 +1848,7 @@ def get_items_missing_barcodes():
     )
     
     # Get all parent codes that have barcodes
-    barcoded_parents = frappe.db.get_all("Item Barcode", pluck="parent")
+    barcoded_parents = smriti.db.get_list("Item Barcode", pluck="parent")
     barcoded_set = set(barcoded_parents)
     
     missing = []

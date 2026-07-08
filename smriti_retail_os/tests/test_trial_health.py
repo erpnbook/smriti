@@ -11,6 +11,7 @@
 #
 
 import frappe
+from smriti_retail_os import smriti
 import unittest
 from datetime import datetime
 from smriti_retail_os.services.trial_service import (
@@ -34,13 +35,13 @@ class TestTrialHealth(unittest.TestCase):
         ensure_doctype_schema("SMRITI Trial Health Snapshot")
         
         # Clear snapshots for testing
-        frappe.db.delete("SMRITI Trial Health Snapshot")
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Trial Health Snapshot")
+        smriti.db.commit()
 
     def tearDown(self):
         frappe.set_user(self.original_user)
-        frappe.db.delete("SMRITI Trial Health Snapshot")
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Trial Health Snapshot")
+        smriti.db.commit()
 
     def test_calculate_health_score_edge_cases(self):
         # Case 1: Active = 0, Failed = 0 -> Expected: 100.0 (no trials processed yet)
@@ -63,7 +64,7 @@ class TestTrialHealth(unittest.TestCase):
 
     def test_generate_health_snapshot_persistence(self):
         # Assert custom DocType exists
-        self.assertTrue(frappe.db.exists("DocType", "SMRITI Trial Health Snapshot"))
+        self.assertTrue(smriti.db.exists("DocType", "SMRITI Trial Health Snapshot"))
 
         # Generate a snapshot
         snapshot = generate_health_snapshot(snapshot_type="Manual", operator="Administrator")
@@ -72,7 +73,7 @@ class TestTrialHealth(unittest.TestCase):
         self.assertEqual(snapshot.generated_by, "Administrator")
         
         # Verify values persisted in DB
-        db_doc = frappe.get_doc("SMRITI Trial Health Snapshot", snapshot.name)
+        db_doc = smriti.documents.get("SMRITI Trial Health Snapshot", snapshot.name)
         self.assertEqual(db_doc.snapshot_version, "1.0")
         self.assertEqual(db_doc.formula_version, "1.0")
         
@@ -92,7 +93,7 @@ class TestTrialHealth(unittest.TestCase):
         
         self.assertNotEqual(s1.name, s2.name)
         
-        snapshots_count = frappe.db.count("SMRITI Trial Health Snapshot")
+        snapshots_count = smriti.db.count("SMRITI Trial Health Snapshot")
         self.assertEqual(snapshots_count, 2)
 
     def test_api_permission_guards(self):
@@ -107,15 +108,15 @@ class TestTrialHealth(unittest.TestCase):
         # 2. Test as ordinary non-admin role user
         # Temporarily create test user with "SMRITI Store Manager" role
         test_email = "test.manager@smriti.local"
-        if not frappe.db.exists("User", test_email):
-            test_user = frappe.get_doc({
-                "doctype": "User",
+        if not smriti.db.exists("User", test_email):
+            test_user = smriti.documents.new("User")
+            test_user.update({
                 "email": test_email,
                 "first_name": "Test Store Manager",
                 "roles": [{"role": "SMRITI Store Manager"}]
             })
             test_user.insert(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
 
         frappe.set_user(test_email)
         
@@ -127,5 +128,5 @@ class TestTrialHealth(unittest.TestCase):
 
         # Restore admin and clean up test user
         frappe.set_user("Administrator")
-        frappe.db.delete("User", {"email": test_email})
-        frappe.db.commit()
+        smriti.db.delete("User", {"email": test_email})
+        smriti.db.commit()

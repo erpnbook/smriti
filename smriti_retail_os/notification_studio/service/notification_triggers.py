@@ -4,14 +4,15 @@ smriti_retail_os/notification_studio/service/notification_triggers.py
 Doc events triggers for SMRITI Notification Studio.
 Author: Jawahar R. Mallah
 """
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from smriti_retail_os.notification_studio.service.notification_service import create_notification
 
 ROLE_STORE_MANAGER = "SMRITI Store Manager"
 ROLE_SYSTEM_MANAGER = "System Manager"
 
 def get_users_by_role(role_name):
-    users = frappe.get_all("Has Role", filters={"role": role_name}, pluck="parent")
+    users = smriti.db.get_list("Has Role", filters={"role": role_name}, pluck="parent")
     users = list(set(users))
     if not users:
         users = ["Administrator"]

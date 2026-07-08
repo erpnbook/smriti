@@ -7,6 +7,7 @@
 
 import unittest
 import frappe
+from smriti_retail_os import smriti
 from smriti_retail_os.label_studio.service.preview_engine import PreviewEngine
 from smriti_retail_os.label_studio.service.render_engine import RenderEngine
 from smriti_retail_os.print_framework.registry.printer_registry import PrinterRegistry
@@ -119,5 +120,5 @@ class TestLabelAndPrintScaffolding(unittest.TestCase):
         self.assertIsNotNone(job_id)
 
         # Verify that print job document status was marked completed
-        job_status = frappe.db.get_value("SMRITI Print Job", job_id, "status")
+        job_status = smriti.db.get("SMRITI Print Job", job_id, "status")
         self.assertEqual(job_status, "Completed")

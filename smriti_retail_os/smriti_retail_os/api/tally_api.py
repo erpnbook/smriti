@@ -4,12 +4,13 @@
 
 import frappe
 from frappe import _
+from smriti_retail_os import smriti
 from smriti_retail_os.smriti_retail_os.services import tally_service
 
 @frappe.whitelist()
 def get_settings():
 	"""Retrieves or creates SMRITI Tally Settings."""
-	if not frappe.db.exists("DocType", "SMRITI Tally Settings"):
+	if not smriti.db.exists("DocType", "SMRITI Tally Settings"):
 		return {}
 	
 	doc = frappe.get_single("SMRITI Tally Settings")
@@ -26,7 +27,7 @@ def save_settings(settings_dict):
 	doc.update(settings_dict)
  # reviewed-ignore-permissions: no role restriction — any authenticated user may configure tally integration preferences, by design
 	doc.save(ignore_permissions=True)
-	frappe.db.commit()
+	smriti.db.commit()
 	return {"status": "Success", "message": _("Tally Settings saved successfully.")}
 
 @frappe.whitelist()
@@ -42,7 +43,7 @@ def get_pending_vouchers(from_date, to_date, voucher_type="Sales"):
 			"payment_type": ptype,
 			"party_type": party_type
 		}
-		invoices = frappe.db.get_all(
+		invoices = smriti.db.get_list(
 			doctype,
 			filters=filters,
 			fields=["name", "posting_date", "party as customer", "paid_amount as grand_total", "0 as is_pos"],
@@ -57,7 +58,7 @@ def get_pending_vouchers(from_date, to_date, voucher_type="Sales"):
 			"is_return": is_return
 		}
 		party_field = "customer" if doctype == "Sales Invoice" else "supplier"
-		invoices = frappe.db.get_all(
+		invoices = smriti.db.get_list(
 			doctype,
 			filters=filters,
 			fields=["name", "posting_date", f"{party_field} as customer", "grand_total", "is_pos" if doctype == "Sales Invoice" else "0 as is_pos"],
@@ -65,7 +66,7 @@ def get_pending_vouchers(from_date, to_date, voucher_type="Sales"):
 		)
 
 	# Fetch existing success logs to mark them
-	synced_names = frappe.db.get_all(
+	synced_names = smriti.db.get_list(
 		"SMRITI Tally Sync Log",
 		filters={"status": "Success", "posting_date": ["between", [from_date, to_date]], "voucher_type": voucher_type},
 		fields=["reference_name"],
@@ -107,7 +108,7 @@ def export_bulk_xml(from_date, to_date, invoice_names=None, voucher_type="Sales"
 	if invoice_names:
 		filters["name"] = ["in", invoice_names]
 
-	invoices = frappe.db.get_all(doctype, filters=filters, pluck="name")
+	invoices = smriti.db.get_list(doctype, filters=filters, pluck="name")
 	if not invoices:
 		frappe.throw(_("No submitted vouchers found for the selected criteria."))
 
@@ -181,7 +182,7 @@ def sync_to_tally(from_date, to_date, invoice_names=None, voucher_type="Sales", 
 	if invoice_names:
 		filters["name"] = ["in", invoice_names]
 
-	invoices = frappe.db.get_all(doctype, filters=filters, fields=["name", "posting_date"])
+	invoices = smriti.db.get_list(doctype, filters=filters, fields=["name", "posting_date"])
 	if not invoices:
 		return {"status": "Failed", "message": _("No submitted vouchers found to sync.")}
 
@@ -210,18 +211,18 @@ def sync_to_tally(from_date, to_date, invoice_names=None, voucher_type="Sales", 
 
 	for inv in invoices:
 		if not frappe.utils.cint(force):
-			if frappe.db.exists("SMRITI Tally Sync Log", {"reference_name": inv.name, "status": "Success"}):
+			if smriti.db.exists("SMRITI Tally Sync Log", {"reference_name": inv.name, "status": "Success"}):
 				continue
 
 		# Check for zero-value vouchers
 		total_amt = 0.0
 		if doctype == "Payment Entry":
-			total_amt = float(frappe.db.get_value("Payment Entry", inv.name, "paid_amount") or 0.0)
+			total_amt = float(smriti.db.get("Payment Entry", inv.name, "paid_amount") or 0.0)
 		else:
-			total_amt = float(frappe.db.get_value(doctype, inv.name, "grand_total") or 0.0)
+			total_amt = float(smriti.db.get(doctype, inv.name, "grand_total") or 0.0)
 
 		if total_amt == 0.0:
-			log_doc = frappe.new_doc("SMRITI Tally Sync Log")
+			log_doc = smriti.documents.new("SMRITI Tally Sync Log")
 			log_doc.posting_date = inv.posting_date
 			log_doc.voucher_type = voucher_type
 			log_doc.reference_doctype = doctype
@@ -236,16 +237,16 @@ def sync_to_tally(from_date, to_date, invoice_names=None, voucher_type="Sales", 
 		# Auto-create missing customer/supplier ledgers in Tally if enabled
 		if settings.get("auto_create_ledgers"):
 			if doctype == "Sales Invoice":
-				is_pos = frappe.db.get_value("Sales Invoice", inv.name, "is_pos")
+				is_pos = smriti.db.get("Sales Invoice", inv.name, "is_pos")
 				if not is_pos:
-					customer_name = frappe.db.get_value("Sales Invoice", inv.name, "customer")
+					customer_name = smriti.db.get("Sales Invoice", inv.name, "customer")
 					tally_service.create_ledger_in_tally(customer_name, "Sundry Debtors", settings)
 			elif doctype == "Purchase Invoice":
-				supplier_name = frappe.db.get_value("Purchase Invoice", inv.name, "supplier")
+				supplier_name = smriti.db.get("Purchase Invoice", inv.name, "supplier")
 				tally_service.create_ledger_in_tally(supplier_name, "Sundry Creditors", settings)
 			elif doctype == "Payment Entry":
-				pe_party_type = frappe.db.get_value("Payment Entry", inv.name, "party_type")
-				pe_party = frappe.db.get_value("Payment Entry", inv.name, "party")
+				pe_party_type = smriti.db.get("Payment Entry", inv.name, "party_type")
+				pe_party = smriti.db.get("Payment Entry", inv.name, "party")
 				parent_group = "Sundry Debtors" if pe_party_type == "Customer" else "Sundry Creditors"
 				tally_service.create_ledger_in_tally(pe_party, parent_group, settings)
 
@@ -253,7 +254,7 @@ def sync_to_tally(from_date, to_date, invoice_names=None, voucher_type="Sales", 
 		res = tally_service.post_to_tally(xml_payload, settings)
 
 		# Create Sync Log Entry
-		log_doc = frappe.new_doc("SMRITI Tally Sync Log")
+		log_doc = smriti.documents.new("SMRITI Tally Sync Log")
 		log_doc.posting_date = inv.posting_date
 		log_doc.voucher_type = voucher_type
 		log_doc.reference_doctype = doctype
@@ -269,7 +270,7 @@ def sync_to_tally(from_date, to_date, invoice_names=None, voucher_type="Sales", 
 			failed_count += 1
 			last_error = res["response"]
 
-	frappe.db.commit()
+	smriti.db.commit()
 
 	msg = _("Synced {0} voucher(s) successfully.").format(success_count)
 	if failed_count > 0:
@@ -284,7 +285,7 @@ def sync_to_tally(from_date, to_date, invoice_names=None, voucher_type="Sales", 
 @frappe.whitelist()
 def get_sync_logs(limit=50):
 	"""Retrieves the latest Tally sync logs."""
-	return frappe.db.get_all(
+	return smriti.db.get_list(
 		"SMRITI Tally Sync Log",
 		fields=["name", "posting_date", "voucher_type", "reference_name", "status", "response"],
 		order_by="creation desc",
@@ -309,7 +310,7 @@ def compare_sync_status(from_date, to_date, voucher_type="Sales"):
 		}
 	
 	# 3. Find which ones are successfully logged in SMRITI Tally Sync Log
-	synced_logs = frappe.db.get_all(
+	synced_logs = smriti.db.get_list(
 		"SMRITI Tally Sync Log",
 		filters={"reference_name": ["in", voucher_names], "status": "Success"},
 		fields=["reference_name"]

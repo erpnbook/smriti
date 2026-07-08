@@ -4,7 +4,8 @@
 # @description: DocType controller for SMRITI PSV Transaction.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from frappe.model.document import Document
 from smriti_retail_os.ledger_engine import make_ledger_entry, log_activity
 
@@ -15,7 +16,7 @@ class SMRITIPSVTransaction(Document):
 
     def validate_tracking_mode(self):
         """Ensures the transaction type is allowed by the PSA's tracking mode."""
-        psa_doc = frappe.get_cached_doc("SMRITI Party Stock Account", self.party_stock_account)
+        psa_doc = smriti.documents.get("SMRITI Party Stock Account", self.party_stock_account)
         mode = psa_doc.tracking_mode or "Hybrid"
         
         # OPENING, TRANSFER_IN, TRANSFER_OUT, MANUAL_ADJUSTMENT are generally always allowed as admin actions
@@ -48,7 +49,7 @@ class SMRITIPSVTransaction(Document):
             bal = get_party_balance(self.party_stock_account, item.item_code)
             if bal < 0:
                 # Set PSA status to Pending Reconciliation
-                frappe.db.set_value("SMRITI Party Stock Account", self.party_stock_account, "status", "Pending Reconciliation")
+                smriti.db.set_value("SMRITI Party Stock Account", self.party_stock_account, "status", "Pending Reconciliation")
                 
                 # Create exception record
                 sales_invoice = self.reference_name if self.reference_doctype == "Sales Invoice" else None

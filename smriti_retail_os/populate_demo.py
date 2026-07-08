@@ -1,10 +1,11 @@
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from smriti_retail_os.notification_studio.service.notification_service import create_notification
 
 def run():
     # Clear existing notifications
-    frappe.db.delete("SMRITI Notification Log")
-    frappe.db.commit()
+    smriti.db.delete("SMRITI Notification Log")
+    smriti.db.commit()
 
     # Create realistic notifications
     notifs = [

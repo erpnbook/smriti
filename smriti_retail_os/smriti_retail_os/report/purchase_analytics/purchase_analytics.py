@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # SMRITI Purchase Analytics Script Report
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 
 def execute(filters=None):
     columns = get_columns()
@@ -42,4 +43,4 @@ def get_data(filters):
 
     query += " GROUP BY month ORDER BY month ASC"
     
-    return frappe.db.sql(query, tuple(params), as_dict=True)
+    return smriti.db.sql(query, tuple(params), as_dict=True)

@@ -13,7 +13,8 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from frappe.utils import getdate, date_diff, now_datetime, get_datetime, nowdate, cint
 
 
@@ -40,7 +41,7 @@ def _load_license():
         return frappe.local._smriti_license_cache
 
     try:
-        doc = frappe.get_cached_doc("SMRITI License")
+        doc = smriti.documents.get("SMRITI License")
         frappe.local._smriti_license_cache = doc
         return doc
     except frappe.DoesNotExistError:
@@ -51,7 +52,7 @@ def _load_license():
             return None
         # Table exists but the singleton row is missing — that is corruption, not pre-migration.
         # Fail CLOSED: do not silently unlock all licensed features.
-        frappe.log_error(
+        smriti.errors.log_error(
             title="SMRITI License: singleton row missing on existing table",
             message=(
                 "The 'SMRITI License' singleton row was not found even though the table exists.\n"
@@ -64,7 +65,7 @@ def _load_license():
     except Exception:
         # Infrastructure failure: DB hiccup, PermissionError, corrupt doc.
         # Fail CLOSED — do not silently unlock all licensed features.
-        frappe.log_error(
+        smriti.errors.log_error(
             title="SMRITI License: Failed to load license record",
             message=(
                 "License could not be loaded due to an infrastructure error.\n"
@@ -284,7 +285,7 @@ def _get_feature_restriction(doc, feature_code: str) -> str:
         if f.feature_code == feature_code:
             return f.restriction_level or "NONE"
     # Unknown feature code — log so typos become visible. Default: unrestricted.
-    frappe.log_error(
+    smriti.errors.log_error(
         title=f"SMRITI License: Unknown feature code in grace check — '{feature_code}'",
         message=(
             f"_get_feature_restriction() was called with feature_code='{feature_code}' "
@@ -310,7 +311,7 @@ def _feature_enabled_for_tier(doc, feature_code: str) -> bool:
     # Unknown feature code — log so typos become visible. Default: allowed.
     # Deliberate forward-compat choice: new features can be deployed before
     # their license registry entry is seeded. See audit Finding #5.
-    frappe.log_error(
+    smriti.errors.log_error(
         title=f"SMRITI License: Unknown feature code in tier check — '{feature_code}'",
         message=(
             f"_feature_enabled_for_tier() was called with feature_code='{feature_code}' "

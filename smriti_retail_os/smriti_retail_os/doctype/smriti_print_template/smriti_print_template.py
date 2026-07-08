@@ -10,9 +10,10 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe.model.document import Document
 from frappe import _
+from smriti_retail_os import smriti
 
 class SMRITIPrintTemplate(Document):
     def autoname(self):
@@ -47,7 +48,7 @@ class SMRITIPrintTemplate(Document):
             v_label = getattr(self.flags, "version_label", None)
             
             # Insert Version record
-            v_doc = frappe.new_doc("SMRITI Print Template Version")
+            v_doc = smriti.documents.new("SMRITI Print Template Version")
             v_doc.template = self.name
             v_doc.version_number = old_version
             v_doc.version_label = v_label
@@ -63,8 +64,7 @@ class SMRITIPrintTemplate(Document):
             
             # Log Audit: SMRITI Print Template Version Created
             try:
-                frappe.get_doc({
-                    "doctype": "Activity Log",
+                smriti.documents.new("ActivityLog").update({
                     "user": self.modified_by or frappe.session.user,
                     "operation": "SMRITI Print Template Version Created",
                     "status": "Success",
@@ -72,7 +72,7 @@ class SMRITIPrintTemplate(Document):
                     "remarks": f"Template: {self.name}, Version: {old_version}, Checksum: {old_checksum}"
                 }).insert(ignore_permissions=True)
             except Exception as le:
-                frappe.log_error(f"Error logging version created: {str(le)}")
+                smriti.errors.log_error(f"Error logging version created: {str(le)}")
                 
             # If user didn't explicitly override version, auto-increment the patch level
             if self.custom_version == old_version and not getattr(self.flags, "ignore_version_increment", False):

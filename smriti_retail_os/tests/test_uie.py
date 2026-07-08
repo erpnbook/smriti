@@ -3,6 +3,7 @@
 # For license information, please see license.txt
 
 import frappe
+from smriti_retail_os import smriti
 import unittest
 import json
 from unittest.mock import patch, MagicMock
@@ -11,30 +12,30 @@ from smriti_retail_os.smriti_retail_os.uie.services import dispatcher, payload_b
 class TestUIE(unittest.TestCase):
 	def _cleanup_test_data(self):
 		# Clean up test queue items and logs
-		test_queue_items = frappe.get_all(
+		test_queue_items = smriti.db.get_list(
 			"SMRITI UIE Sync Queue",
 			filters=[["document_name", "like", "SINV-TEST-%"]]
 		)
 		for q in test_queue_items:
-			frappe.db.delete("SMRITI UIE Sync Log", {"queue_item": q.name})
+			smriti.db.delete("SMRITI UIE Sync Log", {"queue_item": q.name})
 			frappe.delete_doc("SMRITI UIE Sync Queue", q.name, ignore_permissions=True)
 
 		# Clean up credentials
-		if frappe.db.exists("SMRITI UIE Credential", "Test Bearer Credential"):
+		if smriti.db.exists("SMRITI UIE Credential", "Test Bearer Credential"):
 			frappe.delete_doc("SMRITI UIE Credential", "Test Bearer Credential", ignore_permissions=True)
 
 		# Clean up integrations
-		if frappe.db.exists("SMRITI UIE Integration", "Unsupported Integration"):
+		if smriti.db.exists("SMRITI UIE Integration", "Unsupported Integration"):
 			frappe.delete_doc("SMRITI UIE Integration", "Unsupported Integration", ignore_permissions=True)
 
-		frappe.db.commit()
+		smriti.db.commit()
 
 	def setUp(self):
 		# Clear leftover committed test data from previous runs
 		self._cleanup_test_data()
 
 		# Create test Credential
-		if not frappe.db.exists("SMRITI UIE Credential", "Test UIE Credential"):
+		if not smriti.db.exists("SMRITI UIE Credential", "Test UIE Credential"):
 			self.cred = frappe.get_doc({
 				"doctype": "SMRITI UIE Credential",
 				"credential_name": "Test UIE Credential",
@@ -44,10 +45,10 @@ class TestUIE(unittest.TestCase):
 			})
 			self.cred.insert(ignore_permissions=True)
 		else:
-			self.cred = frappe.get_doc("SMRITI UIE Credential", "Test UIE Credential")
+			self.cred = smriti.documents.get("SMRITI UIE Credential", "Test UIE Credential")
 
 		# Create test Endpoint
-		if not frappe.db.exists("SMRITI UIE Endpoint", "Test UIE Endpoint"):
+		if not smriti.db.exists("SMRITI UIE Endpoint", "Test UIE Endpoint"):
 			self.endpoint = frappe.get_doc({
 				"doctype": "SMRITI UIE Endpoint",
 				"endpoint_name": "Test UIE Endpoint",
@@ -58,7 +59,7 @@ class TestUIE(unittest.TestCase):
 			})
 			self.endpoint.insert(ignore_permissions=True)
 		else:
-			self.endpoint = frappe.get_doc("SMRITI UIE Endpoint", "Test UIE Endpoint")
+			self.endpoint = smriti.documents.get("SMRITI UIE Endpoint", "Test UIE Endpoint")
 
 		# Create test Integration
 		mapping_rules = {
@@ -67,7 +68,7 @@ class TestUIE(unittest.TestCase):
 			"customer": {"source": "customer"},
 			"total": {"source": "grand_total"}
 		}
-		if not frappe.db.exists("SMRITI UIE Integration", "Test UIE Integration"):
+		if not smriti.db.exists("SMRITI UIE Integration", "Test UIE Integration"):
 			self.integration = frappe.get_doc({
 				"doctype": "SMRITI UIE Integration",
 				"integration_name": "Test UIE Integration",
@@ -82,11 +83,11 @@ class TestUIE(unittest.TestCase):
 			})
 			self.integration.insert(ignore_permissions=True)
 		else:
-			self.integration = frappe.get_doc("SMRITI UIE Integration", "Test UIE Integration")
+			self.integration = smriti.documents.get("SMRITI UIE Integration", "Test UIE Integration")
 
 	def tearDown(self):
 		self._cleanup_test_data()
-		frappe.db.rollback()
+		smriti.db.rollback()
 
 	def test_payload_builder_mapping(self):
 		"""Tests payload builder declarative mapping rules."""
@@ -141,7 +142,7 @@ class TestUIE(unittest.TestCase):
 		dispatcher.enqueue_document_sync(mock_invoice, "on_submit")
 
 		# Check that one item exists in the queue
-		queue_items = frappe.get_all(
+		queue_items = smriti.db.get_list(
 			"SMRITI UIE Sync Queue",
 			filters={
 				"document_type": "Sales Invoice",
@@ -155,7 +156,7 @@ class TestUIE(unittest.TestCase):
 		dispatcher.enqueue_document_sync(mock_invoice, "on_submit")
 
 		# Should still be only one item
-		queue_items = frappe.get_all(
+		queue_items = smriti.db.get_list(
 			"SMRITI UIE Sync Queue",
 			filters={
 				"document_type": "Sales Invoice",
@@ -182,7 +183,7 @@ class TestUIE(unittest.TestCase):
 		# Enqueue the document
 		dispatcher.enqueue_document_sync(mock_invoice, "on_submit")
 
-		queue_items = frappe.get_all(
+		queue_items = smriti.db.get_list(
 			"SMRITI UIE Sync Queue",
 			filters={
 				"document_type": "Sales Invoice",
@@ -196,7 +197,7 @@ class TestUIE(unittest.TestCase):
 		
 		# First attempt: Retry count 0 -> 1, status "Failed"
 		dispatcher.dispatch_queue_item(queue_item_name)
-		q_item = frappe.get_doc("SMRITI UIE Sync Queue", queue_item_name)
+		q_item = smriti.documents.get("SMRITI UIE Sync Queue", queue_item_name)
 		self.assertEqual(q_item.retry_count, 1)
 		self.assertEqual(q_item.status, "Failed")
 
@@ -234,7 +235,7 @@ class TestUIE(unittest.TestCase):
 		})
 
 		dispatcher.enqueue_document_sync(mock_invoice, "on_submit")
-		queue_items = frappe.get_all(
+		queue_items = smriti.db.get_list(
 			"SMRITI UIE Sync Queue",
 			filters={
 				"document_type": "Sales Invoice",
@@ -249,11 +250,11 @@ class TestUIE(unittest.TestCase):
 		self.assertTrue(success)
 
 		# Check queue status updated to Success
-		q_item = frappe.get_doc("SMRITI UIE Sync Queue", queue_item_name)
+		q_item = smriti.documents.get("SMRITI UIE Sync Queue", queue_item_name)
 		self.assertEqual(q_item.status, "Success")
 
 		# Check that Sync Log is created
-		logs = frappe.get_all(
+		logs = smriti.db.get_list(
 			"SMRITI UIE Sync Log",
 			filters={"queue_item": queue_item_name},
 			fields=["result", "http_status", "response_content"]
@@ -273,7 +274,7 @@ class TestUIE(unittest.TestCase):
 	def test_credential_auth_bearer(self):
 		"""Tests Bearer Token injection from credential vault."""
 		bearer_cred_name = "Test Bearer Credential"
-		if frappe.db.exists("SMRITI UIE Credential", bearer_cred_name):
+		if smriti.db.exists("SMRITI UIE Credential", bearer_cred_name):
 			frappe.delete_doc("SMRITI UIE Credential", bearer_cred_name)
 
 		bearer_cred = frappe.get_doc({
@@ -303,7 +304,7 @@ class TestUIE(unittest.TestCase):
 			"priority": "Normal",
 			"version": "v1"
 		})
-		if not frappe.db.exists("SMRITI UIE Integration", "Unsupported Integration"):
+		if not smriti.db.exists("SMRITI UIE Integration", "Unsupported Integration"):
 			unsupported_integration.insert(ignore_permissions=True)
 
 		mock_invoice = frappe.get_doc({
@@ -315,7 +316,7 @@ class TestUIE(unittest.TestCase):
 		})
 
 		dispatcher.enqueue_document_sync(mock_invoice, "on_submit")
-		queue_items = frappe.get_all(
+		queue_items = smriti.db.get_list(
 			"SMRITI UIE Sync Queue",
 			filters={"document_type": "Sales Invoice", "document_name": "SINV-TEST-UNSUPPORTED-001", "integration": "Unsupported Integration"}
 		)
@@ -326,7 +327,7 @@ class TestUIE(unittest.TestCase):
 		self.assertFalse(success)
 
 		# Check status is Dead-Letter
-		q_item = frappe.get_doc("SMRITI UIE Sync Queue", queue_item_name)
+		q_item = smriti.documents.get("SMRITI UIE Sync Queue", queue_item_name)
 		self.assertEqual(q_item.status, "Dead-Letter")
 		self.assertIn("Unsupported connector", q_item.dead_letter_reason)
 
@@ -354,7 +355,7 @@ class TestUIE(unittest.TestCase):
 		dispatcher.enqueue_document_sync(mock_invoice, "on_submit")
 
 		# Verify Queue Item was successfully created
-		queue_items = frappe.get_all(
+		queue_items = smriti.db.get_list(
 			"SMRITI UIE Sync Queue",
 			filters={
 				"document_type": "Sales Invoice",
@@ -372,11 +373,11 @@ class TestUIE(unittest.TestCase):
 		self.assertTrue(success)
 
 		# Verify status updated to Success
-		q_item = frappe.get_doc("SMRITI UIE Sync Queue", queue_item_name)
+		q_item = smriti.documents.get("SMRITI UIE Sync Queue", queue_item_name)
 		self.assertEqual(q_item.status, "Success")
 
 		# Verify Sync Log created with exact response content
-		logs = frappe.get_all(
+		logs = smriti.db.get_list(
 			"SMRITI UIE Sync Log",
 			filters={"queue_item": queue_item_name},
 			fields=["result", "http_status", "response_content"]
@@ -390,7 +391,7 @@ class TestUIE(unittest.TestCase):
 		dispatcher.enqueue_document_sync(mock_invoice, "on_submit")
 
 		# Verify no duplicate queue items are created
-		all_items = frappe.get_all(
+		all_items = smriti.db.get_list(
 			"SMRITI UIE Sync Queue",
 			filters={
 				"document_type": "Sales Invoice",

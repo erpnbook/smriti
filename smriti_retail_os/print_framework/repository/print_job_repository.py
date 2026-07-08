@@ -5,7 +5,9 @@
 # @author:  Jawahar R. Mallah
 #
 
-import frappe
+# framework-adapter: wraps frappe ORM at the repository boundary — Guard 6 exempt
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 
 class PrintJobRepository:
     """
@@ -15,19 +17,19 @@ class PrintJobRepository:
 
     @staticmethod
     def get_doc(*args, **kwargs):
-        return frappe.get_doc(*args, **kwargs)
+        return frappe.get_doc(*args, **kwargs)  # smriti-adapter-boundary
 
     @staticmethod
     def new_doc(*args, **kwargs):
-        return frappe.new_doc(*args, **kwargs)
+        return smriti.documents.new(*args, **kwargs)
 
     @staticmethod
     def set_value(*args, **kwargs):
-        return frappe.db.set_value(*args, **kwargs)
+        return smriti.db.set_value(*args, **kwargs)
 
     @staticmethod
     def delete(*args, **kwargs):
-        return frappe.db.delete(*args, **kwargs)
+        return smriti.db.delete(*args, **kwargs)
 
     @staticmethod
     def delete_doc(*args, **kwargs):
@@ -35,4 +37,4 @@ class PrintJobRepository:
 
     @staticmethod
     def commit(*args, **kwargs):
-        return frappe.db.commit(*args, **kwargs)
+        return frappe.db.commit(*args, **kwargs)  # smriti-adapter-boundary

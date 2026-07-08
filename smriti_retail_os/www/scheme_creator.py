@@ -20,8 +20,9 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 
 no_cache = 1
 
@@ -60,7 +61,7 @@ def get_context(context):
     context.title = "SMRITI Scheme Creator"
 
     # Fetch reference lists for autocomplete/select options in the Scheme Creator UI
-    context.item_groups = frappe.get_all("Item Group", filters={"is_group": 0}, pluck="name", order_by="name asc")
-    context.brands = frappe.get_all("Brand", pluck="name", order_by="name asc")
+    context.item_groups = smriti.db.get_list("Item Group", filters={"is_group": 0}, pluck="name", order_by="name asc")
+    context.brands = smriti.db.get_list("Brand", pluck="name", order_by="name asc")
 
     return context

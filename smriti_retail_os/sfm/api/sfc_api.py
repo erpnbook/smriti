@@ -12,6 +12,7 @@
 
 import frappe
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.utils import flt
 from smriti_retail_os.sfm.service.commission_service import (
     run_monthly_settlements,
@@ -42,13 +43,13 @@ def get_monthly_commissions(company, fiscal_year, month):
     from smriti_retail_os.sfm.service.target_service import get_month_date_range
     start_date, end_date = get_month_date_range(fiscal_year, month)
 
-    employees_attr = frappe.db.sql_list("""
+    employees_attr = smriti.db.sql_list("""
         select distinct employee from `tabSMRITI Attribution Ledger`
         where company = %s and ledger_status = 'Active'
           and posting_date >= %s and posting_date <= %s
     """, (company, start_date, end_date))
 
-    employees_comm = frappe.db.sql_list("""
+    employees_comm = smriti.db.sql_list("""
         select distinct employee from `tabSMRITI Commission Ledger`
         where company = %s and ledger_status = 'Active'
           and posting_date >= %s and posting_date <= %s
@@ -58,16 +59,16 @@ def get_monthly_commissions(company, fiscal_year, month):
 
     summary = []
     for emp in employees:
-        emp_name = frappe.db.get_value("Employee", emp, "employee_name") or emp
+        emp_name = smriti.db.get("Employee", emp, "employee_name") or emp
         
-        settlement_name = frappe.db.get_value(
+        settlement_name = smriti.db.get(
             "SMRITI Commission Settlement",
             {"employee": emp, "company": company, "fiscal_year": fiscal_year, "month": month},
             "name"
         )
         
         if settlement_name:
-            doc = frappe.get_doc("SMRITI Commission Settlement", settlement_name)
+            doc = smriti.documents.get("SMRITI Commission Settlement", settlement_name)
             gross = flt(doc.gross_commission)
             net = flt(doc.net_commission)
             status = doc.status
@@ -87,7 +88,7 @@ def get_monthly_commissions(company, fiscal_year, month):
             status = "Draft"
             adjustments = []
 
-        revenue_res = frappe.db.sql("""
+        revenue_res = smriti.db.sql("""
             select sum(revenue_credit) from `tabSMRITI Attribution Ledger`
             where employee = %s and company = %s and ledger_status = 'Active'
               and posting_date >= %s and posting_date <= %s
@@ -127,8 +128,8 @@ def save_commission_settlement(
     import json
     adjs = json.loads(adjustments) if isinstance(adjustments, str) else (adjustments or [])
 
-    if settlement_name and frappe.db.exists("SMRITI Commission Settlement", settlement_name):
-        doc = frappe.get_doc("SMRITI Commission Settlement", settlement_name)
+    if settlement_name and smriti.db.exists("SMRITI Commission Settlement", settlement_name):
+        doc = smriti.documents.get("SMRITI Commission Settlement", settlement_name)
         doc.status            = status
         doc.gross_commission  = flt(gross_commission)
         doc.net_commission    = flt(net_commission)
@@ -137,8 +138,8 @@ def save_commission_settlement(
             doc.append("adjustments", adj)
         doc.save(ignore_permissions=False)
     else:
-        doc = frappe.get_doc({
-            "doctype": "SMRITI Commission Settlement",
+        doc = smriti.documents.new("CommissionSettlement")
+        doc.update({
             "employee": employee,
             "company": company,
             "fiscal_year": fiscal_year,
@@ -151,7 +152,7 @@ def save_commission_settlement(
             doc.append("adjustments", adj)
         doc.insert(ignore_permissions=False)
 
-    frappe.db.commit()
+    smriti.db.commit()
     return {"name": doc.name, "status": doc.status}
 
 
@@ -182,13 +183,13 @@ def save_commission_rule(
         "is_active": int(is_active),
     }
 
-    if rule_name and frappe.db.exists("SMRITI Commission Rule", rule_name):
-        doc = frappe.get_doc("SMRITI Commission Rule", rule_name)
+    if rule_name and smriti.db.exists("SMRITI Commission Rule", rule_name):
+        doc = smriti.documents.get("SMRITI Commission Rule", rule_name)
         doc.update(fields)
         doc.save(ignore_permissions=False)
     else:
-        doc = frappe.get_doc({"doctype": "SMRITI Commission Rule", **fields})
+        doc = smriti.documents.new("CommissionRule"); smriti.documents.last().update(**fields)
         doc.insert(ignore_permissions=False)
 
-    frappe.db.commit()
+    smriti.db.commit()
     return {"name": doc.name}

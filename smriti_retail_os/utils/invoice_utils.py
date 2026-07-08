@@ -9,8 +9,9 @@
 # SPDX-License-Identifier: GPL-3.0-only
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.utils import flt
 import csv
 import io
@@ -124,7 +125,7 @@ def resolve_barcode(barcode):
     
     item_code = None
     for cand in candidates:
-        item_code = frappe.db.get_value(
+        item_code = smriti.db.get(
             "Item Barcode", {"barcode": cand}, "parent"
         )
         if item_code:
@@ -132,40 +133,40 @@ def resolve_barcode(barcode):
             
     if not item_code:
         for cand in candidates:
-            if frappe.db.exists("Item", cand):
+            if smriti.db.exists("Item", cand):
                 item_code = cand
                 break
             
     if not item_code:
         return {"error": "Barcode not found", "barcode": barcode}
     
-    item = frappe.get_doc("Item", item_code)
+    item = smriti.documents.get("Item", item_code)
     article = item.variant_of or item.name
     category = item.item_group or ""
     
     # MRP fallback logic (variant -> parent template -> standard_rate)
     mrp = flt(item.get("custom_mrp"))
     if not mrp and item.variant_of:
-        mrp = flt(frappe.db.get_value("Item", item.variant_of, "custom_mrp"))
+        mrp = flt(smriti.db.get("Item", item.variant_of, "custom_mrp"))
     if not mrp:
         mrp = flt(item.valuation_rate or item.standard_rate or 0)
         
     # GST fallback logic (variant -> parent template -> 12.0)
     gst_pct = flt(item.get("custom_gst_percentage"))
     if not gst_pct and item.variant_of:
-        gst_pct = flt(frappe.db.get_value("Item", item.variant_of, "custom_gst_percentage"))
+        gst_pct = flt(smriti.db.get("Item", item.variant_of, "custom_gst_percentage"))
     if not gst_pct:
         gst_pct = 12.0
         
     # HSN fallback logic (variant -> parent template)
     hsn_code = item.gst_hsn_code
     if not hsn_code and item.variant_of:
-        hsn_code = frappe.db.get_value("Item", item.variant_of, "gst_hsn_code")
+        hsn_code = smriti.db.get("Item", item.variant_of, "gst_hsn_code")
         
     # Sub-category fallback logic (variant -> parent template)
     sub_category = item.get("custom_sub_category")
     if not sub_category and item.variant_of:
-        sub_category = frappe.db.get_value("Item", item.variant_of, "custom_sub_category")
+        sub_category = smriti.db.get("Item", item.variant_of, "custom_sub_category")
         
     # Extract Color and Size from attributes
     attributes = {a.attribute.strip().upper(): a.attribute_value for a in item.attributes if a.attribute_value}
@@ -408,19 +409,19 @@ def get_buying_rate(item_code, supplier=None):
 
     price_list = None
     if supplier:
-        price_list = frappe.db.get_value("Supplier", supplier, "default_price_list")
+        price_list = smriti.db.get("Supplier", supplier, "default_price_list")
         
     if not price_list:
         price_list = "Standard Buying"
 
     # 1 & 2: Query Item Price matching price list
-    rate = frappe.db.get_value(
+    rate = smriti.db.get(
         "Item Price", 
         {"item_code": item_code, "price_list": price_list}, 
         "price_list_rate"
     )
     if not rate and price_list != "Standard Buying":
-        rate = frappe.db.get_value(
+        rate = smriti.db.get(
             "Item Price", 
             {"item_code": item_code, "price_list": "Standard Buying"}, 
             "price_list_rate"
@@ -428,7 +429,7 @@ def get_buying_rate(item_code, supplier=None):
 
     # 3 & 4: Fallback to Item valuation_rate / standard_rate
     if not rate:
-        item = frappe.get_doc("Item", item_code)
+        item = smriti.documents.get("Item", item_code)
         rate = item.valuation_rate or item.standard_rate or 0.0
 
     return flt(rate)

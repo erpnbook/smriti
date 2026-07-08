@@ -16,6 +16,7 @@
 #
 
 import frappe
+from smriti_retail_os import smriti
 import unittest
 from frappe.utils import now_datetime, nowdate, add_to_date, flt
 from smriti_retail_os.cge.service.cge_service import (
@@ -32,29 +33,29 @@ class TestCGERuleEvaluator(unittest.TestCase):
         super().setUpClass()
         # Create test customer
         cls.customer_name = "_Test CGE Customer"
-        if not frappe.db.exists("Customer", cls.customer_name):
-            cust = frappe.new_doc("Customer")
+        if not smriti.db.exists("Customer", cls.customer_name):
+            cust = smriti.documents.new("Customer")
             cust.customer_name = cls.customer_name
             cust.customer_group = "Individual"
             cust.insert(ignore_permissions=True)
             
         # Create test item brand
         cls.brand = "Raymond Test"
-        if not frappe.db.exists("Brand", cls.brand):
-            brand_doc = frappe.new_doc("Brand")
+        if not smriti.db.exists("Brand", cls.brand):
+            brand_doc = smriti.documents.new("Brand")
             brand_doc.brand = cls.brand
             brand_doc.insert(ignore_permissions=True)
             
         # Ensure test HSN code exists
-        if not frappe.db.exists("GST HSN Code", "999900"):
-            hsn = frappe.new_doc("GST HSN Code")
+        if not smriti.db.exists("GST HSN Code", "999900"):
+            hsn = smriti.documents.new("GST HSN Code")
             hsn.hsn_code = "999900"
             hsn.insert(ignore_permissions=True)
 
         # Create test items
         cls.item_code = "_Test CGE Item"
-        if not frappe.db.exists("Item", cls.item_code):
-            item_doc = frappe.new_doc("Item")
+        if not smriti.db.exists("Item", cls.item_code):
+            item_doc = smriti.documents.new("Item")
             item_doc.item_code = cls.item_code
             item_doc.item_name = cls.item_code
             item_doc.item_group = "All Item Groups"
@@ -63,12 +64,12 @@ class TestCGERuleEvaluator(unittest.TestCase):
             item_doc.insert(ignore_permissions=True)
 
         # Get active company and warehouse dynamically
-        cls.company_name = frappe.get_all("Company", limit=1)[0].name
-        cls.warehouse = frappe.db.get_value("Warehouse", {"company": cls.company_name, "is_group": 0})
+        cls.company_name = smriti.db.get_list("Company", limit=1)[0].name
+        cls.warehouse = smriti.db.get("Warehouse", {"company": cls.company_name, "is_group": 0})
         if not cls.warehouse:
-            parent = frappe.db.get_value("Warehouse", {"company": cls.company_name, "is_group": 1})
-            w = frappe.get_doc({
-                "doctype": "Warehouse",
+            parent = smriti.db.get("Warehouse", {"company": cls.company_name, "is_group": 1})
+            w = smriti.documents.new("Warehouse")
+            w.update({
                 "warehouse_name": "Stores - TDP",
                 "parent_warehouse": parent,
                 "company": cls.company_name,
@@ -77,32 +78,32 @@ class TestCGERuleEvaluator(unittest.TestCase):
             w.insert(ignore_permissions=True)
             cls.warehouse = w.name
 
-        frappe.db.commit()
+        smriti.db.commit()
 
     @classmethod
     def tearDownClass(cls):
         # Clean up
-        frappe.db.delete("SMRITI Loyalty Tier")
-        frappe.db.delete("SMRITI Loyalty Rule")
-        frappe.db.delete("SMRITI Wallet Ledger")
-        frappe.db.delete("SMRITI Coupon Campaign")
-        frappe.db.delete("SMRITI Liability Snapshot")
-        frappe.db.delete("SMRITI Rule Evaluation Log")
-        frappe.db.delete("Customer", {"name": cls.customer_name})
-        frappe.db.delete("Item", {"name": cls.item_code})
-        frappe.db.delete("Brand", {"name": cls.brand})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Loyalty Tier")
+        smriti.db.delete("SMRITI Loyalty Rule")
+        smriti.db.delete("SMRITI Wallet Ledger")
+        smriti.db.delete("SMRITI Coupon Campaign")
+        smriti.db.delete("SMRITI Liability Snapshot")
+        smriti.db.delete("SMRITI Rule Evaluation Log")
+        smriti.db.delete("Customer", {"name": cls.customer_name})
+        smriti.db.delete("Item", {"name": cls.item_code})
+        smriti.db.delete("Brand", {"name": cls.brand})
+        smriti.db.commit()
         super().tearDownClass()
 
     def setUp(self):
         # Empty CGE tables
-        frappe.db.delete("SMRITI Loyalty Tier")
-        frappe.db.delete("SMRITI Loyalty Rule")
-        frappe.db.delete("SMRITI Wallet Ledger")
-        frappe.db.delete("SMRITI Coupon Campaign")
-        frappe.db.delete("SMRITI Liability Snapshot")
-        frappe.db.delete("SMRITI Rule Evaluation Log")
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Loyalty Tier")
+        smriti.db.delete("SMRITI Loyalty Rule")
+        smriti.db.delete("SMRITI Wallet Ledger")
+        smriti.db.delete("SMRITI Coupon Campaign")
+        smriti.db.delete("SMRITI Liability Snapshot")
+        smriti.db.delete("SMRITI Rule Evaluation Log")
+        smriti.db.commit()
 
     def test_wallet_immutability(self):
         """Verify submitted ledger entries cannot be edited or deleted."""
@@ -126,7 +127,7 @@ class TestCGERuleEvaluator(unittest.TestCase):
         """Verify coupon campaign budget reservation, limit check, commit, and release."""
         # Create campaign
         campaign_name = "Festive Test Campaign"
-        campaign = frappe.new_doc("SMRITI Coupon Campaign")
+        campaign = smriti.documents.new("SMRITI Coupon Campaign")
         campaign.campaign_name = campaign_name
         campaign.campaign_type = "Festival"
         campaign.start_date = nowdate()
@@ -138,10 +139,10 @@ class TestCGERuleEvaluator(unittest.TestCase):
         
         # Create Coupon Link
         coupon_code = "TESTCOUPON123"
-        if frappe.db.exists("Coupon Code", coupon_code):
+        if smriti.db.exists("Coupon Code", coupon_code):
             frappe.delete_doc("Coupon Code", coupon_code)
             
-        coupon = frappe.new_doc("Coupon Code")
+        coupon = smriti.documents.new("Coupon Code")
         coupon.coupon_code = coupon_code
         coupon.coupon_name = coupon_code
         coupon.custom_campaign = campaign_name
@@ -166,7 +167,7 @@ class TestCGERuleEvaluator(unittest.TestCase):
     def test_rule_evaluation_stacking(self):
         """Verify loyalty rule resolution, customer tier multipliers, and stacking logic."""
         # Configure tier: Gold Tier gets 1.5X multiplier
-        tier = frappe.new_doc("SMRITI Loyalty Tier")
+        tier = smriti.documents.new("SMRITI Loyalty Tier")
         tier.tier_name = "Gold Tier"
         tier.min_points = 0.0 # Match customer instantly
         tier.tier_multiplier = 1.5
@@ -174,7 +175,7 @@ class TestCGERuleEvaluator(unittest.TestCase):
         tier.insert(ignore_permissions=True)
         
         # Configure rule: Raymond gets 2.0X multiplier, stacking allowed
-        rule = frappe.new_doc("SMRITI Loyalty Rule")
+        rule = smriti.documents.new("SMRITI Loyalty Rule")
         rule.rule_name = "Raymond Brand Multiplier"
         rule.rule_type = "Multiplier"
         rule.dimension = "Brand"
@@ -187,16 +188,16 @@ class TestCGERuleEvaluator(unittest.TestCase):
         rule.insert(ignore_permissions=True)
         
         # Setup settings to enable logging
-        settings = frappe.get_doc("SMRITI CGE Settings")
+        settings = smriti.documents.get_single("CGESettings")
         settings.enable_rule_trace = 1
         settings.save(ignore_permissions=True)
         
         # Create Sales Invoice mockup doc
-        invoice = frappe.new_doc("Sales Invoice")
+        invoice = smriti.documents.new("Sales Invoice")
         invoice.name = "INV-TEST-0001"
         invoice.customer = self.customer_name
         invoice.posting_date = nowdate()
-        invoice.company = frappe.get_all("Company", limit=1)[0].name
+        invoice.company = smriti.db.get_list("Company", limit=1)[0].name
         
         # Append item
         invoice.append("items", {
@@ -215,5 +216,5 @@ class TestCGERuleEvaluator(unittest.TestCase):
         self.assertEqual(results[0]["multiplier"], 3.0)
         
         # Verify trace log was generated
-        logs = frappe.get_all("SMRITI Rule Evaluation Log", filters={"invoice": invoice.name})
+        logs = smriti.db.get_list("SMRITI Rule Evaluation Log", filters={"invoice": invoice.name})
         self.assertGreater(len(logs), 0)

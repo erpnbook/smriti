@@ -11,6 +11,7 @@
 #
 
 import frappe
+from smriti_retail_os import smriti
 import unittest
 from frappe.tests.utils import FrappeTestCase
 from frappe.utils import nowdate, getdate, flt
@@ -26,32 +27,32 @@ class TestSFC(FrappeTestCase):
         super().setUpClass()
         # Seed basic Gender records
         for g_name in ["Male", "Female"]:
-            if not frappe.db.exists("Gender", g_name):
-                g = frappe.new_doc("Gender")
+            if not smriti.db.exists("Gender", g_name):
+                g = smriti.documents.new("Gender")
                 g.gender = g_name
                 g.insert(ignore_permissions=True)
                 
         cls.company = "_Test SFC Company"
-        if not frappe.db.exists("Company", cls.company):
-            frappe.db.delete("Company", {"abbr": "SFC2"})
-            comp = frappe.new_doc("Company")
+        if not smriti.db.exists("Company", cls.company):
+            smriti.db.delete("Company", {"abbr": "SFC2"})
+            comp = smriti.documents.new("Company")
             comp.company_name = cls.company
             comp.abbr = "SFC2"
             comp.country = "India"
             comp.default_currency = "INR"
             comp.insert(ignore_permissions=True)
 
-        for fy_name in frappe.db.get_all("Fiscal Year", filters={"disabled": 0}, pluck="name"):
-            fy = frappe.get_doc("Fiscal Year", fy_name)
+        for fy_name in smriti.db.get_list("Fiscal Year", filters={"disabled": 0}, pluck="name"):
+            fy = smriti.documents.get("Fiscal Year", fy_name)
             if not any(c.company == cls.company for c in fy.companies):
                 fy.append("companies", {"company": cls.company})
                 fy.save(ignore_permissions=True)
 
-        frappe.db.set_value("Company", cls.company, "gstin", "27AAXFT2508H1ZR")
+        smriti.db.set_value("Company", cls.company, "gstin", "27AAXFT2508H1ZR")
         
         addr_name = f"{cls.company}-Registered-Test"
-        if not frappe.db.exists("Address", addr_name):
-            addr = frappe.new_doc("Address")
+        if not smriti.db.exists("Address", addr_name):
+            addr = smriti.documents.new("Address")
             addr.address_title = cls.company
             addr.address_type = "Office"
             addr.address_line1 = "Test Street"
@@ -67,10 +68,10 @@ class TestSFC(FrappeTestCase):
             addr.insert(ignore_permissions=True)
 
         # Resolve or create basic accounts
-        cls.debit_to = frappe.db.get_value("Account", {"company": cls.company, "account_type": "Receivable", "is_group": 0}, "name")
+        cls.debit_to = smriti.db.get("Account", {"company": cls.company, "account_type": "Receivable", "is_group": 0}, "name")
         if not cls.debit_to:
-            parent_recv = frappe.db.get_value("Account", {"company": cls.company, "account_type": "Receivable", "is_group": 1}, "name")
-            acc = frappe.new_doc("Account")
+            parent_recv = smriti.db.get("Account", {"company": cls.company, "account_type": "Receivable", "is_group": 1}, "name")
+            acc = smriti.documents.new("Account")
             acc.account_name = "Debtors"
             acc.parent_account = parent_recv
             acc.company = cls.company
@@ -78,10 +79,10 @@ class TestSFC(FrappeTestCase):
             acc.insert(ignore_permissions=True)
             cls.debit_to = acc.name
 
-        cls.income_account = frappe.db.get_value("Account", {"company": cls.company, "root_type": "Income", "is_group": 0}, "name")
+        cls.income_account = smriti.db.get("Account", {"company": cls.company, "root_type": "Income", "is_group": 0}, "name")
         if not cls.income_account:
-            parent_inc = frappe.db.get_value("Account", {"company": cls.company, "root_type": "Income", "is_group": 1}, "name")
-            acc = frappe.new_doc("Account")
+            parent_inc = smriti.db.get("Account", {"company": cls.company, "root_type": "Income", "is_group": 1}, "name")
+            acc = smriti.documents.new("Account")
             acc.account_name = "Sales"
             acc.parent_account = parent_inc
             acc.company = cls.company
@@ -89,12 +90,12 @@ class TestSFC(FrappeTestCase):
             acc.insert(ignore_permissions=True)
             cls.income_account = acc.name
 
-        cls.uom = frappe.db.exists("UOM", "Nos") or frappe.db.get_value("UOM", {}, "name") or "Nos"
-        cls.item_group = frappe.db.exists("Item Group", "All Item Groups") or frappe.db.get_value("Item Group", {}, "name") or "All Item Groups"
+        cls.uom = smriti.db.exists("UOM", "Nos") or smriti.db.get("UOM", {}, "name") or "Nos"
+        cls.item_group = smriti.db.exists("Item Group", "All Item Groups") or smriti.db.get("Item Group", {}, "name") or "All Item Groups"
 
-        cls.warehouse = frappe.db.get_value("Warehouse", {"company": cls.company, "is_group": 0}, "name")
+        cls.warehouse = smriti.db.get("Warehouse", {"company": cls.company, "is_group": 0}, "name")
         if not cls.warehouse:
-            w = frappe.new_doc("Warehouse")
+            w = smriti.documents.new("Warehouse")
             w.warehouse_name = "Test SFC Stores"
             w.company = cls.company
             w.is_group = 0
@@ -102,19 +103,19 @@ class TestSFC(FrappeTestCase):
             cls.warehouse = w.name
 
         cls.brand = "Raymond Test Brand"
-        if not frappe.db.exists("Brand", cls.brand):
-            b = frappe.new_doc("Brand")
+        if not smriti.db.exists("Brand", cls.brand):
+            b = smriti.documents.new("Brand")
             b.brand = cls.brand
             b.insert(ignore_permissions=True)
 
-        if not frappe.db.exists("GST HSN Code", "649211"):
-            hsn = frappe.new_doc("GST HSN Code")
+        if not smriti.db.exists("GST HSN Code", "649211"):
+            hsn = smriti.documents.new("GST HSN Code")
             hsn.hsn_code = "649211"
             hsn.insert(ignore_permissions=True)
 
         cls.item = "TEST-SFC-ITEM-01"
-        if not frappe.db.exists("Item", cls.item):
-            itm = frappe.new_doc("Item")
+        if not smriti.db.exists("Item", cls.item):
+            itm = smriti.documents.new("Item")
             itm.item_code = cls.item
             itm.item_name = "Test SFC Item"
             itm.item_group = cls.item_group
@@ -124,16 +125,16 @@ class TestSFC(FrappeTestCase):
             itm.insert(ignore_permissions=True)
 
         cls.customer = "Test Customer SFC"
-        if not frappe.db.exists("Customer", cls.customer):
-            cust = frappe.new_doc("Customer")
+        if not smriti.db.exists("Customer", cls.customer):
+            cust = smriti.documents.new("Customer")
             cust.customer_name = cls.customer
             cust.customer_group = "Individual"
             cust.territory = "All Territories"
             cust.insert(ignore_permissions=True)
 
         cls.store = "Store - Test SFC"
-        if not frappe.db.exists("SMRITI Store", cls.store):
-            s = frappe.new_doc("SMRITI Store")
+        if not smriti.db.exists("SMRITI Store", cls.store):
+            s = smriti.documents.new("SMRITI Store")
             s.store_name = cls.store
             s.default_warehouse = cls.warehouse
             s.company = cls.company
@@ -142,8 +143,8 @@ class TestSFC(FrappeTestCase):
 
         # Create test employees
         cls.emp_p = "EMP-SFC-PRIMARY"
-        if not frappe.db.exists("Employee", cls.emp_p):
-            e = frappe.new_doc("Employee")
+        if not smriti.db.exists("Employee", cls.emp_p):
+            e = smriti.documents.new("Employee")
             e.employee_name = "Rahul Primary Owner"
             e.first_name = "Rahul"
             e.company = cls.company
@@ -152,11 +153,11 @@ class TestSFC(FrappeTestCase):
             e.date_of_joining = "2026-01-01"
             e.date_of_birth = "1990-01-01"
             e.insert(ignore_permissions=True)
-            frappe.db.set_value("Employee", e.name, "name", cls.emp_p)
+            smriti.db.set_value("Employee", e.name, "name", cls.emp_p)
 
         cls.emp_s = "EMP-SFC-SECONDARY"
-        if not frappe.db.exists("Employee", cls.emp_s):
-            e = frappe.new_doc("Employee")
+        if not smriti.db.exists("Employee", cls.emp_s):
+            e = smriti.documents.new("Employee")
             e.employee_name = "Sonia Secondary Owner"
             e.first_name = "Sonia"
             e.company = cls.company
@@ -165,31 +166,31 @@ class TestSFC(FrappeTestCase):
             e.date_of_joining = "2026-01-01"
             e.date_of_birth = "1990-01-01"
             e.insert(ignore_permissions=True)
-            frappe.db.set_value("Employee", e.name, "name", cls.emp_s)
+            smriti.db.set_value("Employee", e.name, "name", cls.emp_s)
 
-        frappe.db.commit()
+        smriti.db.commit()
 
     def setUp(self):
         super().setUp()
         frappe.flags.in_test = True
         frappe.session.user = "Administrator"
 
-        frappe.db.delete("SMRITI Commission Rule")
-        frappe.db.delete("SMRITI Commission Event")
-        frappe.db.delete("SMRITI Commission Ledger")
-        frappe.db.delete("SMRITI Commission Settlement")
-        frappe.db.delete("SMRITI Commission Adjustment Detail")
-        frappe.db.delete("SMRITI Customer Ownership")
-        frappe.db.delete("SMRITI Attribution Ledger")
-        frappe.db.delete("SMRITI Attribution Event")
+        smriti.db.delete("SMRITI Commission Rule")
+        smriti.db.delete("SMRITI Commission Event")
+        smriti.db.delete("SMRITI Commission Ledger")
+        smriti.db.delete("SMRITI Commission Settlement")
+        smriti.db.delete("SMRITI Commission Adjustment Detail")
+        smriti.db.delete("SMRITI Customer Ownership")
+        smriti.db.delete("SMRITI Attribution Ledger")
+        smriti.db.delete("SMRITI Attribution Event")
 
-        invoice_names = frappe.get_all("Sales Invoice", filters={"company": self.company}, pluck="name")
+        invoice_names = smriti.db.get_list("Sales Invoice", filters={"company": self.company}, pluck="name")
         if invoice_names:
-            frappe.db.delete("Sales Invoice Item", {"parent": ["in", invoice_names]})
-            frappe.db.delete("Sales Invoice", {"name": ["in", invoice_names]})
+            smriti.db.delete("Sales Invoice Item", {"parent": ["in", invoice_names]})
+            smriti.db.delete("Sales Invoice", {"name": ["in", invoice_names]})
 
         # Initialize settings
-        frappe.db.set_value("SMRITI SFM Settings", "SMRITI SFM Settings", {
+        smriti.db.set_value("SMRITI SFM Settings", "SMRITI SFM Settings", {
             "enable_sfm": 1,
             "ownership_precedence": 1,
             "primary_split_pct": 70.0,
@@ -197,16 +198,15 @@ class TestSFC(FrappeTestCase):
             "walkin_employee": self.emp_p
         }, update_modified=False)
 
-        if not frappe.db.exists("SMRITI Commission Settings", "SMRITI Commission Settings"):
-            frappe.get_doc({
-                "doctype": "SMRITI Commission Settings",
+        if not smriti.db.exists("SMRITI Commission Settings", "SMRITI Commission Settings"):
+            smriti.documents.new("CommissionSettings").update({
                 "enable_sfc": 1,
                 "auto_generate_events": 1,
                 "auto_generate_settlements": 0,
                 "allow_negative_commission": 1
             }).insert(ignore_permissions=True)
         else:
-            frappe.db.set_value("SMRITI Commission Settings", "SMRITI Commission Settings", {
+            smriti.db.set_value("SMRITI Commission Settings", "SMRITI Commission Settings", {
                 "enable_sfc": 1,
                 "auto_generate_events": 1,
                 "auto_generate_settlements": 0,
@@ -214,7 +214,7 @@ class TestSFC(FrappeTestCase):
             }, update_modified=False)
 
         frappe.clear_cache()
-        frappe.db.commit()
+        smriti.db.commit()
 
     def tearDown(self):
         frappe.flags.in_test = False
@@ -223,7 +223,7 @@ class TestSFC(FrappeTestCase):
     def test_commission_rule_precedence(self):
         """Verify employee-specific override rule takes precedence over global fallback rule."""
         # 1. Global Rule (2% rate)
-        r_global = frappe.new_doc("SMRITI Commission Rule")
+        r_global = smriti.documents.new("SMRITI Commission Rule")
         r_global.rule_name = "Global Base Rule"
         r_global.commission_rate = 2.0
         r_global.company = self.company
@@ -232,7 +232,7 @@ class TestSFC(FrappeTestCase):
         r_global.insert(ignore_permissions=True)
 
         # 2. Employee Override Rule (3% rate)
-        r_override = frappe.new_doc("SMRITI Commission Rule")
+        r_override = smriti.documents.new("SMRITI Commission Rule")
         r_override.rule_name = "Rahul Override Rule"
         r_override.employee = self.emp_p
         r_override.commission_rate = 3.0
@@ -253,7 +253,7 @@ class TestSFC(FrappeTestCase):
     def test_commission_event_and_ledger_generation(self):
         """Verify commission events and ledgers are posted successfully on invoice submit."""
         # Setup 2% global rule
-        r_global = frappe.new_doc("SMRITI Commission Rule")
+        r_global = smriti.documents.new("SMRITI Commission Rule")
         r_global.rule_name = "Global Base Rule"
         r_global.commission_rate = 2.0
         r_global.company = self.company
@@ -261,7 +261,7 @@ class TestSFC(FrappeTestCase):
         r_global.insert(ignore_permissions=True)
 
         # Submit Invoice
-        si = frappe.new_doc("Sales Invoice")
+        si = smriti.documents.new("Sales Invoice")
         si.company = self.company
         si.customer = self.customer
         si.posting_date = "2026-06-02"
@@ -280,7 +280,7 @@ class TestSFC(FrappeTestCase):
         si.submit()
 
         # Check Attribution Ledger -> should fall back to Walk-In Employee (EMP-SFC-PRIMARY) at 100%
-        ledgers = frappe.get_all(
+        ledgers = smriti.db.get_list(
             "SMRITI Attribution Ledger",
             filters={"invoice_reference": si.name},
             fields=["name", "employee", "revenue_credit"]
@@ -290,7 +290,7 @@ class TestSFC(FrappeTestCase):
         self.assertEqual(flt(ledgers[0].revenue_credit), 10000.0)
 
         # Check Commission Event
-        events = frappe.get_all(
+        events = smriti.db.get_list(
             "SMRITI Commission Event",
             filters={"invoice_reference": si.name},
             fields=["name", "employee", "commission_rate", "commission_amount", "event_status", "attributed_revenue"]
@@ -303,7 +303,7 @@ class TestSFC(FrappeTestCase):
         self.assertEqual(events[0].event_status, "Processed")
 
         # Check Commission Ledger
-        comm_ledgers = frappe.get_all(
+        comm_ledgers = smriti.db.get_list(
             "SMRITI Commission Ledger",
             filters={"commission_event": events[0].name},
             fields=["name", "employee", "amount", "ledger_status"]
@@ -315,14 +315,14 @@ class TestSFC(FrappeTestCase):
 
     def test_commission_reversal_on_cancel(self):
         """Verify negative commission entries and active status cancellation on invoice reversal."""
-        r_global = frappe.new_doc("SMRITI Commission Rule")
+        r_global = smriti.documents.new("SMRITI Commission Rule")
         r_global.rule_name = "Global Base Rule"
         r_global.commission_rate = 2.0
         r_global.company = self.company
         r_global.is_active = 1
         r_global.insert(ignore_permissions=True)
 
-        si = frappe.new_doc("Sales Invoice")
+        si = smriti.documents.new("Sales Invoice")
         si.company = self.company
         si.customer = self.customer
         si.posting_date = "2026-06-02"
@@ -345,7 +345,7 @@ class TestSFC(FrappeTestCase):
 
         # Check all Commission Ledger entries for this invoice
         # Expecting 2: 1 original (Reversed), 1 negative reversal (Reversed)
-        ledgers = frappe.get_all(
+        ledgers = smriti.db.get_list(
             "SMRITI Commission Ledger",
             filters={"employee": self.emp_p},
             fields=["name", "amount", "ledger_status", "reversal_reference"]
@@ -362,10 +362,10 @@ class TestSFC(FrappeTestCase):
 
     def test_min_revenue_threshold(self):
         """Verify commission gross evaluates to 0 if monthly revenue threshold is not met."""
-        fiscal_year = frappe.get_all("Fiscal Year", limit=1, pluck="name")[0]
+        fiscal_year = smriti.db.get_list("Fiscal Year", limit=1, pluck="name")[0]
 
         # Commission Rule with 5% rate and 20,000 threshold
-        rule = frappe.new_doc("SMRITI Commission Rule")
+        rule = smriti.documents.new("SMRITI Commission Rule")
         rule.rule_name = "High Performer Rule"
         rule.employee = self.emp_p
         rule.commission_rate = 5.0
@@ -375,7 +375,7 @@ class TestSFC(FrappeTestCase):
         rule.insert(ignore_permissions=True)
 
         # 1. First Invoice (Revenue ₹15,000 - under threshold)
-        si1 = frappe.new_doc("Sales Invoice")
+        si1 = smriti.documents.new("Sales Invoice")
         si1.company = self.company
         si1.customer = self.customer
         si1.posting_date = "2026-06-05"
@@ -398,7 +398,7 @@ class TestSFC(FrappeTestCase):
         self.assertEqual(flt(settle["gross_commission"]), 0.0)
 
         # 2. Second Invoice (Revenue ₹10,000 - brings total to ₹25,000 - meets threshold)
-        si2 = frappe.new_doc("Sales Invoice")
+        si2 = smriti.documents.new("Sales Invoice")
         si2.company = self.company
         si2.customer = self.customer
         si2.posting_date = "2026-06-06"
@@ -422,9 +422,9 @@ class TestSFC(FrappeTestCase):
 
     def test_monthly_settlement_adjustments_and_immutability(self):
         """Verify adjustments calculation, approval workflow, and lock-state checks."""
-        fiscal_year = frappe.get_all("Fiscal Year", limit=1, pluck="name")[0]
+        fiscal_year = smriti.db.get_list("Fiscal Year", limit=1, pluck="name")[0]
 
-        rule = frappe.new_doc("SMRITI Commission Rule")
+        rule = smriti.documents.new("SMRITI Commission Rule")
         rule.rule_name = "Global Rule"
         rule.commission_rate = 10.0
         rule.company = self.company
@@ -432,7 +432,7 @@ class TestSFC(FrappeTestCase):
         rule.insert(ignore_permissions=True)
 
         # Submit Invoice generating ₹1,000 commission
-        si = frappe.new_doc("Sales Invoice")
+        si = smriti.documents.new("Sales Invoice")
         si.company = self.company
         si.customer = self.customer
         si.posting_date = "2026-06-05"
@@ -454,7 +454,7 @@ class TestSFC(FrappeTestCase):
         generated = run_monthly_settlements(self.company, fiscal_year, "Jun")
         self.assertEqual(len(generated), 1)
         
-        settle = frappe.get_doc("SMRITI Commission Settlement", generated[0])
+        settle = smriti.documents.get("SMRITI Commission Settlement", generated[0])
         self.assertEqual(flt(settle.gross_commission), 1000.0)
         self.assertEqual(flt(settle.net_commission), 1000.0)
         self.assertEqual(flt(settle.settled_commission_amount), 1000.0)
@@ -476,7 +476,7 @@ class TestSFC(FrappeTestCase):
         settle.save(ignore_permissions=True)
 
         # Reload and check net_commission is computed as ₹1,200
-        settle = frappe.get_doc("SMRITI Commission Settlement", settle.name)
+        settle = smriti.documents.get("SMRITI Commission Settlement", settle.name)
         self.assertEqual(flt(settle.net_commission), 1200.0)
         self.assertEqual(flt(settle.settled_commission_amount), 1200.0)
         
@@ -485,36 +485,36 @@ class TestSFC(FrappeTestCase):
         self.assertTrue(settle.adjustments[0].approved_on)
 
         # 3. Transition to Approved
-        settle = frappe.get_doc("SMRITI Commission Settlement", settle.name)
+        settle = smriti.documents.get("SMRITI Commission Settlement", settle.name)
         settle.status = "Approved"
         settle.save(ignore_permissions=True)
 
         # Try to modify fields on Approved record -> should fail
-        settle = frappe.get_doc("SMRITI Commission Settlement", settle.name)
+        settle = smriti.documents.get("SMRITI Commission Settlement", settle.name)
         settle.gross_commission = 1500.0
         with self.assertRaises(frappe.ValidationError):
             settle.save(ignore_permissions=True)
 
         # Try to change status back to Draft -> should fail
-        settle = frappe.get_doc("SMRITI Commission Settlement", settle.name)
+        settle = smriti.documents.get("SMRITI Commission Settlement", settle.name)
         settle.status = "Draft"
         with self.assertRaises(frappe.ValidationError):
             settle.save(ignore_permissions=True)
 
         # 4. Transition Approved -> Paid (requires payment reference)
-        settle = frappe.get_doc("SMRITI Commission Settlement", settle.name)
+        settle = smriti.documents.get("SMRITI Commission Settlement", settle.name)
         settle.status = "Paid"
         with self.assertRaises(frappe.ValidationError):
             settle.save(ignore_permissions=True) # Fails due to missing payment reference
 
-        settle = frappe.get_doc("SMRITI Commission Settlement", settle.name)
+        settle = smriti.documents.get("SMRITI Commission Settlement", settle.name)
         settle.status = "Paid"
         settle.payment_reference = "PAY-REF-SFC-001"
         settle.payment_date = "2026-06-30"
         settle.save(ignore_permissions=True) # Success
 
         # Try to edit Paid record -> should fail
-        settle = frappe.get_doc("SMRITI Commission Settlement", settle.name)
+        settle = smriti.documents.get("SMRITI Commission Settlement", settle.name)
         settle.payment_reference = "MODIFIED-REF"
         with self.assertRaises(frappe.ValidationError):
             settle.save(ignore_permissions=True)

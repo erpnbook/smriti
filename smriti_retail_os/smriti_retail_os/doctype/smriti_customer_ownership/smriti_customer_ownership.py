@@ -10,8 +10,9 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.model.document import Document
 from frappe.utils import getdate, add_days
 
@@ -44,12 +45,12 @@ class SMRITICustomerOwnership(Document):
             "is_active": 1,
             "name": ["!=", self.name]
         }
-        previous_records = frappe.get_all("SMRITI Customer Ownership", filters=filters, fields=["name", "start_date"])
+        previous_records = smriti.db.get_list("SMRITI Customer Ownership", filters=filters, fields=["name", "start_date"])
         
         yesterday = add_days(self.start_date or frappe.utils.nowdate(), -1)
         
         for r in previous_records:
-            doc = frappe.get_doc("SMRITI Customer Ownership", r.name)
+            doc = smriti.documents.get("SMRITI Customer Ownership", r.name)
             doc.is_active = 0
             doc.end_date = yesterday
             doc.save(ignore_permissions=True)

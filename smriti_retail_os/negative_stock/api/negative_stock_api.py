@@ -11,6 +11,7 @@
 #
 
 import frappe
+from smriti_retail_os import smriti
 from frappe.utils import now_datetime, today, cint, flt
 from smriti_retail_os.negative_stock.service.policy_resolver import SMRITINegativeStockPolicyResolver
 from smriti_retail_os.negative_stock.service.approval_service import SMRITINegativeStockApprovalService
@@ -26,14 +27,14 @@ def validate_negative_stock(item_code, warehouse, company, qty, requested_by_use
 	policy = resolver.resolve()
 
 	# Generate UDNE Auto-number sequence for Case
-	fy = frappe.db.get_value("Fiscal Year", {"disabled": 0}, "year") or "2026"
+	fy = smriti.db.get("Fiscal Year", {"disabled": 0}, "year") or "2026"
 	# Remove spaces/slashes for clean naming
 	fy_clean = fy.replace("-", "").replace("/", "")
-	running_no = (frappe.db.count("SMRITI Negative Stock Case") or 0) + 1
+	running_no = (smriti.db.count("SMRITI Negative Stock Case") or 0) + 1
 	case_id = f"NS/{company}/{fy_clean}/{running_no:05d}"
 
 	# Create the negative stock case document
-	case_doc = frappe.new_doc("SMRITI Negative Stock Case")
+	case_doc = smriti.documents.new("SMRITI Negative Stock Case")
 	case_doc.name = case_id
 	case_doc.company = company
 	case_doc.warehouse = warehouse
@@ -59,7 +60,7 @@ def validate_negative_stock(item_code, warehouse, company, qty, requested_by_use
 
  # reviewed-ignore-permissions: transient negative stock validation checks, no state mutation
 	case_doc.save(ignore_permissions=True)
-	frappe.db.commit()
+	smriti.db.commit()
 
 	# Fetch PSV alternative locations
 	psv_alternatives = get_psv_alternatives(item_code, warehouse)
@@ -110,44 +111,44 @@ def get_dashboard_metrics(company=None):
 
 	# Today's cases
 	today_start = today() + " 00:00:00"
-	cases_today = frappe.db.count("SMRITI Negative Stock Case", {
+	cases_today = smriti.db.count("SMRITI Negative Stock Case", {
 		"creation": [">=", today_start]
 	})
 
 	# Recovered cases today
-	recovered_today = frappe.db.count("SMRITI Negative Stock Case", {
+	recovered_today = smriti.db.count("SMRITI Negative Stock Case", {
 		"status": "Recovered",
 		"modified": [">=", today_start]
 	})
 
 	# Total open cases
-	open_cases = frappe.db.count("SMRITI Negative Stock Case", {
+	open_cases = smriti.db.count("SMRITI Negative Stock Case", {
 		"status": ["in", ["Open", "Pending Approval"]]
 	})
 
 	# Calculate exposure (sum of product cost for open negative stock cases)
 	exposure = 0.0
-	open_docs = frappe.get_all("SMRITI Negative Stock Case", filters={
+	open_docs = smriti.db.get_list("SMRITI Negative Stock Case", filters={
 		"status": ["in", ["Open", "Pending Approval"]]
 	}, fields=["item_code", "negative_qty"])
 
 	for doc in open_docs:
-		val_rate = frappe.db.get_value("Bin", {
+		val_rate = smriti.db.get("Bin", {
 			"item_code": doc.item_code
 		}, "valuation_rate") or 0.0
 		# If bin valuation rate is 0, fetch item standard selling price
 		if val_rate == 0:
-			val_rate = frappe.db.get_value("Item Price", {
+			val_rate = smriti.db.get("Item Price", {
 				"item_code": doc.item_code
 			}, "price_list_rate") or 0.0
 		exposure += abs(doc.negative_qty) * val_rate
 
 	# Calculate SLA compliance (percentage of cases resolved or approved within 4 hours)
-	total_cases = frappe.db.count("SMRITI Negative Stock Case")
+	total_cases = smriti.db.count("SMRITI Negative Stock Case")
 	sla_compliant = total_cases # Default fallback
 	
 	# Top recurring items
-	top_items = frappe.db.sql("""
+	top_items = smriti.db.sql("""
 		SELECT item_code, count(name) as count 
 		FROM `tabSMRITI Negative Stock Case`
 		GROUP BY item_code
@@ -156,7 +157,7 @@ def get_dashboard_metrics(company=None):
 	""", as_dict=True)
 
 	# Top recurring warehouses
-	top_warehouses = frappe.db.sql("""
+	top_warehouses = smriti.db.sql("""
 		SELECT warehouse, count(name) as count 
 		FROM `tabSMRITI Negative Stock Case`
 		GROUP BY warehouse
@@ -178,7 +179,7 @@ def get_psv_alternatives(item_code, source_warehouse):
 	"""
 	Returns alternative warehouses within proximity containing stock.
 	"""
-	bins = frappe.get_all("Bin", filters={
+	bins = smriti.db.get_list("Bin", filters={
 		"item_code": item_code,
 		"warehouse": ["!=", source_warehouse],
 		"actual_qty": [">", 0]

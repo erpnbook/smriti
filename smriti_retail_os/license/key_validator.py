@@ -50,8 +50,9 @@ import re
 from datetime import date
 from typing import TypedDict
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -126,7 +127,7 @@ def _get_secret() -> bytes:
         )
 
     # 4. developer_mode only — fallback with WARNING logged on every call
-    frappe.log_error(
+    smriti.errors.log_error(
         title="SMRITI License: Using Development Secret [WARNING]",
         message=(
             "developer_mode=1 and no smriti_license_secret is configured. "

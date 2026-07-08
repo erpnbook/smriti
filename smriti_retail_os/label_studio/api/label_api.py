@@ -7,6 +7,7 @@
 
 import frappe
 from frappe import _
+from smriti_retail_os import smriti
 from smriti_retail_os.label_studio.repository.label_template_repository import LabelTemplateRepository
 from smriti_retail_os.label_studio.service.label_service import LabelService
 
@@ -74,12 +75,12 @@ def get_item_for_label(item_code):
     if not item_code:
         frappe.throw(_("Item Code is required to load label data."))
 
-    if not frappe.db.exists("Item", item_code):
+    if not smriti.db.exists("Item", item_code):
         frappe.throw(
             _("Product not found: {0}. Please check the Item Code and try again.").format(item_code)
         )
 
-    item = frappe.get_doc("Item", item_code)
+    item = smriti.documents.get("Item", item_code)
 
     # Primary barcode: first entry in Item Barcode child table, else blank
     barcode = ""
@@ -87,7 +88,7 @@ def get_item_for_label(item_code):
         barcode = item.barcodes[0].barcode or ""
 
     # MRP: standard_rate is the base selling price; valuation_rate is cost
-    mrp = frappe.db.get_value(
+    mrp = smriti.db.get(
         "Item Price",
         {"item_code": item_code, "selling": 1, "price_list": "Standard Selling"},
         "price_list_rate"
@@ -112,7 +113,7 @@ def get_printers_list():
     """
     _guest_guard()
     try:
-        printers = frappe.get_all(
+        printers = smriti.db.get_list(
             "SMRITI Printer",
             fields=["name", "printer_name", "format_type", "ip_address"],
             filters={"disabled": 0},

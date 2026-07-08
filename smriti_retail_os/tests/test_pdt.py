@@ -14,6 +14,7 @@
 # For license information, please see license.txt
 
 import frappe
+from smriti_retail_os import smriti
 from smriti_retail_os.tests.test_psv import TestPSV
 from smriti_retail_os.balance_engine import get_party_balance
 from smriti_retail_os.services.forecasting_service import (
@@ -29,16 +30,16 @@ from smriti_retail_os.services.pdt_service import rebuild_twin_cache, enqueue_re
 class TestPDT(TestPSV):
     def setUp(self):
         super().setUp()
-        frappe.db.delete("SMRITI SKU Twin")
-        frappe.db.commit()
+        smriti.db.delete("SMRITI SKU Twin")
+        smriti.db.commit()
 
     def test_sku_twin_creation_and_uniqueness(self):
         # 1. Assert DocType exists
-        self.assertTrue(frappe.db.exists("DocType", "SMRITI SKU Twin"))
+        self.assertTrue(smriti.db.exists("DocType", "SMRITI SKU Twin"))
         
         # 2. Insert standard twin
-        twin1 = frappe.get_doc({
-            "doctype": "SMRITI SKU Twin",
+        twin1 = smriti.documents.new("SKUTwin")
+        twin1.update({
             "company": self.company,
             "party_stock_account": self.account_name,
             "item_code": self.item,
@@ -47,11 +48,11 @@ class TestPDT(TestPSV):
             "twin_state": "Healthy"
         })
         twin1.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # 3. Assert duplicate insert throws ValidationError
-        twin2 = frappe.get_doc({
-            "doctype": "SMRITI SKU Twin",
+        twin2 = smriti.documents.new("SKUTwin")
+        twin2.update({
             "company": self.company,
             "party_stock_account": self.account_name,
             "item_code": self.item,
@@ -78,7 +79,7 @@ class TestPDT(TestPSV):
                 voucher_type="Sales",
                 voucher_no=f"INV-TEST-{i}"
             )
-        frappe.db.commit()
+        smriti.db.commit()
 
         # 2. Calculate velocity stats
         stats = calculate_weekly_velocity_stats(self.company, self.account_name, self.item)
@@ -96,8 +97,8 @@ class TestPDT(TestPSV):
     def test_cost_aware_rebalancing_optimization(self):
         # 1. Create a second PSA (Pune Outlet) in same West zone
         pune_psa = f"{self.customer}-Pune Outlet"
-        if not frappe.db.exists("SMRITI Party Stock Account", pune_psa):
-            pune = frappe.new_doc("SMRITI Party Stock Account")
+        if not smriti.db.exists("SMRITI Party Stock Account", pune_psa):
+            pune = smriti.documents.new("SMRITI Party Stock Account")
             pune.company = self.company
             pune.customer = self.customer
             pune.location_name = "Pune Outlet"
@@ -105,8 +106,8 @@ class TestPDT(TestPSV):
             pune.insert(ignore_permissions=True)
             
         # Ensure Mumbai target PSA has same zone
-        frappe.db.set_value("SMRITI Party Stock Account", self.account_name, "zone", "West")
-        frappe.db.commit()
+        smriti.db.set_value("SMRITI Party Stock Account", self.account_name, "zone", "West")
+        smriti.db.commit()
 
         # 2. Seed Pune PSA with excess stock (100 units)
         from smriti_retail_os.psv_service import import_opening_balances
@@ -116,14 +117,14 @@ class TestPDT(TestPSV):
         import_opening_balances(self.company, self.account_name, [{"item_code": self.item, "qty": 0.0}])
 
         # 3. Create a Reorder Rule for Mumbai PSA
-        rule = frappe.new_doc("SMRITI PSV Reorder Rule")
+        rule = smriti.documents.new("SMRITI PSV Reorder Rule")
         rule.company = self.company
         rule.party_stock_account = self.account_name
         rule.item_variant = self.item
         rule.safety_stock = 20.0
         rule.active = 1
         rule.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # 4. Optimize transfer
         opt = optimize_network_transfer(self.company, self.account_name, self.item, 0.0)
@@ -136,25 +137,25 @@ class TestPDT(TestPSV):
     def test_variant_curve_detection(self):
         # Force reload PSV settings to ensure schema is synced in the test database
         frappe.reload_doc("smriti_retail_os", "doctype", "smriti_psv_settings")
-        frappe.db.commit()
+        smriti.db.commit()
 
         # Configure variant_dimension setting
-        if frappe.db.exists("DocType", "SMRITI PSV Settings"):
-            settings = frappe.get_doc("SMRITI PSV Settings")
+        if smriti.db.exists("DocType", "SMRITI PSV Settings"):
+            settings = smriti.documents.get_single("PSVSettings")
             settings.variant_dimension = "Test Curve Attribute"
             settings.save(ignore_permissions=True)
             frappe.clear_document_cache("SMRITI PSV Settings", "SMRITI PSV Settings")
 
         # Ensure items do not exist
         for itm_code in ["TEST-STYLE-SHIRT-S", "TEST-STYLE-SHIRT-M", "TEST-STYLE-SHIRT"]:
-            if frappe.db.exists("Item", itm_code):
+            if smriti.db.exists("Item", itm_code):
                 frappe.delete_doc("Item", itm_code, force=True)
 
         # Ensure Item Attribute "Test Curve Attribute" exists with correct values
-        if frappe.db.exists("Item Attribute", "Test Curve Attribute"):
+        if smriti.db.exists("Item Attribute", "Test Curve Attribute"):
             frappe.delete_doc("Item Attribute", "Test Curve Attribute", force=True)
 
-        attr = frappe.new_doc("Item Attribute")
+        attr = smriti.documents.new("Item Attribute")
         attr.attribute_name = "Test Curve Attribute"
         attr.append("item_attribute_values", {"attribute_value": "S", "abbr": "S"})
         attr.append("item_attribute_values", {"attribute_value": "M", "abbr": "M"})
@@ -162,8 +163,8 @@ class TestPDT(TestPSV):
 
         # 1. Create a template style item
         template_item = "TEST-STYLE-SHIRT"
-        if not frappe.db.exists("Item", template_item):
-            itm = frappe.new_doc("Item")
+        if not smriti.db.exists("Item", template_item):
+            itm = smriti.documents.new("Item")
             itm.item_code = template_item
             itm.item_name = "Test Style Shirt"
             itm.item_group = self.item_group
@@ -175,8 +176,8 @@ class TestPDT(TestPSV):
 
         # 2. Create variant items
         var_s = "TEST-STYLE-SHIRT-S"
-        if not frappe.db.exists("Item", var_s):
-            itm = frappe.new_doc("Item")
+        if not smriti.db.exists("Item", var_s):
+            itm = smriti.documents.new("Item")
             itm.item_code = var_s
             itm.item_name = "Test Style Shirt S"
             itm.item_group = self.item_group
@@ -187,8 +188,8 @@ class TestPDT(TestPSV):
             itm.insert(ignore_permissions=True)
 
         var_m = "TEST-STYLE-SHIRT-M"
-        if not frappe.db.exists("Item", var_m):
-            itm = frappe.new_doc("Item")
+        if not smriti.db.exists("Item", var_m):
+            itm = smriti.documents.new("Item")
             itm.item_code = var_m
             itm.item_name = "Test Style Shirt M"
             itm.item_group = self.item_group
@@ -208,8 +209,8 @@ class TestPDT(TestPSV):
 
     def test_sandbox_simulation_isolation(self):
         # 1. Insert standard twin record in database
-        twin = frappe.get_doc({
-            "doctype": "SMRITI SKU Twin",
+        twin = smriti.documents.new("SKUTwin")
+        twin.update({
             "company": self.company,
             "party_stock_account": self.account_name,
             "item_code": self.item,
@@ -219,7 +220,7 @@ class TestPDT(TestPSV):
             "twin_state": "Healthy"
         })
         twin.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # 2. Run simulation with a 1.5x velocity multiplier
         config = {
@@ -234,7 +235,7 @@ class TestPDT(TestPSV):
         self.assertEqual(simulated[0]["weeks_of_cover"], round(20.0 / 6.0, 2))
         
         # 3. Assert DB twin record remains unmodified
-        db_twin = frappe.get_doc("SMRITI SKU Twin", twin.name)
+        db_twin = smriti.documents.get("SMRITI SKU Twin", twin.name)
         self.assertEqual(db_twin.weekly_velocity, 4.0)
 
     def test_rebuild_lock_prevention(self):
@@ -250,7 +251,7 @@ class TestPDT(TestPSV):
         self.assertFalse(frappe.cache().get_value(lock_key))
         
         # 4. Verify SMRITI SKU Twin was created
-        twin_exists = frappe.db.exists("SMRITI SKU Twin", {
+        twin_exists = smriti.db.exists("SMRITI SKU Twin", {
             "company": self.company,
             "party_stock_account": self.account_name,
             "item_code": self.item
@@ -259,8 +260,8 @@ class TestPDT(TestPSV):
 
     def test_pdt_dashboard_list(self):
         # 1. Create a twin record
-        twin = frappe.get_doc({
-            "doctype": "SMRITI SKU Twin",
+        twin = smriti.documents.new("SKUTwin")
+        twin.update({
             "company": self.company,
             "party_stock_account": self.account_name,
             "item_code": self.item,
@@ -270,7 +271,7 @@ class TestPDT(TestPSV):
             "twin_state": "Healthy"
         })
         twin.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # 2. Call the API method
         from smriti_retail_os.api.pdt_api import get_pdt_dashboard_list

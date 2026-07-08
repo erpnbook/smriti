@@ -9,9 +9,10 @@
 #
 
 import datetime
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe.utils import cint
 from frappe import _
+from smriti_retail_os import smriti
 
 
 def log_print_job(template_name, printer_ip, labels_count, success,
@@ -37,12 +38,12 @@ def log_print_job(template_name, printer_ip, labels_count, success,
         with open(log_file, "a", encoding="utf-8") as lf:
             lf.write(log_msg)
     except Exception as e:
-        frappe.log_error(f"Failed to write local print log: {str(e)}")
+        smriti.errors.log_error(f"Failed to write local print log: {str(e)}")
 
     # 2. Frappe Activity Log
     try:
-        company = frappe.defaults.get_user_default("Company") or frappe.db.get_value("Company", {}, "name")
-        log_doc = frappe.new_doc("Activity Log")
+        company = frappe.defaults.get_user_default("Company") or smriti.db.get("Company", {}, "name")
+        log_doc = smriti.documents.new("Activity Log")
         log_doc.user = frappe.session.user
         log_doc.operation = "SMRITI Label Studio Print Run"
         log_doc.status = "Success" if success_val else "Failed"
@@ -59,9 +60,9 @@ def log_print_job(template_name, printer_ip, labels_count, success,
         }
         log_doc.remarks = json.dumps(remarks_dict)
         log_doc.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
     except Exception as e:
-        frappe.log_error(f"Failed to write Activity Log print job: {str(e)}")
+        smriti.errors.log_error(f"Failed to write Activity Log print job: {str(e)}")
 
     return {"success": True}
 
@@ -72,7 +73,7 @@ def get_print_analytics():
     """
     import json
     try:
-        logs = frappe.db.get_all(
+        logs = smriti.db.get_list(
             "Activity Log",
             filters={"operation": "SMRITI Label Studio Print Run"},
             fields=["remarks", "status", "creation"],
@@ -169,7 +170,7 @@ def get_print_analytics():
             "history":           history
         }
     except Exception as e:
-        frappe.log_error(f"Error compiling print analytics: {str(e)}")
+        smriti.errors.log_error(f"Error compiling print analytics: {str(e)}")
         return {
             "total_labels": 0, "total_jobs": 0, "failed_jobs": 0,
             "success_jobs": 0, "failed_percentage": 0.0,
@@ -183,7 +184,7 @@ def get_template_usage_stats():
     Aggregates template usage statistics from the Activity Log database table.
     """
     try:
-        logs = frappe.db.get_all(
+        logs = smriti.db.get_list(
             "Activity Log",
             filters={"operation": "SMRITI Label Studio Print Run"},
             fields=["subject", "status", "creation"]
@@ -209,5 +210,5 @@ def get_template_usage_stats():
                         pass
         return stats
     except Exception as e:
-        frappe.log_error(f"Error compiling template usage stats: {str(e)}")
+        smriti.errors.log_error(f"Error compiling template usage stats: {str(e)}")
         return {}

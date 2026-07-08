@@ -10,9 +10,10 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe.utils import flt, getdate, today, now_datetime
 from frappe import _
+from smriti_retail_os import smriti
 
 def mark_dirty(customer, source=None, source_document=None):
     """
@@ -23,8 +24,8 @@ def mark_dirty(customer, source=None, source_document=None):
         return
         
     for doctype in ["SMRITI Customer Graph", "SMRITI Customer Intelligence Graph", "SMRITI Customer Profile"]:
-        if frappe.db.exists(doctype, customer):
-            frappe.db.set_value(doctype, customer, {
+        if smriti.db.exists(doctype, customer):
+            smriti.db.set_value(doctype, customer, {
                 "is_dirty": 1,
                 "calculation_status": "Pending",
                 "dirty_source": source,
@@ -50,8 +51,8 @@ def regenerate_customer_data(customer, source=None, source_document=None):
     
     # Create entries if they do not exist
     for doctype in ["SMRITI Customer Graph", "SMRITI Customer Intelligence Graph", "SMRITI Customer Profile"]:
-        if not frappe.db.exists(doctype, customer):
-            doc = frappe.new_doc(doctype)
+        if not smriti.db.exists(doctype, customer):
+            doc = smriti.documents.new(doctype)
             doc.customer = customer
             if doctype == "SMRITI Customer Graph":
                 doc.graph_version = "CIG-1.1"
@@ -65,7 +66,7 @@ def regenerate_customer_data(customer, source=None, source_document=None):
             
     # Mark as processing
     for doctype in ["SMRITI Customer Graph", "SMRITI Customer Intelligence Graph", "SMRITI Customer Profile"]:
-        frappe.db.set_value(doctype, customer, "calculation_status", "Processing")
+        smriti.db.set_value(doctype, customer, "calculation_status", "Processing")
         
     try:
         # 1. Update Customer Graph
@@ -79,8 +80,8 @@ def regenerate_customer_data(customer, source=None, source_document=None):
     except Exception as e:
         duration_ms = (time.time() - start_time) * 1000.0
         err_msg = str(e)
-        if frappe.db.exists("SMRITI Customer Graph", customer):
-            frappe.db.set_value("SMRITI Customer Graph", customer, {
+        if smriti.db.exists("SMRITI Customer Graph", customer):
+            smriti.db.set_value("SMRITI Customer Graph", customer, {
                 "calculation_status": "Failed",
                 "graph_status": "Failed",
                 "graph_generation_error": err_msg,
@@ -88,12 +89,12 @@ def regenerate_customer_data(customer, source=None, source_document=None):
                 "graph_generation_duration_ms": duration_ms
             })
         for doctype in ["SMRITI Customer Intelligence Graph", "SMRITI Customer Profile"]:
-            if frappe.db.exists(doctype, customer):
-                frappe.db.set_value(doctype, customer, {
+            if smriti.db.exists(doctype, customer):
+                smriti.db.set_value(doctype, customer, {
                     "calculation_status": "Failed",
                     "is_dirty": 0
                 })
-        frappe.log_error(f"SMRITI Clienteling Graph Update Failed for {customer}: {err_msg}")
+        smriti.errors.log_error(f"SMRITI Clienteling Graph Update Failed for {customer}: {err_msg}")
         raise e
 
 def update_customer_graph(customer, source=None, source_document=None, start_time=None):
@@ -101,16 +102,16 @@ def update_customer_graph(customer, source=None, source_document=None, start_tim
     if not start_time:
         start_time = time.time()
         
-    doc = frappe.get_doc("SMRITI Customer Graph", customer)
+    doc = smriti.documents.get("SMRITI Customer Graph", customer)
     
     # 1. Fetch Invoices and Returns
-    invoices = frappe.db.get_all(
+    invoices = smriti.db.get_list(
         "Sales Invoice",
         filters={"customer": customer, "docstatus": 1},
         fields=["name", "posting_date", "grand_total", "is_return"]
     )
     
-    pos_invoices = frappe.db.get_all(
+    pos_invoices = smriti.db.get_list(
         "POS Invoice",
         filters={"customer": customer, "docstatus": 1},
         fields=["name", "posting_date", "grand_total", "is_return"]
@@ -144,7 +145,7 @@ def update_customer_graph(customer, source=None, source_document=None, start_tim
     preferred_color = get_mode(items, "color")
     
     # Favorite Executive from Attribution Ledger
-    favorite_executive = frappe.db.get_value(
+    favorite_executive = smriti.db.get(
         "SMRITI Attribution Ledger",
         filters={"customer": customer, "docstatus": 1},
         fieldname="employee",
@@ -152,32 +153,32 @@ def update_customer_graph(customer, source=None, source_document=None, start_tim
     )
     
     # Attributed revenue
-    attributed_revenue = flt(frappe.db.sql("""
+    attributed_revenue = flt(smriti.db.sql("""
         select sum(revenue_credit) from `tabSMRITI Attribution Ledger`
         where customer = %s and docstatus = 1
     """, customer)[0][0])
     
     # Owned customer revenue matching SMRITI Customer Ownership
     owned_customer_revenue = 0.0
-    owner = frappe.db.get_value("SMRITI Customer Ownership", {"customer": customer, "is_active": 1}, "primary_owner")
+    owner = smriti.db.get("SMRITI Customer Ownership", {"customer": customer, "is_active": 1}, "primary_owner")
     if owner:
-        owned_customer_revenue = flt(frappe.db.sql("""
+        owned_customer_revenue = flt(smriti.db.sql("""
             select sum(revenue_credit) from `tabSMRITI Attribution Ledger`
             where customer = %s and employee = %s and docstatus = 1
         """, (customer, owner))[0][0])
         
     # Wallet balance from CGE Wallet Ledger or Benefit Ledger
     wallet_balance = 0.0
-    if frappe.db.exists("DocType", "SMRITI Wallet Ledger"):
+    if smriti.db.exists("DocType", "SMRITI Wallet Ledger"):
         # Sum balance_remaining of Credits
-        wallet_balance = flt(frappe.db.sql("""
+        wallet_balance = flt(smriti.db.sql("""
             select sum(balance_remaining)
             from `tabSMRITI Wallet Ledger`
             where customer = %s and transaction_type = 'Credit'
               and is_expired = 0 and (expiry_date is null or expiry_date >= %s)
         """, (customer, today()))[0][0])
-    elif frappe.db.exists("DocType", "SMRITI Benefit Ledger"):
-        wallet_balance = flt(frappe.db.sql("""
+    elif smriti.db.exists("DocType", "SMRITI Benefit Ledger"):
+        wallet_balance = flt(smriti.db.sql("""
             select sum(case when transaction_type = 'Credit' then amount else -amount end)
             from `tabSMRITI Benefit Ledger`
             where customer = %s
@@ -185,10 +186,10 @@ def update_customer_graph(customer, source=None, source_document=None, start_tim
         
     # Campaign Responses Count
     campaign_responses_count = 0
-    if frappe.db.exists("DocType", "SMRITI Campaign Response"):
-        campaign_responses_count = frappe.db.count("SMRITI Campaign Response", {"customer": customer})
-    elif frappe.db.exists("DocType", "SMRITI Benefit Ledger"):
-        campaign_responses_count = frappe.db.count("SMRITI Benefit Ledger", {"customer": customer, "event_type": "EARN"})
+    if smriti.db.exists("DocType", "SMRITI Campaign Response"):
+        campaign_responses_count = smriti.db.count("SMRITI Campaign Response", {"customer": customer})
+    elif smriti.db.exists("DocType", "SMRITI Benefit Ledger"):
+        campaign_responses_count = smriti.db.count("SMRITI Benefit Ledger", {"customer": customer, "event_type": "EARN"})
         
     # Save Graph Data
     doc.purchases_count = purchases_count
@@ -224,7 +225,7 @@ def update_customer_graph(customer, source=None, source_document=None, start_tim
     return doc
 
 def update_customer_profile(customer, graph_doc, intel_doc, source=None, source_document=None):
-    doc = frappe.get_doc("SMRITI Customer Profile", customer)
+    doc = smriti.documents.get("SMRITI Customer Profile", customer)
     
     # Read derived variables from Customer Graph
     doc.preferred_brand = graph_doc.preferred_brand
@@ -238,9 +239,9 @@ def update_customer_profile(customer, graph_doc, intel_doc, source=None, source_
     # Retrieve Formula Expressions from SMRITI Formula Registry without hardcoding calculations
     abv_expr = None
     ltv_expr = None
-    if frappe.db.exists("DocType", "SMRITI Formula Definition"):
-        abv_expr = frappe.db.get_value("SMRITI Formula Definition", {"formula_name": "Average Basket Value"}, "formula_expression")
-        ltv_expr = frappe.db.get_value("SMRITI Formula Definition", {"formula_name": "Lifetime Value"}, "formula_expression")
+    if smriti.db.exists("DocType", "SMRITI Formula Definition"):
+        abv_expr = smriti.db.get("SMRITI Formula Definition", {"formula_name": "Average Basket Value"}, "formula_expression")
+        ltv_expr = smriti.db.get("SMRITI Formula Definition", {"formula_name": "Lifetime Value"}, "formula_expression")
         
     # Evaluate formulas safely
     context = {
@@ -292,7 +293,7 @@ def update_customer_profile(customer, graph_doc, intel_doc, source=None, source_
     doc.save()
 
 def update_customer_intelligence_graph(customer, graph_doc, source=None, source_document=None):
-    doc = frappe.get_doc("SMRITI Customer Intelligence Graph", customer)
+    doc = smriti.documents.get("SMRITI Customer Intelligence Graph", customer)
     
     # 1. Fetch settings
     settings = frappe.get_single("SMRITI Clienteling Settings")
@@ -371,10 +372,10 @@ def update_customer_intelligence_graph(customer, graph_doc, source=None, source_
  
     # 5. Campaign Affinity Score
     campaign_responses = 0
-    if frappe.db.exists("DocType", "SMRITI Campaign Response"):
-        campaign_responses += frappe.db.count("SMRITI Campaign Response", {"customer": customer})
-    if frappe.db.exists("DocType", "SMRITI Benefit Ledger"):
-        campaign_responses += frappe.db.count("SMRITI Benefit Ledger", {"customer": customer, "event_type": "EARN"})
+    if smriti.db.exists("DocType", "SMRITI Campaign Response"):
+        campaign_responses += smriti.db.count("SMRITI Campaign Response", {"customer": customer})
+    if smriti.db.exists("DocType", "SMRITI Benefit Ledger"):
+        campaign_responses += smriti.db.count("SMRITI Benefit Ledger", {"customer": customer, "event_type": "EARN"})
         
     affinity_expr, affinity_ver = get_formula_details("TST-AFFINITY")
     if not affinity_expr:
@@ -435,13 +436,13 @@ def update_customer_intelligence_graph(customer, graph_doc, source=None, source_
     # 8. Save Doc Fields
     doc.churn_risk_score = churn_risk_score
     doc.churn_risk_level = churn_risk_level
-    doc.churn_formula_id = frappe.db.get_value("SMRITI Formula Definition", {"formula_id": "TST-CHURN"}, "name")
+    doc.churn_formula_id = smriti.db.get("SMRITI Formula Definition", {"formula_id": "TST-CHURN"}, "name")
     doc.churn_formula_version = churn_ver
     
     doc.vip_candidate_score = vip_candidate_score
     doc.vip_candidate_level = vip_candidate_level
     doc.is_vip = is_vip
-    doc.vip_formula_id = frappe.db.get_value("SMRITI Formula Definition", {"formula_id": "TST-VIP"}, "name")
+    doc.vip_formula_id = smriti.db.get("SMRITI Formula Definition", {"formula_id": "TST-VIP"}, "name")
     doc.vip_formula_version = vip_ver
     
     doc.is_dormant = is_dormant
@@ -451,7 +452,7 @@ def update_customer_intelligence_graph(customer, graph_doc, source=None, source_
     doc.next_purchase_confidence = next_purchase_confidence
     
     doc.campaign_affinity_score = campaign_affinity_score
-    doc.affinity_formula_id = frappe.db.get_value("SMRITI Formula Definition", {"formula_id": "TST-AFFINITY"}, "name")
+    doc.affinity_formula_id = smriti.db.get("SMRITI Formula Definition", {"formula_id": "TST-AFFINITY"}, "name")
     doc.affinity_formula_version = affinity_ver
     
     # GAP-03, GAP-05 Customer Health & Governance versions
@@ -476,7 +477,7 @@ def get_formula_details(formula_id):
     """
     Returns (expression, version) for active formula.
     """
-    formula = frappe.db.get_value(
+    formula = smriti.db.get(
         "SMRITI Formula Definition",
         {"formula_id": formula_id, "is_active": 1},
         ["formula_expression", "formula_version"],
@@ -487,7 +488,7 @@ def get_formula_details(formula_id):
     return None, None
 
 def get_purchased_item_details(customer):
-    items_raw = frappe.db.sql("""
+    items_raw = smriti.db.sql("""
         SELECT sii.item_code, i.brand, i.item_group
         FROM `tabSales Invoice Item` sii
         JOIN `tabSales Invoice` si ON sii.parent = si.name
@@ -504,8 +505,8 @@ def get_purchased_item_details(customer):
     results = []
     for item in items_raw:
         item_code = item["item_code"]
-        size = frappe.db.get_value("Item Variant Attribute", {"parent": item_code, "attribute": ["like", "%size%"]}, "attribute_value")
-        color = frappe.db.get_value("Item Variant Attribute", {"parent": item_code, "attribute": ["like", "%color%"]}, "attribute_value")
+        size = smriti.db.get("Item Variant Attribute", {"parent": item_code, "attribute": ["like", "%size%"]}, "attribute_value")
+        color = smriti.db.get("Item Variant Attribute", {"parent": item_code, "attribute": ["like", "%color%"]}, "attribute_value")
         results.append({
             "brand": item["brand"],
             "item_group": item["item_group"],

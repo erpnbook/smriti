@@ -15,8 +15,9 @@
 # @date: 2026-06-18
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.utils import now_datetime, nowdate, add_to_date, flt, getdate
 from frappe.model.document import Document
 
@@ -41,7 +42,7 @@ def get_active_wallet_balance(customer):
     """Calculates customer's active wallet balance using remaining unconsumed credit balances."""
     if not customer:
         return 0.0
-    credits = flt(frappe.db.sql("""
+    credits = flt(smriti.db.sql("""
         select sum(balance_remaining)
         from `tabSMRITI Wallet Ledger`
         where customer = %s and transaction_type = 'Credit' 
@@ -54,7 +55,7 @@ def calculate_wallet_expiry_date(posting_date=None):
     """Calculates wallet expiry date based on wallet_validity_days in SMRITI CGE Settings (defaults to 90)."""
     if not posting_date:
         posting_date = nowdate()
-    validity_days = frappe.db.get_single_value("SMRITI CGE Settings", "wallet_validity_days")
+    validity_days = smriti.db.get_single("SMRITI CGE Settings", "wallet_validity_days")
     if validity_days is None:
         validity_days = 90
     else:
@@ -68,7 +69,7 @@ def consume_credits(customer, debit_amount):
     if debit_amount <= 0:
         return
         
-    credits = frappe.get_all(
+    credits = smriti.db.get_list(
         "SMRITI Wallet Ledger",
         filters={
             "customer": customer,
@@ -84,11 +85,11 @@ def consume_credits(customer, debit_amount):
     for c in credits:
         bal = flt(c.balance_remaining)
         if bal >= remaining_to_deduct:
-            frappe.db.set_value("SMRITI Wallet Ledger", c.name, "balance_remaining", bal - remaining_to_deduct)
+            smriti.db.set_value("SMRITI Wallet Ledger", c.name, "balance_remaining", bal - remaining_to_deduct)
             remaining_to_deduct = 0.0
             break
         else:
-            frappe.db.set_value("SMRITI Wallet Ledger", c.name, "balance_remaining", 0.0)
+            smriti.db.set_value("SMRITI Wallet Ledger", c.name, "balance_remaining", 0.0)
             remaining_to_deduct -= bal
 
 
@@ -112,7 +113,7 @@ class CGERuleEvaluator:
         5. Log matching traces into SMRITI Rule Evaluation Log.
         """
         # Resolve customer details
-        cust_doc = frappe.get_doc("Customer", self.customer)
+        cust_doc = smriti.documents.get("Customer", self.customer)
         
         # 1. Fetch customer's tier and base multiplier
         tier_info = get_customer_loyalty_tier(self.customer)
@@ -121,7 +122,7 @@ class CGERuleEvaluator:
         
         # 2. Fetch active loyalty rules
         today = getdate(nowdate())
-        rules = frappe.get_all("SMRITI Loyalty Rule",
+        rules = smriti.db.get_list("SMRITI Loyalty Rule",
             filters={
                 "status": "Active"
             },
@@ -156,7 +157,7 @@ class CGERuleEvaluator:
             if self.has_season_col:
                 fields.append("custom_season")
             
-            items_info = frappe.get_all("Item", filters={"name": ["in", item_codes]}, fields=fields)
+            items_info = smriti.db.get_list("Item", filters={"name": ["in", item_codes]}, fields=fields)
             item_dimension_cache = {d.name: d for d in items_info}
         
         # 3. Match rules for each item
@@ -281,14 +282,14 @@ class CGERuleEvaluator:
     def log_trace(self, rule_name, rule_type, status, reason, multiplier=0.0, discount_amount=0.0):
         """Creates a rule evaluation log entry if tracing is enabled in settings."""
         # Check settings
-        enable_trace = frappe.db.get_single_value("SMRITI CGE Settings", "enable_rule_trace")
+        enable_trace = smriti.db.get_single("SMRITI CGE Settings", "enable_rule_trace")
         if not enable_trace:
             return
             
         # Use invoice name if available; invoice may be unsaved in test scenarios
         invoice_name = getattr(self.invoice, "name", None) or ""
-        log_doc = frappe.get_doc({
-            "doctype": "SMRITI Rule Evaluation Log",
+        log_doc = smriti.documents.new("RuleEvaluationLog")
+        log_doc.update({
             "invoice": invoice_name,
             "rule_name": rule_name,
             "rule_type": rule_type,
@@ -310,11 +311,11 @@ class CGECampaignManager:
         Sets checkouts reservation_expiry_minutes = 30.
         Throws error if budget_limit is exceeded (if stop_on_limit is active).
         """
-        coupon = frappe.get_doc("Coupon Code", coupon_code)
+        coupon = smriti.documents.get("Coupon Code", coupon_code)
         if not coupon.custom_campaign:
             return
             
-        campaign = frappe.get_doc("SMRITI Coupon Campaign", coupon.custom_campaign)
+        campaign = smriti.documents.get("SMRITI Coupon Campaign", coupon.custom_campaign)
         if campaign.status != "Active":
             frappe.throw(_("Campaign {0} is not active.").format(campaign.campaign_name))
             
@@ -343,11 +344,11 @@ class CGECampaignManager:
         Decrements campaign.budget_reserved by the original reserved amount.
         Increments campaign.budget_consumed by final_discount.
         """
-        coupon = frappe.get_doc("Coupon Code", coupon_code)
+        coupon = smriti.documents.get("Coupon Code", coupon_code)
         if not coupon.custom_campaign:
             return
             
-        campaign = frappe.get_doc("SMRITI Coupon Campaign", coupon.custom_campaign)
+        campaign = smriti.documents.get("SMRITI Coupon Campaign", coupon.custom_campaign)
         
         cache_key = f"{session_id}_{coupon_code}"
         reservation = frappe.cache().hget("cge_budget_reservations", cache_key)
@@ -389,8 +390,8 @@ class CGECampaignManager:
                 amount = flt(val.get("amount"))
                 
                 # Release budget
-                if frappe.db.exists("SMRITI Coupon Campaign", campaign_name):
-                    campaign = frappe.get_doc("SMRITI Coupon Campaign", campaign_name)
+                if smriti.db.exists("SMRITI Coupon Campaign", campaign_name):
+                    campaign = smriti.documents.get("SMRITI Coupon Campaign", campaign_name)
                     campaign.budget_reserved = max(0.0, flt(campaign.budget_reserved) - amount)
                     campaign.save(ignore_permissions=True)
                     
@@ -408,7 +409,7 @@ class CGEWalletLedger:
         """
         # Deterministic Idempotency Check
         if reference_invoice:
-            duplicate = frappe.db.exists("SMRITI Wallet Ledger", {
+            duplicate = smriti.db.exists("SMRITI Wallet Ledger", {
                 "reference_invoice": reference_invoice,
                 "transaction_type": transaction_type,
                 "wallet_type": wallet_type,
@@ -422,16 +423,16 @@ class CGEWalletLedger:
 
         if not company:
             if reference_invoice:
-                if frappe.db.exists("POS Invoice", reference_invoice):
-                    company = frappe.db.get_value("POS Invoice", reference_invoice, "company")
-                elif frappe.db.exists("Sales Invoice", reference_invoice):
-                    company = frappe.db.get_value("Sales Invoice", reference_invoice, "company")
+                if smriti.db.exists("POS Invoice", reference_invoice):
+                    company = smriti.db.get("POS Invoice", reference_invoice, "company")
+                elif smriti.db.exists("Sales Invoice", reference_invoice):
+                    company = smriti.db.get("Sales Invoice", reference_invoice, "company")
             
             if not company:
                 company = frappe.defaults.get_user_default("Company")
                 
             if not company:
-                company = frappe.db.get_default("company") or frappe.get_all("Company", limit=1)[0].name
+                company = frappe.db.get_default("company") or smriti.db.get_list("Company", limit=1)[0].name
 
         # Wallet negative balance check
         if transaction_type == "Debit":
@@ -456,8 +457,8 @@ class CGEWalletLedger:
             balance_remaining = flt(amount)
         
         # 3. Post ledger entry
-        ledger_doc = frappe.get_doc({
-            "doctype": "SMRITI Wallet Ledger",
+        ledger_doc = smriti.documents.new("WalletLedger")
+        ledger_doc.update({
             "ledger_sequence": seq_id,
             "customer": customer,
             "company": company,
@@ -478,7 +479,7 @@ class CGEWalletLedger:
             je_name = create_double_entry_journal(customer, transaction_type, amount, company, seq_id, reference_invoice=reference_invoice)
             ledger_doc.journal_entry = je_name
         except Exception as e:
-            frappe.log_error(title="CGE Wallet Journal Posting Failure", message=frappe.get_traceback())
+            smriti.errors.log_error(title="CGE Wallet Journal Posting Failure", message=frappe.get_traceback())
             raise e
             
         ledger_doc.insert(ignore_permissions=True)
@@ -494,7 +495,7 @@ class CGEWalletLedger:
         """
         Performs reversal. Creates counter debit/credit entry referencing ledger_seq.
         """
-        orig_doc = frappe.get_doc("SMRITI Wallet Ledger", ledger_seq)
+        orig_doc = smriti.documents.get("SMRITI Wallet Ledger", ledger_seq)
         
         rev_type = "Debit" if orig_doc.transaction_type == "Credit" else "Credit"
         
@@ -510,10 +511,10 @@ class CGEWalletLedger:
 
         company = orig_doc.company
         if not company:
-            company = frappe.defaults.get_user_default("company") or frappe.get_all("Company", limit=1)[0].name
+            company = frappe.defaults.get_user_default("company") or smriti.db.get_list("Company", limit=1)[0].name
 
-        rev_doc = frappe.get_doc({
-            "doctype": "SMRITI Wallet Ledger",
+        rev_doc = smriti.documents.new("WalletLedger")
+        rev_doc.update({
             "ledger_sequence": seq_id,
             "customer": orig_doc.customer,
             "company": company,
@@ -533,7 +534,7 @@ class CGEWalletLedger:
             je_name = create_double_entry_journal(orig_doc.customer, rev_type, orig_doc.amount, company, seq_id, is_reversal=True, ref_seq=ledger_seq, reference_invoice=orig_doc.reference_invoice)
             rev_doc.journal_entry = je_name
         except Exception as e:
-            frappe.log_error(title="CGE Wallet Reversal Journal Posting Failure", message=frappe.get_traceback())
+            smriti.errors.log_error(title="CGE Wallet Reversal Journal Posting Failure", message=frappe.get_traceback())
             raise e
             
         rev_doc.insert(ignore_permissions=True)
@@ -551,13 +552,13 @@ def reconcile_wallet_liability():
     Records reconciliation snapshot and alerts on variance.
     """
     # 1. Calculate sum from ledger using the safer dynamic date filter
-    credits = flt(frappe.db.sql("""
+    credits = flt(smriti.db.sql("""
         select sum(amount)
         from `tabSMRITI Wallet Ledger`
         where transaction_type = 'Credit' and is_expired = 0 
           and (expiry_date is null or expiry_date >= %s)
     """, (nowdate()))[0][0])
-    debits_res = frappe.db.sql("""
+    debits_res = smriti.db.sql("""
         select sum(amount) from `tabSMRITI Wallet Ledger`
         where transaction_type = 'Debit'
     """)
@@ -565,7 +566,7 @@ def reconcile_wallet_liability():
     ledger_total = max(0.0, credits - debits)
 
     # 2. Sum up balances from wallets per customer using grouped queries (AUD-11)
-    credits_res = frappe.db.sql("""
+    credits_res = smriti.db.sql("""
         select customer, sum(amount)
         from `tabSMRITI Wallet Ledger`
         where transaction_type = 'Credit' and is_expired = 0 
@@ -573,7 +574,7 @@ def reconcile_wallet_liability():
         group by customer
     """, (nowdate()))
     
-    debits_res = frappe.db.sql("""
+    debits_res = smriti.db.sql("""
         select customer, sum(amount)
         from `tabSMRITI Wallet Ledger`
         where transaction_type = 'Debit'
@@ -601,8 +602,8 @@ def reconcile_wallet_liability():
     }
     
     # Save snapshot
-    snapshot = frappe.get_doc({
-        "doctype": "SMRITI Wallet Reconciliation Snapshot",
+    snapshot = smriti.documents.new("WalletReconciliationSnapshot")
+    snapshot.update({
         "snapshot_date": nowdate(),
         "wallet_total": wallet_total,
         "ledger_total": ledger_total,
@@ -611,15 +612,15 @@ def reconcile_wallet_liability():
         "details": json.dumps(details_dict, indent=2)
     })
     
-    today_snapshot = frappe.db.exists("SMRITI Wallet Reconciliation Snapshot", {"snapshot_date": nowdate()})
+    today_snapshot = smriti.db.exists("SMRITI Wallet Reconciliation Snapshot", {"snapshot_date": nowdate()})
     if today_snapshot:
         frappe.delete_doc("SMRITI Wallet Reconciliation Snapshot", today_snapshot, ignore_permissions=True)
         
     snapshot.insert(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
 
     if status == "Mismatch":
-        frappe.log_error(
+        smriti.errors.log_error(
             title="SMRITI Wallet Reconciliation Mismatch Alert",
             message=f"Reconciliation variance detected on {nowdate()}: Variance = {variance}. Details: {json.dumps(details_dict)}"
         )
@@ -638,7 +639,7 @@ def create_double_entry_journal(customer, transaction_type, amount, company, seq
     """
     liability_account = get_or_create_account("Cashback Liability", "Liability", company)
     
-    je = frappe.new_doc("Journal Entry")
+    je = smriti.documents.new("Journal Entry")
     je.company = company
     je.posting_date = nowdate()
     je.voucher_type = "Journal Entry"
@@ -651,9 +652,9 @@ def create_double_entry_journal(customer, transaction_type, amount, company, seq
     if is_reversal:
         if transaction_type == "Credit":
             # Reversing a Debit (redemption) -> Dr Accounts Receivable, Cr Cashback Liability
-            receivable_account = frappe.db.get_value("Party Account", {"parent": customer, "company": company}, "account")
+            receivable_account = smriti.db.get("Party Account", {"parent": customer, "company": company}, "account")
             if not receivable_account:
-                receivable_account = frappe.db.get_value("Customer", customer, "receivable_account")
+                receivable_account = smriti.db.get("Customer", customer, "receivable_account")
             if not receivable_account:
                 receivable_account = frappe.get_cached_value("Company", company, "default_receivable_account")
             if not receivable_account:
@@ -667,7 +668,7 @@ def create_double_entry_journal(customer, transaction_type, amount, company, seq
                 "party": customer
             }
             if reference_invoice:
-                if frappe.db.exists("POS Invoice", reference_invoice):
+                if smriti.db.exists("POS Invoice", reference_invoice):
                     ref_doctype = "POS Invoice"
                 else:
                     ref_doctype = "Sales Invoice"
@@ -714,7 +715,7 @@ def create_double_entry_journal(customer, transaction_type, amount, company, seq
         else:
             # Resolve customer standard Accounts Receivable account
             # ERPNext: customer AR is stored in Party Account child table, not on Customer DocType
-            receivable_account = frappe.db.get_value(
+            receivable_account = smriti.db.get(
                 "Party Account",
                 {"parent": customer, "company": company, "parenttype": "Customer"},
                 "account"
@@ -739,7 +740,7 @@ def create_double_entry_journal(customer, transaction_type, amount, company, seq
                 "party": customer
             }
             if reference_invoice:
-                if frappe.db.exists("POS Invoice", reference_invoice):
+                if smriti.db.exists("POS Invoice", reference_invoice):
                     ref_doctype = "POS Invoice"
                 else:
                     ref_doctype = "Sales Invoice"
@@ -755,7 +756,7 @@ def create_double_entry_journal(customer, transaction_type, amount, company, seq
 
 def get_customer_loyalty_points(customer):
     """Calculates active remaining loyalty points for the customer."""
-    points = frappe.db.sql("""
+    points = smriti.db.sql("""
         select sum(loyalty_points)
         from `tabLoyalty Point Entry`
         where customer = %s and expiry_date >= %s
@@ -766,7 +767,7 @@ def get_customer_loyalty_points(customer):
 def get_customer_loyalty_tier(customer):
     """Finds matching loyalty tier based on active points."""
     points = get_customer_loyalty_points(customer)
-    tiers = frappe.get_all("SMRITI Loyalty Tier",
+    tiers = smriti.db.get_list("SMRITI Loyalty Tier",
         filters={"active": 1, "min_points": ("<=", points)},
         fields=["tier_name", "tier_multiplier"],
         order_by="min_points desc",
@@ -779,14 +780,14 @@ def get_customer_loyalty_tier(customer):
 
 def get_or_create_account(account_name, account_type, company):
     """Gets or creates the account with company suffix matching standard chart of accounts."""
-    abbr = frappe.db.get_value("Company", company, "abbr")
+    abbr = smriti.db.get("Company", company, "abbr")
     full_name = f"{account_name} - {abbr}"
-    if frappe.db.exists("Account", full_name):
+    if smriti.db.exists("Account", full_name):
         return full_name
         
     parent_account = get_parent_account(company, account_type)
     
-    doc = frappe.new_doc("Account")
+    doc = smriti.documents.new("Account")
     doc.account_name = account_name
     doc.account_type = account_type
     doc.parent_account = parent_account
@@ -797,7 +798,7 @@ def get_or_create_account(account_name, account_type, company):
 
 def get_parent_account(company, account_type):
     """Finds a group account of specified type to act as parent."""
-    parent = frappe.db.get_value("Account", {"company": company, "is_group": 1, "account_type": account_type})
+    parent = smriti.db.get("Account", {"company": company, "is_group": 1, "account_type": account_type})
     if parent:
         return parent
         
@@ -808,13 +809,13 @@ def get_parent_account(company, account_type):
     else:
         search_names = ["Current Liabilities", "Liabilities"]
         
-    abbr = frappe.db.get_value("Company", company, "abbr")
+    abbr = smriti.db.get("Company", company, "abbr")
     for name in search_names:
         full_name = f"{name} - {abbr}"
-        if frappe.db.exists("Account", full_name):
+        if smriti.db.exists("Account", full_name):
             return full_name
             
-    return frappe.db.get_value("Account", {"company": company, "is_group": 1})
+    return smriti.db.get("Account", {"company": company, "is_group": 1})
 
 
 def generate_nightly_liability_snapshot(company=None):
@@ -824,7 +825,7 @@ def generate_nightly_liability_snapshot(company=None):
     # 1. Sum remaining points for active Loyalty Point Entries
     if company:
         # Join with Sales Invoice and POS Invoice to filter by company
-        loyalty_points_sum = flt(frappe.db.sql("""
+        loyalty_points_sum = flt(smriti.db.sql("""
             select sum(lpe.remaining_points)
             from `tabLoyalty Point Entry` lpe
             left join `tabSales Invoice` si on lpe.invoice = si.name
@@ -833,7 +834,7 @@ def generate_nightly_liability_snapshot(company=None):
               and (si.company = %s or pi.company = %s)
         """, (today, company, company))[0][0])
     else:
-        loyalty_points_sum = flt(frappe.db.sql("""
+        loyalty_points_sum = flt(smriti.db.sql("""
             select sum(remaining_points)
             from `tabLoyalty Point Entry`
             where expiry_date >= %s
@@ -841,14 +842,14 @@ def generate_nightly_liability_snapshot(company=None):
         
     # 2. Sum Cashback balances from SMRITI Wallet Ledger
     if company:
-        credits = flt(frappe.db.sql("""
+        credits = flt(smriti.db.sql("""
             select sum(balance_remaining)
             from `tabSMRITI Wallet Ledger`
             where company = %s and transaction_type = 'Credit' and is_expired = 0 
               and (expiry_date is null or expiry_date >= %s)
         """, (company, today))[0][0])
     else:
-        credits = flt(frappe.db.sql("""
+        credits = flt(smriti.db.sql("""
             select sum(balance_remaining)
             from `tabSMRITI Wallet Ledger`
             where transaction_type = 'Credit' and is_expired = 0 
@@ -860,12 +861,12 @@ def generate_nightly_liability_snapshot(company=None):
     # 3. Sum Coupon Campaign budget reservations
     has_company_campaign = frappe.db.has_column("SMRITI Coupon Campaign", "company")
     if has_company_campaign and company:
-        coupon_reserved_res = frappe.db.sql("""
+        coupon_reserved_res = smriti.db.sql("""
             select sum(budget_reserved) from `tabSMRITI Coupon Campaign`
             where status = 'Active' and company = %s
         """, (company,))
     else:
-        coupon_reserved_res = frappe.db.sql("""
+        coupon_reserved_res = smriti.db.sql("""
             select sum(budget_reserved) from `tabSMRITI Coupon Campaign`
             where status = 'Active'
         """)
@@ -878,18 +879,18 @@ def generate_nightly_liability_snapshot(company=None):
     else:
         filters["company"] = ["is", "not set"]
         
-    existing_name = frappe.db.get_value("SMRITI Liability Snapshot", filters, "name")
+    existing_name = smriti.db.get("SMRITI Liability Snapshot", filters, "name")
     
     if existing_name:
-        snapshot = frappe.get_doc("SMRITI Liability Snapshot", existing_name)
+        snapshot = smriti.documents.get("SMRITI Liability Snapshot", existing_name)
         snapshot.loyalty_liability = loyalty_points_sum
         snapshot.cashback_liability = cashback_bal
         snapshot.coupon_liability = coupon_reserved
         snapshot.giftcard_liability = 0.0
         snapshot.save(ignore_permissions=True)
     else:
-        snapshot = frappe.get_doc({
-            "doctype": "SMRITI Liability Snapshot",
+        snapshot = smriti.documents.new("LiabilitySnapshot")
+        snapshot.update({
             "snapshot_date": today,
             "company": company,
             "loyalty_liability": loyalty_points_sum,
@@ -899,13 +900,13 @@ def generate_nightly_liability_snapshot(company=None):
         })
         snapshot.insert(ignore_permissions=True)
         
-    frappe.db.commit()
+    smriti.db.commit()
     return snapshot
 
 
 def generate_all_liability_snapshots():
     """Scheduled daily runner to generate liability snapshots for all active companies."""
-    companies = frappe.get_all("Company", filters={"is_group": 0}, pluck="name")
+    companies = smriti.db.get_list("Company", filters={"is_group": 0}, pluck="name")
     for company in companies:
         generate_nightly_liability_snapshot(company)
     # Generate global snapshot (company = None) for compatibility
@@ -915,7 +916,7 @@ def generate_all_liability_snapshots():
 def expire_wallet_credits():
     """Daily scheduler task to mark unconsumed past-due wallet credits as expired."""
     today = nowdate()
-    expired_entries = frappe.get_all(
+    expired_entries = smriti.db.get_list(
         "SMRITI Wallet Ledger",
         filters={
             "transaction_type": "Credit",
@@ -927,12 +928,12 @@ def expire_wallet_credits():
     )
     
     for entry in expired_entries:
-        frappe.db.set_value("SMRITI Wallet Ledger", entry.name, {
+        smriti.db.set_value("SMRITI Wallet Ledger", entry.name, {
             "is_expired": 1,
             "balance_remaining": 0.0
         })
         
-    frappe.db.commit()
+    smriti.db.commit()
 
 
 def release_expired_reservations():
@@ -969,9 +970,9 @@ def cleanup_expired_budget_reservations():
                 invoice_name = None
                 if len(parts) >= 2:
                     session_id = "_".join(parts[:-1])
-                    invoice_name = frappe.db.get_value("POS Invoice", {"custom_billing_session_id": session_id}, "name")
+                    invoice_name = smriti.db.get("POS Invoice", {"custom_billing_session_id": session_id}, "name")
                     if not invoice_name:
-                        invoice_name = frappe.db.get_value("Sales Invoice", {"custom_billing_session_id": session_id}, "name")
+                        invoice_name = smriti.db.get("Sales Invoice", {"custom_billing_session_id": session_id}, "name")
                     if not invoice_name:
                         for p in parts:
                             if p.startswith("ACC-") or p.startswith("SINV-") or p.startswith("PINV-") or "-" in p:
@@ -979,27 +980,27 @@ def cleanup_expired_budget_reservations():
                                 break
                 
                 if invoice_name:
-                    docstatus = frappe.db.get_value("POS Invoice", invoice_name, "docstatus")
+                    docstatus = smriti.db.get("POS Invoice", invoice_name, "docstatus")
                     if docstatus is None:
-                        docstatus = frappe.db.get_value("Sales Invoice", invoice_name, "docstatus")
+                        docstatus = smriti.db.get("Sales Invoice", invoice_name, "docstatus")
                     if docstatus == 1:
                         invoice_submitted = True
                         
                 if not invoice_submitted:
                     campaign_name = val.get("campaign")
                     amount = flt(val.get("amount"))
-                    if frappe.db.exists("SMRITI Coupon Campaign", campaign_name):
-                        campaign = frappe.get_doc("SMRITI Coupon Campaign", campaign_name)
+                    if smriti.db.exists("SMRITI Coupon Campaign", campaign_name):
+                        campaign = smriti.documents.get("SMRITI Coupon Campaign", campaign_name)
                         campaign.budget_reserved = max(0.0, flt(campaign.budget_reserved) - amount)
                         campaign.save(ignore_permissions=True)
                     
                     frappe.cache().hdel("cge_budget_reservations", cache_key)
         except Exception as ex:
-            frappe.log_error(title="CGE Stale Reservation Cleanup Error", message=frappe.get_traceback())
+            smriti.errors.log_error(title="CGE Stale Reservation Cleanup Error", message=frappe.get_traceback())
             
     # 2. Reconcile campaign.budget_reserved with Redis to heal from restarts
     try:
-        active_campaigns = frappe.get_all("SMRITI Coupon Campaign", filters={"status": "Active"}, fields=["name", "budget_reserved"])
+        active_campaigns = smriti.db.get_list("SMRITI Coupon Campaign", filters={"status": "Active"}, fields=["name", "budget_reserved"])
         redis_reservations = frappe.cache().hgetall("cge_budget_reservations") or {}
         
         campaign_redis_sums = {}
@@ -1017,18 +1018,18 @@ def cleanup_expired_budget_reservations():
         for camp_doc in active_campaigns:
             expected_reserved = campaign_redis_sums.get(camp_doc.name, 0.0)
             if abs(flt(camp_doc.budget_reserved) - expected_reserved) > 0.01:
-                frappe.db.set_value("SMRITI Coupon Campaign", camp_doc.name, "budget_reserved", expected_reserved)
+                smriti.db.set_value("SMRITI Coupon Campaign", camp_doc.name, "budget_reserved", expected_reserved)
                 
-        frappe.db.commit()
+        smriti.db.commit()
     except Exception as ex:
-        frappe.log_error(title="CGE Campaign Budget Reconciliation Error", message=frappe.get_traceback())
+        smriti.errors.log_error(title="CGE Campaign Budget Reconciliation Error", message=frappe.get_traceback())
 
 
 def execute_snapshot_cleanup():
     """Deletes daily snapshots older than 90 days, keeping monthly ones up to 5 years."""
     cutoff_90_days = add_to_date(nowdate(), days=-90)
     
-    old_snapshots = frappe.get_all("SMRITI Liability Snapshot",
+    old_snapshots = smriti.db.get_list("SMRITI Liability Snapshot",
         filters={"snapshot_date": ("<", cutoff_90_days)},
         fields=["name", "snapshot_date"]
     )
@@ -1042,7 +1043,7 @@ def execute_snapshot_cleanup():
         else:
             frappe.delete_doc("SMRITI Liability Snapshot", s.name, ignore_permissions=True)
             
-    frappe.db.commit()
+    smriti.db.commit()
 
 
 import hashlib
@@ -1060,10 +1061,10 @@ def validate_coupon_code(coupon_code, customer, docname=None):
     if not settings.enable_coupon:
         frappe.throw(_("Coupon Studio is disabled in CGE settings."), frappe.ValidationError)
         
-    if not frappe.db.exists("Coupon Code", coupon_code):
+    if not smriti.db.exists("Coupon Code", coupon_code):
         frappe.throw(_("Coupon Code {0} does not exist.").format(coupon_code), frappe.ValidationError)
         
-    coupon = frappe.get_doc("Coupon Code", coupon_code)
+    coupon = smriti.documents.get("Coupon Code", coupon_code)
     today = getdate(nowdate())
     
     # Dates
@@ -1080,7 +1081,7 @@ def validate_coupon_code(coupon_code, customer, docname=None):
     if coupon.custom_max_uses_per_customer:
         total_cust_uses = 0
         for doctype in ["Sales Invoice", "POS Invoice"]:
-            res = frappe.db.sql(f"""
+            res = smriti.db.sql(f"""
                 select count(name) from `tab{doctype}`
                 where customer = %s and docstatus = 1
                   and coupon_code = %s
@@ -1093,13 +1094,13 @@ def validate_coupon_code(coupon_code, customer, docname=None):
             
     # Mobile limit (AUD-02: count across both Sales Invoice and POS Invoice)
     if coupon.custom_max_uses_per_mobile:
-        mobile = frappe.db.get_value("Customer", customer, "mobile_no")
+        mobile = smriti.db.get("Customer", customer, "mobile_no")
         if mobile:
-            matching_customers = frappe.get_all("Customer", filters={"mobile_no": mobile}, pluck="name")
+            matching_customers = smriti.db.get_list("Customer", filters={"mobile_no": mobile}, pluck="name")
             if matching_customers:
                 total_mobile_uses = 0
                 for doctype in ["Sales Invoice", "POS Invoice"]:
-                    res = frappe.db.sql(f"""
+                    res = smriti.db.sql(f"""
                         select count(name) from `tab{doctype}`
                         where customer in %s and docstatus = 1
                           and coupon_code = %s
@@ -1114,7 +1115,7 @@ def validate_coupon_code(coupon_code, customer, docname=None):
     if coupon.custom_max_uses_per_day:
         total_daily_uses = 0
         for doctype in ["Sales Invoice", "POS Invoice"]:
-            res = frappe.db.sql(f"""
+            res = smriti.db.sql(f"""
                 select count(name) from `tab{doctype}`
                 where posting_date = %s and docstatus = 1
                   and coupon_code = %s
@@ -1127,7 +1128,7 @@ def validate_coupon_code(coupon_code, customer, docname=None):
             
     # Campaign budget
     if coupon.custom_campaign:
-        campaign = frappe.get_doc("SMRITI Coupon Campaign", coupon.custom_campaign)
+        campaign = smriti.documents.get("SMRITI Coupon Campaign", coupon.custom_campaign)
         if campaign.status != "Active":
             frappe.throw(_("Campaign {0} linked to Coupon is not Active.").format(campaign.campaign_name), frappe.ValidationError)
         if campaign.start_date and today < getdate(campaign.start_date):
@@ -1152,12 +1153,12 @@ def validate_checkout_rules(invoice_data):
     coupon_code = invoice_data.get("coupon_code")
     use_wallet_balance = flt(invoice_data.get("use_wallet_balance", 0))
     session_id = invoice_data.get("session_id")
-    company = invoice_data.get("company") or frappe.db.get_default("company") or frappe.get_all("Company", limit=1)[0].name
+    company = invoice_data.get("company") or frappe.db.get_default("company") or smriti.db.get_list("Company", limit=1)[0].name
     
-    settings = frappe.get_doc("SMRITI CGE Settings")
+    settings = smriti.documents.get_single("CGESettings")
     
     # Create Sales Invoice mockup in-memory for CGERuleEvaluator
-    invoice_doc = frappe.new_doc("Sales Invoice")
+    invoice_doc = smriti.documents.new("Sales Invoice")
     invoice_doc.customer = customer
     invoice_doc.company = company
     invoice_doc.posting_date = nowdate()
@@ -1179,10 +1180,10 @@ def validate_checkout_rules(invoice_data):
         item_results = evaluator.evaluate()
         
         # Get standard points collection factor
-        loyalty_program = frappe.db.get_value("Customer", customer, "loyalty_program")
+        loyalty_program = smriti.db.get("Customer", customer, "loyalty_program")
         collection_factor = 0.0
         if loyalty_program:
-            collection_rules = frappe.get_all("Loyalty Program Collection",
+            collection_rules = smriti.db.get_list("Loyalty Program Collection",
                 filters={"parent": loyalty_program},
                 fields=["collection_factor"]
             )
@@ -1220,7 +1221,7 @@ def validate_checkout_rules(invoice_data):
         if not coupon.pricing_rule:
             frappe.throw(_("No Pricing Rule linked to Coupon {0}.").format(coupon_code), frappe.ValidationError)
             
-        pr = frappe.get_doc("Pricing Rule", coupon.pricing_rule)
+        pr = smriti.documents.get("Pricing Rule", coupon.pricing_rule)
         cart_total = sum(flt(item.get("qty", 1)) * flt(item.get("rate", 0)) for item in items)
         
         matched_items = []
@@ -1228,8 +1229,8 @@ def validate_checkout_rules(invoice_data):
         
         for item in items:
             item_code = item.get("item_code")
-            item_brand = frappe.db.get_value("Item", item_code, "brand")
-            item_group = frappe.db.get_value("Item", item_code, "item_group")
+            item_brand = smriti.db.get("Item", item_code, "brand")
+            item_group = smriti.db.get("Item", item_code, "item_group")
             
             is_matched = False
             if scope == "Invoice":
@@ -1245,7 +1246,7 @@ def validate_checkout_rules(invoice_data):
             elif scope == "Customer" and customer == pr.customer:
                 is_matched = True
             elif scope == "Customer Group":
-                cust_group = frappe.db.get_value("Customer", customer, "customer_group")
+                cust_group = smriti.db.get("Customer", customer, "customer_group")
                 if cust_group == pr.customer_group:
                     is_matched = True
                     
@@ -1268,7 +1269,7 @@ def validate_checkout_rules(invoice_data):
                 
         # Check campaign budget limits
         if coupon.custom_campaign and settings.enable_campaign_budget:
-            campaign = frappe.get_doc("SMRITI Coupon Campaign", coupon.custom_campaign)
+            campaign = smriti.documents.get("SMRITI Coupon Campaign", coupon.custom_campaign)
             if campaign.stop_on_limit:
                 total_exposure = flt(campaign.budget_consumed) + flt(campaign.budget_reserved) + coupon_discount
                 if total_exposure > flt(campaign.budget_limit):
@@ -1313,7 +1314,7 @@ def execute_non_critical(operation_name, fn):
     try:
         fn()
     except Exception as e:
-        frappe.log_error(
+        smriti.errors.log_error(
             title=f"CGE Non-Critical Hook Error: {operation_name}",
             message=frappe.get_traceback()
         )
@@ -1324,12 +1325,12 @@ def process_invoice_submit(doc, method=None):
     Hook handler on POS/Sales Invoice submit.
     Commits coupon budget, posts wallet ledger entries, and writes loyalty points.
     """
-    settings = frappe.get_doc("SMRITI CGE Settings")
+    settings = smriti.documents.get_single("CGESettings")
     
     # 1. Wallet Deduction (Critical)
     wallet_ded_amt = flt(doc.get("custom_wallet_deduction"))
     if wallet_ded_amt > 0.0 and settings.enable_cashback:
-        exists = frappe.db.exists("SMRITI Wallet Ledger", {"reference_invoice": doc.name, "transaction_type": "Debit"})
+        exists = smriti.db.exists("SMRITI Wallet Ledger", {"reference_invoice": doc.name, "transaction_type": "Debit"})
         if not exists:
             CGEWalletLedger.post_transaction(
                 customer=doc.customer,
@@ -1345,8 +1346,8 @@ def process_invoice_submit(doc, method=None):
     coupon_disc_amt = flt(doc.get("custom_coupon_discount") or doc.get("discount_amount"))
     
     if coupon_code and settings.enable_coupon:
-        if frappe.db.exists("Coupon Code", coupon_code):
-            coupon = frappe.get_doc("Coupon Code", coupon_code)
+        if smriti.db.exists("Coupon Code", coupon_code):
+            coupon = smriti.documents.get("Coupon Code", coupon_code)
             if coupon.custom_campaign:
                 session_id = doc.get("custom_billing_session_id") or f"pos_{doc.name}"
                 execute_non_critical(
@@ -1358,15 +1359,15 @@ def process_invoice_submit(doc, method=None):
     pts_earned = flt(doc.get("custom_loyalty_points_earned"))
     if pts_earned > 0.0 and settings.enable_loyalty:
         def update_loyalty():
-            lpe = frappe.db.get_value("Loyalty Point Entry", {"invoice": doc.name}, "name")
+            lpe = smriti.db.get("Loyalty Point Entry", {"invoice": doc.name}, "name")
             if lpe:
-                frappe.db.set_value("Loyalty Point Entry", lpe, "loyalty_points", pts_earned)
-                frappe.db.set_value("Loyalty Point Entry", lpe, "remaining_points", pts_earned)
+                smriti.db.set_value("Loyalty Point Entry", lpe, "loyalty_points", pts_earned)
+                smriti.db.set_value("Loyalty Point Entry", lpe, "remaining_points", pts_earned)
             else:
-                lpe_doc = frappe.get_doc({
-                    "doctype": "Loyalty Point Entry",
+                lpe_doc = smriti.documents.new("LoyaltyPointEntry")
+                lpe_doc.update({
                     "customer": doc.customer,
-                    "loyalty_program": doc.loyalty_program or frappe.db.get_value("Customer", doc.customer, "loyalty_program"),
+                    "loyalty_program": doc.loyalty_program or smriti.db.get("Customer", doc.customer, "loyalty_program"),
                     "invoice": doc.name,
                     "loyalty_points": pts_earned,
                     "remaining_points": pts_earned,
@@ -1382,14 +1383,14 @@ def process_invoice_cancel(doc, method=None):
     Hook handler on POS/Sales Invoice cancel.
     Reverses wallet deductions and reverts coupon campaigns budget.
     """
-    settings = frappe.get_doc("SMRITI CGE Settings")
+    settings = smriti.documents.get_single("CGESettings")
     
     # 1. Wallet Reversal (Critical)
     wallet_ded_amt = flt(doc.get("custom_wallet_deduction"))
     if wallet_ded_amt > 0.0 and settings.enable_cashback:
-        ledger_seq = frappe.db.get_value("SMRITI Wallet Ledger", {"reference_invoice": doc.name, "transaction_type": "Debit"}, "name")
+        ledger_seq = smriti.db.get("SMRITI Wallet Ledger", {"reference_invoice": doc.name, "transaction_type": "Debit"}, "name")
         if ledger_seq:
-            already_reversed = frappe.db.exists("SMRITI Wallet Ledger", {"reference_invoice": doc.name, "transaction_type": "Credit", "is_reversal": 1})
+            already_reversed = smriti.db.exists("SMRITI Wallet Ledger", {"reference_invoice": doc.name, "transaction_type": "Credit", "is_reversal": 1})
             if not already_reversed:
                 CGEWalletLedger.reverse_transaction(ledger_seq, reason=f"Invoice {doc.name} Cancelled")
                 
@@ -1398,11 +1399,11 @@ def process_invoice_cancel(doc, method=None):
     coupon_disc_amt = flt(doc.get("custom_coupon_discount") or doc.get("discount_amount"))
     
     if coupon_code and settings.enable_coupon:
-        if frappe.db.exists("Coupon Code", coupon_code):
-            coupon = frappe.get_doc("Coupon Code", coupon_code)
+        if smriti.db.exists("Coupon Code", coupon_code):
+            coupon = smriti.documents.get("Coupon Code", coupon_code)
             if coupon.custom_campaign:
                 def revert_budget():
-                    campaign = frappe.get_doc("SMRITI Coupon Campaign", coupon.custom_campaign)
+                    campaign = smriti.documents.get("SMRITI Coupon Campaign", coupon.custom_campaign)
                     campaign.budget_consumed = max(0.0, flt(campaign.budget_consumed) - coupon_disc_amt)
                     campaign.save(ignore_permissions=True)
                 execute_non_critical("Coupon Campaign Revert", revert_budget)
@@ -1417,20 +1418,20 @@ def get_offline_cache():
     import hashlib
     
     # 1. Read from Redis cache first if enabled (AUD-13)
-    settings = frappe.get_doc("SMRITI CGE Settings")
+    settings = smriti.documents.get_single("CGESettings")
     if settings.enable_offline_cache:
         cached = frappe.cache().hget("cge_offline_cache", "latest")
         if cached:
             return cached
 
     # 2. Fetch active loyalty tiers
-    tiers = frappe.get_all("SMRITI Loyalty Tier",
+    tiers = smriti.db.get_list("SMRITI Loyalty Tier",
         filters={"active": 1},
         fields=["name", "tier_name", "min_points", "tier_multiplier", "validity_months", "active"]
     )
     
     # 3. Fetch active loyalty rules
-    rules = frappe.get_all("SMRITI Loyalty Rule",
+    rules = smriti.db.get_list("SMRITI Loyalty Rule",
         filters={"status": "Active"},
         fields=[
             "name", "rule_name", "version", "status", "effective_from", "effective_to",
@@ -1440,7 +1441,7 @@ def get_offline_cache():
     )
     
     # 4. Fetch active coupon campaigns
-    campaigns = frappe.get_all("SMRITI Coupon Campaign",
+    campaigns = smriti.db.get_list("SMRITI Coupon Campaign",
         filters={"status": "Active"},
         fields=[
             "name", "campaign_name", "campaign_type", "start_date", "end_date",
@@ -1454,7 +1455,7 @@ def get_offline_cache():
         campaign_names = [c.campaign_name for c in campaigns]
         today = nowdate()
         # Fetch maximum 1000 active, non-personalized, non-exhausted coupons
-        coupons = frappe.db.sql("""
+        coupons = smriti.db.sql("""
             select name, coupon_code, coupon_name, coupon_type, valid_from, valid_upto,
                    used, maximum_use, pricing_rule,
                    custom_coupon_scope, custom_campaign, custom_max_uses_per_customer,
@@ -1535,10 +1536,10 @@ def save_cge_generic_doc_service(doctype, doc_data):
         doc_data = json.loads(doc_data)
 
     name = doc_data.get("name")
-    if name and frappe.db.exists(doctype, name):
-        doc = frappe.get_doc(doctype, name)
+    if name and smriti.db.exists(doctype, name):
+        doc = smriti.documents.get(doctype, name)
     else:
-        doc = frappe.new_doc(doctype)
+        doc = smriti.documents.new(doctype)
 
     # Set fields
     meta = frappe.get_meta(doctype)
@@ -1560,7 +1561,7 @@ def save_cge_generic_doc_service(doctype, doc_data):
             doc.set(f.fieldname, doc_data[f.fieldname])
 
     doc.save(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
     return doc.name
 
 
@@ -1568,10 +1569,10 @@ def delete_cge_generic_doc_service(doctype, name):
     """
     Deletes a SMRITI CGE document.
     """
-    if not frappe.db.exists(doctype, name):
+    if not smriti.db.exists(doctype, name):
         frappe.throw(_("Document {0} of type {1} not found.").format(name, doctype))
 
     frappe.delete_doc(doctype, name, ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
     return True
 

@@ -6,8 +6,9 @@
 # @author:  Jawahar R. Mallah
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 
 class QueueRepository:
     """
@@ -18,9 +19,9 @@ class QueueRepository:
     @staticmethod
     def get_active_providers() -> list[dict]:
         """Retrieves list of active providers from SMRITI Integration Provider DocType."""
-        if not frappe.db.exists("DocType", "SMRITI Integration Provider"):
+        if not smriti.db.exists("DocType", "SMRITI Integration Provider"):
             return []
-        return frappe.get_all(
+        return smriti.db.get_list(
             "SMRITI Integration Provider",
             filters={"enabled": 1},
             fields=["name", "provider_id", "provider_name", "provider_type", 
@@ -30,10 +31,10 @@ class QueueRepository:
     @staticmethod
     def update_provider_health(provider_id: str, status: str, latency: int, error_msg: str = None):
         """Updates health metrics for a provider."""
-        if not frappe.db.exists("SMRITI Integration Provider", provider_id):
+        if not smriti.db.exists("SMRITI Integration Provider", provider_id):
             return
         
-        frappe.db.set_value(
+        smriti.db.set_value(
             "SMRITI Integration Provider",
             provider_id,
             {
@@ -44,15 +45,15 @@ class QueueRepository:
             update_modified=False
         )
         # Commit immediately if outside main transaction
-        frappe.db.commit()
+        smriti.db.commit()
 
     @staticmethod
     def get_event_definition(event_name: str) -> dict | None:
         """Retrieves event schema definition by event name."""
-        if not frappe.db.exists("DocType", "SMRITI Event Definition"):
+        if not smriti.db.exists("DocType", "SMRITI Event Definition"):
             return None
         
-        defs = frappe.get_all(
+        defs = smriti.db.get_list(
             "SMRITI Event Definition",
             filters={"event_name": event_name},
             fields=["name", "event_name", "version", "producer", "consumers", "required_fields"],
@@ -63,9 +64,9 @@ class QueueRepository:
     @staticmethod
     def get_routing_policies() -> list[dict]:
         """Retrieves active routing rules for SMRITI Connect."""
-        if not frappe.db.exists("DocType", "SMRITI Integration Policy"):
+        if not smriti.db.exists("DocType", "SMRITI Integration Policy"):
             return []
-        return frappe.get_all(
+        return smriti.db.get_list(
             "SMRITI Integration Policy",
             filters={"enabled": 1},
             fields=["name", "event_type", "company", "location", "action", "adapter_id"]
@@ -74,12 +75,12 @@ class QueueRepository:
     @staticmethod
     def insert_queue_entry(event_type: str, doc_type: str, doc_name: str, adapter_id: str, payload_dict: dict, priority: str) -> str:
         """Inserts pending transaction entry into SMRITI Integration Queue."""
-        if not frappe.db.exists("DocType", "SMRITI Integration Queue"):
+        if not smriti.db.exists("DocType", "SMRITI Integration Queue"):
             frappe.msgprint(_("SMRITI Connect: Integration Queue not active. Event {0} bypassed.").format(event_type), indicator="orange", alert=True)
             return ""
             
-        doc = frappe.get_doc({
-            "doctype": "SMRITI Integration Queue",
+        doc = smriti.documents.new("IntegrationQueue")
+        doc.update({
             "event_type": event_type,
             "document_type": doc_type,
             "document_name": doc_name,
@@ -98,10 +99,10 @@ class QueueRepository:
         Retrieves pending or retrying queue items ordered by priority (Critical -> Normal -> Low)
         and creation date to process them in correct order.
         """
-        if not frappe.db.exists("DocType", "SMRITI Integration Queue"):
+        if not smriti.db.exists("DocType", "SMRITI Integration Queue"):
             return []
         
-        return frappe.get_all(
+        return smriti.db.get_list(
             "SMRITI Integration Queue",
             filters={"status": ["in", ["Pending", "Retrying"]]},
             fields=["name", "event_type", "document_type", "document_name", 
@@ -113,7 +114,7 @@ class QueueRepository:
     @staticmethod
     def update_queue_status(queue_id: str, status: str, retry_count: int, error_msg: str = None):
         """Updates queue item status, retry increments and errors."""
-        frappe.db.set_value(
+        smriti.db.set_value(
             "SMRITI Integration Queue",
             queue_id,
             {
@@ -129,20 +130,20 @@ class QueueRepository:
         """Writes execution detail log to SMRITI Integration Audit Log."""
         # Check if audit log DocType exists before inserting, fallback to general tally sync log if needed
         doctype_name = "SMRITI Integration Audit Log"
-        if not frappe.db.exists("DocType", doctype_name):
-            if adapter_id == "accounting.tally" and frappe.db.exists("DocType", "SMRITI Tally Sync Log"):
+        if not smriti.db.exists("DocType", doctype_name):
+            if adapter_id == "accounting.tally" and smriti.db.exists("DocType", "SMRITI Tally Sync Log"):
                 doctype_name = "SMRITI Tally Sync Log"
             else:
                 # If neither exists, write to standard Frappe Log
-                frappe.log_error(
+                smriti.errors.log_error(
                     title=f"[SMRITI Connect] Sync Log: {event_type} - {doc_name}",
                     message=f"Adapter: {adapter_id}\nSuccess: {success}\nResponse ID: {response_id}\nError: {error}\nDuration: {duration_ms}ms"
                 )
                 return
 
         # Insert structured log entry
-        log_doc = frappe.get_doc({
-            "doctype": doctype_name,
+        log_doc = smriti.documents.new(doctype_name)
+        log_doc.update({
             "queue_reference": queue_id,
             "adapter_id": adapter_id,
             "event_type": event_type,
@@ -159,7 +160,7 @@ class QueueRepository:
     @staticmethod
     def get_queue_statistics() -> list[dict]:
         """Runs group query to summarize queue totals by status."""
-        return frappe.db.sql(
+        return smriti.db.sql(
             """
             select status, count(*) as count 
             from `tabSMRITI Integration Queue` 
@@ -171,7 +172,7 @@ class QueueRepository:
     @staticmethod
     def reset_queue_item(queue_id: str):
         """Resets the state of a queue item to allow immediate retry."""
-        frappe.db.set_value("SMRITI Integration Queue", queue_id, {
+        smriti.db.set_value("SMRITI Integration Queue", queue_id, {
             "status": "Pending",
             "retry_count": 0,
             "error_details": ""

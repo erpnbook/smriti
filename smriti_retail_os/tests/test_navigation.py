@@ -7,6 +7,7 @@
 
 import unittest
 import frappe
+from smriti_retail_os import smriti
 from smriti_retail_os.navigation.navigation_service import (
     get_user_navigation,
     invalidate_navigation_cache,
@@ -16,15 +17,15 @@ from smriti_retail_os.navigation.navigation_service import (
 class TestSMRITINavigation(unittest.TestCase):
     def setUp(self):
         # Clean up database records first
-        frappe.db.delete("SMRITI Navigation Assignment")
-        frappe.db.delete("SMRITI Navigation Override")
-        frappe.db.delete("SMRITI Navigation Profile")
+        smriti.db.delete("SMRITI Navigation Assignment")
+        smriti.db.delete("SMRITI Navigation Override")
+        smriti.db.delete("SMRITI Navigation Profile")
         invalidate_navigation_cache()
         
     def tearDown(self):
-        frappe.db.delete("SMRITI Navigation Assignment")
-        frappe.db.delete("SMRITI Navigation Override")
-        frappe.db.delete("SMRITI Navigation Profile")
+        smriti.db.delete("SMRITI Navigation Assignment")
+        smriti.db.delete("SMRITI Navigation Override")
+        smriti.db.delete("SMRITI Navigation Profile")
         invalidate_navigation_cache()
 
     def test_canonical_fallback(self):
@@ -40,15 +41,14 @@ class TestSMRITINavigation(unittest.TestCase):
         Verifies overrides are successfully merged on top of the canonical structure.
         """
         # 1. Create a Navigation Profile
-        profile = frappe.get_doc({
-            "doctype": "SMRITI Navigation Profile",
+        profile = smriti.documents.new("NavigationProfile")
+        profile.update({
             "profile_name": "Test Manager Profile",
             "version": "1.0.0"
         }).insert()
         
         # 2. Create Override
-        frappe.get_doc({
-            "doctype": "SMRITI Navigation Override",
+        smriti.documents.new("NavigationOverride").update({
             "menu_id": "masters",
             "navigation_profile": "Test Manager Profile",
             "override_state": "Override",
@@ -57,16 +57,14 @@ class TestSMRITINavigation(unittest.TestCase):
         }).insert()
         
         # Disable item under masters
-        frappe.get_doc({
-            "doctype": "SMRITI Navigation Override",
+        smriti.documents.new("NavigationOverride").update({
             "menu_id": "brand_master",
             "navigation_profile": "Test Manager Profile",
             "override_state": "Disabled"
         }).insert()
 
         # 3. Create User Assignment
-        frappe.get_doc({
-            "doctype": "SMRITI Navigation Assignment",
+        smriti.documents.new("NavigationAssignment").update({
             "assignment_type": "User",
             "assign_to": "Administrator",
             "navigation_profile": "Test Manager Profile",
@@ -97,15 +95,14 @@ class TestSMRITINavigation(unittest.TestCase):
         self.assertEqual(nav1["sections"][0]["label"], "Masters")
 
         # Create Profile
-        profile = frappe.get_doc({
-            "doctype": "SMRITI Navigation Profile",
+        profile = smriti.documents.new("NavigationProfile")
+        profile.update({
             "profile_name": "Cache Test Profile",
             "version": "1.0.0"
         }).insert()
         
         # Create Override
-        frappe.get_doc({
-            "doctype": "SMRITI Navigation Override",
+        smriti.documents.new("NavigationOverride").update({
             "menu_id": "masters",
             "navigation_profile": "Cache Test Profile",
             "override_state": "Override",
@@ -113,8 +110,7 @@ class TestSMRITINavigation(unittest.TestCase):
         }).insert()
 
         # Create Assignment (triggers cache clear automatically on insert hooks)
-        frappe.get_doc({
-            "doctype": "SMRITI Navigation Assignment",
+        smriti.documents.new("NavigationAssignment").update({
             "assignment_type": "User",
             "assign_to": "Administrator",
             "navigation_profile": "Cache Test Profile",

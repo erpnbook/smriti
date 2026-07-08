@@ -5,8 +5,9 @@
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 
 @frappe.whitelist()
 def parse_opening_excel(file_url: str) -> dict:
@@ -19,7 +20,7 @@ def parse_opening_excel(file_url: str) -> dict:
     except ImportError:
         frappe.throw(_("Python library 'openpyxl' is required to parse Excel files."))
 
-    file_doc = frappe.get_doc("File", {"file_url": file_url})
+    file_doc = smriti.documents.get("File", {"file_url": file_url})
     file_path = file_doc.get_full_path()
     
     if not file_path.endswith(('.xlsx', '.xls')):
@@ -50,7 +51,7 @@ def parse_opening_excel(file_url: str) -> dict:
         if qty <= 0:
             continue
             
-        if not frappe.db.exists("Item", item_code):
+        if not smriti.db.exists("Item", item_code):
             errors.append(f"Row {i}: Item Variant '{item_code}' not found in system")
             continue
             

@@ -11,6 +11,7 @@
 #
 
 import frappe
+from smriti_retail_os import smriti
 import unittest
 import json
 from smriti_retail_os.company_api import (
@@ -31,45 +32,45 @@ class TestSmritiCompanyAPI(unittest.TestCase):
         super().setUpClass()
         from smriti_retail_os.setup import setup_smriti_retail_os
         setup_smriti_retail_os()
-        frappe.db.commit()
+        smriti.db.commit()
 
         cls.company_name = "Test Company Ltd"
         
         # Robust cleanup first
-        if frappe.db.exists("Company", cls.company_name):
+        if smriti.db.exists("Company", cls.company_name):
             frappe.delete_doc("Company", cls.company_name, ignore_permissions=True, force=True)
-        frappe.db.delete("SMRITI Company Settings", {"company": cls.company_name})
-        frappe.db.delete("SMRITI Company Settings", {"name": cls.company_name})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Company Settings", {"company": cls.company_name})
+        smriti.db.delete("SMRITI Company Settings", {"name": cls.company_name})
+        smriti.db.commit()
 
         # Create the test company once
-        cls.company = frappe.new_doc("Company")
+        cls.company = smriti.documents.new("Company")
         cls.company.company_name = cls.company_name
         cls.company.default_currency = "INR"
         cls.company.country = "India"
         cls.company.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
     @classmethod
     def tearDownClass(cls):
         # Remove the test company and settings once
-        if frappe.db.exists("Company", cls.company_name):
+        if smriti.db.exists("Company", cls.company_name):
             frappe.delete_doc("Company", cls.company_name, ignore_permissions=True, force=True)
-        frappe.db.delete("SMRITI Company Settings", {"company": cls.company_name})
-        frappe.db.delete("SMRITI Company Settings", {"name": cls.company_name})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Company Settings", {"company": cls.company_name})
+        smriti.db.delete("SMRITI Company Settings", {"name": cls.company_name})
+        smriti.db.commit()
         super().tearDownClass()
 
     def setUp(self):
         self.company_name = "Test Company Ltd"
-        self.company = frappe.get_doc("Company", self.company_name)
+        self.company = smriti.documents.get("Company", self.company_name)
         ensure_company_settings(self.company)
-        frappe.db.commit()
+        smriti.db.commit()
 
     def tearDown(self):
-        frappe.db.delete("SMRITI Company Settings", {"company": self.company_name})
-        frappe.db.delete("SMRITI Company Settings", {"name": self.company_name})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Company Settings", {"company": self.company_name})
+        smriti.db.delete("SMRITI Company Settings", {"name": self.company_name})
+        smriti.db.commit()
 
     def test_active_company_resolution(self):
         """Tests that get_active_company returns a valid company when defaults are set/unset."""
@@ -86,22 +87,22 @@ class TestSmritiCompanyAPI(unittest.TestCase):
     def test_ensure_company_settings_hook(self):
         """Tests that ensure_company_settings hook auto-provisions settings for new companies."""
         # Check that settings exist for self.company_name (created during insert in setUp)
-        settings_exist = frappe.db.exists("SMRITI Company Settings", {"company": self.company_name})
+        settings_exist = smriti.db.exists("SMRITI Company Settings", {"company": self.company_name})
         self.assertTrue(settings_exist)
 
         # If deleted, ensure_company_settings should restore it when called manually
-        frappe.db.delete("SMRITI Company Settings", {"company": self.company_name})
-        frappe.db.commit()
-        self.assertFalse(frappe.db.exists("SMRITI Company Settings", {"company": self.company_name}))
+        smriti.db.delete("SMRITI Company Settings", {"company": self.company_name})
+        smriti.db.commit()
+        self.assertFalse(smriti.db.exists("SMRITI Company Settings", {"company": self.company_name}))
 
         ensure_company_settings(self.company)
-        self.assertTrue(frappe.db.exists("SMRITI Company Settings", {"company": self.company_name}))
+        self.assertTrue(smriti.db.exists("SMRITI Company Settings", {"company": self.company_name}))
 
     def test_get_company_settings_defaults(self):
         """Tests that get_company_settings returns in-memory defaults if settings record is missing."""
         temp_company = "Temp In Memory Company"
         # Verify no database record exists
-        self.assertFalse(frappe.db.exists("SMRITI Company Settings", {"company": temp_company}))
+        self.assertFalse(smriti.db.exists("SMRITI Company Settings", {"company": temp_company}))
 
         # Load settings and verify default fields are present
         settings = get_company_settings(temp_company)

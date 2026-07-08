@@ -9,9 +9,10 @@
 #
 
 import datetime
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe.utils import flt, cint
 from frappe import _
+from smriti_retail_os import smriti
 
 
 def expand_item_variants(item_code, default_print_qty=1):
@@ -19,9 +20,9 @@ def expand_item_variants(item_code, default_print_qty=1):
     Checks if item has variants. If yes, returns list of print details for all
     non-disabled variants. If no, returns list with print details for the item itself.
     """
-    has_variants = frappe.db.get_value("Item", item_code, "has_variants")
+    has_variants = smriti.db.get("Item", item_code, "has_variants")
     if has_variants:
-        variants = frappe.db.get_all(
+        variants = smriti.db.get_list(
             "Item",
             filters={"variant_of": item_code, "disabled": 0},
             fields=["name"]
@@ -42,15 +43,15 @@ def get_transaction_items_checklist(source_doctype, source_name):
     if source_doctype not in ["Purchase Receipt", "Stock Entry"]:
         return []
 
-    if not frappe.db.exists(source_doctype, source_name):
+    if not smriti.db.exists(source_doctype, source_name):
         return []
 
     items = []
-    doc = frappe.get_doc(source_doctype, source_name)
+    doc = smriti.documents.get(source_doctype, source_name)
 
     for it in doc.items:
-        has_barcode = frappe.db.exists("Item Barcode", {"parent": it.item_code})
-        creation = frappe.db.get_value("Item", it.item_code, "creation")
+        has_barcode = smriti.db.exists("Item Barcode", {"parent": it.item_code})
+        creation = smriti.db.get("Item", it.item_code, "creation")
         is_new = False
         if creation:
             from frappe.utils import add_days, now_datetime
@@ -94,7 +95,7 @@ def get_items_by_range(from_article, to_article):
     if prefix_from and prefix_to and prefix_from == prefix_to:
         lower = min(num_from, num_to)
         upper = max(num_from, num_to)
-        items = frappe.db.get_all(
+        items = smriti.db.get_list(
             "Item",
             filters={"item_code": ["like", f"{prefix_from}%"], "disabled": 0},
             fields=["name"]
@@ -107,7 +108,7 @@ def get_items_by_range(from_article, to_article):
                 if lower <= val <= upper:
                     item_codes.append(code)
     else:
-        items = frappe.db.get_all(
+        items = smriti.db.get_list(
             "Item",
             filters={"item_code": [">=", from_article], "disabled": 0},
             fields=["name"],
@@ -135,16 +136,16 @@ def get_items_for_printing(filters=None, source_doctype=None, source_name=None):
 
     if source_doctype and source_name:
         if source_doctype == "Purchase Receipt":
-            if not frappe.db.exists("Purchase Receipt", source_name):
+            if not smriti.db.exists("Purchase Receipt", source_name):
                 frappe.throw(_("Purchase Receipt {0} not found.").format(source_name))
-            pr = frappe.get_doc("Purchase Receipt", source_name)
+            pr = smriti.documents.get("Purchase Receipt", source_name)
             for it in pr.items:
                 items.extend(expand_item_variants(it.item_code, it.qty))
 
         elif source_doctype == "Stock Entry":
-            if not frappe.db.exists("Stock Entry", source_name):
+            if not smriti.db.exists("Stock Entry", source_name):
                 frappe.throw(_("Stock Entry {0} not found.").format(source_name))
-            se = frappe.get_doc("Stock Entry", source_name)
+            se = smriti.documents.get("Stock Entry", source_name)
             for it in se.items:
                 items.extend(expand_item_variants(it.item_code, it.qty))
 
@@ -168,7 +169,7 @@ def get_items_for_printing(filters=None, source_doctype=None, source_name=None):
             if frappe.db.has_column("Item", "custom_season"):
                 db_filters["custom_season"] = season_val
             else:
-                items_with_season = frappe.get_all(
+                items_with_season = smriti.db.get_list(
                     "Item Variant Attribute",
                     filters={"attribute": ["like", "%season%"], "attribute_value": season_val},
                     fields=["parent"]
@@ -180,7 +181,7 @@ def get_items_for_printing(filters=None, source_doctype=None, source_name=None):
             if frappe.db.has_column("Item", "custom_collection"):
                 db_filters["custom_collection"] = collection_val
             else:
-                items_with_collection = frappe.get_all(
+                items_with_collection = smriti.db.get_list(
                     "Item Variant Attribute",
                     filters={"attribute": ["like", "%collection%"], "attribute_value": collection_val},
                     fields=["parent"]
@@ -192,7 +193,7 @@ def get_items_for_printing(filters=None, source_doctype=None, source_name=None):
 
         if flt_dict.get("supplier"):
             supplier = flt_dict.get("supplier")
-            item_list = frappe.db.get_all(
+            item_list = smriti.db.get_list(
                 "Item Supplier",
                 filters={"supplier": supplier},
                 fields=["parent"]
@@ -220,7 +221,7 @@ def get_items_for_printing(filters=None, source_doctype=None, source_name=None):
                 "item_name": ["like", f"%{txt}%"]
             }
 
-        item_list = frappe.db.get_all(
+        item_list = smriti.db.get_list(
             "Item",
             filters=db_filters,
             or_filters=or_filters,
@@ -239,10 +240,10 @@ def get_item_print_details(item_code, default_print_qty):
     Resolves standard printing parameters for a single item.
     Includes all custom Item Master fields used as PRN placeholders.
     """
-    item_doc = frappe.get_doc("Item", item_code)
+    item_doc = smriti.documents.get("Item", item_code)
 
     # 1. Barcode — primary flag first, then first, then item_code
-    barcodes_list = frappe.db.get_all(
+    barcodes_list = smriti.db.get_list(
         "Item Barcode",
         filters={"parent": item_code},
         fields=["barcode", "custom_is_primary"],
@@ -255,8 +256,8 @@ def get_item_print_details(item_code, default_print_qty):
     # 2. MRP — custom_mrp > MRP price list > Standard Selling > valuation_rate
     mrp = (
         item_doc.get("custom_mrp")
-        or frappe.db.get_value("Item Price", {"item_code": item_code, "price_list": "MRP"}, "price_list_rate")
-        or frappe.db.get_value("Item Price", {"item_code": item_code, "price_list": "Standard Selling"}, "price_list_rate")
+        or smriti.db.get("Item Price", {"item_code": item_code, "price_list": "MRP"}, "price_list_rate")
+        or smriti.db.get("Item Price", {"item_code": item_code, "price_list": "Standard Selling"}, "price_list_rate")
         or item_doc.valuation_rate
         or 0.0
     )

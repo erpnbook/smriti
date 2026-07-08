@@ -5,7 +5,8 @@
 # @author: Jawahar R. Mallah
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 import json
 import hashlib
 import os
@@ -282,9 +283,9 @@ def _get_navigation_version_hash(user, company):
     """
     Generates a version hash from SMRITI Navigation Profile and Override states.
     """
-    last_mod = frappe.db.get_value("SMRITI Navigation Profile", {}, "modified", order_by="modified desc") or "default"
-    last_override_mod = frappe.db.get_value("SMRITI Navigation Override", {}, "modified", order_by="modified desc") or "default"
-    last_assignment_mod = frappe.db.get_value("SMRITI Navigation Assignment", {}, "modified", order_by="modified desc") or "default"
+    last_mod = smriti.db.get("SMRITI Navigation Profile", {}, "modified", order_by="modified desc") or "default"
+    last_override_mod = smriti.db.get("SMRITI Navigation Override", {}, "modified", order_by="modified desc") or "default"
+    last_assignment_mod = smriti.db.get("SMRITI Navigation Assignment", {}, "modified", order_by="modified desc") or "default"
     
     combined = f"{last_mod}:{last_override_mod}:{last_assignment_mod}"
     return hashlib.md5(combined.encode("utf-8")).hexdigest()
@@ -295,12 +296,12 @@ def _resolve_navigation_tree(user, company):
     Resolves permissions, assignments, and structural overrides on top of canonical config.
     """
     # Fallback immediately if SMRITI Navigation Profile is empty
-    if not frappe.db.count("SMRITI Navigation Profile"):
+    if not smriti.db.count("SMRITI Navigation Profile"):
         return CANONICAL_NAV
 
     # Find highest priority assignment
     user_roles = frappe.get_roles(user)
-    assignments = frappe.get_all(
+    assignments = smriti.db.get_list(
         "SMRITI Navigation Assignment",
         filters=[
             ["docstatus", "=", 0]
@@ -330,10 +331,10 @@ def _resolve_navigation_tree(user, company):
         return CANONICAL_NAV
         
     # Load profile details
-    profile_doc = frappe.get_doc("SMRITI Navigation Profile", resolved_profile)
+    profile_doc = smriti.documents.get("SMRITI Navigation Profile", resolved_profile)
     
     # Load overrides
-    overrides = frappe.get_all(
+    overrides = smriti.db.get_list(
         "SMRITI Navigation Override",
         filters={"navigation_profile": resolved_profile},
         fields=["name", "menu_id", "override_state", "label_override", "icon_override", "display_order", "feature_flag", "badge", "tooltip"]
@@ -401,7 +402,7 @@ def generate_upgrade_merge_report():
             canonical_ids.add(item["id"])
             
     # Find all overridden menu IDs
-    overridden_ids = frappe.get_all("SMRITI Navigation Override", fields=["menu_id", "navigation_profile"])
+    overridden_ids = smriti.db.get_list("SMRITI Navigation Override", fields=["menu_id", "navigation_profile"])
     
     merge_report = {
         "new_menus": [],

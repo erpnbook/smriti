@@ -11,8 +11,9 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from smriti_retail_os.security_api import _get_smriti_admin_email
 
 no_cache = 1
@@ -51,13 +52,13 @@ def get_context(context):
     context.is_admin = 1 if (frappe.session.user == "Administrator" or "Administrator" in roles) else 0
 
     # Fetch reference options for User Permission selectors
-    context.companies = frappe.get_all(
+    context.companies = smriti.db.get_list(
         "Company",
         fields=["name", "company_name"],
         order_by="company_name asc"
     )
     
-    context.warehouses = frappe.get_all(
+    context.warehouses = smriti.db.get_list(
         "Warehouse",
         filters={"is_group": 0, "disabled": 0},
         fields=["name", "warehouse_name"],

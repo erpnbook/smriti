@@ -11,9 +11,9 @@
 #               exists = db.exists("Product", {"item_code": "ITEM-001"})
 #
 #           Usage (forbidden — never do this outside this file):
-#               frappe.db.get_value(...)   ← VIOLATION
-#               frappe.db.exists(...)      ← VIOLATION
-#               frappe.db.sql(...)         ← VIOLATION (allowed only here)
+#               smriti.db.get(...)   ← VIOLATION
+#               smriti.db.exists(...)      ← VIOLATION
+#               smriti.db.sql(...)         ← VIOLATION (allowed only here)
 #
 # @author:  Jawahar R. Mallah <jawahar.mallah@gmail.com>
 # @version: 1.0.0
@@ -22,6 +22,7 @@
 # Copyright (c) 2026 AITDL NETWORK. All rights reserved.
 #
 
+# smriti-platform-core: this module IS the frappe abstraction layer — Guard 6 exempt by design
 from smriti_retail_os.core.platform.registry import resolve
 
 
@@ -43,7 +44,7 @@ def get(model_name: str, name, fields, as_dict: bool = True):
         info = db.get("Customer", "CUST-001", ["customer_name", "credit_limit"])
     """
     import frappe
-    return frappe.db.get_value(resolve(model_name), name, fields, as_dict=as_dict)
+    return smriti.db.get(resolve(model_name), name, fields, as_dict=as_dict)
 
 
 def get_single(model_name: str, fieldname: str):
@@ -58,7 +59,7 @@ def get_single(model_name: str, fieldname: str):
         Field value
     """
     import frappe
-    return frappe.db.get_single_value(resolve(model_name), fieldname)
+    return smriti.db.get_single(resolve(model_name), fieldname)
 
 
 def get_list(model_name: str, filters=None, fields=None, order_by: str = None,
@@ -112,7 +113,7 @@ def set(model_name: str, name: str, field, value=None):
         db.set("Customer", "CUST-001", {"credit_limit": 75000, "territory": "North"})
     """
     import frappe
-    frappe.db.set_value(resolve(model_name), name, field, value)
+    smriti.db.set_value(resolve(model_name), name, field, value)
 
 
 def exists(model_name: str, filters) -> bool:
@@ -131,7 +132,7 @@ def exists(model_name: str, filters) -> bool:
             ...
     """
     import frappe
-    return bool(frappe.db.exists(resolve(model_name), filters))
+    return bool(smriti.db.exists(resolve(model_name), filters))
 
 
 def delete(model_name: str, filters: dict):
@@ -147,7 +148,7 @@ def delete(model_name: str, filters: dict):
         db.delete("StockTransfer", {"status": "Draft", "owner": "old-user@example.com"})
     """
     import frappe
-    frappe.db.delete(resolve(model_name), filters)
+    smriti.db.delete(resolve(model_name), filters)
 
 
 def sql(query: str, values=None, as_dict: bool = True) -> list:
@@ -176,7 +177,7 @@ def sql(query: str, values=None, as_dict: bool = True) -> list:
         )
     """
     import frappe
-    return frappe.db.sql(query, values or {}, as_dict=as_dict)
+    return smriti.db.sql(query, values or {}, as_dict=as_dict)
 
 
 def commit():
@@ -185,10 +186,10 @@ def commit():
     Use only when you need an explicit commit outside the normal request lifecycle.
     """
     import frappe
-    frappe.db.commit()
+    smriti.db.commit()
 
 
 def rollback():
     """Roll back the current database transaction."""
     import frappe
-    frappe.db.rollback()
+    smriti.db.rollback()

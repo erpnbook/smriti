@@ -10,8 +10,9 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.utils import flt, getdate, nowdate, now_datetime
 import calendar
 
@@ -29,7 +30,7 @@ def resolve_commission_rule(employee, company, posting_date):
     """
     today = getdate(posting_date or nowdate())
     
-    rules = frappe.get_all(
+    rules = smriti.db.get_list(
         "SMRITI Commission Rule",
         filters={
             "company": company,
@@ -74,11 +75,11 @@ def process_attribution_ledger_insert(doc, method=None):
     Generates a SMRITI Commission Event and SMRITI Commission Ledger entry.
     Supports standard attribution and negative reversals.
     """
-    enable_sfc = frappe.db.get_single_value("SMRITI Commission Settings", "enable_sfc")
+    enable_sfc = smriti.db.get_single("SMRITI Commission Settings", "enable_sfc")
     if not enable_sfc:
         return
 
-    auto_generate_events = frappe.db.get_single_value("SMRITI Commission Settings", "auto_generate_events")
+    auto_generate_events = smriti.db.get_single("SMRITI Commission Settings", "auto_generate_events")
     if not auto_generate_events:
         return
 
@@ -90,7 +91,7 @@ def process_attribution_ledger_insert(doc, method=None):
         rule_name = None
         
         if orig_ledger_name:
-            orig_event = frappe.db.get_value(
+            orig_event = smriti.db.get(
                 "SMRITI Commission Event", 
                 {"attribution_ledger": orig_ledger_name, "event_status": "Processed"}, 
                 ["name", "commission_rate", "commission_rule"], 
@@ -108,7 +109,7 @@ def process_attribution_ledger_insert(doc, method=None):
         comm_amount = flt(doc.revenue_credit) * (orig_rate / 100.0)
 
         # Create Reversal Event
-        evt = frappe.new_doc("SMRITI Commission Event")
+        evt = smriti.documents.new("SMRITI Commission Event")
         evt.employee = doc.employee
         evt.invoice_reference = doc.invoice_reference
         evt.attribution_ledger = doc.name
@@ -124,12 +125,12 @@ def process_attribution_ledger_insert(doc, method=None):
         # Find original commission ledger entry to mark as Reversed
         orig_led_name = None
         if orig_event:
-            orig_led_name = frappe.db.get_value("SMRITI Commission Ledger", {"commission_event": orig_event.name}, "name")
+            orig_led_name = smriti.db.get("SMRITI Commission Ledger", {"commission_event": orig_event.name}, "name")
             if orig_led_name:
-                frappe.db.set_value("SMRITI Commission Ledger", orig_led_name, "ledger_status", "Reversed")
+                smriti.db.set_value("SMRITI Commission Ledger", orig_led_name, "ledger_status", "Reversed")
 
         # Create Reversal Ledger entry
-        led = frappe.new_doc("SMRITI Commission Ledger")
+        led = smriti.documents.new("SMRITI Commission Ledger")
         led.employee = doc.employee
         led.commission_event = evt.name
         led.amount = comm_amount
@@ -146,7 +147,7 @@ def process_attribution_ledger_insert(doc, method=None):
         rate = flt(rule.commission_rate) if rule else 0.0
         comm_amount = flt(doc.revenue_credit) * (rate / 100.0)
 
-        evt = frappe.new_doc("SMRITI Commission Event")
+        evt = smriti.documents.new("SMRITI Commission Event")
         evt.employee = doc.employee
         evt.invoice_reference = doc.invoice_reference
         evt.attribution_ledger = doc.name
@@ -159,7 +160,7 @@ def process_attribution_ledger_insert(doc, method=None):
         evt.company = doc.company
         evt.insert(ignore_permissions=True)
 
-        led = frappe.new_doc("SMRITI Commission Ledger")
+        led = smriti.documents.new("SMRITI Commission Ledger")
         led.employee = doc.employee
         led.commission_event = evt.name
         led.amount = comm_amount
@@ -178,7 +179,7 @@ def generate_monthly_settlement(employee, company, fiscal_year, month):
     start_date, end_date = get_month_date_range(fiscal_year, month)
 
     # 1. Calculate active attributed revenue from SMRITI Attribution Ledger
-    revenue_res = frappe.db.sql("""
+    revenue_res = smriti.db.sql("""
         select sum(revenue_credit) from `tabSMRITI Attribution Ledger`
         where employee = %s and company = %s and ledger_status = 'Active'
           and posting_date >= %s and posting_date <= %s
@@ -192,7 +193,7 @@ def generate_monthly_settlement(employee, company, fiscal_year, month):
     # 3. Sum active Commission Ledger entries
     gross_comm = 0.0
     if total_revenue >= threshold:
-        comm_res = frappe.db.sql("""
+        comm_res = smriti.db.sql("""
             select sum(amount) from `tabSMRITI Commission Ledger`
             where employee = %s and company = %s and ledger_status = 'Active'
               and posting_date >= %s and posting_date <= %s
@@ -220,13 +221,13 @@ def run_monthly_settlements(company, fiscal_year, month):
     from smriti_retail_os.sfm.service.target_service import get_month_date_range
     start_date, end_date = get_month_date_range(fiscal_year, month)
 
-    employees_attr = frappe.db.sql_list("""
+    employees_attr = smriti.db.sql_list("""
         select distinct employee from `tabSMRITI Attribution Ledger`
         where company = %s and ledger_status = 'Active'
           and posting_date >= %s and posting_date <= %s
     """, (company, start_date, end_date))
 
-    employees_comm = frappe.db.sql_list("""
+    employees_comm = smriti.db.sql_list("""
         select distinct employee from `tabSMRITI Commission Ledger`
         where company = %s and ledger_status = 'Active'
           and posting_date >= %s and posting_date <= %s
@@ -236,12 +237,12 @@ def run_monthly_settlements(company, fiscal_year, month):
     
     generated = []
     for emp in employees:
-        if frappe.db.exists("SMRITI Commission Settlement", {"employee": emp, "company": company, "fiscal_year": fiscal_year, "month": month}):
+        if smriti.db.exists("SMRITI Commission Settlement", {"employee": emp, "company": company, "fiscal_year": fiscal_year, "month": month}):
             continue
             
         settle_data = generate_monthly_settlement(emp, company, fiscal_year, month)
-        doc = frappe.get_doc({
-            "doctype": "SMRITI Commission Settlement",
+        doc = smriti.documents.new("CommissionSettlement")
+        doc.update({
             "employee": settle_data["employee"],
             "company": settle_data["company"],
             "fiscal_year": settle_data["fiscal_year"],
@@ -256,5 +257,5 @@ def run_monthly_settlements(company, fiscal_year, month):
         doc.insert(ignore_permissions=True)
         generated.append(doc.name)
 
-    frappe.db.commit()
+    smriti.db.commit()
     return generated

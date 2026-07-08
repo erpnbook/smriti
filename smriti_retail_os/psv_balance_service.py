@@ -13,7 +13,8 @@
 # Copyright (c) 2026, Smriti Retail OS and contributors
 # For license information, please see license.txt
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from smriti_retail_os.balance_engine import get_party_balance, get_bulk_party_balances
 
 def get_channel_balance(customer: str, item_code: str = None):
@@ -22,7 +23,7 @@ def get_channel_balance(customer: str, item_code: str = None):
     If item_code is provided, returns float balance.
     Otherwise, returns dict of {item_code: qty}.
     """
-    psas = frappe.get_all("SMRITI Party Stock Account", filters={"customer": customer, "active": 1}, fields=["name"])
+    psas = smriti.db.get_list("SMRITI Party Stock Account", filters={"customer": customer, "active": 1}, fields=["name"])
     if not psas:
         return 0.0 if item_code else {}
 

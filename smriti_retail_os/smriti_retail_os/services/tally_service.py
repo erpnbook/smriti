@@ -3,6 +3,7 @@
 # For license information, please see license.txt
 
 import frappe
+from smriti_retail_os import smriti
 from smriti_retail_os.smriti_retail_os.services.coordination.sync_coordinator import SyncCoordinator
 from smriti_retail_os.smriti_retail_os.services.adapters.tally_builders.accounting_builder import (
 	generate_voucher_xml as _gen_xml,
@@ -11,7 +12,7 @@ from smriti_retail_os.smriti_retail_os.services.adapters.tally_builders.accounti
 
 def get_settings():
 	"""Retrieves the SMRITI Tally Settings doc."""
-	if not frappe.db.exists("DocType", "SMRITI Tally Settings"):
+	if not smriti.db.exists("DocType", "SMRITI Tally Settings"):
 		return frappe._dict({
 			"tally_url": "http://localhost:9000",
 			"tally_company": "SMRITI Company",
@@ -22,7 +23,7 @@ def get_settings():
 			"sgst_ledger": "SGST",
 			"igst_ledger": "IGST"
 		})
-	return frappe.get_doc("SMRITI Tally Settings")
+	return smriti.documents.get_single("TallySettings")
 
 def get_tally_date_format(date_val):
 	"""Converts Date or Datetime to YYYYMMDD format."""

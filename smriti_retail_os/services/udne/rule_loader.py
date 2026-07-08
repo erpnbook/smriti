@@ -1,5 +1,6 @@
 import datetime
 import frappe
+from smriti_retail_os import smriti
 from frappe.utils import getdate
 from smriti_retail_os.services.udne.exceptions import UDNERuleNotFoundError
 
@@ -10,7 +11,7 @@ def load_active_rule(doctype: str, context_dict: dict) -> dict:
     """
     today = datetime.date.today()
     
-    rules = frappe.get_all(
+    rules = smriti.db.get_list(
         "SMRITI Numbering Rule",
         fields=["name", "priority", "priority_value", "version", "template", "reset_rule", "allow_manual_override", "effective_from", "effective_until"],
         filters={

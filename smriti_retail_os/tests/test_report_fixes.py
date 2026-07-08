@@ -14,6 +14,7 @@ import frappe
 import unittest
 import json
 from frappe import _
+from smriti_retail_os import smriti
 from smriti_retail_os.reports_api import (
     SMRITIReportEngine,
     get_smriti_report_data,
@@ -28,13 +29,13 @@ class TestReportFixes(unittest.TestCase):
         super().setUpClass()
         # Ensure test company exists
         cls.company_name = "_Test Company"
-        if not frappe.db.exists("Company", cls.company_name):
-            cls.company = frappe.new_doc("Company")
+        if not smriti.db.exists("Company", cls.company_name):
+            cls.company = smriti.documents.new("Company")
             cls.company.company_name = cls.company_name
             cls.company.default_currency = "INR"
             cls.company.country = "India"
             cls.company.insert(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
 
     def test_alias_map_extraction(self):
         """Test extract_select_alias_map parses select projections properly."""
@@ -77,8 +78,8 @@ class TestReportFixes(unittest.TestCase):
         """Test that subquery expressions in dictionary projection recovery are blocked."""
         # 1. Create a temporary report template
         template_id = "test_subquery_report"
-        if not frappe.db.exists("SMRITI Report Template", template_id):
-            tpl = frappe.new_doc("SMRITI Report Template")
+        if not smriti.db.exists("SMRITI Report Template", template_id):
+            tpl = smriti.documents.new("SMRITI Report Template")
             tpl.report_key = template_id
             tpl.report_name = "Test Subquery Report"
             tpl.report_category = "Sales"
@@ -86,7 +87,7 @@ class TestReportFixes(unittest.TestCase):
                 {"fieldname": "qty_sold", "label": "Qty Sold"}
             ])
             tpl.insert(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
 
         # 2. Register temporary query in REPORT_QUERIES with subquery select alias
         from smriti_retail_os.reports_api import REPORT_QUERIES

@@ -9,9 +9,10 @@
 #
 
 import re
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe.utils import flt, cint
 from frappe import _
+from smriti_retail_os import smriti
 from smriti_retail_os.barcode.token_registry import build_token_dict
 
 
@@ -54,13 +55,13 @@ def generate_prn(items, template_name=None):
 
     # Load custom template from DB
     db_template = None
-    if template_name and frappe.db.exists("DocType", "SMRITI Print Template"):
-        if frappe.db.exists("SMRITI Print Template", template_name):
-            db_template = frappe.get_doc("SMRITI Print Template", template_name)
+    if template_name and smriti.db.exists("DocType", "SMRITI Print Template"):
+        if smriti.db.exists("SMRITI Print Template", template_name):
+            db_template = smriti.documents.get("SMRITI Print Template", template_name)
         else:
-            matched_name = frappe.db.get_value("SMRITI Print Template", {"template_title": template_name}, "name")
+            matched_name = smriti.db.get("SMRITI Print Template", {"template_title": template_name}, "name")
             if matched_name:
-                db_template = frappe.get_doc("SMRITI Print Template", matched_name)
+                db_template = smriti.documents.get("SMRITI Print Template", matched_name)
 
     for it in items_list:
         item_code  = it.get("item_code") or ""
@@ -91,7 +92,7 @@ def generate_prn(items, template_name=None):
                     if mappings and isinstance(mappings, list):
                         item_doc = None
                         try:
-                            item_doc = frappe.get_doc("Item", item_code)
+                            item_doc = smriti.documents.get("Item", item_code)
                         except Exception:
                             import sys
                             _f = sys.modules.get('frappe')
@@ -134,7 +135,7 @@ def generate_prn(items, template_name=None):
 
             except Exception as e:
                 used_fallback_for.append(item_code)
-                frappe.log_error(
+                smriti.errors.log_error(
                     f"PRN template substitution failed for '{template_name}': {e}",
                     "Barcode PRN Generator"
                 )

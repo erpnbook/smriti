@@ -10,9 +10,10 @@
 
 import os
 import hashlib
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe.utils import cint
 from frappe import _
+from smriti_retail_os import smriti
 from smriti_retail_os.barcode.printer_service import _send_to_printer_sync
 from smriti_retail_os.barcode.analytics_service import log_print_job
 
@@ -37,7 +38,7 @@ def enqueue_print_job(template_name, printer_ip, printer_port, payload,
     os.chmod(prn_path, 0o600)
 
     # Create job record
-    doc = frappe.new_doc("SMRITI Print Job")
+    doc = smriti.documents.new("SMRITI Print Job")
     doc.job_id          = job_id
     doc.name            = job_id
     doc.item_code       = item_code
@@ -52,21 +53,20 @@ def enqueue_print_job(template_name, printer_ip, printer_port, payload,
     doc.created_by      = frappe.session.user
     doc.created_on      = frappe.utils.now_datetime()
     doc.insert(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
 
     # Audit log
     try:
-        frappe.get_doc({
-            "doctype":   "Activity Log",
+        smriti.documents.new("ActivityLog").update({
             "user":      doc.created_by,
             "operation": "SMRITI Print Job Queued",
             "status":    "Success",
             "subject":   f"Print job {job_id} queued",
             "remarks":   f"Queued {doc.print_qty} labels for template {doc.template_name}"
         }).insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
     except Exception as e:
-        frappe.log_error(f"Error logging print job queued: {str(e)}")
+        smriti.errors.log_error(f"Error logging print job queued: {str(e)}")
 
     # Realtime notification
     frappe.publish_realtime(
@@ -95,28 +95,27 @@ def _process_print_job(job_id=None, print_job_id=None):
     if job_id is None:
         job_id = print_job_id
 
-    name = frappe.db.get_value("SMRITI Print Job", {"job_id": job_id}, "name")
+    name = smriti.db.get("SMRITI Print Job", {"job_id": job_id}, "name")
     if not name:
         frappe.throw(f"Print job {job_id} not found.", frappe.DoesNotExistError)
 
-    doc = frappe.get_doc("SMRITI Print Job", name)
+    doc = smriti.documents.get("SMRITI Print Job", name)
     doc.status = "Sending"
     doc.save(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
 
     def _audit(operation, status, subject, remarks):
         try:
-            frappe.get_doc({
-                "doctype":   "Activity Log",
+            smriti.documents.new("ActivityLog").update({
                 "user":      doc.created_by or "System",
                 "operation": operation,
                 "status":    status,
                 "subject":   subject,
                 "remarks":   remarks
             }).insert(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
         except Exception as e:
-            frappe.log_error(f"Error writing audit log: {str(e)}")
+            smriti.errors.log_error(f"Error writing audit log: {str(e)}")
 
     _audit(
         "SMRITI Print Job Sending", "Success",
@@ -162,7 +161,7 @@ def _process_print_job(job_id=None, print_job_id=None):
         doc.status       = "Success"
         doc.completed_on = frappe.utils.now_datetime()
         doc.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         frappe.publish_realtime(
             "smriti.barcode.print_status",
@@ -188,9 +187,9 @@ def _process_print_job(job_id=None, print_job_id=None):
         doc.error_message = str(e)
         doc.completed_on  = frappe.utils.now_datetime()
         doc.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
-        frappe.log_error(
+        smriti.errors.log_error(
             title=f"SMRITI Print Job Failed: {job_id}",
             message=f"Printer: {doc.printer_ip}:{doc.printer_port}\nTemplate: {doc.template_name}\nError: {str(e)}"
         )
@@ -211,10 +210,10 @@ def _process_print_job(job_id=None, print_job_id=None):
 
 def get_print_job_status(job_id):
     """Returns status of a single print job."""
-    name = frappe.db.get_value("SMRITI Print Job", {"job_id": job_id}, "name")
+    name = smriti.db.get("SMRITI Print Job", {"job_id": job_id}, "name")
     if not name:
         frappe.throw(f"Print job {job_id} not found.", frappe.DoesNotExistError)
-    doc = frappe.get_doc("SMRITI Print Job", name)
+    doc = smriti.documents.get("SMRITI Print Job", name)
     return {
         "status":        doc.status,
         "error_message": doc.error_message or "",
@@ -224,11 +223,11 @@ def get_print_job_status(job_id):
 
 def retry_print_job(job_id):
     """Re-enqueues a failed print job using the original payload file."""
-    name = frappe.db.get_value("SMRITI Print Job", {"job_id": job_id}, "name")
+    name = smriti.db.get("SMRITI Print Job", {"job_id": job_id}, "name")
     if not name:
         frappe.throw(f"Print job {job_id} not found.", frappe.DoesNotExistError)
 
-    old_doc  = frappe.get_doc("SMRITI Print Job", name)
+    old_doc  = smriti.documents.get("SMRITI Print Job", name)
     old_path = frappe.get_site_path('private', 'print_jobs', f"{job_id}.prn")
     if not os.path.exists(old_path):
         frappe.throw(_("Original payload no longer available. Re-print from worksheet."))
@@ -248,7 +247,7 @@ def retry_print_job(job_id):
 
 def get_recent_print_jobs(limit=20):
     """Returns recent print jobs ordered by creation desc."""
-    return frappe.get_all(
+    return smriti.db.get_list(
         "SMRITI Print Job",
         fields=["job_id", "status", "template_name", "print_qty as labels_count", "creation", "printer_ip"],
         order_by="creation desc",
@@ -265,7 +264,7 @@ def cleanup_old_print_jobs():
         success_cutoff = add_days(now_datetime(), -30)
         failed_cutoff  = add_days(now_datetime(), -90)
 
-        success_jobs = frappe.get_all(
+        success_jobs = smriti.db.get_list(
             "SMRITI Print Job",
             filters={"status": "Success", "completed_on": ["<", success_cutoff]},
             fields=["name", "job_id"]
@@ -281,7 +280,7 @@ def cleanup_old_print_jobs():
             frappe.delete_doc("SMRITI Print Job", job.name, ignore_permissions=True)
             success_deleted += 1
 
-        failed_jobs = frappe.get_all(
+        failed_jobs = smriti.db.get_list(
             "SMRITI Print Job",
             filters={"status": "Failed", "completed_on": ["<", failed_cutoff]},
             fields=["name", "job_id"]
@@ -298,7 +297,7 @@ def cleanup_old_print_jobs():
             failed_deleted += 1
 
         if success_deleted or failed_deleted:
-            frappe.db.commit()
+            smriti.db.commit()
 
         from smriti_retail_os.backup_api import log_audit_event
         log_audit_event(
@@ -306,4 +305,4 @@ def cleanup_old_print_jobs():
             f"Cleaned up {success_deleted} success jobs (>30d) and {failed_deleted} failed jobs (>90d)."
         )
     except Exception as e:
-        frappe.log_error(title="SMRITI Print Job Cleanup Error", message=str(e))
+        smriti.errors.log_error(title="SMRITI Print Job Cleanup Error", message=str(e))

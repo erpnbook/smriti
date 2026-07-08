@@ -30,8 +30,7 @@ class AuditMixin:
         """Record a field change in the SMRITI audit log."""
         import frappe
         from smriti_retail_os.core.platform import permissions
-        frappe.get_doc({
-            "doctype": "SMRITI Audit Log",
+        smriti.documents.new("AuditLog").update({
             "reference_doctype": self.doctype,
             "reference_name": self.name,
             "field_changed": field,

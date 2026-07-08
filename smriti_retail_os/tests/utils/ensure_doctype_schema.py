@@ -11,6 +11,7 @@
 #
 
 import frappe
+from smriti_retail_os import smriti
 
 def ensure_doctype_schema(doctype_name, creator_fn=None):
     """
@@ -23,10 +24,10 @@ def ensure_doctype_schema(doctype_name, creator_fn=None):
     If the metadata exists but the physical database table is missing, it runs
     `frappe.db.updatedb` to create and synchronize the table.
     """
-    if not frappe.db.exists("DocType", doctype_name):
+    if not smriti.db.exists("DocType", doctype_name):
         if creator_fn:
             creator_fn()
-            frappe.db.commit()
+            smriti.db.commit()
         else:
             # Try to resolve creator dynamically from setup module by convention:
             # e.g., "SMRITI Trial Health Snapshot" -> "create_smriti_trial_health_snapshot_doctype"
@@ -37,7 +38,7 @@ def ensure_doctype_schema(doctype_name, creator_fn=None):
             if hasattr(setup_module, func_name):
                 creator_func = getattr(setup_module, func_name)
                 creator_func()
-                frappe.db.commit()
+                smriti.db.commit()
             else:
                 raise ValueError(
                     f"DocType '{doctype_name}' metadata does not exist, and no creator "
@@ -45,4 +46,4 @@ def ensure_doctype_schema(doctype_name, creator_fn=None):
                 )
     elif not frappe.db.table_exists(doctype_name):
         frappe.db.updatedb(doctype_name)
-        frappe.db.commit()
+        smriti.db.commit()

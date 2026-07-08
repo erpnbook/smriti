@@ -9,7 +9,8 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from frappe.model.document import Document
 
 class SMRITILiabilitySnapshot(Document):
@@ -20,7 +21,7 @@ class SMRITILiabilitySnapshot(Document):
         else:
             filters["company"] = ["is", "not set"]
             
-        duplicate = frappe.db.get_value("SMRITI Liability Snapshot", filters, "name")
+        duplicate = smriti.db.get("SMRITI Liability Snapshot", filters, "name")
         if duplicate and duplicate != self.name:
             frappe.throw(
                 frappe._("A SMRITI Liability Snapshot already exists for company {0} on {1}.").format(

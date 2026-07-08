@@ -13,6 +13,7 @@
 #   bench --site smriti_retail execute smriti_retail_os.tests.seed_psv_uat.cleanup_uat_data
 
 import frappe
+from smriti_retail_os import smriti
 import hashlib
 import json
 import time
@@ -68,18 +69,17 @@ def _ensure_report_dir():
 def _get_hsn_code():
     """Returns a valid GST HSN code that exists in the database."""
     # Try footwear HSN first, fall back to any existing one
-    if frappe.db.exists("GST HSN Code", "640299"):
+    if smriti.db.exists("GST HSN Code", "640299"):
         return "640299"
-    existing = frappe.db.get_value("GST HSN Code", {}, "name")
+    existing = smriti.db.get("GST HSN Code", {}, "name")
     if existing:
         return existing
     # Create one if none exist
-    frappe.get_doc({
-        "doctype": "GST HSN Code",
+    smriti.documents.new("GSTHSNCode").update({
         "hsn_code": "640299",
         "description": "Footwear (UAT)"
     }).insert(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
     return "640299"
 
 
@@ -92,20 +92,19 @@ def _ensure_prerequisites():
     _log(f"  ✓ HSN code: {hsn_code}")
 
     # UOM
-    if not frappe.db.exists("UOM", "Nos"):
+    if not smriti.db.exists("UOM", "Nos"):
         frappe.get_doc({"doctype": "UOM", "uom_name": "Nos"}).insert(ignore_permissions=True)
 
     # Item Group — get an existing leaf group, not a group node
     ig_name = (
-        frappe.db.get_value("Item Group", {"is_group": 0}, "name") or
-        frappe.db.get_value("Item Group", {}, "name") or
+        smriti.db.get("Item Group", {"is_group": 0}, "name") or
+        smriti.db.get("Item Group", {}, "name") or
         "Products"
     )
-    if not frappe.db.exists("Item Group", ig_name):
+    if not smriti.db.exists("Item Group", ig_name):
         ig_name = "All Item Groups"
-        if not frappe.db.exists("Item Group", ig_name):
-            frappe.get_doc({
-                "doctype": "Item Group",
+        if not smriti.db.exists("Item Group", ig_name):
+            smriti.documents.new("ItemGroup").update({
                 "item_group_name": ig_name,
                 "is_group": 1
             }).insert(ignore_permissions=True)
@@ -113,13 +112,12 @@ def _ensure_prerequisites():
 
     # Brands
     for brand in [UAT_BRAND_A, UAT_BRAND_B]:
-        if not frappe.db.exists("Brand", brand):
+        if not smriti.db.exists("Brand", brand):
             frappe.get_doc({"doctype": "Brand", "brand": brand}).insert(ignore_permissions=True)
 
     # Company
-    if not frappe.db.exists("Company", UAT_COMPANY):
-        frappe.get_doc({
-            "doctype": "Company",
+    if not smriti.db.exists("Company", UAT_COMPANY):
+        smriti.documents.new("Company").update({
             "company_name": UAT_COMPANY,
             "abbr": "SUFC",
             "country": "India",
@@ -129,8 +127,8 @@ def _ensure_prerequisites():
 
     # Fiscal Year
     fy_name = "2025-2026-UAT"
-    if not frappe.db.exists("Fiscal Year", fy_name):
-        fy = frappe.new_doc("Fiscal Year")
+    if not smriti.db.exists("Fiscal Year", fy_name):
+        fy = smriti.documents.new("Fiscal Year")
         fy.year = fy_name
         fy.year_start_date = "2025-04-01"
         fy.year_end_date = "2026-03-31"
@@ -138,25 +136,22 @@ def _ensure_prerequisites():
         fy.insert(ignore_permissions=True)
 
     # Territory
-    if not frappe.db.exists("Territory", "All Territories"):
-        frappe.get_doc({
-            "doctype": "Territory",
+    if not smriti.db.exists("Territory", "All Territories"):
+        smriti.documents.new("Territory").update({
             "territory_name": "All Territories",
             "is_group": 1
         }).insert(ignore_permissions=True)
 
     for zone in ["UAT-Zone-North", "UAT-Zone-South"]:
-        if not frappe.db.exists("Territory", zone):
-            frappe.get_doc({
-                "doctype": "Territory",
+        if not smriti.db.exists("Territory", zone):
+            smriti.documents.new("Territory").update({
                 "territory_name": zone,
                 "parent_territory": "All Territories"
             }).insert(ignore_permissions=True)
 
     # Price List
-    if not frappe.db.exists("Price List", "Standard Buying"):
-        frappe.get_doc({
-            "doctype": "Price List",
+    if not smriti.db.exists("Price List", "Standard Buying"):
+        smriti.documents.new("PriceList").update({
             "price_list_name": "Standard Buying",
             "enabled": 1,
             "buying": 1,
@@ -171,7 +166,7 @@ def _ensure_prerequisites():
     settings.weeks_of_cover_healthy = 8
     settings.save(ignore_permissions=True)
 
-    frappe.db.commit()
+    smriti.db.commit()
     _log("  ✓ All prerequisites satisfied")
     return ig_name, hsn_code
 
@@ -211,9 +206,8 @@ def seed_footwear_uat_dataset():
             item_code = f"{UAT_ITEM_PFX}S{sku_idx:04d}-{size}"
             variant_names.append(item_code)
 
-            if not frappe.db.exists("Item", item_code):
-                frappe.get_doc({
-                    "doctype": "Item",
+            if not smriti.db.exists("Item", item_code):
+                smriti.documents.new("Item").update({
                     "item_code": item_code,
                     "item_name": f"UAT Shoe SKU-{sku_idx:04d} Size {size}",
                     "item_group": ig_name,
@@ -229,15 +223,15 @@ def seed_footwear_uat_dataset():
                 created_items += 1
 
             if sku_idx % 50 == 0 and size == UAT_SIZE_CURVE[-1]:
-                frappe.db.commit()
+                smriti.db.commit()
                 _log(f"  ... {sku_idx}/{NUM_BASE_SKUS} SKU groups committed ({created_items} items created)")
 
-    frappe.db.commit()
+    smriti.db.commit()
     total_variants = NUM_BASE_SKUS * len(UAT_SIZE_CURVE)
     _log(f"  ✓ Items: {created_items} new flat items created")
 
     # Collect all seeded item codes
-    variant_names = frappe.db.get_all(
+    variant_names = smriti.db.get_list(
         "Item",
         filters={"item_code": ["like", f"{UAT_ITEM_PFX}%"]},
         pluck="item_code",
@@ -256,17 +250,16 @@ def seed_footwear_uat_dataset():
         partner_name = f"{cust_name}-{loc_name}"   # actual DB name after autoname
         zone = "North" if d_idx <= 5 else "South"   # must match Select options
 
-        if not frappe.db.exists("Customer", cust_name):
-            frappe.get_doc({
-                "doctype": "Customer",
+        if not smriti.db.exists("Customer", cust_name):
+            smriti.documents.new("Customer").update({
                 "customer_name": cust_name,
                 "customer_type": "Company",
                 "territory": "All Territories"   # territories don't have UAT-Zone-North
             }).insert(ignore_permissions=True)
 
-        if not frappe.db.exists("PSV Channel Partner", partner_name):
-            partner_doc = frappe.get_doc({
-                "doctype": "PSV Channel Partner",
+        if not smriti.db.exists("PSV Channel Partner", partner_name):
+            partner_doc = smriti.documents.new("PSVChannelPartner")
+            partner_doc.update({
                 "company": UAT_COMPANY,
                 "customer": cust_name,
                 "location_name": loc_name,
@@ -285,7 +278,7 @@ def seed_footwear_uat_dataset():
 
         dist_partners.append(partner_name)
 
-    frappe.db.commit()
+    smriti.db.commit()
     _log(f"  ✓ Distributors: {len(dist_partners)} channel partners")
 
     # --- Step 3: Create Dealer Channel Partners ---
@@ -300,17 +293,16 @@ def seed_footwear_uat_dataset():
         zone = "North" if dl_idx % 2 == 0 else "South"   # valid Select values
         brand = UAT_BRAND_A if dl_idx % 2 == 0 else UAT_BRAND_B
 
-        if not frappe.db.exists("Customer", cust_name):
-            frappe.get_doc({
-                "doctype": "Customer",
+        if not smriti.db.exists("Customer", cust_name):
+            smriti.documents.new("Customer").update({
                 "customer_name": cust_name,
                 "customer_type": "Individual",
                 "territory": "All Territories"
             }).insert(ignore_permissions=True)
 
-        if not frappe.db.exists("PSV Channel Partner", partner_name):
-            partner_doc = frappe.get_doc({
-                "doctype": "PSV Channel Partner",
+        if not smriti.db.exists("PSV Channel Partner", partner_name):
+            partner_doc = smriti.documents.new("PSVChannelPartner")
+            partner_doc.update({
                 "company": UAT_COMPANY,
                 "customer": cust_name,
                 "location_name": loc_name,
@@ -327,10 +319,10 @@ def seed_footwear_uat_dataset():
         dealer_partners.append(partner_name)
 
         if dl_idx % 20 == 0:
-            frappe.db.commit()
+            smriti.db.commit()
             _log(f"  ... {dl_idx}/{NUM_DEALERS} dealers committed")
 
-    frappe.db.commit()
+    smriti.db.commit()
     _log(f"  ✓ Dealers: {len(dealer_partners)} channel partners")
 
     # --- Step 4: Seed 12 months of ledger history (sample: 3 distributors × 30 variants) ---
@@ -351,9 +343,8 @@ def seed_footwear_uat_dataset():
                 raw = f"{UAT_COMPANY}{posting_dt_str}{partner}{variant}{dispatch_qty}DispatchDispatch"
                 unique_hash = hashlib.sha256(raw.encode()).hexdigest()
 
-                if not frappe.db.exists("PSV Ledger Entry", {"unique_hash": unique_hash}):
-                    frappe.get_doc({
-                        "doctype": "PSV Ledger Entry",
+                if not smriti.db.exists("PSV Ledger Entry", {"unique_hash": unique_hash}):
+                    smriti.documents.new("PSVLedgerEntry").update({
                         "company": UAT_COMPANY,
                         "posting_datetime": posting_dt_str,
                         "channel_partner": partner,
@@ -381,9 +372,8 @@ def seed_footwear_uat_dataset():
                 raw = f"{UAT_COMPANY}{sellout_dt_str}{partner}{variant}{sell_qty}SalesSales"
                 unique_hash = hashlib.sha256(raw.encode()).hexdigest()
 
-                if not frappe.db.exists("PSV Ledger Entry", {"unique_hash": unique_hash}):
-                    frappe.get_doc({
-                        "doctype": "PSV Ledger Entry",
+                if not smriti.db.exists("PSV Ledger Entry", {"unique_hash": unique_hash}):
+                    smriti.documents.new("PSVLedgerEntry").update({
                         "company": UAT_COMPANY,
                         "posting_datetime": sellout_dt_str,
                         "channel_partner": partner,
@@ -399,7 +389,7 @@ def seed_footwear_uat_dataset():
                     }).insert(ignore_permissions=True)
                     ledger_entries_created += 1
 
-        frappe.db.commit()
+        smriti.db.commit()
         _log(f"  ... Committed ledger entries for {partner}: running total={ledger_entries_created}")
 
     _log(f"  ✓ Ledger entries created: {ledger_entries_created}")
@@ -457,18 +447,16 @@ def validate_migration():
     legacy_item_A = "MIG-ITEM-A"
     legacy_item_B = "MIG-ITEM-B"
 
-    if not frappe.db.exists("Customer", legacy_customer):
-        frappe.get_doc({
-            "doctype": "Customer",
+    if not smriti.db.exists("Customer", legacy_customer):
+        smriti.documents.new("Customer").update({
             "customer_name": legacy_customer,
             "customer_type": "Individual",
             "territory": "All Territories"
         }).insert(ignore_permissions=True)
 
     for item_code in [legacy_item_A, legacy_item_B]:
-        if not frappe.db.exists("Item", item_code):
-            frappe.get_doc({
-                "doctype": "Item",
+        if not smriti.db.exists("Item", item_code):
+            smriti.documents.new("Item").update({
                 "item_code": item_code,
                 "item_name": f"Migration Test Item {item_code}",
                 "item_group": ig_name,
@@ -479,9 +467,9 @@ def validate_migration():
                 "gst_hsn_code": hsn_code
             }).insert(ignore_permissions=True)
 
-    if not frappe.db.exists("SMRITI Party Stock Account", legacy_psa_name):
-        psa_doc = frappe.get_doc({
-            "doctype": "SMRITI Party Stock Account",
+    if not smriti.db.exists("SMRITI Party Stock Account", legacy_psa_name):
+        psa_doc = smriti.documents.new("PartyStockAccount")
+        psa_doc.update({
             "company": UAT_COMPANY,
             "customer": legacy_customer,
             "location_name": legacy_loc,
@@ -505,7 +493,7 @@ def validate_migration():
     ]
 
     for item_code, qty, vtype in legacy_entries:
-        if not frappe.db.get_value(
+        if not smriti.db.get(
             "SMRITI Party Stock Ledger Entry",
             {"party_stock_account": legacy_psa_name, "item_code": item_code, "voucher_type": vtype},
             "name"
@@ -513,8 +501,7 @@ def validate_migration():
             now_dt = now_datetime()
             raw_hash_str = f"{UAT_COMPANY}{now_dt}{legacy_psa_name}{item_code}{qty}{vtype}"
             raw_hash = hashlib.sha256(raw_hash_str.encode('utf-8')).hexdigest()
-            frappe.get_doc({
-                "doctype": "SMRITI Party Stock Ledger Entry",
+            smriti.documents.new("PartyStockLedgerEntry").update({
                 "party_stock_account": legacy_psa_name,
                 "item_code": item_code,
                 "qty": qty,
@@ -525,7 +512,7 @@ def validate_migration():
                 "unique_hash": raw_hash
             }).insert(ignore_permissions=True)
 
-    frappe.db.commit()
+    smriti.db.commit()
     _log(f"  ✓ Legacy PSA '{legacy_psa_name}' seeded with {len(legacy_entries)} entries")
 
     expected_bal_A = 100.0 - 30.0   # = 70.0
@@ -573,7 +560,7 @@ def validate_migration():
     # The migration creates PSV Channel Partner with name = {customer}-{location_name}
     expected_partner_name = f"{legacy_customer}-{legacy_loc}"
 
-    legacy_bal = frappe.db.sql("""
+    legacy_bal = smriti.db.sql("""
         SELECT item_code, SUM(qty) as balance
         FROM `tabSMRITI Party Stock Ledger Entry`
         WHERE party_stock_account = %s
@@ -582,7 +569,7 @@ def validate_migration():
 
     legacy_bal_map = {r["item_code"]: float(r["balance"] or 0) for r in legacy_bal}
 
-    new_bal = frappe.db.sql("""
+    new_bal = smriti.db.sql("""
         SELECT item_variant, SUM(qty) as balance
         FROM `tabPSV Ledger Entry`
         WHERE channel_partner = %s
@@ -627,8 +614,8 @@ def validate_migration():
 
 def _clear_ledger_entries_by_company(company):
     """Removes all PSV Ledger and legacy Party Stock Ledger entries for a given company."""
-    frappe.db.delete("PSV Ledger Entry", {"company": company})
-    frappe.db.delete("SMRITI Party Stock Ledger Entry", {"company": company})
+    smriti.db.delete("PSV Ledger Entry", {"company": company})
+    smriti.db.delete("SMRITI Party Stock Ledger Entry", {"company": company})
 
 
 def validate_compatibility_matrix():
@@ -656,35 +643,35 @@ def validate_compatibility_matrix():
         "COMPAT-MIXED-CO": "CMC1",
     }
     for co, abbr in compat_company_abbrs.items():
-        if not frappe.db.exists("Company", co):
+        if not smriti.db.exists("Company", co):
             frappe.get_doc({
                 "doctype": "Company", "company_name": co,
                 "abbr": abbr,
                 "country": "India", "default_currency": "INR"
             }).insert(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
 
     fy_name = "2025-2026-UAT"
     # Ensure FY is associated to compat companies
-    if frappe.db.exists("Fiscal Year", fy_name):
-        fy_doc = frappe.get_doc("Fiscal Year", fy_name)
+    if smriti.db.exists("Fiscal Year", fy_name):
+        fy_doc = smriti.documents.get("Fiscal Year", fy_name)
         existing_companies = [c.company for c in fy_doc.get("companies", [])]
         for co in ["COMPAT-NEW-CO", "COMPAT-MIXED-CO"]:
             if co not in existing_companies:
                 fy_doc.append("companies", {"company": co})
         fy_doc.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
     # ── Scenario A: Legacy-only ──
     _log("\n[Scenario A] Legacy-only: expects fallback returns data ...")
 
     # PSA names use Frappe prompt autoname → name = {customer}-{location_name}
-    psa_a_customer = frappe.db.get_value("Customer", {}, "name") or "Administrator"
+    psa_a_customer = smriti.db.get("Customer", {}, "name") or "Administrator"
     psa_a_loc = "Compat A"
     psa_a = f"{psa_a_customer}-{psa_a_loc}"   # computed autoname
     item_a = "COMPAT-ITEM-A"
 
-    if not frappe.db.exists("Item", item_a):
+    if not smriti.db.exists("Item", item_a):
         frappe.get_doc({
             "doctype": "Item", "item_code": item_a,
             "item_name": "Compat Item A", "item_group": ig_name,
@@ -693,11 +680,11 @@ def validate_compatibility_matrix():
             "gst_hsn_code": hsn_code
         }).insert(ignore_permissions=True)
 
-    any_customer = frappe.db.get_value("Customer", {}, "name") or "Administrator"
+    any_customer = smriti.db.get("Customer", {}, "name") or "Administrator"
 
-    if not frappe.db.exists("SMRITI Party Stock Account", psa_a):
-        psa_a_doc = frappe.get_doc({
-            "doctype": "SMRITI Party Stock Account",
+    if not smriti.db.exists("SMRITI Party Stock Account", psa_a):
+        psa_a_doc = smriti.documents.new("PartyStockAccount")
+        psa_a_doc.update({
             "company": "COMPAT-TEST-CO",
             "customer": psa_a_customer,
             "location_name": psa_a_loc,
@@ -716,7 +703,7 @@ def validate_compatibility_matrix():
     for qty, vtype in [(200.0, "Dispatch"), (-50.0, "Sales")]:
         # NOTE: This existence check is redundant now that we clear the company entries beforehand,
         # but is kept to preserve the original seeding check design.
-        if not frappe.db.get_value(
+        if not smriti.db.get(
             "SMRITI Party Stock Ledger Entry",
             {"party_stock_account": psa_a, "voucher_type": vtype},
             "name"
@@ -724,8 +711,7 @@ def validate_compatibility_matrix():
             now_dt = now_datetime()
             raw_hash_str = f"COMPAT-TEST-CO{now_dt}{psa_a}{item_a}{qty}{vtype}"
             raw_hash = hashlib.sha256(raw_hash_str.encode('utf-8')).hexdigest()
-            frappe.get_doc({
-                "doctype": "SMRITI Party Stock Ledger Entry",
+            smriti.documents.new("PartyStockLedgerEntry").update({
                 "party_stock_account": psa_a, "item_code": item_a,
                 "qty": qty, "posting_datetime": now_dt,
                 "company": "COMPAT-TEST-CO", "voucher_type": vtype,
@@ -734,8 +720,8 @@ def validate_compatibility_matrix():
             }).insert(ignore_permissions=True)
 
     # Assert expected row counts
-    count_legacy_a = frappe.db.count("SMRITI Party Stock Ledger Entry", {"company": "COMPAT-TEST-CO"})
-    count_new_a = frappe.db.count("PSV Ledger Entry", {"company": "COMPAT-TEST-CO"})
+    count_legacy_a = smriti.db.count("SMRITI Party Stock Ledger Entry", {"company": "COMPAT-TEST-CO"})
+    count_new_a = smriti.db.count("PSV Ledger Entry", {"company": "COMPAT-TEST-CO"})
     assert count_legacy_a == 2, f"Scenario A expected 2 legacy rows, found {count_legacy_a}"
     assert count_new_a == 0, f"Scenario A expected 0 new rows, found {count_new_a}"
 
@@ -774,7 +760,7 @@ def validate_compatibility_matrix():
     # PSV Channel Partner autoname: {customer}-{location_name}
     partner_b = f"{cust_b}-{loc_b}"
 
-    if not frappe.db.exists("Item", item_b):
+    if not smriti.db.exists("Item", item_b):
         frappe.get_doc({
             "doctype": "Item", "item_code": item_b,
             "item_name": "Compat Item B", "item_group": ig_name,
@@ -784,15 +770,14 @@ def validate_compatibility_matrix():
         }).insert(ignore_permissions=True)
 
     cust_b = "Compat Customer B"
-    if not frappe.db.exists("Customer", cust_b):
+    if not smriti.db.exists("Customer", cust_b):
         frappe.get_doc({
             "doctype": "Customer", "customer_name": cust_b,
             "customer_type": "Individual", "territory": "All Territories"
         }).insert(ignore_permissions=True)
 
-    if not frappe.db.exists("PSV Channel Partner", partner_b):
-        frappe.get_doc({
-            "doctype": "PSV Channel Partner",
+    if not smriti.db.exists("PSV Channel Partner", partner_b):
+        smriti.documents.new("PSVChannelPartner").update({
             "company": "COMPAT-NEW-CO",
             "customer": cust_b, "location_name": loc_b,
             "territory": "All Territories",
@@ -807,9 +792,8 @@ def validate_compatibility_matrix():
         dt_str = now_datetime()
         raw = f"COMPAT-NEW-CO{dt_str}{partner_b}{item_b}{qty}{tx_type}{tx_type}"
         unique_hash = hashlib.sha256(raw.encode()).hexdigest()
-        if not frappe.db.exists("PSV Ledger Entry", {"unique_hash": unique_hash}):
-            frappe.get_doc({
-                "doctype": "PSV Ledger Entry",
+        if not smriti.db.exists("PSV Ledger Entry", {"unique_hash": unique_hash}):
+            smriti.documents.new("PSVLedgerEntry").update({
                 "company": "COMPAT-NEW-CO",
                 "posting_datetime": dt_str,
                 "channel_partner": partner_b, "item_variant": item_b,
@@ -821,8 +805,8 @@ def validate_compatibility_matrix():
             time.sleep(0.01)  # ensure unique datetimes
 
     # Assert expected row counts
-    count_legacy_b = frappe.db.count("SMRITI Party Stock Ledger Entry", {"company": "COMPAT-NEW-CO"})
-    count_new_b = frappe.db.count("PSV Ledger Entry", {"company": "COMPAT-NEW-CO"})
+    count_legacy_b = smriti.db.count("SMRITI Party Stock Ledger Entry", {"company": "COMPAT-NEW-CO"})
+    count_new_b = smriti.db.count("PSV Ledger Entry", {"company": "COMPAT-NEW-CO"})
     assert count_legacy_b == 0, f"Scenario B expected 0 legacy rows, found {count_legacy_b}"
     assert count_new_b == 2, f"Scenario B expected 2 new rows, found {count_new_b}"
 
@@ -854,7 +838,7 @@ def validate_compatibility_matrix():
     partner_c = f"{cust_c}-{loc_c}"
     # PSA-C: autoname = {customer}-{location_name} (computed after customer exists)
 
-    if not frappe.db.exists("Item", item_c):
+    if not smriti.db.exists("Item", item_c):
         frappe.get_doc({
             "doctype": "Item", "item_code": item_c,
             "item_name": "Compat Item C", "item_group": ig_name,
@@ -863,7 +847,7 @@ def validate_compatibility_matrix():
             "gst_hsn_code": hsn_code
         }).insert(ignore_permissions=True)
 
-    if not frappe.db.exists("Customer", cust_c):
+    if not smriti.db.exists("Customer", cust_c):
         frappe.get_doc({
             "doctype": "Customer", "customer_name": cust_c,
             "customer_type": "Individual", "territory": "All Territories"
@@ -872,9 +856,9 @@ def validate_compatibility_matrix():
     # Compute PSA name after customer is guaranteed to exist
     psa_c = f"{cust_c}-{psa_c_loc}"
 
-    if not frappe.db.exists("SMRITI Party Stock Account", psa_c):
-        psa_c_doc = frappe.get_doc({
-            "doctype": "SMRITI Party Stock Account",
+    if not smriti.db.exists("SMRITI Party Stock Account", psa_c):
+        psa_c_doc = smriti.documents.new("PartyStockAccount")
+        psa_c_doc.update({
             "company": "COMPAT-MIXED-CO",
             "customer": cust_c,
             "location_name": psa_c_loc,
@@ -887,9 +871,8 @@ def validate_compatibility_matrix():
     else:
         _log(f"  PSA-C exists: {psa_c}")
 
-    if not frappe.db.exists("PSV Channel Partner", partner_c):
-        frappe.get_doc({
-            "doctype": "PSV Channel Partner",
+    if not smriti.db.exists("PSV Channel Partner", partner_c):
+        smriti.documents.new("PSVChannelPartner").update({
             "company": "COMPAT-MIXED-CO",
             "customer": cust_c, "location_name": loc_c,
             "territory": "All Territories",
@@ -900,13 +883,12 @@ def validate_compatibility_matrix():
     _clear_ledger_entries_by_company("COMPAT-MIXED-CO")
 
     # Legacy: +500 units
-    if not frappe.db.get_value("SMRITI Party Stock Ledger Entry",
+    if not smriti.db.get("SMRITI Party Stock Ledger Entry",
                                 {"party_stock_account": psa_c, "item_code": item_c}, "name"):
         now_dt = now_datetime()
         raw_hash_str = f"COMPAT-MIXED-CO{now_dt}{psa_c}{item_c}500.0Dispatch"
         raw_hash = hashlib.sha256(raw_hash_str.encode('utf-8')).hexdigest()
-        frappe.get_doc({
-            "doctype": "SMRITI Party Stock Ledger Entry",
+        smriti.documents.new("PartyStockLedgerEntry").update({
             "party_stock_account": psa_c, "item_code": item_c,
             "qty": 500.0, "posting_datetime": now_dt,
             "company": "COMPAT-MIXED-CO", "voucher_type": "Dispatch",
@@ -918,9 +900,8 @@ def validate_compatibility_matrix():
     dt_c = now_datetime()
     raw_c = f"COMPAT-MIXED-CO{dt_c}{partner_c}{item_c}120.0DispatchDispatch"
     unique_hash_c = hashlib.sha256(raw_c.encode()).hexdigest()
-    if not frappe.db.exists("PSV Ledger Entry", {"unique_hash": unique_hash_c}):
-        frappe.get_doc({
-            "doctype": "PSV Ledger Entry",
+    if not smriti.db.exists("PSV Ledger Entry", {"unique_hash": unique_hash_c}):
+        smriti.documents.new("PSVLedgerEntry").update({
             "company": "COMPAT-MIXED-CO",
             "posting_datetime": dt_c,
             "channel_partner": partner_c, "item_variant": item_c,
@@ -930,11 +911,11 @@ def validate_compatibility_matrix():
             "fiscal_year": fy_name, "hash_version": 1
         }).insert(ignore_permissions=True)
 
-    frappe.db.commit()
+    smriti.db.commit()
 
     # Assert expected row counts
-    count_legacy_c = frappe.db.count("SMRITI Party Stock Ledger Entry", {"company": "COMPAT-MIXED-CO"})
-    count_new_c = frappe.db.count("PSV Ledger Entry", {"company": "COMPAT-MIXED-CO"})
+    count_legacy_c = smriti.db.count("SMRITI Party Stock Ledger Entry", {"company": "COMPAT-MIXED-CO"})
+    count_new_c = smriti.db.count("PSV Ledger Entry", {"company": "COMPAT-MIXED-CO"})
     assert count_legacy_c == 1, f"Scenario C expected 1 legacy row, found {count_legacy_c}"
     assert count_new_c == 1, f"Scenario C expected 1 new row, found {count_new_c}"
 
@@ -993,7 +974,7 @@ def validate_footwear_analytics():
         "passed": True
     }
 
-    uat_partner_count = frappe.db.count("PSV Channel Partner", {"company": UAT_COMPANY})
+    uat_partner_count = smriti.db.count("PSV Channel Partner", {"company": UAT_COMPANY})
     _log(f"  UAT channel partners found: {uat_partner_count}")
 
     if uat_partner_count == 0:
@@ -1017,7 +998,7 @@ def validate_footwear_analytics():
     sell_by_size = {}
     dispatch_by_size = {}
 
-    entries = frappe.db.sql("""
+    entries = smriti.db.sql("""
         SELECT item_variant, transaction_type, SUM(ABS(qty)) as total_qty
         FROM `tabPSV Ledger Entry`
         WHERE channel_partner = %s AND company = %s
@@ -1177,14 +1158,14 @@ def validate_explain_plans():
         }
     ]
 
-    table_count = frappe.db.count("PSV Ledger Entry")
-    snap_count = frappe.db.count("PSV Stock Aging Snapshot")
+    table_count = smriti.db.count("PSV Ledger Entry")
+    snap_count = smriti.db.count("PSV Stock Aging Snapshot")
     _log(f"  Current table counts: PSV Ledger Entry={table_count}, Aging Snapshot={snap_count}")
 
     # Fetch all indexes for verification
     ledger_indexes = []
     try:
-        idx_rows = frappe.db.sql("SHOW INDEX FROM `tabPSV Ledger Entry`", as_dict=True)
+        idx_rows = smriti.db.sql("SHOW INDEX FROM `tabPSV Ledger Entry`", as_dict=True)
         ledger_indexes = [r.get("Key_name") for r in idx_rows if r.get("Key_name")]
         _log(f"  Available indexes on tabPSV Ledger Entry: {ledger_indexes}")
     except Exception as e:
@@ -1192,7 +1173,7 @@ def validate_explain_plans():
 
     snap_indexes = []
     try:
-        idx_rows = frappe.db.sql("SHOW INDEX FROM `tabPSV Stock Aging Snapshot`", as_dict=True)
+        idx_rows = smriti.db.sql("SHOW INDEX FROM `tabPSV Stock Aging Snapshot`", as_dict=True)
         snap_indexes = [r.get("Key_name") for r in idx_rows if r.get("Key_name")]
         _log(f"  Available indexes on tabPSV Stock Aging Snapshot: {snap_indexes}")
     except Exception as e:
@@ -1208,7 +1189,7 @@ def validate_explain_plans():
     for q in queries_to_test:
         _log(f"\n  [EXPLAIN] {q['name']} ...")
         try:
-            rows = frappe.db.sql(q["sql"], as_dict=True)
+            rows = smriti.db.sql(q["sql"], as_dict=True)
             uses_full_scan = False
             uses_temporary = False
             uses_filesort = False
@@ -1606,54 +1587,54 @@ def cleanup_uat_data():
 
     # PSV Aging Snapshots — keyed by channel_partner (no company column); delete via partner list
     for company in [UAT_COMPANY, "COMPAT-TEST-CO", "COMPAT-NEW-CO", "COMPAT-MIXED-CO"]:
-        cp_names = frappe.get_all("PSV Channel Partner",
+        cp_names = smriti.db.get_list("PSV Channel Partner",
                                    filters={"company": company}, pluck="name")
         if cp_names:
-            frappe.db.delete("PSV Stock Aging Snapshot",
+            smriti.db.delete("PSV Stock Aging Snapshot",
                              {"channel_partner": ["in", cp_names]})
 
     # PSV Channel Partners — delete by company
     for company in [UAT_COMPANY, "COMPAT-TEST-CO", "COMPAT-NEW-CO", "COMPAT-MIXED-CO"]:
-        partners = frappe.get_all("PSV Channel Partner",
+        partners = smriti.db.get_list("PSV Channel Partner",
                                    filters={"company": company},
                                    pluck="name")
         for p in partners:
-            frappe.db.delete("PSV Channel Partner Brand", {"parent": p})
-        frappe.db.delete("PSV Channel Partner", {"company": company})
+            smriti.db.delete("PSV Channel Partner Brand", {"parent": p})
+        smriti.db.delete("PSV Channel Partner", {"company": company})
 
     # SMRITI PSA + Ledger — delete by company
     for company in [UAT_COMPANY, "COMPAT-TEST-CO", "COMPAT-MIXED-CO"]:
-        psa_names = frappe.get_all("SMRITI Party Stock Account",
+        psa_names = smriti.db.get_list("SMRITI Party Stock Account",
                                     filters={"company": company}, pluck="name")
         for psa in psa_names:
-            frappe.db.delete("SMRITI Party Stock Ledger Entry", {"party_stock_account": psa})
-        frappe.db.delete("SMRITI Party Stock Account", {"company": company})
+            smriti.db.delete("SMRITI Party Stock Ledger Entry", {"party_stock_account": psa})
+        smriti.db.delete("SMRITI Party Stock Account", {"company": company})
 
     # MIG-specific PSA (in case it's in UAT company)
-    frappe.db.delete("SMRITI Party Stock Ledger Entry",
+    smriti.db.delete("SMRITI Party Stock Ledger Entry",
                      {"company": ["in", [UAT_COMPANY, "COMPAT-TEST-CO", "COMPAT-MIXED-CO"]]})
 
     # UAT Items — delete by item_code prefix (also cleans up Item Price records)
-    frappe.db.sql(
+    smriti.db.sql(
         "DELETE ip FROM `tabItem Price` ip "
         "JOIN tabItem i ON ip.item_code = i.item_code "
         "WHERE i.item_code LIKE 'UAT-SHOE-%' OR i.item_code LIKE 'MIG-ITEM-%' "
         "OR i.item_code LIKE 'COMPAT-ITEM-%'"
     )
-    frappe.db.sql(
+    smriti.db.sql(
         "DELETE FROM tabItem WHERE item_code LIKE 'UAT-SHOE-%' OR item_code LIKE 'MIG-ITEM-%' "
         "OR item_code LIKE 'COMPAT-ITEM-%'"
     )
 
     # UAT Customers
-    frappe.db.sql(
+    smriti.db.sql(
         "DELETE FROM tabCustomer WHERE customer_name LIKE 'UAT Dist Customer %' "
         "OR customer_name LIKE 'UAT Dealer Customer %' "
         "OR customer_name LIKE 'MIG Test Customer%' "
         "OR customer_name LIKE 'Compat Customer%'"
     )
 
-    frappe.db.commit()
+    smriti.db.commit()
     _log("  ✓ UAT data removed")
 
 

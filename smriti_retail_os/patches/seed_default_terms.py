@@ -13,7 +13,8 @@
 # Copyright (c) 2026, SMRITI Retail OS and contributors
 # For license information, please see license.txt
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 import json
 
 def execute():
@@ -1205,11 +1206,11 @@ def execute():
 
     print(f"Phase 1: Seeding {len(default_terms)} SMRITI Business Dictionary terms...")
     for t in default_terms:
-        exists_name = frappe.db.exists("SMRITI Business Term", {"term_id": t["term_id"], "term_version": t["dictionary_version"]})
+        exists_name = smriti.db.exists("SMRITI Business Term", {"term_id": t["term_id"], "term_version": t["dictionary_version"]})
         if not exists_name:
             # Create parent term without child tables first to avoid LinkValidationErrors
-            doc = frappe.get_doc({
-                "doctype": "SMRITI Business Term",
+            doc = smriti.documents.new("BusinessTerm")
+            doc.update({
                 "term_id": t["term_id"],
                 "term_name": t["term_name"],
                 "term_category": t["term_category"],
@@ -1239,7 +1240,7 @@ def execute():
             doc.insert(ignore_permissions=True)
             print(f" - [Phase 1 Seeded] Term: {t['term_id']}")
         else:
-            doc = frappe.get_doc("SMRITI Business Term", exists_name)
+            doc = smriti.documents.get("SMRITI Business Term", exists_name)
             doc.term_name = t["term_name"]
             doc.term_category = t["term_category"]
             doc.definition = t["definition"]
@@ -1263,13 +1264,13 @@ def execute():
             doc.save(ignore_permissions=True)
             print(f" - [Phase 1 Updated] Term: {t['term_id']}")
 
-    frappe.db.commit()
+    smriti.db.commit()
 
     print("Phase 2: Updating SMRITI Business Dictionary terms relations...")
     for t in default_terms:
-        doc_name = frappe.db.get_value("SMRITI Business Term", {"term_id": t["term_id"], "term_version": t["dictionary_version"]})
+        doc_name = smriti.db.get("SMRITI Business Term", {"term_id": t["term_id"], "term_version": t["dictionary_version"]})
         if doc_name:
-            doc = frappe.get_doc("SMRITI Business Term", doc_name)
+            doc = smriti.documents.get("SMRITI Business Term", doc_name)
             
             # Clear existing child table rows first to make execution idempotent
             doc.set("related_formulas", [])
@@ -1278,7 +1279,7 @@ def execute():
             # Append formulas
             for fid in t["related_formulas"]:
                 # Safe check: only append if formula exists in system
-                formula_doc_name = frappe.db.get_value("SMRITI Formula Definition", {"formula_id": fid})
+                formula_doc_name = smriti.db.get("SMRITI Formula Definition", {"formula_id": fid})
                 if formula_doc_name:
                     doc.append("related_formulas", {
                         "doctype": "SMRITI Related Formula",
@@ -1289,9 +1290,9 @@ def execute():
 
             # Append related terms
             for rtid in t["related_terms"]:
-                related_doc_name = frappe.db.get_value("SMRITI Business Term", {"term_id": rtid, "term_version": "1.0"})
+                related_doc_name = smriti.db.get("SMRITI Business Term", {"term_id": rtid, "term_version": "1.0"})
                 if not related_doc_name:
-                    related_doc_name = frappe.db.get_value("SMRITI Business Term", {"term_id": rtid})
+                    related_doc_name = smriti.db.get("SMRITI Business Term", {"term_id": rtid})
                 if related_doc_name:
                     doc.append("related_terms", {
                         "doctype": "SMRITI Related Term",
@@ -1303,5 +1304,5 @@ def execute():
             doc.save(ignore_permissions=True)
             print(f" - [Phase 2 Updated] Term Relations: {t['term_id']}")
 
-    frappe.db.commit()
+    smriti.db.commit()
     print("SMRITI Business Dictionary terms seeding complete!")

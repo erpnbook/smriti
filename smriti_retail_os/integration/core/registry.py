@@ -6,6 +6,7 @@
 #
 
 import frappe
+from smriti_retail_os import smriti
 from smriti_retail_os.integration.repository.queue_repository import QueueRepository
 
 class IntegrationRegistry:
@@ -57,7 +58,7 @@ class IntegrationRegistry:
             except Exception as e:
                 # Log registry failure and auto-update health status to Unhealthy in DB
                 error_msg = f"Failed to dynamically import adapter class '{class_path}': {str(e)}"
-                frappe.log_error(title=f"SMRITI Connect Registry Error: {provider_id}", message=error_msg)
+                smriti.errors.log_error(title=f"SMRITI Connect Registry Error: {provider_id}", message=error_msg)
                 QueueRepository.update_provider_health(provider_id, "Unhealthy", 0, error_msg)
                 
         return active_adapters
@@ -70,10 +71,10 @@ class IntegrationRegistry:
         """
         config = {}
         if provider_id == "accounting.tally":
-            if frappe.db.exists("DocType", "SMRITI Tally Settings"):
+            if smriti.db.exists("DocType", "SMRITI Tally Settings"):
                 doc = frappe.get_single("SMRITI Tally Settings")
                 config = doc.as_dict()
-            elif frappe.db.exists("DocType", "SMRITI Tally Sync Log"): # check fallback settings
+            elif smriti.db.exists("DocType", "SMRITI Tally Sync Log"): # check fallback settings
                 # Default settings fallback if single settings not set
                 config = {
                     "tally_url": "http://localhost:9000",

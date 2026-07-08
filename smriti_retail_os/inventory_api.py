@@ -10,9 +10,10 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe.utils import flt, cint, nowdate
 from frappe import _
+from smriti_retail_os import smriti
 from smriti_retail_os.utils.invoice_utils import get_barcode_candidates
 from smriti_retail_os.security_api import check_administrator_only
 
@@ -36,25 +37,25 @@ def _get_default_warehouse(company):
     """Company ke saath matching warehouse lo."""
     if not company:
         return None
-    warehouse = frappe.db.get_value(
+    warehouse = smriti.db.get(
         "Warehouse",
         {"company": company, "is_group": 0, "warehouse_name": "Stores"},
         "name"
     )
     if not warehouse:
-        warehouse = frappe.db.get_value(
+        warehouse = smriti.db.get(
             "Warehouse",
             {"company": company, "is_group": 0},
             "name",
             order_by="creation asc"
         )
     if not warehouse:
-        warehouse = frappe.db.get_value(
+        warehouse = smriti.db.get(
             "Warehouse",
             {"company": company},
             "name"
         )
-    if warehouse and frappe.db.get_value("Warehouse", warehouse, "company") == company:
+    if warehouse and smriti.db.get("Warehouse", warehouse, "company") == company:
         return warehouse
     return None
 
@@ -71,22 +72,22 @@ def get_or_create_batch(item_code, expiry_date=None):
     Finds or creates a batch for an item, optionally with an expiry date.
     """
     if expiry_date:
-        existing = frappe.db.get_value("Batch", {"item": item_code, "expiry_date": expiry_date, "disabled": 0}, "name")
+        existing = smriti.db.get("Batch", {"item": item_code, "expiry_date": expiry_date, "disabled": 0}, "name")
         if existing:
             return existing
         
-        batch_doc = frappe.new_doc("Batch")
+        batch_doc = smriti.documents.new("Batch")
         batch_doc.item = item_code
         batch_doc.expiry_date = expiry_date
         batch_doc.insert(ignore_permissions=True)
         return batch_doc.name
     else:
         # Check if any active batch exists
-        existing = frappe.db.get_value("Batch", {"item": item_code, "disabled": 0}, "name", order_by="creation desc")
+        existing = smriti.db.get("Batch", {"item": item_code, "disabled": 0}, "name", order_by="creation desc")
         if existing:
             return existing
         
-        batch_doc = frappe.new_doc("Batch")
+        batch_doc = smriti.documents.new("Batch")
         batch_doc.item = item_code
         batch_doc.insert(ignore_permissions=True)
         return batch_doc.name
@@ -96,7 +97,7 @@ def get_active_batch_for_transfer(item_code, warehouse):
     Locates the oldest batch with positive inventory in the given warehouse,
     or falls back to any active batch for this item.
     """
-    batch = frappe.db.sql("""
+    batch = smriti.db.sql("""
         SELECT batch_no FROM `tabStock Ledger Entry` 
         WHERE item_code=%s AND warehouse=%s AND batch_no IS NOT NULL AND batch_no != ''
         GROUP BY batch_no HAVING SUM(actual_qty) > 0 
@@ -122,28 +123,28 @@ def scan_item_for_inventory(barcode, warehouse=None):
     
     item_code = None
     for cand in candidates:
-        item_code = frappe.db.get_value("Item Barcode", {"barcode": cand}, "parent")
+        item_code = smriti.db.get("Item Barcode", {"barcode": cand}, "parent")
         if item_code:
             break
             
     if not item_code:
         for cand in candidates:
-            if frappe.db.exists("Item", cand):
+            if smriti.db.exists("Item", cand):
                 item_code = cand
                 break
 
     if not item_code:
         return None
 
-    item_doc = frappe.get_doc("Item", item_code)
+    item_doc = smriti.documents.get("Item", item_code)
     
     # Resolve warehouse
     if not warehouse:
-        company = frappe.defaults.get_user_default("company") or frappe.db.get_single_value("Global Defaults", "default_company") or (frappe.get_all("Company", limit=1)[0].name if frappe.get_all("Company", limit=1) else None)
+        company = frappe.defaults.get_user_default("company") or smriti.db.get_single("Global Defaults", "default_company") or (smriti.db.get_list("Company", limit=1)[0].name if smriti.db.get_list("Company", limit=1) else None)
         warehouse = _get_default_warehouse(company)
         
     # Get bin stock
-    stock_res = frappe.db.sql(
+    stock_res = smriti.db.sql(
         "SELECT SUM(actual_qty) FROM `tabBin` WHERE item_code=%s AND warehouse=%s",
         (item_code, warehouse)
     )
@@ -172,10 +173,10 @@ def create_grn(supplier, invoice_no, items, warehouse=None):
         frappe.throw(_("Cannot create GRN with an empty items list."))
 
     items_list = frappe.parse_json(items)
-    company = frappe.defaults.get_user_default("company") or frappe.db.get_single_value("Global Defaults", "default_company") or (frappe.get_all("Company", limit=1)[0].name if frappe.get_all("Company", limit=1) else None)
+    company = frappe.defaults.get_user_default("company") or smriti.db.get_single("Global Defaults", "default_company") or (smriti.db.get_list("Company", limit=1)[0].name if smriti.db.get_list("Company", limit=1) else None)
     warehouse = warehouse or _get_default_warehouse(company)
 
-    pr = frappe.new_doc("Purchase Receipt")
+    pr = smriti.documents.new("Purchase Receipt")
     pr.supplier = supplier
     pr.bill_no = invoice_no
     pr.posting_date = nowdate()
@@ -189,7 +190,7 @@ def create_grn(supplier, invoice_no, items, warehouse=None):
 
         # Handle batch & expiry tracking
         batch_no = None
-        has_batch_no = frappe.db.get_value("Item", item_code, "has_batch_no")
+        has_batch_no = smriti.db.get("Item", item_code, "has_batch_no")
         if has_batch_no:
             expiry_date = it.get("expiry_date")
             batch_no = get_or_create_batch(item_code, expiry_date)
@@ -200,17 +201,17 @@ def create_grn(supplier, invoice_no, items, warehouse=None):
             "rate": rate,
             "warehouse": wh,
             "batch_no": batch_no,
-            "uom": it.get("stock_uom") or frappe.db.get_value("Item", item_code, "stock_uom")
+            "uom": it.get("stock_uom") or smriti.db.get("Item", item_code, "stock_uom")
         })
 
     try:
         # reviewed-ignore-permissions: stock receipt validation, gated by SMRITI Store Manager or System Manager roles
         pr.insert(ignore_permissions=True)
         pr.submit()  # Triggers before_submit, on_submit, Stock Ledger, GL Entries
-        frappe.db.commit()
+        smriti.db.commit()
     except Exception:
-        frappe.db.rollback()
-        frappe.log_error(title="SMRITI GRN Submit Failed", message=frappe.get_traceback())
+        smriti.db.rollback()
+        smriti.errors.log_error(title="SMRITI GRN Submit Failed", message=frappe.get_traceback())
         raise
 
     return {
@@ -230,9 +231,9 @@ def create_stock_transfer(from_warehouse, to_warehouse, items):
         frappe.throw(_("Cannot create stock transfer with an empty items list."))
 
     items_list = frappe.parse_json(items)
-    company = frappe.defaults.get_user_default("company") or frappe.get_all("Company", limit=1)[0].name
+    company = frappe.defaults.get_user_default("company") or smriti.db.get_list("Company", limit=1)[0].name
 
-    se = frappe.new_doc("Stock Entry")
+    se = smriti.documents.new("Stock Entry")
     se.purpose = "Material Transfer"
     se.stock_entry_type = "Material Transfer"
     se.company = company
@@ -241,11 +242,11 @@ def create_stock_transfer(from_warehouse, to_warehouse, items):
     for it in items_list:
         item_code = it.get("item_code")
         qty = flt(it.get("qty"))
-        uom = it.get("stock_uom") or frappe.db.get_value("Item", item_code, "stock_uom")
+        uom = it.get("stock_uom") or smriti.db.get("Item", item_code, "stock_uom")
 
         # Resolve batch if needed
         batch_no = None
-        has_batch_no = frappe.db.get_value("Item", item_code, "has_batch_no")
+        has_batch_no = smriti.db.get("Item", item_code, "has_batch_no")
         if has_batch_no:
             batch_no = get_active_batch_for_transfer(item_code, from_warehouse)
 
@@ -263,10 +264,10 @@ def create_stock_transfer(from_warehouse, to_warehouse, items):
         # reviewed-ignore-permissions: stock transfer validation, gated by SMRITI Store Manager or System Manager roles
         se.insert(ignore_permissions=True)
         se.submit()  # Triggers Stock Ledger + GL Entries for the transfer
-        frappe.db.commit()
+        smriti.db.commit()
     except Exception:
-        frappe.db.rollback()
-        frappe.log_error(title="SMRITI Stock Transfer Submit Failed", message=frappe.get_traceback())
+        smriti.db.rollback()
+        smriti.errors.log_error(title="SMRITI Stock Transfer Submit Failed", message=frappe.get_traceback())
         raise
 
     return {
@@ -287,7 +288,7 @@ def create_stock_adjustment(items, reason):
         frappe.throw(_("Cannot create stock adjustment with an empty items list."))
 
     items_list = frappe.parse_json(items)
-    company = frappe.defaults.get_user_default("company") or frappe.get_all("Company", limit=1)[0].name
+    company = frappe.defaults.get_user_default("company") or smriti.db.get_list("Company", limit=1)[0].name
 
     # Determine purpose
     if reason == "Stock Surplus":
@@ -297,18 +298,18 @@ def create_stock_adjustment(items, reason):
 
     # Map account
     account = (
-        frappe.db.get_value("Company", company, "default_inventory_account")
-        or frappe.db.get_value("Company", company, "stock_adjustment_account")
-        or frappe.db.get_value("Account", {"account_name": "Stock Adjustment", "company": company}, "name")
-        or frappe.db.get_value("Account", {"account_name": "Cost of Goods Sold", "company": company}, "name")
-        or frappe.db.get_value("Account", {"account_type": "Stock Adjustment", "company": company}, "name")
-        or frappe.db.get_value("Account", {"account_type": "Expense", "company": company}, "name")
-        or frappe.db.get_value("Account", {"account_type": "Expense Account", "company": company}, "name")
-        or frappe.db.get_value("Account", {"root_type": "Expense", "company": company, "is_group": 0}, "name")
-        or frappe.db.get_value("Account", {"company": company, "is_group": 0}, "name")
+        smriti.db.get("Company", company, "default_inventory_account")
+        or smriti.db.get("Company", company, "stock_adjustment_account")
+        or smriti.db.get("Account", {"account_name": "Stock Adjustment", "company": company}, "name")
+        or smriti.db.get("Account", {"account_name": "Cost of Goods Sold", "company": company}, "name")
+        or smriti.db.get("Account", {"account_type": "Stock Adjustment", "company": company}, "name")
+        or smriti.db.get("Account", {"account_type": "Expense", "company": company}, "name")
+        or smriti.db.get("Account", {"account_type": "Expense Account", "company": company}, "name")
+        or smriti.db.get("Account", {"root_type": "Expense", "company": company, "is_group": 0}, "name")
+        or smriti.db.get("Account", {"company": company, "is_group": 0}, "name")
     )
 
-    se = frappe.new_doc("Stock Entry")
+    se = smriti.documents.new("Stock Entry")
     se.purpose = purpose
     se.stock_entry_type = purpose
     se.company = company
@@ -318,7 +319,7 @@ def create_stock_adjustment(items, reason):
         item_code = it.get("item_code")
         qty = flt(it.get("qty"))
         wh = it.get("warehouse")
-        uom = it.get("stock_uom") or frappe.db.get_value("Item", item_code, "stock_uom")
+        uom = it.get("stock_uom") or smriti.db.get("Item", item_code, "stock_uom")
 
         row = {
             "item_code": item_code,
@@ -334,7 +335,7 @@ def create_stock_adjustment(items, reason):
             row["t_warehouse"] = wh
 
         # Resolve batch if needed
-        has_batch_no = frappe.db.get_value("Item", item_code, "has_batch_no")
+        has_batch_no = smriti.db.get("Item", item_code, "has_batch_no")
         if has_batch_no:
             if purpose == "Material Issue":
                 row["batch_no"] = get_active_batch_for_transfer(item_code, wh)
@@ -347,10 +348,10 @@ def create_stock_adjustment(items, reason):
         # reviewed-ignore-permissions: inventory adjustment, gated by SMRITI Store Manager or System Manager roles
         se.insert(ignore_permissions=True)
         se.submit()  # Triggers Stock Ledger + GL Entries for the adjustment
-        frappe.db.commit()
+        smriti.db.commit()
     except Exception:
-        frappe.db.rollback()
-        frappe.log_error(title="SMRITI Stock Adjustment Submit Failed", message=frappe.get_traceback())
+        smriti.db.rollback()
+        smriti.errors.log_error(title="SMRITI Stock Adjustment Submit Failed", message=frappe.get_traceback())
         raise
 
     return {
@@ -370,16 +371,16 @@ def create_stock_audit(items):
         frappe.throw(_("Cannot create stock reconciliation with an empty audit list."))
 
     items_list = frappe.parse_json(items)
-    company = frappe.defaults.get_user_default("company") or frappe.get_all("Company", limit=1)[0].name
+    company = frappe.defaults.get_user_default("company") or smriti.db.get_list("Company", limit=1)[0].name
     # Resolve asset/liability difference account for opening entries (strictly must be Asset or Liability root type)
     difference_account = (
-        frappe.db.get_value("Account", {"account_type": "Temporary", "company": company, "root_type": ["in", ["Asset", "Liability"]]}, "name")
-        or frappe.db.get_value("Account", {"account_name": "Temporary Opening", "company": company, "root_type": ["in", ["Asset", "Liability"]]}, "name")
-        or frappe.db.get_value("Account", {"root_type": "Asset", "company": company, "is_group": 0}, "name")
-        or frappe.db.get_value("Account", {"root_type": "Liability", "company": company, "is_group": 0}, "name")
+        smriti.db.get("Account", {"account_type": "Temporary", "company": company, "root_type": ["in", ["Asset", "Liability"]]}, "name")
+        or smriti.db.get("Account", {"account_name": "Temporary Opening", "company": company, "root_type": ["in", ["Asset", "Liability"]]}, "name")
+        or smriti.db.get("Account", {"root_type": "Asset", "company": company, "is_group": 0}, "name")
+        or smriti.db.get("Account", {"root_type": "Liability", "company": company, "is_group": 0}, "name")
     )
 
-    sr = frappe.new_doc("Stock Reconciliation")
+    sr = smriti.documents.new("Stock Reconciliation")
     sr.purpose = "Stock Reconciliation"
     sr.company = company
     sr.posting_date = nowdate()
@@ -390,7 +391,7 @@ def create_stock_audit(items):
         wh = it.get("warehouse")
         qty = flt(it.get("qty"))
         
-        val_rate = frappe.db.get_value("Item", item_code, "valuation_rate") or 1.0
+        val_rate = smriti.db.get("Item", item_code, "valuation_rate") or 1.0
 
         sr.append("items", {
             "item_code": item_code,
@@ -403,10 +404,10 @@ def create_stock_audit(items):
         # reviewed-ignore-permissions: physical inventory reconciliation audit, gated by SMRITI Store Manager or System Manager roles
         sr.insert(ignore_permissions=True)
         sr.submit()  # Triggers Stock Ledger + GL Entries for the reconciliation
-        frappe.db.commit()
+        smriti.db.commit()
     except Exception:
-        frappe.db.rollback()
-        frappe.log_error(title="SMRITI Stock Audit Submit Failed", message=frappe.get_traceback())
+        smriti.db.rollback()
+        smriti.errors.log_error(title="SMRITI Stock Audit Submit Failed", message=frappe.get_traceback())
         raise
 
     return {
@@ -424,7 +425,7 @@ def get_stock_summary(warehouse=None):
     if warehouse:
         filters["warehouse"] = warehouse
 
-    bins = frappe.db.get_all(
+    bins = smriti.db.get_list(
         "Bin",
         filters=filters,
         fields=["item_code", "warehouse", "actual_qty"]
@@ -433,7 +434,7 @@ def get_stock_summary(warehouse=None):
     results = []
     for b in bins:
         if flt(b.actual_qty) != 0.0:
-            item_details = frappe.db.get_value("Item", b.item_code, ["item_name", "stock_uom", "brand"], as_dict=1)
+            item_details = smriti.db.get("Item", b.item_code, ["item_name", "stock_uom", "brand"], as_dict=1)
             if item_details:
                 results.append({
                     "item_code": b.item_code,
@@ -474,7 +475,7 @@ def reset_db(confirmation_token=None):
         f"[SMRITI] reset_db() initiated by {frappe.session.user} — truncating transaction tables."
     )
 
-    frappe.db.sql("SET FOREIGN_KEY_CHECKS = 0;")
+    smriti.db.sql("SET FOREIGN_KEY_CHECKS = 0;")
 
     tables = [
         "tabStock Reconciliation",
@@ -504,20 +505,20 @@ def reset_db(confirmation_token=None):
     failed_tables = []
     for t in tables:
         if t not in _RESET_DB_SAFE_TABLES:
-            frappe.log_error(title="SMRITI: Rejected unexpected TRUNCATE", message=f"Refused to truncate unlisted table: {t}")
+            smriti.errors.log_error(title="SMRITI: Rejected unexpected TRUNCATE", message=f"Refused to truncate unlisted table: {t}")
             failed_tables.append(t)
             continue
         try:
-            frappe.db.sql(f"TRUNCATE TABLE `{t}`")
+            smriti.db.sql(f"TRUNCATE TABLE `{t}`")
         except Exception:
             failed_tables.append(t)
-            frappe.log_error(
+            smriti.errors.log_error(
                 title=f"SMRITI reset_db: Failed to truncate {t}",
                 message=frappe.get_traceback()
             )
 
-    frappe.db.sql("SET FOREIGN_KEY_CHECKS = 1;")
-    frappe.db.commit()
+    smriti.db.sql("SET FOREIGN_KEY_CHECKS = 1;")
+    smriti.db.commit()
 
     msg = "All transactions reset to zero successfully. Starting from 1."
     if failed_tables:

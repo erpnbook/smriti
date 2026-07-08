@@ -10,7 +10,8 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from frappe.model.document import Document
 
 class SMRITIKnowledgeRelation(Document):
@@ -20,7 +21,7 @@ class SMRITIKnowledgeRelation(Document):
             frappe.throw(frappe._("An asset cannot have a relationship with itself."))
 
         # 2. Database uniqueness constraint to prevent duplicate edges
-        dup = frappe.db.exists(
+        dup = smriti.db.exists(
             "SMRITI Knowledge Relation",
             {
                 "source_asset_id": self.source_asset_id,
@@ -48,7 +49,7 @@ class SMRITIKnowledgeRelation(Document):
         from smriti_retail_os.services.knowledge_service import invalidate_asset_cache
         for asset_id in (self.source_asset_id, self.target_asset_id):
             if asset_id:
-                uri = frappe.db.get_value("SMRITI Knowledge Asset", asset_id, "asset_uri")
+                uri = smriti.db.get("SMRITI Knowledge Asset", asset_id, "asset_uri")
                 if uri:
                     doc_stub = frappe._dict(asset_uri=uri)
                     invalidate_asset_cache(doc_stub)

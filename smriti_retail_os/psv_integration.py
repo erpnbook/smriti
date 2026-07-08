@@ -22,8 +22,9 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 
 
 # ─── Delivery Note PSV Integration ───────────────────────────────────────────
@@ -101,7 +102,7 @@ def handle_delivery_note_submit(doc, method=None):
         )
 
     except Exception:
-        frappe.log_error(
+        smriti.errors.log_error(
             title=f"PSV DN Submit Error: {doc.name}",
             message=frappe.get_traceback()
         )
@@ -125,7 +126,7 @@ def handle_delivery_note_cancel(doc, method=None):
         return
 
     try:
-        tx_name = frappe.db.get_value(
+        tx_name = smriti.db.get(
             "SMRITI PSV Transaction",
             {
                 "reference_doctype": doc.doctype,
@@ -135,9 +136,9 @@ def handle_delivery_note_cancel(doc, method=None):
             "name"
         )
         if tx_name:
-            frappe.get_doc("SMRITI PSV Transaction", tx_name).cancel()
+            smriti.documents.get("SMRITI PSV Transaction", tx_name).cancel()
         else:
-            frappe.log_error(
+            smriti.errors.log_error(
                 title=f"PSV DN Cancel — No TX found: {doc.name}",
                 message=(
                     f"Delivery Note {doc.name} cancelled but no submitted PSV Transaction "
@@ -146,7 +147,7 @@ def handle_delivery_note_cancel(doc, method=None):
                 )
             )
     except Exception:
-        frappe.log_error(
+        smriti.errors.log_error(
             title=f"PSV DN Cancel Error: {doc.name}",
             message=frappe.get_traceback()
         )
@@ -198,7 +199,7 @@ def handle_sales_return_submit(doc, method=None):
         )
 
     except Exception:
-        frappe.log_error(
+        smriti.errors.log_error(
             title=f"PSV SE Submit Error: {doc.name}",
             message=frappe.get_traceback()
         )
@@ -216,7 +217,7 @@ def handle_sales_return_cancel(doc, method=None):
         return
 
     try:
-        tx_name = frappe.db.get_value(
+        tx_name = smriti.db.get(
             "SMRITI PSV Transaction",
             {
                 "reference_doctype": doc.doctype,
@@ -226,9 +227,9 @@ def handle_sales_return_cancel(doc, method=None):
             "name"
         )
         if tx_name:
-            frappe.get_doc("SMRITI PSV Transaction", tx_name).cancel()
+            smriti.documents.get("SMRITI PSV Transaction", tx_name).cancel()
     except Exception:
-        frappe.log_error(
+        smriti.errors.log_error(
             title=f"PSV SE Cancel Error: {doc.name}",
             message=frappe.get_traceback()
         )
@@ -240,8 +241,7 @@ def _create_dn_exception_record(doc, psa, exception_type, description):
     """Creates a SMRITI PSV Exception Record for operational health monitoring."""
     try:
         from frappe.utils import now_datetime
-        frappe.get_doc({
-            "doctype": "SMRITI PSV Exception Record",
+        smriti.documents.new("PSVExceptionRecord").update({
             "party_stock_account": psa,
             "alert_type": exception_type,
             "timestamp": now_datetime(),
@@ -251,10 +251,10 @@ def _create_dn_exception_record(doc, psa, exception_type, description):
             "reconciliation_notes": description,
             "status": "Pending Reconciliation"
         }).insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
     except Exception:
         # Exception record creation must never raise — just log
-        frappe.log_error(
+        smriti.errors.log_error(
             title="PSV Exception Record Creation Failed",
             message=frappe.get_traceback()
         )

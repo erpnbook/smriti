@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # SMRITI Supplier Purchase Summary Script Report
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.utils import flt
 
 def execute(filters=None):
@@ -50,11 +51,11 @@ def get_data(filters):
 
     query += " GROUP BY supplier"
     
-    rows = frappe.db.sql(query, tuple(params), as_dict=True)
+    rows = smriti.db.sql(query, tuple(params), as_dict=True)
 
     # Fetch child received quantities and calculate fill rate
     for row in rows:
-        received_res = frappe.db.sql("""
+        received_res = smriti.db.sql("""
             SELECT SUM(poi.received_qty) 
             FROM `tabSMRITI Purchase Order Item` poi 
             INNER JOIN `tabSMRITI Purchase Order` po ON poi.parent = po.name

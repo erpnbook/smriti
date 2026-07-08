@@ -6,7 +6,8 @@
 # Designation: Founder & Chief Architect
 # Organization: AITDL – AI Technology & Development Lab
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 
 def execute():
 	"""Ensures the SMRITI UIE Sync Queue database table has an index on 'idempotency_key'."""
@@ -17,7 +18,7 @@ def execute():
 		return
 
 	# Check if index exists on the column 'idempotency_key'
-	existing = frappe.db.sql(
+	existing = smriti.db.sql(
 		"""
 		SELECT COUNT(*) 
 		FROM information_schema.statistics
@@ -30,7 +31,7 @@ def execute():
 
 	if not existing or existing[0][0] == 0:
 		try:
-			frappe.db.sql(
+			smriti.db.sql(
 				f"""
 				ALTER TABLE `{table_name}`
 				ADD INDEX `idempotency_key_idx` (`idempotency_key`)

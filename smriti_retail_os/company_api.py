@@ -12,9 +12,10 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 import json
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.utils import flt, cint
 from smriti_retail_os.repositories.company_repository import CompanyRepository
 
@@ -38,14 +39,14 @@ def get_active_company():
     """
     Centralised company resolver — use this everywhere instead of duplicating:
         frappe.defaults.get_user_default("company") or
-        frappe.get_all("Company", limit=1)[0].name
+        smriti.db.get_list("Company", limit=1)[0].name
 
     Returns:
         str: Name of the active company, or None if no company exists.
     """
     company = frappe.defaults.get_user_default("company")
     if not company:
-        companies = frappe.get_all("Company", limit=1, pluck="name")
+        companies = smriti.db.get_list("Company", limit=1, pluck="name")
         company = companies[0] if companies else None
     return company
 
@@ -55,18 +56,18 @@ def get_business_type():
     if frappe.session.user == "Guest":
         frappe.throw(_("Not permitted"), frappe.PermissionError)
     try:
-        company = frappe.defaults.get_user_default("company") or (frappe.get_all("Company", limit=1)[0].name if frappe.get_all("Company", limit=1) else None)
-        if company and frappe.db.exists("SMRITI Company Settings", company):
-            bt = frappe.db.get_value("SMRITI Company Settings", company, "custom_business_type")
+        company = frappe.defaults.get_user_default("company") or (smriti.db.get_list("Company", limit=1)[0].name if smriti.db.get_list("Company", limit=1) else None)
+        if company and smriti.db.exists("SMRITI Company Settings", company):
+            bt = smriti.db.get("SMRITI Company Settings", company, "custom_business_type")
             return bt or "Footwear"
     except Exception:
-        frappe.log_error(frappe.get_traceback(), "SMRITI: get_business_type failed")
+        smriti.errors.log_error(frappe.get_traceback(), "SMRITI: get_business_type failed")
     return "Footwear"
 
 @frappe.whitelist()
 def list_companies():
     """Return all companies for multi-company selector UI."""
-    return frappe.get_all(
+    return smriti.db.get_list(
         "Company",
         fields=["name", "company_name", "country", "default_currency", "gstin"],
         order_by="company_name asc"
@@ -117,7 +118,7 @@ def get_company_settings(company=None):
     if not company:
         return {}
 
-    if frappe.db.exists(_SETTINGS_DOCTYPE, {"company": company}):
+    if smriti.db.exists(_SETTINGS_DOCTYPE, {"company": company}):
         doc = CompanyRepository.get_doc(_SETTINGS_DOCTYPE, {"company": company})
         result = doc.as_dict()
     else:
@@ -126,7 +127,7 @@ def get_company_settings(company=None):
 
     # Augment with Company-level custom fields so the frontend can get
     # everything in a single call without using frappe.client.get_value.
-    company_extras = frappe.db.get_value(
+    company_extras = smriti.db.get(
         "Company",
         company,
         ["custom_smriti_store_type", "custom_smriti_gstin_state",
@@ -181,7 +182,7 @@ def save_company_settings(company=None, settings=None):
     }
     clean = {k: v for k, v in settings.items() if k in allowed_fields}
 
-    existing = frappe.db.exists(_SETTINGS_DOCTYPE, {"company": company})
+    existing = smriti.db.exists(_SETTINGS_DOCTYPE, {"company": company})
     if existing:
         doc = CompanyRepository.get_doc(_SETTINGS_DOCTYPE, existing)
         doc.update(clean)
@@ -211,10 +212,10 @@ def get_store_address(company=None):
         return {}
         
     address_name = f"{company}-Registered"
-    if not frappe.db.exists("Address", address_name):
+    if not smriti.db.exists("Address", address_name):
         # Use the Frappe ORM Dynamic Link table (tabAddress Link does not
         # exist in Frappe v15+; the correct table is tabDynamic Link).
-        links = frappe.get_all(
+        links = smriti.db.get_list(
             "Dynamic Link",
             filters={"link_doctype": "Company", "link_name": company, "parenttype": "Address"},
             fields=["parent"],
@@ -296,11 +297,11 @@ def save_store_address(company=None, address_data=None):
     address_name = f"{company}-Registered"
     
     existing_addr = None
-    if frappe.db.exists("Address", address_name):
+    if smriti.db.exists("Address", address_name):
         existing_addr = address_name
     else:
         # Use Frappe ORM Dynamic Link (tabAddress Link removed in Frappe v15+)
-        links = frappe.get_all(
+        links = smriti.db.get_list(
             "Dynamic Link",
             filters={"link_doctype": "Company", "link_name": company, "parenttype": "Address"},
             fields=["parent"],
@@ -342,7 +343,7 @@ def save_store_address(company=None, address_data=None):
     except Exception:
         addr.longitude = None
         
-    gstin = frappe.db.get_value("Company", company, "gstin")
+    gstin = smriti.db.get("Company", company, "gstin")
     if gstin:
         addr.gstin = gstin
         addr.gst_category = "Registered"
@@ -367,7 +368,7 @@ def ensure_company_settings(doc, method=None):
     Silently creates a blank SMRITI Company Settings record if missing.
     """
     company = doc.name if hasattr(doc, "name") else str(doc)
-    if not frappe.db.exists(_SETTINGS_DOCTYPE, {"company": company}):
+    if not smriti.db.exists(_SETTINGS_DOCTYPE, {"company": company}):
         try:
             defaults = _default_settings(company)
             new_doc = CompanyRepository.new_doc(_SETTINGS_DOCTYPE)
@@ -380,7 +381,7 @@ def ensure_company_settings(doc, method=None):
                 f"[SMRITI] Created Company Settings for: {company}"
             )
         except Exception as e:
-            frappe.log_error(
+            smriti.errors.log_error(
                 f"[SMRITI] Failed to auto-create Company Settings for {company}: {e}",
                 "Company Settings Auto-Provision"
             )
@@ -403,9 +404,9 @@ def create_company(company_name, abbr, country="India", default_currency="INR", 
         frappe.throw(_("Company Name is mandatory."))
     if not abbr:
         frappe.throw(_("Abbreviation is mandatory."))
-    if frappe.db.exists("Company", company_name):
+    if smriti.db.exists("Company", company_name):
         frappe.throw(_("Company '{0}' already exists.").format(company_name))
-    if frappe.db.exists("Company", {"abbr": abbr}):
+    if smriti.db.exists("Company", {"abbr": abbr}):
         frappe.throw(_("Abbreviation '{0}' is already used by another company.").format(abbr))
 
     doc = CompanyRepository.new_doc("Company")
@@ -442,7 +443,7 @@ def update_company(company, company_name=None, gstin=None, default_currency=None
     """
     _check_manager_permission()
 
-    if not company or not frappe.db.exists("Company", company):
+    if not company or not smriti.db.exists("Company", company):
         frappe.throw(_("Company '{0}' not found.").format(company))
 
     doc = CompanyRepository.get_doc("Company", company)
@@ -485,13 +486,13 @@ def delete_company(company):
                 frappe.PermissionError
             )
 
-    if not company or not frappe.db.exists("Company", company):
+    if not company or not smriti.db.exists("Company", company):
         frappe.throw(_("Company '{0}' not found.").format(company))
 
     # Safety: block if any transactions exist
     blockers = {}
     for doctype in ["Sales Invoice", "Purchase Invoice", "GL Entry", "Stock Ledger Entry"]:
-        count = frappe.db.count(doctype, {"company": company})
+        count = smriti.db.count(doctype, {"company": company})
         if count:
             blockers[doctype] = count
 
@@ -503,7 +504,7 @@ def delete_company(company):
         )
 
     # Clean up SMRITI Company Settings first
-    settings_name = frappe.db.exists(_SETTINGS_DOCTYPE, {"company": company})
+    settings_name = smriti.db.exists(_SETTINGS_DOCTYPE, {"company": company})
     if settings_name:
         # reviewed-ignore-permissions: organization entity deletion, gated by System Manager role
         CompanyRepository.delete_doc(_SETTINGS_DOCTYPE, settings_name, ignore_permissions=True)
@@ -581,9 +582,9 @@ def get_item_attributes(company=None):
     
     # Custom attributes from SMRITI Custom Attribute DocType
     custom_attrs = []
-    if frappe.db.exists("DocType", "SMRITI Custom Attribute"):
+    if smriti.db.exists("DocType", "SMRITI Custom Attribute"):
         try:
-            db_attrs = frappe.get_all(
+            db_attrs = smriti.db.get_list(
                 "SMRITI Custom Attribute",
                 fields=["attribute_code", "attribute_name"]
             )
@@ -601,7 +602,7 @@ def get_item_attributes(company=None):
     # Fetch weights from SMRITI Attribute Layout
     weights = {}
     if company:
-        layout_entries = frappe.get_all(
+        layout_entries = smriti.db.get_list(
             "SMRITI Attribute Layout",
             filters={"company": company},
             fields=["attribute_id", "weight"]
@@ -656,7 +657,7 @@ def save_item_attributes(company=None, attributes=None):
 
     try:
         # Step 1: Capture before_state
-        existing_entries = frappe.get_all(
+        existing_entries = smriti.db.get_list(
             "SMRITI Attribute Layout",
             filters={"company": company},
             fields=["attribute_id", "weight"],
@@ -717,8 +718,8 @@ def save_item_attributes(company=None, attributes=None):
         CompanyRepository.commit()
         
     except Exception as e:
-        frappe.db.rollback()
-        frappe.log_error(title="Failed to save attribute layout", message=frappe.get_traceback())
+        smriti.db.rollback()
+        smriti.errors.log_error(title="Failed to save attribute layout", message=frappe.get_traceback())
         raise e
         
     return {"success": True, "message": _("Attribute layout saved successfully.")}
@@ -743,7 +744,7 @@ def reset_item_attributes(company=None):
     
     try:
         # Capture before_state
-        existing_entries = frappe.get_all(
+        existing_entries = smriti.db.get_list(
             "SMRITI Attribute Layout",
             filters={"company": company},
             fields=["attribute_id", "weight"],
@@ -773,8 +774,8 @@ def reset_item_attributes(company=None):
         CompanyRepository.commit()
         
     except Exception as e:
-        frappe.db.rollback()
-        frappe.log_error(title="Failed to reset attribute layout", message=frappe.get_traceback())
+        smriti.db.rollback()
+        smriti.errors.log_error(title="Failed to reset attribute layout", message=frappe.get_traceback())
         raise e
         
     return {"success": True, "message": _("Attribute layout reset successfully.")}

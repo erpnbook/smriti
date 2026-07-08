@@ -23,6 +23,7 @@ import os
 import unittest
 from unittest.mock import patch, MagicMock
 import frappe
+from smriti_retail_os import smriti
 import werkzeug.routing.exceptions
 
 class TestAuditFixes(unittest.TestCase):
@@ -32,45 +33,45 @@ class TestAuditFixes(unittest.TestCase):
         # Ensure SMRITI roles and profiles exist
         from smriti_retail_os.setup import setup_smriti_retail_os
         setup_smriti_retail_os()
-        frappe.db.commit()
+        smriti.db.commit()
 
         # Create a test cashier user if not exists
-        if not frappe.db.exists("User", "test_cashier@smriti.com"):
-            user = frappe.get_doc({
-                "doctype": "User",
+        if not smriti.db.exists("User", "test_cashier@smriti.com"):
+            user = smriti.documents.new("User")
+            user.update({
                 "email": "test_cashier@smriti.com",
                 "first_name": "Test Cashier",
                 "send_welcome_email": 0
             })
             user.insert(ignore_permissions=True)
             user.add_roles("SMRITI Cashier")
-            frappe.db.commit()
+            smriti.db.commit()
 
         # Create a test manager user if not exists
-        if not frappe.db.exists("User", "test_manager@smriti.com"):
-            user = frappe.get_doc({
-                "doctype": "User",
+        if not smriti.db.exists("User", "test_manager@smriti.com"):
+            user = smriti.documents.new("User")
+            user.update({
                 "email": "test_manager@smriti.com",
                 "first_name": "Test Manager",
                 "send_welcome_email": 0
             })
             user.insert(ignore_permissions=True)
             user.add_roles("SMRITI Store Manager")
-            frappe.db.commit()
+            smriti.db.commit()
 
         # Set dedicated PIN in both tabPassword and User table
         from frappe.utils.password import update_password
         update_password("test_manager@smriti.com", "123456", fieldname="custom_smriti_pin")
-        frappe.db.set_value("User", "test_manager@smriti.com", "custom_smriti_pin", "123456")
-        frappe.db.commit()
+        smriti.db.set_value("User", "test_manager@smriti.com", "custom_smriti_pin", "123456")
+        smriti.db.commit()
 
     @classmethod
     def tearDownClass(cls):
-        if frappe.db.exists("User", "test_cashier@smriti.com"):
-            frappe.db.delete("User", {"email": "test_cashier@smriti.com"})
-        if frappe.db.exists("User", "test_manager@smriti.com"):
-            frappe.db.delete("User", {"email": "test_manager@smriti.com"})
-        frappe.db.commit()
+        if smriti.db.exists("User", "test_cashier@smriti.com"):
+            smriti.db.delete("User", {"email": "test_cashier@smriti.com"})
+        if smriti.db.exists("User", "test_manager@smriti.com"):
+            smriti.db.delete("User", {"email": "test_manager@smriti.com"})
+        smriti.db.commit()
         super().tearDownClass()
 
     def setUp(self):
@@ -142,15 +143,15 @@ class TestAuditFixes(unittest.TestCase):
         from smriti_retail_os.billing_api import validate_manager_override
 
         # Clear existing logs for testing clean state
-        frappe.db.delete("Error Log", {"method": "SMRITI Failed PIN Override Attempt"})
-        frappe.db.commit()
+        smriti.db.delete("Error Log", {"method": "SMRITI Failed PIN Override Attempt"})
+        smriti.db.commit()
 
         # Submit wrong PIN
         res = validate_manager_override("wrongpin", "Test Action")
         self.assertFalse(res.get("authorized"))
 
         # Verify entry created in Error Log
-        logs = frappe.get_all("Error Log", filters={"method": "SMRITI Failed PIN Override Attempt"})
+        logs = smriti.db.get_list("Error Log", filters={"method": "SMRITI Failed PIN Override Attempt"})
         self.assertTrue(len(logs) >= 1)
 
     # ─── Password Length Test ─────────────────────────────────────────────────

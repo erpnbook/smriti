@@ -18,7 +18,8 @@ import subprocess
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 
 def run_backup():
     print("[SMRITI Backup Runner] Starting backup process...")
@@ -87,7 +88,7 @@ def run_backup():
     except Exception as ex:
         print(f"[SMRITI Backup Runner] ERROR: {ex}")
         try:
-            frappe.log_error("SMRITI Backup Runner Error", str(ex))
+            smriti.errors.log_error("SMRITI Backup Runner Error", str(ex))
         except Exception:
             import sys
             _frappe = sys.modules.get('frappe')

@@ -14,6 +14,7 @@
 # For license information, please see license.txt
 
 import frappe
+from smriti_retail_os import smriti
 from frappe.tests.utils import FrappeTestCase
 from frappe.utils import now_datetime, add_days, today
 from smriti_retail_os.balance_engine import get_party_balance, get_bulk_party_balances
@@ -22,46 +23,46 @@ from smriti_retail_os.ledger_engine import make_ledger_entry
 
 class TestPSV(FrappeTestCase):
     def setUp(self):
-        frappe.db.delete("SMRITI Party Stock Ledger Entry")
-        frappe.db.delete("SMRITI PSV Transaction")
-        frappe.db.delete("SMRITI Party Sales Upload")
-        frappe.db.delete("SMRITI Party Sales Item")
-        frappe.db.delete("SMRITI Party Physical Snapshot")
-        frappe.db.delete("SMRITI Party Physical Item")
-        frappe.db.delete("SMRITI PSV Reorder Rule")
-        frappe.db.delete("SMRITI PSV Exception Record")
+        smriti.db.delete("SMRITI Party Stock Ledger Entry")
+        smriti.db.delete("SMRITI PSV Transaction")
+        smriti.db.delete("SMRITI Party Sales Upload")
+        smriti.db.delete("SMRITI Party Sales Item")
+        smriti.db.delete("SMRITI Party Physical Snapshot")
+        smriti.db.delete("SMRITI Party Physical Item")
+        smriti.db.delete("SMRITI PSV Reorder Rule")
+        smriti.db.delete("SMRITI PSV Exception Record")
 
         # Clean up Sales Invoices and POS Invoices under Test PSV Company to prevent state leaks
-        invoice_names = frappe.get_all("Sales Invoice", filters={"company": "Test PSV Company"}, pluck="name")
+        invoice_names = smriti.db.get_list("Sales Invoice", filters={"company": "Test PSV Company"}, pluck="name")
         if invoice_names:
-            frappe.db.delete("Sales Invoice Item", {"parent": ["in", invoice_names]})
-            frappe.db.delete("Sales Invoice Payment", {"parent": ["in", invoice_names]})
-            frappe.db.delete("Sales Invoice", {"name": ["in", invoice_names]})
+            smriti.db.delete("Sales Invoice Item", {"parent": ["in", invoice_names]})
+            smriti.db.delete("Sales Invoice Payment", {"parent": ["in", invoice_names]})
+            smriti.db.delete("Sales Invoice", {"name": ["in", invoice_names]})
 
-        pos_invoice_names = frappe.get_all("POS Invoice", filters={"company": "Test PSV Company"}, pluck="name")
+        pos_invoice_names = smriti.db.get_list("POS Invoice", filters={"company": "Test PSV Company"}, pluck="name")
         if pos_invoice_names:
-            frappe.db.delete("POS Invoice Item", {"parent": ["in", pos_invoice_names]})
-            frappe.db.delete("POS Invoice", {"name": ["in", pos_invoice_names]})
+            smriti.db.delete("POS Invoice Item", {"parent": ["in", pos_invoice_names]})
+            smriti.db.delete("POS Invoice", {"name": ["in", pos_invoice_names]})
 
-        frappe.db.commit()
+        smriti.db.commit()
         try:
             frappe.cache().delete_keys("psv:*")
         except Exception:
             pass
 
         # 1. Resolve or Create basic link dependencies
-        self.uom = frappe.db.exists("UOM", "Nos") or frappe.db.get_value("UOM", {}, "name")
+        self.uom = smriti.db.exists("UOM", "Nos") or smriti.db.get("UOM", {}, "name")
         if not self.uom:
-            uom_doc = frappe.new_doc("UOM")
+            uom_doc = smriti.documents.new("UOM")
             uom_doc.uom_name = "Nos"
             # ignore_if_duplicate: prevents DuplicateEntryError when a prior test class
             # (e.g. TestPSVPhase1_1) committed 'Nos' before this setUp runs.
             uom_doc.insert(ignore_permissions=True, ignore_if_duplicate=True)
-            self.uom = frappe.db.exists("UOM", "Nos") or uom_doc.name
+            self.uom = smriti.db.exists("UOM", "Nos") or uom_doc.name
 
-        self.item_group = frappe.db.exists("Item Group", "All Item Groups") or frappe.db.get_value("Item Group", {}, "name")
+        self.item_group = smriti.db.exists("Item Group", "All Item Groups") or smriti.db.get("Item Group", {}, "name")
         if not self.item_group:
-            ig = frappe.new_doc("Item Group")
+            ig = smriti.documents.new("Item Group")
             ig.item_group_name = "All Item Groups"
             ig.is_group = 0
             ig.insert(ignore_permissions=True)
@@ -69,19 +70,19 @@ class TestPSV(FrappeTestCase):
 
         # 2. Create a mock company if missing
         self.company = "Test PSV Company"
-        if not frappe.db.exists("Company", self.company):
-            comp = frappe.new_doc("Company")
+        if not smriti.db.exists("Company", self.company):
+            comp = smriti.documents.new("Company")
             comp.company_name = self.company
             comp.country = "India"
             comp.default_currency = "INR"
             comp.insert(ignore_permissions=True)
 
         # Ensure valid GSTIN and Registered Address on Company for India Compliance
-        frappe.db.set_value("Company", self.company, "gstin", "27AAXFT2508H1ZR")
+        smriti.db.set_value("Company", self.company, "gstin", "27AAXFT2508H1ZR")
         
         addr_name = f"{self.company}-Registered-Test"
-        if not frappe.db.exists("Address", addr_name):
-            addr = frappe.new_doc("Address")
+        if not smriti.db.exists("Address", addr_name):
+            addr = smriti.documents.new("Address")
             addr.address_title = self.company
             addr.address_type = "Office"
             addr.address_line1 = "Test Street"
@@ -95,29 +96,29 @@ class TestPSV(FrappeTestCase):
             addr.gstin = "27AAXFT2508H1ZR"
             addr.append("links", {"link_doctype": "Company", "link_name": self.company})
             addr.insert(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
 
         # Resolve or create Warehouse for Test PSV Company
-        self.warehouse = frappe.db.get_value("Warehouse", {"company": self.company, "is_group": 0}, "name")
+        self.warehouse = smriti.db.get("Warehouse", {"company": self.company, "is_group": 0}, "name")
         if not self.warehouse:
-            w = frappe.new_doc("Warehouse")
+            w = smriti.documents.new("Warehouse")
             w.warehouse_name = "Test Stores"
             w.company = self.company
             w.insert(ignore_permissions=True)
             self.warehouse = w.name
 
         # Create valid GST HSN Code record for India Compliance
-        self.hsn_code = frappe.db.exists("GST HSN Code", "998311") or frappe.db.get_value("GST HSN Code", {}, "name")
+        self.hsn_code = smriti.db.exists("GST HSN Code", "998311") or smriti.db.get("GST HSN Code", {}, "name")
         if not self.hsn_code:
-            hsn = frappe.new_doc("GST HSN Code")
+            hsn = smriti.documents.new("GST HSN Code")
             hsn.hsn_code = "998311"
             hsn.description = "Test Services"
             hsn.insert(ignore_permissions=True)
             self.hsn_code = hsn.name
 
         # Resolve standard selling price list
-        if not frappe.db.exists("Price List", "Standard Selling"):
-            pl = frappe.new_doc("Price List")
+        if not smriti.db.exists("Price List", "Standard Selling"):
+            pl = smriti.documents.new("Price List")
             pl.price_list_name = "Standard Selling"
             pl.enabled = 1
             pl.selling = 1
@@ -127,25 +128,25 @@ class TestPSV(FrappeTestCase):
 
         # Ensure active Fiscal Year exists
         fy_name = "2026-2027"
-        if not frappe.db.exists("Fiscal Year", fy_name):
-            fy = frappe.new_doc("Fiscal Year")
+        if not smriti.db.exists("Fiscal Year", fy_name):
+            fy = smriti.documents.new("Fiscal Year")
             fy.year = fy_name
             fy.year_start_date = "2026-04-01"
             fy.year_end_date = "2027-03-31"
             fy.append("companies", {"company": self.company})
             fy.insert(ignore_permissions=True)
         else:
-            fy = frappe.get_doc("Fiscal Year", fy_name)
+            fy = smriti.documents.get("Fiscal Year", fy_name)
             if not any(c.company == self.company for c in fy.companies):
                 fy.append("companies", {"company": self.company})
                 fy.save(ignore_permissions=True)
 
         # Resolve or create Cost Center
-        self.cost_center = frappe.db.get_value("Cost Center", {"company": self.company, "is_group": 0}, "name")
+        self.cost_center = smriti.db.get("Cost Center", {"company": self.company, "is_group": 0}, "name")
         if not self.cost_center:
-            parent_cc = frappe.db.get_value("Cost Center", {"cost_center_name": self.company}, "name")
+            parent_cc = smriti.db.get("Cost Center", {"cost_center_name": self.company}, "name")
             if not parent_cc:
-                pcc = frappe.new_doc("Cost Center")
+                pcc = smriti.documents.new("Cost Center")
                 pcc.cost_center_name = self.company
                 pcc.company = self.company
                 pcc.is_group = 1
@@ -153,7 +154,7 @@ class TestPSV(FrappeTestCase):
                 pcc.insert(ignore_permissions=True)
                 parent_cc = pcc.name
                 
-            cc = frappe.new_doc("Cost Center")
+            cc = smriti.documents.new("Cost Center")
             cc.cost_center_name = "Test PSV Cost Center"
             cc.company = self.company
             cc.is_group = 0
@@ -162,11 +163,11 @@ class TestPSV(FrappeTestCase):
             self.cost_center = cc.name
 
         # Resolve or create Income Account
-        self.income_account = frappe.db.get_value("Account", {"company": self.company, "root_type": "Income", "is_group": 0}, "name")
+        self.income_account = smriti.db.get("Account", {"company": self.company, "root_type": "Income", "is_group": 0}, "name")
         if not self.income_account:
-            parent_account = frappe.db.get_value("Account", {"company": self.company, "root_type": "Income", "is_group": 1}, "name")
+            parent_account = smriti.db.get("Account", {"company": self.company, "root_type": "Income", "is_group": 1}, "name")
             if not parent_account:
-                p_acc = frappe.new_doc("Account")
+                p_acc = smriti.documents.new("Account")
                 p_acc.account_name = "Root Income Group"
                 p_acc.company = self.company
                 p_acc.root_type = "Income"
@@ -174,7 +175,7 @@ class TestPSV(FrappeTestCase):
                 p_acc.insert(ignore_permissions=True)
                 parent_account = p_acc.name
                 
-            acc = frappe.new_doc("Account")
+            acc = smriti.documents.new("Account")
             acc.account_name = "Sales - TEST"
             acc.company = self.company
             acc.root_type = "Income"
@@ -183,31 +184,31 @@ class TestPSV(FrappeTestCase):
             acc.insert(ignore_permissions=True)
             self.income_account = acc.name
 
-        round_off_cost_center = frappe.db.get_value("Company", self.company, "round_off_cost_center")
-        round_off_account = frappe.db.get_value("Company", self.company, "round_off_account")
+        round_off_cost_center = smriti.db.get("Company", self.company, "round_off_cost_center")
+        round_off_account = smriti.db.get("Company", self.company, "round_off_account")
 
         updates = {}
         if not round_off_cost_center:
             updates["round_off_cost_center"] = self.cost_center
         if not round_off_account:
-            updates["round_off_account"] = frappe.db.get_value("Account", {"company": self.company, "account_type": "Round Off"}, "name") or self.income_account
+            updates["round_off_account"] = smriti.db.get("Account", {"company": self.company, "account_type": "Round Off"}, "name") or self.income_account
 
         if updates:
-            frappe.db.set_value("Company", self.company, updates)
+            smriti.db.set_value("Company", self.company, updates)
 
 
         # 3. Create a mock customer if missing
         self.customer = "Test PSV Customer"
-        if not frappe.db.exists("Customer", self.customer):
-            cust = frappe.new_doc("Customer")
+        if not smriti.db.exists("Customer", self.customer):
+            cust = smriti.documents.new("Customer")
             cust.customer_name = self.customer
             cust.customer_type = "Individual"
             cust.insert(ignore_permissions=True)
 
         # 4. Create a mock item if missing
         self.item = "TEST-PSV-ITEM"
-        if not frappe.db.exists("Item", self.item):
-            itm = frappe.new_doc("Item")
+        if not smriti.db.exists("Item", self.item):
+            itm = smriti.documents.new("Item")
             itm.item_code = self.item
             itm.item_name = "Test PSV Item"
             itm.item_group = self.item_group
@@ -217,8 +218,8 @@ class TestPSV(FrappeTestCase):
 
         # 5. Create a Party Stock Account
         self.account_name = f"{self.customer}-Mumbai Outlet"
-        if not frappe.db.exists("SMRITI Party Stock Account", self.account_name):
-            acc = frappe.new_doc("SMRITI Party Stock Account")
+        if not smriti.db.exists("SMRITI Party Stock Account", self.account_name):
+            acc = smriti.documents.new("SMRITI Party Stock Account")
             acc.company = self.company
             acc.customer = self.customer
             acc.location_name = "Mumbai Outlet"
@@ -226,7 +227,7 @@ class TestPSV(FrappeTestCase):
 
     def tearDown(self):
         # Clean up created database records to prevent pollution
-        frappe.db.rollback()
+        smriti.db.rollback()
 
     def test_opening_balance(self):
         # 1. Import opening balances
@@ -239,7 +240,7 @@ class TestPSV(FrappeTestCase):
 
     def test_sales_invoice_hooks(self):
         # 1. Create a standard Sales Invoice referencing custom_party_stock_account
-        si = frappe.new_doc("Sales Invoice")
+        si = smriti.documents.new("Sales Invoice")
         si.company = self.company
         si.customer = self.customer
         si.custom_party_stock_account = self.account_name
@@ -271,7 +272,7 @@ class TestPSV(FrappeTestCase):
 
     def test_sales_invoice_cancellation_exception(self):
         # 1. Dispatch 100 units via invoice submit
-        si = frappe.new_doc("Sales Invoice")
+        si = smriti.documents.new("Sales Invoice")
         si.company = self.company
         si.customer = self.customer
         si.custom_party_stock_account = self.account_name
@@ -291,7 +292,7 @@ class TestPSV(FrappeTestCase):
         si.submit()
 
         # 2. Record weekly sales upload for 100 units (balance drops to 0)
-        upload = frappe.new_doc("SMRITI Party Sales Upload")
+        upload = smriti.documents.new("SMRITI Party Sales Upload")
         upload.company = self.company
         upload.party_stock_account = self.account_name
         upload.period_start_date = today()
@@ -312,7 +313,7 @@ class TestPSV(FrappeTestCase):
         si.cancel()
 
         # 4. Assert cancellation succeeds, but an Exception Record is created
-        ex_rec = frappe.db.exists("SMRITI PSV Exception Record", {
+        ex_rec = smriti.db.exists("SMRITI PSV Exception Record", {
             "party_stock_account": self.account_name,
             "sales_invoice": si.name,
             "item_code": self.item,
@@ -321,7 +322,7 @@ class TestPSV(FrappeTestCase):
         self.assertTrue(ex_rec)
 
         # Assert location status is set to Pending Reconciliation
-        loc_status = frappe.db.get_value("SMRITI Party Stock Account", self.account_name, "status")
+        loc_status = smriti.db.get("SMRITI Party Stock Account", self.account_name, "status")
         self.assertEqual(loc_status, "Pending Reconciliation")
 
     def test_sales_upload_validations(self):
@@ -330,7 +331,7 @@ class TestPSV(FrappeTestCase):
         import_opening_balances(self.company, self.account_name, items_data)
 
         # 2. Attempt to upload sales of 100 units (overselling) -> should throw ValidationError
-        upload = frappe.new_doc("SMRITI Party Sales Upload")
+        upload = smriti.documents.new("SMRITI Party Sales Upload")
         upload.company = self.company
         upload.party_stock_account = self.account_name
         upload.period_start_date = today()
@@ -345,7 +346,7 @@ class TestPSV(FrappeTestCase):
 
         # 3. Period Overlap Check:
         # Insert a valid upload for Week 1
-        u1 = frappe.new_doc("SMRITI Party Sales Upload")
+        u1 = smriti.documents.new("SMRITI Party Sales Upload")
         u1.company = self.company
         u1.party_stock_account = self.account_name
         u1.period_start_date = today()
@@ -360,7 +361,7 @@ class TestPSV(FrappeTestCase):
         u1.submit()
 
         # Attempt to insert overlapping period upload -> should throw ValidationError
-        u2 = frappe.new_doc("SMRITI Party Sales Upload")
+        u2 = smriti.documents.new("SMRITI Party Sales Upload")
         u2.company = self.company
         u2.party_stock_account = self.account_name
         u2.period_start_date = add_days(today(), 3)
@@ -379,7 +380,7 @@ class TestPSV(FrappeTestCase):
         import_opening_balances(self.company, self.account_name, items_data)
 
         # 2. Create snapshot with physical count 90 (system count is 100, variance is -10)
-        snap = frappe.new_doc("SMRITI Party Physical Snapshot")
+        snap = smriti.documents.new("SMRITI Party Physical Snapshot")
         snap.company = self.company
         snap.party_stock_account = self.account_name
         snap.audit_date = today()
@@ -394,7 +395,7 @@ class TestPSV(FrappeTestCase):
         self.assertRaises(frappe.ValidationError, snap.submit)
 
         # Approve and submit
-        snap = frappe.get_doc("SMRITI Party Physical Snapshot", snap.name)
+        snap = smriti.documents.get("SMRITI Party Physical Snapshot", snap.name)
         snap.status = "Approved"
         snap.save()
         snap.submit()
@@ -426,7 +427,7 @@ class TestPSV(FrappeTestCase):
             ))
             
         # Group insert in SQL
-        frappe.db.sql("""
+        smriti.db.sql("""
             INSERT INTO `tabSMRITI Party Stock Ledger Entry` 
             (name, company, posting_datetime, party_stock_account, item_code, qty, voucher_type, voucher_no, unique_hash)
             VALUES """ + ", ".join(["(%s, %s, %s, %s, %s, %s, %s, %s, %s)"] * 10000), 
@@ -471,7 +472,7 @@ class TestPSV(FrappeTestCase):
         
         db_error_raised = False
         try:
-            frappe.db.sql("""
+            smriti.db.sql("""
                 INSERT INTO `tabSMRITI Party Stock Ledger Entry`
                 (name, company, posting_datetime, party_stock_account, item_code, qty, voucher_type, voucher_no, unique_hash)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -500,25 +501,25 @@ class TestPSV(FrappeTestCase):
         ]
         for dt in doctypes:
             if dt == "SMRITI PSV Settings":
-                self.assertTrue(frappe.db.exists("DocType", dt))
+                self.assertTrue(smriti.db.exists("DocType", dt))
             else:
                 self.assertTrue(frappe.db.table_exists(dt))
             
         # Verify unique index on unique_hash field in ledger table
-        indices = frappe.db.sql("SHOW INDEX FROM `tabSMRITI Party Stock Ledger Entry` WHERE Key_name = 'unique_hash'")
-        self.assertTrue(len(indices) > 0 or frappe.db.exists("DocField", {"parent": "SMRITI Party Stock Ledger Entry", "fieldname": "unique_hash", "unique": 1}))
+        indices = smriti.db.sql("SHOW INDEX FROM `tabSMRITI Party Stock Ledger Entry` WHERE Key_name = 'unique_hash'")
+        self.assertTrue(len(indices) > 0 or smriti.db.exists("DocField", {"parent": "SMRITI Party Stock Ledger Entry", "fieldname": "unique_hash", "unique": 1}))
 
     def test_health_check_alerting(self):
         from smriti_retail_os.psv_service import run_psv_daily_health_check
         
         # Clean existing health alerts
-        frappe.db.delete("SMRITI PSV Exception Record")
-        frappe.db.commit()
+        smriti.db.delete("SMRITI PSV Exception Record")
+        smriti.db.commit()
         
         # 1. Run health check on clean state -> Should log late upload and never audited alerts
         run_psv_daily_health_check()
         
-        late_upload_alert = frappe.db.get_value("SMRITI PSV Exception Record", {
+        late_upload_alert = smriti.db.get("SMRITI PSV Exception Record", {
             "party_stock_account": self.account_name,
             "alert_type": "Late Upload"
         }, ["name", "severity", "status", "last_seen"], as_dict=True)
@@ -529,14 +530,14 @@ class TestPSV(FrappeTestCase):
         # 2. Run again -> verify alert suppression updates last_seen but doesn't duplicate
         last_seen_before = late_upload_alert.last_seen
         from frappe.utils import add_to_date
-        frappe.db.set_value("SMRITI PSV Exception Record", late_upload_alert.name, "last_seen", add_to_date(last_seen_before, minutes=-5))
+        smriti.db.set_value("SMRITI PSV Exception Record", late_upload_alert.name, "last_seen", add_to_date(last_seen_before, minutes=-5))
         
         run_psv_daily_health_check()
         
         # Open alerts count remains 2 (Late Upload, Never Audited)
-        self.assertEqual(frappe.db.count("SMRITI PSV Exception Record", {"party_stock_account": self.account_name, "status": "Pending Reconciliation"}), 2)
+        self.assertEqual(smriti.db.count("SMRITI PSV Exception Record", {"party_stock_account": self.account_name, "status": "Pending Reconciliation"}), 2)
         
-        last_seen_after = frappe.db.get_value("SMRITI PSV Exception Record", late_upload_alert.name, "last_seen")
+        last_seen_after = smriti.db.get("SMRITI PSV Exception Record", late_upload_alert.name, "last_seen")
         self.assertNotEqual(last_seen_before, last_seen_after)
 
         # 3. Trigger Critical Negative Balance
@@ -544,7 +545,7 @@ class TestPSV(FrappeTestCase):
         
         run_psv_daily_health_check()
         
-        neg_alert = frappe.db.get_value("SMRITI PSV Exception Record", {
+        neg_alert = smriti.db.get("SMRITI PSV Exception Record", {
             "party_stock_account": self.account_name,
             "alert_type": "Negative Balance"
         }, ["name", "severity", "status"], as_dict=True)
@@ -552,19 +553,19 @@ class TestPSV(FrappeTestCase):
         self.assertEqual(neg_alert.severity, "Critical")
         
         # Verify location status is set to Pending Reconciliation
-        loc_status = frappe.db.get_value("SMRITI Party Stock Account", self.account_name, "status")
+        loc_status = smriti.db.get("SMRITI Party Stock Account", self.account_name, "status")
         self.assertEqual(loc_status, "Pending Reconciliation")
 
         # 4. Resolve the negative balance
         import_opening_balances(self.company, self.account_name, [{"item_code": self.item, "qty": 100.0}])
         run_psv_daily_health_check()
         
-        neg_alert_status = frappe.db.get_value("SMRITI PSV Exception Record", neg_alert.name, "status")
+        neg_alert_status = smriti.db.get("SMRITI PSV Exception Record", neg_alert.name, "status")
         self.assertEqual(neg_alert_status, "Reconciled")
 
     def test_reorder_rule_validation(self):
         # 1. Either item_group or item_variant must be set
-        rule = frappe.new_doc("SMRITI PSV Reorder Rule")
+        rule = smriti.documents.new("SMRITI PSV Reorder Rule")
         rule.company = self.company
         rule.party_stock_account = self.account_name
         rule.lead_time_days = 7
@@ -573,7 +574,7 @@ class TestPSV(FrappeTestCase):
         self.assertRaises(frappe.ValidationError, rule.insert, ignore_permissions=True)
 
         # 2. Lead Time (Days) must be greater than zero
-        rule2 = frappe.new_doc("SMRITI PSV Reorder Rule")
+        rule2 = smriti.documents.new("SMRITI PSV Reorder Rule")
         rule2.company = self.company
         rule2.party_stock_account = self.account_name
         rule2.item_variant = self.item
@@ -583,7 +584,7 @@ class TestPSV(FrappeTestCase):
         self.assertRaises(frappe.ValidationError, rule2.insert, ignore_permissions=True)
 
         # 3. Safety Stock cannot be negative
-        rule3 = frappe.new_doc("SMRITI PSV Reorder Rule")
+        rule3 = smriti.documents.new("SMRITI PSV Reorder Rule")
         rule3.company = self.company
         rule3.party_stock_account = self.account_name
         rule3.item_variant = self.item
@@ -593,7 +594,7 @@ class TestPSV(FrappeTestCase):
         self.assertRaises(frappe.ValidationError, rule3.insert, ignore_permissions=True)
 
         # 4. Maximum Stock must be greater than Minimum Stock
-        rule4 = frappe.new_doc("SMRITI PSV Reorder Rule")
+        rule4 = smriti.documents.new("SMRITI PSV Reorder Rule")
         rule4.company = self.company
         rule4.party_stock_account = self.account_name
         rule4.item_variant = self.item
@@ -605,7 +606,7 @@ class TestPSV(FrappeTestCase):
         self.assertRaises(frappe.ValidationError, rule4.insert, ignore_permissions=True)
 
         # 5. Valid insert
-        rule5 = frappe.new_doc("SMRITI PSV Reorder Rule")
+        rule5 = smriti.documents.new("SMRITI PSV Reorder Rule")
         rule5.company = self.company
         rule5.party_stock_account = self.account_name
         rule5.item_variant = self.item
@@ -621,8 +622,8 @@ class TestPSV(FrappeTestCase):
         from smriti_retail_os.balance_engine import get_reorder_recommendation
 
         # Clean up existing rules
-        frappe.db.delete("SMRITI PSV Reorder Rule", {"company": self.company})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI PSV Reorder Rule", {"company": self.company})
+        smriti.db.commit()
 
         # Seed initial balance: 152 units (so that after 147 units of sales, 5 units remain)
         import_opening_balances(self.company, self.account_name, [{"item_code": self.item, "qty": 152.0}])
@@ -633,22 +634,22 @@ class TestPSV(FrappeTestCase):
             dt = add_days(now_datetime(), -i)
             name = f"LE-SALE-{uuid.uuid4().hex[:10]}-{i}"
             unique_hash = f"hash-{uuid.uuid4().hex}"
-            frappe.db.sql("""
+            smriti.db.sql("""
                 INSERT INTO `tabSMRITI Party Stock Ledger Entry`
                 (name, company, posting_datetime, party_stock_account, item_code, qty, voucher_type, voucher_no, unique_hash)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (name, self.company, dt, self.account_name, self.item, -7.0, "Sales", "MOCK-SALE", unique_hash))
         
-        frappe.db.commit()
+        smriti.db.commit()
 
         # Set Global defaults in Settings
-        settings = frappe.get_doc("SMRITI PSV Settings")
+        settings = smriti.documents.get_single("PSVSettings")
         settings.default_lead_time_days = 7
         settings.default_safety_stock = 10
         settings.default_target_days_cover = 14
         settings.reorder_avg_weeks = 4
         settings.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # ─── Priority 3: Global defaults ───
         # Weekly sale avg: 49.0 units. Daily sale: 7.0 units.
@@ -663,7 +664,7 @@ class TestPSV(FrappeTestCase):
 
         # ─── Priority 2: Item Group-level rule ───
         # Create group-level rule with lead_time_days = 5, safety_stock = 20, max_stock = 80
-        group_rule = frappe.new_doc("SMRITI PSV Reorder Rule")
+        group_rule = smriti.documents.new("SMRITI PSV Reorder Rule")
         group_rule.company = self.company
         group_rule.party_stock_account = self.account_name
         group_rule.item_group = self.item_group
@@ -672,7 +673,7 @@ class TestPSV(FrappeTestCase):
         group_rule.max_stock = 80
         group_rule.active = 1
         group_rule.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # reorder_level = (5 * 7) + 20 = 55.0
         # raw_need = max(0, 55.0 - 5.0) = 50.0
@@ -684,7 +685,7 @@ class TestPSV(FrappeTestCase):
 
         # ─── Priority 1: Variant-specific rule ───
         # Create variant-specific rule with lead_time_days = 3, safety_stock = 30, max_stock = 40
-        var_rule = frappe.new_doc("SMRITI PSV Reorder Rule")
+        var_rule = smriti.documents.new("SMRITI PSV Reorder Rule")
         var_rule.company = self.company
         var_rule.party_stock_account = self.account_name
         var_rule.item_variant = self.item
@@ -693,7 +694,7 @@ class TestPSV(FrappeTestCase):
         var_rule.max_stock = 40
         var_rule.active = 1
         var_rule.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # reorder_level = (3 * 7) + 30 = 51.0
         # raw_need = max(0, 51.0 - 5.0) = 46.0
@@ -750,8 +751,8 @@ class TestPSV(FrappeTestCase):
         
         self.assertNotEqual(res1, res2)
         
-        tx1 = frappe.get_doc("SMRITI PSV Transaction", res1)
-        tx2 = frappe.get_doc("SMRITI PSV Transaction", res2)
+        tx1 = smriti.documents.get("SMRITI PSV Transaction", res1)
+        tx2 = smriti.documents.get("SMRITI PSV Transaction", res2)
         
         self.assertNotEqual(tx1.reference_name, tx2.reference_name)
         self.assertNotEqual(tx1.opening_import_batch, tx2.opening_import_batch)
@@ -782,7 +783,7 @@ class TestPSV(FrappeTestCase):
         
         batch_ids = []
         for name in tx_names:
-            tx = frappe.get_doc("SMRITI PSV Transaction", name)
+            tx = smriti.documents.get("SMRITI PSV Transaction", name)
             batch_ids.append(tx.opening_import_batch)
             
             # Pattern validation

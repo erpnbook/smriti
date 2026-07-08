@@ -5,7 +5,8 @@
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from smriti_retail_os.balance_engine import get_all_party_balances
 
 def execute(filters=None):
@@ -40,7 +41,7 @@ def execute(filters=None):
         where += " AND s.audit_date <= %(to_date)s"
         values["to_date"] = filters["to_date"]
 
-    physical = frappe.db.sql(f"""
+    physical = smriti.db.sql(f"""
         SELECT s.party_stock_account, i.item_code,
                i.physical_qty, s.audit_date, s.status
         FROM `tabSMRITI Party Physical Snapshot` s

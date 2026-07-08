@@ -16,6 +16,7 @@ import json
 import shutil
 import datetime
 import frappe
+from smriti_retail_os import smriti
 from frappe.utils import add_days, now_datetime
 
 # Helper to append SDC directory dynamically
@@ -37,12 +38,12 @@ class TestKnowledgeGovernance(unittest.TestCase):
     def setUp(self):
         frappe.set_user("Administrator")
         # Ensure telemetry logs are cleaned before test
-        frappe.db.delete("SMRITI Knowledge Usage Log")
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Knowledge Usage Log")
+        smriti.db.commit()
 
     def tearDown(self):
-        frappe.db.delete("SMRITI Knowledge Usage Log")
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Knowledge Usage Log")
+        smriti.db.commit()
 
     def test_ske_public_api_compatibility(self):
         """Assert that SKE class has public methods locking the SKE public API surface."""
@@ -201,7 +202,7 @@ class TestKnowledgeGovernance(unittest.TestCase):
             confidence_source="None"
         )
         
-        logs = frappe.get_all(
+        logs = smriti.db.get_list(
             "SMRITI Knowledge Usage Log",
             filters={"query": "NonexistentXYZQueryTerm", "has_result": 0},
             fields=["name", "has_result"]
@@ -212,8 +213,8 @@ class TestKnowledgeGovernance(unittest.TestCase):
     def test_daily_scheduled_purge_task(self):
         """Assert automated scheduler purging removes log entries older than 90 days."""
         old_time = add_days(now_datetime(), -95)
-        doc1 = frappe.get_doc({
-            "doctype": "SMRITI Knowledge Usage Log",
+        doc1 = smriti.documents.new("KnowledgeUsageLog")
+        doc1.update({
             "event_type": "SEARCH",
             "query": "OldQuery",
             "has_result": 1,
@@ -223,8 +224,8 @@ class TestKnowledgeGovernance(unittest.TestCase):
         doc1.insert(ignore_permissions=True)
         
         new_time = add_days(now_datetime(), -50)
-        doc2 = frappe.get_doc({
-            "doctype": "SMRITI Knowledge Usage Log",
+        doc2 = smriti.documents.new("KnowledgeUsageLog")
+        doc2.update({
             "event_type": "SEARCH",
             "query": "NewQuery",
             "has_result": 1,
@@ -232,16 +233,16 @@ class TestKnowledgeGovernance(unittest.TestCase):
             "timestamp": new_time
         })
         doc2.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         
-        self.assertTrue(frappe.db.exists("SMRITI Knowledge Usage Log", doc1.name))
-        self.assertTrue(frappe.db.exists("SMRITI Knowledge Usage Log", doc2.name))
+        self.assertTrue(smriti.db.exists("SMRITI Knowledge Usage Log", doc1.name))
+        self.assertTrue(smriti.db.exists("SMRITI Knowledge Usage Log", doc2.name))
         
         from smriti_retail_os.tasks import daily_telemetry_cleanup
         daily_telemetry_cleanup()
         
-        self.assertFalse(frappe.db.exists("SMRITI Knowledge Usage Log", doc1.name))
-        self.assertTrue(frappe.db.exists("SMRITI Knowledge Usage Log", doc2.name))
+        self.assertFalse(smriti.db.exists("SMRITI Knowledge Usage Log", doc1.name))
+        self.assertTrue(smriti.db.exists("SMRITI Knowledge Usage Log", doc2.name))
 
     def test_no_hardcoded_evidence_badge(self):
         """Assert no hardcoded evidence badge strings remain in ai_integration_api.py."""

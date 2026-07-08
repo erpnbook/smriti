@@ -15,8 +15,9 @@
 # @date: 2026-06-19
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.utils import flt, now_datetime
 
 # DRY_RUN = True blocks database mutation and only performs dry-run validation, reporting counts and schemas.
@@ -71,7 +72,7 @@ def execute(dry_run=None):
         "SMRITI Benefit Audit Log"
     ]
 
-    missing_dt = [dt for dt in required_doctypes if not frappe.db.exists("DocType", dt)]
+    missing_dt = [dt for dt in required_doctypes if not smriti.db.exists("DocType", dt)]
     if missing_dt:
         print(f"ERROR: Missing DocType schemas: {missing_dt}")
         print("Ensure migrations have run or doctype JSONs are loaded first.")
@@ -86,7 +87,7 @@ def execute(dry_run=None):
             table_name = f"tab{doctype}"
             for idx_name, cols in indexes.items():
                 try:
-                    idx_rows = frappe.db.sql(f"SHOW INDEX FROM `{table_name}` WHERE Key_name = %s", (idx_name,), as_dict=True)
+                    idx_rows = smriti.db.sql(f"SHOW INDEX FROM `{table_name}` WHERE Key_name = %s", (idx_name,), as_dict=True)
                     if not idx_rows:
                         print(f" - [Warning] Missing database index: {idx_name} on `{table_name}` for columns {cols}")
                     else:
@@ -104,11 +105,11 @@ def execute(dry_run=None):
     instrument_types = ["LOYALTY", "CASHBACK", "STORE_CREDIT", "VOUCHER", "MEMBERSHIP"]
     print(f"Validating Benefit Instrument Types: {instrument_types}")
     for it in instrument_types:
-        if not frappe.db.exists("SMRITI Benefit Instrument Type", it):
+        if not smriti.db.exists("SMRITI Benefit Instrument Type", it):
             print(f" - [Seed Pending] Instrument Type: {it}")
             if not DRY_RUN:
-                doc = frappe.get_doc({
-                    "doctype": "SMRITI Benefit Instrument Type",
+                doc = smriti.documents.new("BenefitInstrumentType")
+                doc.update({
                     "type_name": it,
                     "description": f"{it} Benefit Classification"
                 })
@@ -137,11 +138,11 @@ def execute(dry_run=None):
 
     print("Validating Benefit Instruments...")
     for inst in instruments:
-        if not frappe.db.exists("SMRITI Benefit Instrument", inst["instrument_name"]):
+        if not smriti.db.exists("SMRITI Benefit Instrument", inst["instrument_name"]):
             print(f" - [Seed Pending] Instrument: {inst['instrument_name']}")
             if not DRY_RUN:
-                doc = frappe.get_doc({
-                    "doctype": "SMRITI Benefit Instrument",
+                doc = smriti.documents.new("BenefitInstrument")
+                doc.update({
                     **inst
                 })
                 doc.insert(ignore_permissions=True)
@@ -151,8 +152,8 @@ def execute(dry_run=None):
 
     # 4. Port tabSMRITI Wallet Ledger to tabSMRITI Benefit Ledger
     legacy_count = 0
-    if frappe.db.exists("DocType", "SMRITI Wallet Ledger"):
-        legacy_count = frappe.db.count("SMRITI Wallet Ledger")
+    if smriti.db.exists("DocType", "SMRITI Wallet Ledger"):
+        legacy_count = smriti.db.count("SMRITI Wallet Ledger")
     print(f"Legacy Wallet Ledger entries found: {legacy_count}")
 
     if legacy_count > 0:
@@ -161,7 +162,7 @@ def execute(dry_run=None):
         else:
             print(f" - [Porting] Executing SQL to port {legacy_count} records...")
             # Run SQL to insert legacy records into the new Benefit Ledger table
-            frappe.db.sql("""
+            smriti.db.sql("""
                 INSERT INTO `tabSMRITI Benefit Ledger` (
                     name, creation, modified, modified_by, owner, docstatus,
                     ledger_sequence, customer, company, benefit_instrument,
@@ -193,7 +194,7 @@ def execute(dry_run=None):
     if legacy_count > 0:
         # Fetch unique combinations of customer and company to compile wallets
         print("Calculating Benefit Wallet current-state cache balances...")
-        wallets_summary = frappe.db.sql("""
+        wallets_summary = smriti.db.sql("""
             select customer, company, 
                    sum(case when transaction_type = 'Credit' then amount else 0 end) -
                    sum(case when transaction_type = 'Debit' then amount else 0 end) as balance
@@ -210,14 +211,14 @@ def execute(dry_run=None):
             if DRY_RUN:
                 print(f" - [Dry Run] Wallet for Customer: {cust}, Company: {comp} -> Balance: ₹{bal}")
             else:
-                existing_wallet = frappe.db.exists("SMRITI Benefit Wallet", {
+                existing_wallet = smriti.db.exists("SMRITI Benefit Wallet", {
                     "customer": cust,
                     "company": comp,
                     "benefit_instrument": "Promo Cashback"
                 })
                 if not existing_wallet:
-                    wallet_doc = frappe.get_doc({
-                        "doctype": "SMRITI Benefit Wallet",
+                    wallet_doc = smriti.documents.new("BenefitWallet")
+                    wallet_doc.update({
                         "customer": cust,
                         "company": comp,
                         "benefit_instrument": "Promo Cashback",
@@ -226,7 +227,7 @@ def execute(dry_run=None):
                     })
                     wallet_doc.insert(ignore_permissions=True)
                 else:
-                    frappe.db.set_value("SMRITI Benefit Wallet", existing_wallet, {
+                    smriti.db.set_value("SMRITI Benefit Wallet", existing_wallet, {
                         "balance": bal,
                         "last_updated": now_datetime()
                     })
@@ -235,15 +236,15 @@ def execute(dry_run=None):
 
     # 6. Port Campaigns
     campaign_count = 0
-    if frappe.db.exists("DocType", "SMRITI Coupon Campaign"):
-        campaign_count = frappe.db.count("SMRITI Coupon Campaign")
+    if smriti.db.exists("DocType", "SMRITI Coupon Campaign"):
+        campaign_count = smriti.db.count("SMRITI Coupon Campaign")
     print(f"Legacy SMRITI Coupon Campaigns found: {campaign_count}")
 
     if campaign_count > 0:
         if DRY_RUN:
             print(f" - [Dry Run] Would port {campaign_count} SMRITI Coupon Campaigns to SMRITI Campaign.")
         else:
-            frappe.db.sql("""
+            smriti.db.sql("""
                 INSERT INTO `tabSMRITI Campaign` (
                     name, creation, modified, modified_by, owner, docstatus,
                     campaign_name, company, status, start_date, end_date,
@@ -265,7 +266,7 @@ def execute(dry_run=None):
 
     # 7. Commit
     if not DRY_RUN:
-        frappe.db.commit()
+        smriti.db.commit()
         print("✅ Migration patch executed successfully!")
     else:
         print("✅ Dry-run validation checks complete. No database mutations occurred.")

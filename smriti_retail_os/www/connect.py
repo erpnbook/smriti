@@ -5,8 +5,9 @@
 # @author:  Jawahar R. Mallah
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from smriti_retail_os.security_api import check_page_access
 from smriti_retail_os.integration.repository.queue_repository import QueueRepository
 
@@ -64,7 +65,7 @@ def get_queue_statistics() -> dict:
         "dead_letter": 0
     }
     
-    if not frappe.db.exists("DocType", "SMRITI Integration Queue"):
+    if not smriti.db.exists("DocType", "SMRITI Integration Queue"):
         return stats
         
     # Delegate to Repository
@@ -86,10 +87,10 @@ def get_recent_queue(limit=50):
     if frappe.session.user == "Guest":
         frappe.throw(_("Authentication required."), frappe.PermissionError)
         
-    if not frappe.db.exists("DocType", "SMRITI Integration Queue"):
+    if not smriti.db.exists("DocType", "SMRITI Integration Queue"):
         return []
         
-    return frappe.get_all(
+    return smriti.db.get_list(
         "SMRITI Integration Queue",
         fields=["name", "event_type", "document_type", "document_name", 
                 "adapter_id", "priority", "status", "retry_count", "last_attempt", "error_details"],
@@ -106,7 +107,7 @@ def trigger_manual_retry(queue_id):
         
     check_page_access("connect")
     
-    if not frappe.db.exists("SMRITI Integration Queue", queue_id):
+    if not smriti.db.exists("SMRITI Integration Queue", queue_id):
         frappe.throw(_("Queue entry {0} not found.").format(queue_id))
         
     # Delegate to Repository
@@ -118,11 +119,11 @@ def trigger_manual_retry(queue_id):
     IntegrationEngine.process_queue(limit=100)
     
     # Check new status
-    new_status = frappe.db.get_value("SMRITI Integration Queue", queue_id, "status")
+    new_status = smriti.db.get("SMRITI Integration Queue", queue_id, "status")
     return {
         "success": new_status == "Success",
         "new_status": new_status,
-        "error": frappe.db.get_value("SMRITI Integration Queue", queue_id, "error_details") if new_status != "Success" else ""
+        "error": smriti.db.get("SMRITI Integration Queue", queue_id, "error_details") if new_status != "Success" else ""
     }
 
 

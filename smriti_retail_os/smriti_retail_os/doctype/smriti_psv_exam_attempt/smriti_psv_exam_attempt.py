@@ -11,8 +11,9 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.model.document import Document
 import uuid
 
@@ -24,7 +25,7 @@ class SMRITIPSVExamAttempt(Document):
     def validate(self):
         # 1. Enforce single active attempt constraint (1 active attempt per exam per user)
         if self.is_new() and self.status == "In Progress":
-            active_attempt = frappe.db.get_value(
+            active_attempt = smriti.db.get(
                 "SMRITI PSV Exam Attempt",
                 filters={
                     "user": self.user,
@@ -41,7 +42,7 @@ class SMRITIPSVExamAttempt(Document):
 
         # 2. Lock completed attempts (prevent modifying passed/failed results)
         if not self.is_new():
-            db_status = frappe.db.get_value("SMRITI PSV Exam Attempt", self.name, "status")
+            db_status = smriti.db.get("SMRITI PSV Exam Attempt", self.name, "status")
             if db_status in ("Passed", "Failed") and self.status != db_status:
                 frappe.throw(
                     _("This exam attempt has already been graded and closed. It cannot be modified."),

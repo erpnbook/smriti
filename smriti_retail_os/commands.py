@@ -6,7 +6,8 @@
 #
 
 import click
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from frappe.commands import pass_context
 
 @click.command('smriti-audit-navigation')
@@ -32,7 +33,7 @@ def smriti_audit_navigation(context):
     click.echo(f"Canonical Menu IDs registered: {len(canonical_ids)}")
     
     # 2. Check overrides
-    overrides = frappe.get_all("SMRITI Navigation Override", fields=["name", "menu_id", "navigation_profile"])
+    overrides = smriti.db.get_list("SMRITI Navigation Override", fields=["name", "menu_id", "navigation_profile"])
     orphans = []
     for ov in overrides:
         if ov.menu_id not in canonical_ids:
@@ -46,9 +47,9 @@ def smriti_audit_navigation(context):
         click.secho("OK: No orphaned overrides found.", fg="green")
         
     # 3. Check duplicate ordering
-    profiles = frappe.get_all("SMRITI Navigation Profile", fields=["name"])
+    profiles = smriti.db.get_list("SMRITI Navigation Profile", fields=["name"])
     for prof in profiles:
-        doc = frappe.get_doc("SMRITI Navigation Profile", prof.name)
+        doc = smriti.documents.get("SMRITI Navigation Profile", prof.name)
         orders = doc.get("order_overrides") or []
         seen = {}
         dups = []

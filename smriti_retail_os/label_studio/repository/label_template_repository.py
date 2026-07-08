@@ -5,7 +5,8 @@
 # @author:  Jawahar R. Mallah
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 
 class LabelTemplateRepository:
     """
@@ -16,7 +17,7 @@ class LabelTemplateRepository:
     @staticmethod
     def get_template(template_name):
         """Retrieves raw print template document."""
-        return frappe.get_doc("SMRITI Print Template", template_name)
+        return smriti.documents.get("SMRITI Print Template", template_name)
 
     @staticmethod
     def get_templates_list(filters=None):

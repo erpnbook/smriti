@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 # SMRITI Purchase Studio — Purchase Validation Service
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.utils import flt
 
 
@@ -21,11 +22,11 @@ class PurchaseValidationService:
 			raise SmritiValidationError(_("Supplier is required."))
 		
 		# Check supplier exists
-		if not frappe.db.exists("SMRITI Supplier", po_doc.supplier):
+		if not smriti.db.exists("SMRITI Supplier", po_doc.supplier):
 			raise SmritiValidationError(_("Supplier '{0}' not found.").format(po_doc.supplier))
 		
 		# Check supplier disabled
-		disabled = frappe.db.get_value("SMRITI Supplier", po_doc.supplier, "disabled")
+		disabled = smriti.db.get("SMRITI Supplier", po_doc.supplier, "disabled")
 		if disabled:
 			raise SmritiValidationError(_("Supplier '{0}' is disabled.").format(po_doc.supplier))
 			

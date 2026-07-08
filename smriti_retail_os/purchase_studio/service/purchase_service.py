@@ -16,8 +16,9 @@
 # * Copyright (c) 2026 AITDL NETWORK. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.utils import flt, cint, nowdate, now_datetime
 
 from smriti_retail_os.purchase_studio.service.purchase_order_service import PurchaseOrderService
@@ -129,7 +130,7 @@ def list_grns(company=None, supplier=None, po_name=None, status=None,
     if company:
         filters["company"] = company
     if supplier:
-        erp_supplier = frappe.db.get_value("SMRITI Supplier", supplier, "erpnext_supplier")
+        erp_supplier = smriti.db.get("SMRITI Supplier", supplier, "erpnext_supplier")
         filters["supplier"] = erp_supplier or supplier
     if po_name:
         filters["smriti_source_po"] = po_name
@@ -209,7 +210,7 @@ def list_invoices(company=None, supplier=None, status=None, from_date=None,
     if company:
         filters["company"] = company
     if supplier:
-        erp_supplier = frappe.db.get_value("SMRITI Supplier", supplier, "erpnext_supplier")
+        erp_supplier = smriti.db.get("SMRITI Supplier", supplier, "erpnext_supplier")
         filters["supplier"] = erp_supplier or supplier
     if status:
         filters["status"] = status
@@ -257,7 +258,7 @@ def create_invoice(mode, supplier=None, grn_name=None, items_list=None, posting_
 
     pi_name = erp_adapter.build_and_submit_invoice(grn_name, posting_date=posting_date)
 
-    source_po = frappe.db.get_value("Purchase Receipt", grn_name, "smriti_source_po")
+    source_po = smriti.db.get("Purchase Receipt", grn_name, "smriti_source_po")
     if source_po:
         PurchaseWorkflowService.close(source_po)
 
@@ -283,7 +284,7 @@ def list_returns(company=None, supplier=None, from_date=None, to_date=None,
     if company:
         filters["company"] = company
     if supplier:
-        erp_supplier = frappe.db.get_value("SMRITI Supplier", supplier, "erpnext_supplier")
+        erp_supplier = smriti.db.get("SMRITI Supplier", supplier, "erpnext_supplier")
         filters["supplier"] = erp_supplier or supplier
     if from_date:
         filters["posting_date"] = [">=", from_date]
@@ -336,8 +337,8 @@ def get_supplier_ledger(supplier, from_date, to_date, company=None):
     company = company or frappe.defaults.get_user_default("Company")
 
     # Bridge SMRITI Supplier → ERPNext Supplier for GL lookup
-    erp_supplier = frappe.db.get_value("SMRITI Supplier", supplier, "erpnext_supplier") or supplier
-    supplier_name = frappe.db.get_value("SMRITI Supplier", supplier, "supplier_name") or supplier
+    erp_supplier = smriti.db.get("SMRITI Supplier", supplier, "erpnext_supplier") or supplier
+    supplier_name = smriti.db.get("SMRITI Supplier", supplier, "supplier_name") or supplier
 
     # Read actual GL entries — SMRITI reads GL, never writes it
     gl_entries = erp_adapter.get_supplier_gl_entries(erp_supplier, from_date, to_date, company)
@@ -390,7 +391,7 @@ def search_items(query):
     check_any_purchase_role()
     if not query or len(query) < 2:
         return []
-    return frappe.get_all(
+    return smriti.db.get_list(
         "Item",
         filters={"disabled": 0, "item_code": ["like", f"%{query}%"]},
         fields=["name as item_code", "item_name", "standard_rate", "has_variants", "variant_of", "stock_uom"],
@@ -409,7 +410,7 @@ def get_purchase_analytics(company=None, from_date=None, to_date=None):
     — not SMRITI PO amounts which are pre-GST intent records.
     """
     check_any_purchase_role()
-    company = company or frappe.defaults.get_user_default("Company") or frappe.db.get_value("Company", {}, "name")
+    company = company or frappe.defaults.get_user_default("Company") or smriti.db.get("Company", {}, "name")
     return erp_adapter.get_purchase_spend_analytics(company, from_date=from_date, to_date=to_date)
 
 
@@ -419,7 +420,7 @@ def get_supplier_performance(company=None, from_date=None, to_date=None, top_n=1
     Delegates to erp_adapter to keep all DocType queries in the adapter layer.
     """
     check_any_purchase_role()
-    company = company or frappe.defaults.get_user_default("Company") or frappe.db.get_value("Company", {}, "name")
+    company = company or frappe.defaults.get_user_default("Company") or smriti.db.get("Company", {}, "name")
     return erp_adapter.get_supplier_performance_data(
         company, from_date=from_date, to_date=to_date, top_n=top_n
     )
@@ -468,9 +469,9 @@ def get_po_matrix_print_data(po_name):
     po = PurchaseOrderService.get_purchase_order_detail(po_name)
 
     # Load company info
-    company = po.get("company") or frappe.defaults.get_user_default("Company") or frappe.db.get_value("Company", {}, "name")
-    comp_doc = frappe.get_doc("Company", company) if frappe.db.exists("Company", company) else None
-    cs = frappe.db.get_value(
+    company = po.get("company") or frappe.defaults.get_user_default("Company") or smriti.db.get("Company", {}, "name")
+    comp_doc = smriti.documents.get("Company", company) if smriti.db.exists("Company", company) else None
+    cs = smriti.db.get(
         "SMRITI Company Settings", {"company": company},
         ["store_trade_name", "store_logo_url", "receipt_footer_text"],
         as_dict=True
@@ -486,7 +487,7 @@ def get_po_matrix_print_data(po_name):
     }
 
     # Supplier info
-    supplier_doc = frappe.db.get_value(
+    supplier_doc = smriti.db.get(
         "SMRITI Supplier", po.get("supplier"),
         ["supplier_name", "billing_address", "tax_id", "mobile_no", "email_id"],
         as_dict=True
@@ -502,7 +503,7 @@ def get_po_matrix_print_data(po_name):
             continue
 
         # Read attributes from Item Variant Attribute table
-        attrs = frappe.db.get_all(
+        attrs = smriti.db.get_list(
             "Item Variant Attribute",
             filters={"parent": item_code},
             fields=["attribute", "attribute_value"]
@@ -513,8 +514,8 @@ def get_po_matrix_print_data(po_name):
 
         # Resolve article from item meta
         article = (
-            frappe.db.get_value("Item", item_code, "custom_style_code")
-            or frappe.db.get_value("Item", item_code, "variant_of")
+            smriti.db.get("Item", item_code, "custom_style_code")
+            or smriti.db.get("Item", item_code, "variant_of")
             or item_code
         )
 
@@ -538,9 +539,9 @@ def get_po_matrix_print_data(po_name):
     sorted_sizes = sorted(all_sizes, key=size_sort_key)
 
     # Resolve product image (first attachment on the PO document)
-    image_url = frappe.db.get_value("SMRITI Purchase Order", po_name, "image") or ""
+    image_url = smriti.db.get("SMRITI Purchase Order", po_name, "image") or ""
     if not image_url:
-        attachments = frappe.db.get_all(
+        attachments = smriti.db.get_list(
             "File",
             filters={"attached_to_doctype": "SMRITI Purchase Order", "attached_to_name": po_name},
             fields=["file_url"],
@@ -586,8 +587,8 @@ def get_size_presets():
     the user to configure size groups when defaults are active.
     """
     import json
-    company = frappe.defaults.get_user_default("Company") or frappe.db.get_value("Company", {}, "name")
-    raw = frappe.db.get_value("SMRITI Company Settings", {"company": company}, "size_groups_json") or ""
+    company = frappe.defaults.get_user_default("Company") or smriti.db.get("Company", {}, "name")
+    raw = smriti.db.get("SMRITI Company Settings", {"company": company}, "size_groups_json") or ""
     try:
         presets = json.loads(raw) if raw else {}
     except Exception:
@@ -614,15 +615,15 @@ def resolve_variant_item(article, color, size):
         return None
 
     # Find all variants of the article (by variant_of or custom_style_code)
-    items = frappe.db.get_all("Item", filters={"disabled": 0, "variant_of": article}, fields=["name"])
+    items = smriti.db.get_list("Item", filters={"disabled": 0, "variant_of": article}, fields=["name"])
     if not items:
-        items = frappe.db.get_all("Item", filters={"disabled": 0, "custom_style_code": article}, fields=["name"])
+        items = smriti.db.get_list("Item", filters={"disabled": 0, "custom_style_code": article}, fields=["name"])
     if not items:
-        return article if frappe.db.exists("Item", article) else None
+        return article if smriti.db.exists("Item", article) else None
 
     # Batch-fetch ALL attributes for ALL variants in a single query (eliminates N+1)
     item_codes = [i.name for i in items]
-    all_attrs = frappe.db.get_all(
+    all_attrs = smriti.db.get_list(
         "Item Variant Attribute",
         filters={"parent": ["in", item_codes]},
         fields=["parent", "attribute", "attribute_value"]

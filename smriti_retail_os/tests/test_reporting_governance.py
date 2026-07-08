@@ -11,6 +11,7 @@
 #
 
 import frappe
+from smriti_retail_os import smriti
 import unittest
 import json
 from smriti_retail_os.reports_api import SMRITIReportEngine
@@ -19,22 +20,22 @@ class TestReportingGovernance(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         try:
-            frappe.db.rollback()
+            smriti.db.rollback()
         except Exception:
             pass
         # Clean up test users once at start
-        frappe.db.delete("User", {"email": ["in", ["user_a@example.com", "user_b@example.com", "test_user@example.com"]]})
-        frappe.db.commit()
+        smriti.db.delete("User", {"email": ["in", ["user_a@example.com", "user_b@example.com", "test_user@example.com"]]})
+        smriti.db.commit()
 
     @classmethod
     def tearDownClass(cls):
         try:
-            frappe.db.rollback()
+            smriti.db.rollback()
         except Exception:
             pass
         # Clean up test users at the end of class
-        frappe.db.delete("User", {"email": ["in", ["user_a@example.com", "user_b@example.com", "test_user@example.com"]]})
-        frappe.db.commit()
+        smriti.db.delete("User", {"email": ["in", ["user_a@example.com", "user_b@example.com", "test_user@example.com"]]})
+        smriti.db.commit()
 
     def setUp(self):
         frappe.clear_cache()
@@ -47,38 +48,38 @@ class TestReportingGovernance(unittest.TestCase):
 
     def cleanup_records(self):
         try:
-            frappe.db.rollback()
+            smriti.db.rollback()
         except Exception:
             pass
         # Clean up test business terms
         test_terms = ["tst_dim_approved", "tst_meas_approved", "tst_meas_no_agg", "tst_term_deprecated", "tst_term_blocked", "tst_term_unapproved", "tst_meas_items_qty"]
         for term_id in test_terms:
-            frappe.db.delete("SMRITI Business Term", {"term_id": term_id})
-            frappe.db.delete("SMRITI Business Term", {"dictionary_key": term_id})
+            smriti.db.delete("SMRITI Business Term", {"term_id": term_id})
+            smriti.db.delete("SMRITI Business Term", {"dictionary_key": term_id})
         
         # Clean up test formulas
         test_formulas = ["TST-FRM-001", "TST-FRM-002", "TST-FRM-003"]
         for formula_id in test_formulas:
-            frappe.db.delete("SMRITI Formula Definition", {"formula_id": formula_id})
+            smriti.db.delete("SMRITI Formula Definition", {"formula_id": formula_id})
         
         # Clean up test report template
-        frappe.db.delete("SMRITI Report Template", {"name": "tst_gov_report"})
-        frappe.db.delete("SMRITI PSV Activity Log", {"reference_name": "tst_gov_report"})
+        smriti.db.delete("SMRITI Report Template", {"name": "tst_gov_report"})
+        smriti.db.delete("SMRITI PSV Activity Log", {"reference_name": "tst_gov_report"})
         
         # Clean up saved views for test report template
-        frappe.db.delete("SMRITI Saved View", {"report_template": "tst_gov_report"})
+        smriti.db.delete("SMRITI Saved View", {"report_template": "tst_gov_report"})
 
         # Clean up Knowledge Asset and Knowledge Relation
         all_asset_uris = [f"smriti:term:{t}" for t in test_terms] + [f"smriti:formula:{f}" for f in test_formulas]
-        asset_names = frappe.get_all("SMRITI Knowledge Asset", filters={"asset_uri": ["in", all_asset_uris]}, pluck="name")
+        asset_names = smriti.db.get_list("SMRITI Knowledge Asset", filters={"asset_uri": ["in", all_asset_uris]}, pluck="name")
         if asset_names:
-            frappe.db.delete("SMRITI Knowledge Relation", {"source_asset_id": ["in", asset_names]})
-            frappe.db.delete("SMRITI Knowledge Relation", {"target_asset_id": ["in", asset_names]})
-            frappe.db.delete("SMRITI Knowledge Asset", {"name": ["in", asset_names]})
+            smriti.db.delete("SMRITI Knowledge Relation", {"source_asset_id": ["in", asset_names]})
+            smriti.db.delete("SMRITI Knowledge Relation", {"target_asset_id": ["in", asset_names]})
+            smriti.db.delete("SMRITI Knowledge Asset", {"name": ["in", asset_names]})
             for uri in all_asset_uris:
                 frappe.cache().delete_value(f"smriti:skos:asset:{uri}")
         
-        frappe.db.commit()
+        smriti.db.commit()
 
         # Clean up dynamic report config
         from smriti_retail_os.reports_api import REPORT_QUERIES
@@ -88,7 +89,7 @@ class TestReportingGovernance(unittest.TestCase):
     def create_test_records(self):
         # Create test users once to satisfy link validation
         for email, name in [("user_a@example.com", "User A"), ("user_b@example.com", "User B"), ("test_user@example.com", "Test User")]:
-            if not frappe.db.exists("User", email):
+            if not smriti.db.exists("User", email):
                 frappe.get_doc({
                     "doctype": "User",
                     "email": email,
@@ -295,7 +296,7 @@ class TestReportingGovernance(unittest.TestCase):
             "cache_minutes": 0
         }).insert(ignore_permissions=True)
 
-        frappe.db.commit()
+        smriti.db.commit()
 
     def test_approved_report_executes(self):
         # A valid report with approved terms and approved formulas should run without exceptions
@@ -306,10 +307,10 @@ class TestReportingGovernance(unittest.TestCase):
 
     def test_unregistered_term_fails(self):
         # Set template columns to include an unregistered term
-        frappe.db.set_value("SMRITI Report Template", "tst_gov_report", "columns_json", json.dumps([
+        smriti.db.set_value("SMRITI Report Template", "tst_gov_report", "columns_json", json.dumps([
             {"fieldname": "unregistered_term_xyz", "label": "Invalid"}
         ]))
-        frappe.db.commit()
+        smriti.db.commit()
         
         engine = SMRITIReportEngine("tst_gov_report")
         with self.assertRaises(frappe.ValidationError) as context:
@@ -317,10 +318,10 @@ class TestReportingGovernance(unittest.TestCase):
         self.assertIn("not defined in the SMRITI Business Dictionary", str(context.exception))
 
     def test_deprecated_term_fails(self):
-        frappe.db.set_value("SMRITI Report Template", "tst_gov_report", "columns_json", json.dumps([
+        smriti.db.set_value("SMRITI Report Template", "tst_gov_report", "columns_json", json.dumps([
             {"fieldname": "tst_term_deprecated", "label": "Deprecated"}
         ]))
-        frappe.db.commit()
+        smriti.db.commit()
         
         engine = SMRITIReportEngine("tst_gov_report")
         with self.assertRaises(frappe.ValidationError) as context:
@@ -328,10 +329,10 @@ class TestReportingGovernance(unittest.TestCase):
         self.assertTrue("deprecated" in str(context.exception) or "not approved" in str(context.exception))
 
     def test_blocked_term_fails(self):
-        frappe.db.set_value("SMRITI Report Template", "tst_gov_report", "columns_json", json.dumps([
+        smriti.db.set_value("SMRITI Report Template", "tst_gov_report", "columns_json", json.dumps([
             {"fieldname": "tst_term_blocked", "label": "Blocked"}
         ]))
-        frappe.db.commit()
+        smriti.db.commit()
         
         engine = SMRITIReportEngine("tst_gov_report")
         with self.assertRaises(frappe.ValidationError) as context:
@@ -339,10 +340,10 @@ class TestReportingGovernance(unittest.TestCase):
         self.assertIn("not approved", str(context.exception))
 
     def test_unapproved_term_fails(self):
-        frappe.db.set_value("SMRITI Report Template", "tst_gov_report", "columns_json", json.dumps([
+        smriti.db.set_value("SMRITI Report Template", "tst_gov_report", "columns_json", json.dumps([
             {"fieldname": "tst_term_unapproved", "label": "Unapproved"}
         ]))
-        frappe.db.commit()
+        smriti.db.commit()
         
         engine = SMRITIReportEngine("tst_gov_report")
         with self.assertRaises(frappe.ValidationError) as context:
@@ -350,10 +351,10 @@ class TestReportingGovernance(unittest.TestCase):
         self.assertIn("not approved", str(context.exception))
 
     def test_missing_aggregation_on_measure_fails(self):
-        frappe.db.set_value("SMRITI Report Template", "tst_gov_report", "columns_json", json.dumps([
+        smriti.db.set_value("SMRITI Report Template", "tst_gov_report", "columns_json", json.dumps([
             {"fieldname": "tst_meas_no_agg", "label": "No Aggregation"}
         ]))
-        frappe.db.commit()
+        smriti.db.commit()
         
         engine = SMRITIReportEngine("tst_gov_report")
         with self.assertRaises(frappe.ValidationError) as context:
@@ -362,13 +363,13 @@ class TestReportingGovernance(unittest.TestCase):
 
     def test_unapproved_linked_formula_fails(self):
         # Link unapproved formula to tst_meas_approved
-        term_doc = frappe.get_doc("SMRITI Business Term", {"term_id": "tst_meas_approved"})
+        term_doc = smriti.documents.get("SMRITI Business Term", {"term_id": "tst_meas_approved"})
         term_doc.set("related_formulas", [])
         term_doc.append("related_formulas", {
             "formula_id": self.f_unapproved.name
         })
         term_doc.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         engine = SMRITIReportEngine("tst_gov_report")
         with self.assertRaises(frappe.ValidationError) as context:
@@ -377,13 +378,13 @@ class TestReportingGovernance(unittest.TestCase):
 
     def test_inactive_linked_formula_fails(self):
         # Link inactive formula to tst_meas_approved
-        term_doc = frappe.get_doc("SMRITI Business Term", {"term_id": "tst_meas_approved"})
+        term_doc = smriti.documents.get("SMRITI Business Term", {"term_id": "tst_meas_approved"})
         term_doc.set("related_formulas", [])
         term_doc.append("related_formulas", {
             "formula_id": self.f_inactive.name
         })
         term_doc.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         engine = SMRITIReportEngine("tst_gov_report")
         with self.assertRaises(frappe.ValidationError) as context:
@@ -392,14 +393,14 @@ class TestReportingGovernance(unittest.TestCase):
 
     def test_missing_linked_formula_fails(self):
         # Link non-existent formula to tst_meas_approved
-        term_doc = frappe.get_doc("SMRITI Business Term", {"term_id": "tst_meas_approved"})
+        term_doc = smriti.documents.get("SMRITI Business Term", {"term_id": "tst_meas_approved"})
         term_doc.set("related_formulas", [])
         term_doc.append("related_formulas", {
             "formula_id": "NON-EXISTENT"
         })
         term_doc.flags.ignore_links = True
         term_doc.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         engine = SMRITIReportEngine("tst_gov_report")
         with self.assertRaises(frappe.ValidationError) as context:
@@ -447,7 +448,7 @@ class TestReportingGovernance(unittest.TestCase):
         finally:
             frappe.db.sql = original_sql
         
-        logs = frappe.get_all("SMRITI PSV Activity Log", filters={
+        logs = smriti.db.get_list("SMRITI PSV Activity Log", filters={
             "reference_doctype": "SMRITI Report Template",
             "reference_name": "tst_gov_report",
             "action_type": "Formula Explained"
@@ -498,14 +499,14 @@ class TestReportingGovernance(unittest.TestCase):
         from smriti_retail_os.reports_api import export_smriti_report
         
         # Clear existing logs for report
-        frappe.db.delete("SMRITI Audit Event", {"event_type": "REPORT_EXPORTED"})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Audit Event", {"event_type": "REPORT_EXPORTED"})
+        smriti.db.commit()
         
         # Run export
         export_smriti_report("tst_gov_report", filters={"company": "_Test Company"})
         
         # Fetch log
-        logs = frappe.get_all("SMRITI Audit Event", filters={"event_type": "REPORT_EXPORTED"}, fields=["after_state", "user", "company"])
+        logs = smriti.db.get_list("SMRITI Audit Event", filters={"event_type": "REPORT_EXPORTED"}, fields=["after_state", "user", "company"])
         self.assertTrue(len(logs) > 0)
         
         payload = json.loads(logs[0]["after_state"])
@@ -546,7 +547,7 @@ class TestReportingGovernance(unittest.TestCase):
         # Verify empty role access templates block non-manager users.
         self.template.set("role_access", [])
         self.template.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         
         # Mock session user with custom non-admin roles
         original_get_roles = frappe.get_roles
@@ -601,27 +602,27 @@ class TestReportingGovernance(unittest.TestCase):
         self.assertIn("Invalid JSON format", str(context.exception))
         
         # Clean up
-        frappe.db.delete("SMRITI Saved View", {"report_template": "tst_gov_report"})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Saved View", {"report_template": "tst_gov_report"})
+        smriti.db.commit()
 
     def test_template_audit_and_versioning_test_rep_006(self):
         # TEST-REP-006 (Template Audit & Versioning)
         # Verify modifying a template's details logs audit payload and increments version.
-        frappe.db.delete("SMRITI Audit Event", {"event_type": "REPORT_TEMPLATE_MODIFIED"})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Audit Event", {"event_type": "REPORT_TEMPLATE_MODIFIED"})
+        smriti.db.commit()
         
-        template_doc = frappe.get_doc("SMRITI Report Template", "tst_gov_report")
+        template_doc = smriti.documents.get("SMRITI Report Template", "tst_gov_report")
         old_version = template_doc.template_version or 1
         template_doc.report_name = "Test Governance Report Modified"
         template_doc.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         
         # Check version incremented
-        updated_template = frappe.get_doc("SMRITI Report Template", "tst_gov_report")
+        updated_template = smriti.documents.get("SMRITI Report Template", "tst_gov_report")
         self.assertEqual(updated_template.template_version, old_version + 1)
         
         # Check audit event log
-        logs = frappe.get_all("SMRITI Audit Event", filters={"event_type": "REPORT_TEMPLATE_MODIFIED"}, fields=["before_state", "after_state"])
+        logs = smriti.db.get_list("SMRITI Audit Event", filters={"event_type": "REPORT_TEMPLATE_MODIFIED"}, fields=["before_state", "after_state"])
         self.assertTrue(len(logs) > 0)
         
         before = json.loads(logs[0]["before_state"])
@@ -641,14 +642,14 @@ class TestReportingGovernance(unittest.TestCase):
             "visible_columns_json": '[]'
         })
         view.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         
         # Login as User A and try to edit -> should fail
         frappe.session.user = "user_a@example.com"
         original_get_roles = frappe.get_roles
         frappe.get_roles = lambda *args, **kwargs: ["SMRITI Store Manager"]
         
-        view_doc = frappe.get_doc("SMRITI Saved View", view.name)
+        view_doc = smriti.documents.get("SMRITI Saved View", view.name)
         view_doc.view_name = "User B View Edited"
         with self.assertRaises(frappe.PermissionError):
             view_doc.save(ignore_permissions=True)
@@ -660,8 +661,8 @@ class TestReportingGovernance(unittest.TestCase):
         # Restore original
         frappe.get_roles = original_get_roles
         frappe.session.user = "Administrator"
-        frappe.db.delete("SMRITI Saved View", {"name": view.name})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Saved View", {"name": view.name})
+        smriti.db.commit()
 
     def test_export_permission_enforcement_test_rep_008(self):
         # TEST-REP-008 (Export Permission Enforcement)
@@ -672,7 +673,7 @@ class TestReportingGovernance(unittest.TestCase):
             "export_allowed": 0
         })
         self.template.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         
         original_get_roles = frappe.get_roles
         frappe.get_roles = lambda *args, **kwargs: ["SMRITI Cashier"]
@@ -687,14 +688,14 @@ class TestReportingGovernance(unittest.TestCase):
         frappe.session.user = "Administrator"
         frappe.get_roles = original_get_roles
         
-        t_doc = frappe.get_doc("SMRITI Report Template", "tst_gov_report")
+        t_doc = smriti.documents.get("SMRITI Report Template", "tst_gov_report")
         t_doc.set("role_access", [])
         t_doc.append("role_access", {
             "role": "SMRITI Cashier",
             "export_allowed": 1
         })
         t_doc.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         
         # Test again as cashier -> should now succeed
         frappe.get_roles = lambda *args, **kwargs: ["SMRITI Cashier"]
@@ -710,12 +711,12 @@ class TestReportingGovernance(unittest.TestCase):
     def test_concurrent_template_versioning_test_rep_009(self):
         # TEST-REP-009 (Concurrent Template Versioning)
         # Verify template version assignment is serialized and increments sequentially.
-        template_doc = frappe.get_doc("SMRITI Report Template", "tst_gov_report")
+        template_doc = smriti.documents.get("SMRITI Report Template", "tst_gov_report")
         v1 = template_doc.template_version or 1
         
         # Simulating concurrent fetch:
-        doc1 = frappe.get_doc("SMRITI Report Template", "tst_gov_report")
-        doc2 = frappe.get_doc("SMRITI Report Template", "tst_gov_report")
+        doc1 = smriti.documents.get("SMRITI Report Template", "tst_gov_report")
+        doc2 = smriti.documents.get("SMRITI Report Template", "tst_gov_report")
         
         doc1.save(ignore_permissions=True)
         
@@ -726,9 +727,9 @@ class TestReportingGovernance(unittest.TestCase):
         # Reloading doc2 gets the new version and timestamp, then saving increments version again
         doc2.reload()
         doc2.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         
-        final_doc = frappe.get_doc("SMRITI Report Template", "tst_gov_report")
+        final_doc = smriti.documents.get("SMRITI Report Template", "tst_gov_report")
         self.assertEqual(final_doc.template_version, v1 + 2)
 
     def test_incompatible_report_column(self):
@@ -753,17 +754,17 @@ class TestReportingGovernance(unittest.TestCase):
             "definition": "Approved test items quantity.",
             "hinglish_definition": "Approved test items quantity Hinglish."
         }).insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # Update the report template columns to include this incompatible column
-        t_doc = frappe.get_doc("SMRITI Report Template", "tst_gov_report")
+        t_doc = smriti.documents.get("SMRITI Report Template", "tst_gov_report")
         original_columns = t_doc.columns_json
         t_doc.columns_json = json.dumps([
             {"fieldname": "tst_dim_approved", "label": "Date"},
             {"fieldname": "tst_meas_items_qty", "label": "Incompatible Qty"}
         ])
         t_doc.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # base_sql does not join POS Invoice Item, so running the report should throw a ValidationError
         engine = SMRITIReportEngine("tst_gov_report")
@@ -780,7 +781,7 @@ class TestReportingGovernance(unittest.TestCase):
         t_doc.reload()
         t_doc.columns_json = original_columns
         t_doc.save(ignore_permissions=True)
-        frappe.db.delete("SMRITI Business Term", {"term_id": "tst_meas_items_qty"})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Business Term", {"term_id": "tst_meas_items_qty"})
+        smriti.db.commit()
 
 

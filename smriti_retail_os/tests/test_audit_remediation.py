@@ -17,6 +17,7 @@
 #   F5 — Transaction kernel permission enforcement (ignore_permissions is guarded)
 
 import frappe
+from smriti_retail_os import smriti
 import unittest
 import json
 from unittest.mock import patch, MagicMock, call
@@ -513,7 +514,7 @@ class TestFinding3SMTPEncryption(unittest.TestCase):
             "use_tls": 1,
         }
         frappe.db.set_default("smriti_backup_settings", json.dumps(legacy_settings))
-        frappe.db.commit()
+        smriti.db.commit()
 
         result = migrate_legacy_smtp_password()
         self.assertEqual(result.get("status"), "migrated")

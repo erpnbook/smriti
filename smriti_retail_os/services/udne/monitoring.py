@@ -1,4 +1,5 @@
 import frappe
+from smriti_retail_os import smriti
 import datetime
 from smriti_retail_os.services.udne.gap_scanner import scan_gaps
 
@@ -14,7 +15,7 @@ def get_metrics(timespan: str = "Today") -> dict:
     elif timespan == "Last 7 Days":
         filters["timestamp"] = [">=", now - datetime.timedelta(days=7)]
         
-    logs = frappe.get_all(
+    logs = smriti.db.get_list(
         "SMRITI Numbering Audit Log",
         fields=["generation_duration_ms", "retry_count", "generation_mode"],
         filters=filters
@@ -58,12 +59,12 @@ def get_health() -> dict:
     Computes overall UDNE subsystem operational health summary.
     """
     # Active vs Disabled rules
-    active_rules = frappe.db.count("SMRITI Numbering Rule", {"is_active": 1})
-    disabled_rules = frappe.db.count("SMRITI Numbering Rule", {"is_active": 0})
+    active_rules = smriti.db.count("SMRITI Numbering Rule", {"is_active": 1})
+    disabled_rules = smriti.db.count("SMRITI Numbering Rule", {"is_active": 0})
     
     # Rules expiring soon (< 30 days)
     now_date = datetime.date.today()
-    expiring_soon = frappe.db.count(
+    expiring_soon = smriti.db.count(
         "SMRITI Numbering Rule",
         {
             "is_active": 1,
@@ -72,14 +73,14 @@ def get_health() -> dict:
     )
     
     # Reservations status
-    res_status = frappe.db.sql("""
+    res_status = smriti.db.sql("""
         select status, count(*) as count from `tabSMRITI Numbering Reserved Range` group by status
     """, as_dict=1)
     
     res_counts = {row["status"]: row["count"] for row in res_status}
     
     # Explainability score (based on audit logs explain completeness)
-    logs = frappe.get_all("SMRITI Numbering Audit Log", fields=["rule", "template", "context_details"], limit=100)
+    logs = smriti.db.get_list("SMRITI Numbering Audit Log", fields=["rule", "template", "context_details"], limit=100)
     total_logs = len(logs)
     score_sum = 0
     if total_logs:
@@ -114,7 +115,7 @@ def get_gaps(target_doctype: str = None) -> list:
     if target_doctype:
         filters["document_type"] = target_doctype
         
-    rules = frappe.get_all("SMRITI Numbering Rule", fields=["name", "document_type"], filters=filters)
+    rules = smriti.db.get_list("SMRITI Numbering Rule", fields=["name", "document_type"], filters=filters)
     all_gaps = []
     
     for r in rules:
@@ -130,7 +131,7 @@ def get_reservations() -> list:
     """
     Returns detailed reservation lifecycle records with utilization ratios.
     """
-    ranges = frappe.get_all(
+    ranges = smriti.db.get_list(
         "SMRITI Numbering Reserved Range",
         fields=["name", "document_type", "terminal_id", "start_number", "end_number", "current_counter", "status", "expiry_datetime"],
         order_by="creation desc"

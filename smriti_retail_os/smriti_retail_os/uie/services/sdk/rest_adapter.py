@@ -5,6 +5,7 @@
 import requests
 import json
 import frappe
+from smriti_retail_os import smriti
 from smriti_retail_os.smriti_retail_os.uie.services.sdk.base_adapter import BaseAdapter
 
 class RestAdapter(BaseAdapter):
@@ -16,7 +17,7 @@ class RestAdapter(BaseAdapter):
 		if not credential:
 			return headers
 			
-		cred_doc = frappe.get_doc("SMRITI UIE Credential", credential)
+		cred_doc = smriti.documents.get("SMRITI UIE Credential", credential)
 		if cred_doc.type == "API Key" and cred_doc.api_key_header:
 			headers[cred_doc.api_key_header] = cred_doc.get_password("api_key_value")
 		elif cred_doc.type == "Bearer Token" and cred_doc.token:
@@ -31,7 +32,7 @@ class RestAdapter(BaseAdapter):
 
 	def send(self, queue_item, integration, endpoint):
 		"""Sends REST request to the target URL."""
-		endpoint_doc = frappe.get_doc("SMRITI UIE Endpoint", endpoint)
+		endpoint_doc = smriti.documents.get("SMRITI UIE Endpoint", endpoint)
 		
 		# Resolve headers
 		headers = {

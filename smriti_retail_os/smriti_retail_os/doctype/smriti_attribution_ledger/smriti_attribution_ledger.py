@@ -10,14 +10,15 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.model.document import Document
 
 class SMRITIAttributionLedger(Document):
     def validate(self):
         if not self.is_new():
-            db_doc = frappe.get_doc("SMRITI Attribution Ledger", self.name)
+            db_doc = smriti.documents.get("SMRITI Attribution Ledger", self.name)
             for field in [
                 "invoice_reference", "invoice_doctype", "customer", 
                 "employee", "ownership_type", "revenue_credit", 

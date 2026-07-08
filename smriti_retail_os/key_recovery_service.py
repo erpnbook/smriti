@@ -20,13 +20,14 @@ import re
 import random
 import hashlib
 import json
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.utils import now_datetime, add_to_date
 
 def validate_smtp_configured():
     """Verifies that an enabled outgoing Email Account exists in Frappe."""
-    if not frappe.db.exists("Email Account", {"enable_outgoing": 1}):
+    if not smriti.db.exists("Email Account", {"enable_outgoing": 1}):
         frappe.throw(
             _("Outgoing email is not configured. Please configure an outgoing Email Account first."),
             frappe.ValidationError
@@ -53,16 +54,16 @@ def send_verification_email(email):
     hashed_otp = hashlib.sha256(otp.encode("utf-8")).hexdigest()
     expiry = add_to_date(now_datetime(), minutes=15)
     
-    if frappe.db.exists("SMRITI Key Custodian", email):
-        doc = frappe.get_doc("SMRITI Key Custodian", email)
+    if smriti.db.exists("SMRITI Key Custodian", email):
+        doc = smriti.documents.get("SMRITI Key Custodian", email)
         doc.otp_hash = hashed_otp
         doc.otp_expiry = expiry
         doc.status = "Pending"
         doc.verified = 0
         doc.save(ignore_permissions=True)
     else:
-        doc = frappe.get_doc({
-            "doctype": "SMRITI Key Custodian",
+        doc = smriti.documents.new("KeyCustodian")
+        doc.update({
             "email": email,
             "name": email,
             "custodian_name": email.split("@")[0].title(),
@@ -83,10 +84,10 @@ def confirm_verification(email, otp):
     """Validates OTP, sets verified state, and logs the event."""
     check_manager_role()
     
-    if not frappe.db.exists("SMRITI Key Custodian", email):
+    if not smriti.db.exists("SMRITI Key Custodian", email):
         frappe.throw(_("Custodian {0} not found.").format(email), frappe.DoesNotExistError)
         
-    doc = frappe.get_doc("SMRITI Key Custodian", email)
+    doc = smriti.documents.get("SMRITI Key Custodian", email)
     
     # Check expiration
     if now_datetime() > doc.otp_expiry:
@@ -125,7 +126,7 @@ def send_recovery_fragments():
     """Midpoint splits the active key and sends parts to the two custodians."""
     check_manager_role()
     
-    custodians = frappe.get_all("SMRITI Key Custodian", filters={"status": "Verified", "verified": 1}, fields=["email"])
+    custodians = smriti.db.get_list("SMRITI Key Custodian", filters={"status": "Verified", "verified": 1}, fields=["email"])
     if len(custodians) != 2:
         frappe.throw(_("Key recovery fragments can only be dispatched when exactly 2 verified custodians are registered."), frappe.ValidationError)
         
@@ -150,7 +151,7 @@ def send_recovery_fragments():
     frappe.sendmail(recipients=[c2], subject=subject, message=msg2, now=True)
     
     for c_email in [c1, c2]:
-        doc = frappe.get_doc("SMRITI Key Custodian", c_email)
+        doc = smriti.documents.get("SMRITI Key Custodian", c_email)
         doc.last_recovery_sent = now_datetime()
         doc.save(ignore_permissions=True)
         
@@ -225,7 +226,7 @@ def get_encryption_status():
     settings = get_settings()
     encryption_enabled = bool(settings.get("enable_backup_encryption", 0))
     
-    custodians = frappe.get_all(
+    custodians = smriti.db.get_list(
         "SMRITI Key Custodian", 
         fields=["custodian_name", "email", "status", "verified", "verification_date", "last_recovery_sent"]
     )

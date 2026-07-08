@@ -17,13 +17,14 @@
 # @version: 1.8.6
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from smriti_retail_os.balance_engine import get_party_balance, get_bulk_party_balances
 
 
 def _get_all_psas_for_customer(customer: str):
     """Returns list of active PSA names for a customer."""
-    return frappe.get_all(
+    return smriti.db.get_list(
         "SMRITI Party Stock Account",
         filters={"customer": customer, "active": 1},
         fields=["name", "company"]
@@ -58,8 +59,8 @@ def get_broken_sizes(customer: str):
         {"style": "Sneaker-X", "stranded_qty": 15, "missing_core": "7,8"}
 
     BUG-005 FIX:
-    - Old: frappe.get_all("PSV Reorder Rule", ...) — DocType does not exist
-    - Old: frappe.get_all("PSV Balance", ...) — DocType does not exist
+    - Old: smriti.db.get_list("PSV Reorder Rule", ...) — DocType does not exist
+    - Old: smriti.db.get_list("PSV Balance", ...) — DocType does not exist
     - New: Uses SMRITI PSV Reorder Rule + live ledger balance via balance_engine
     """
     if not customer:
@@ -72,7 +73,7 @@ def get_broken_sizes(customer: str):
 
     psa_names = [p.name for p in psas]
 
-    rules = frappe.get_all(
+    rules = smriti.db.get_list(
         "SMRITI PSV Reorder Rule",
         filters={"party_stock_account": ["in", psa_names], "active": 1},
         fields=["item_variant", "item_group", "party_stock_account"]
@@ -91,11 +92,11 @@ def get_broken_sizes(customer: str):
             continue  # Group-level rules don't carry variant-specific core size info
 
         # Find all item variants under the same template
-        item_template = frappe.db.get_value("Item", rule.item_variant, "variant_of")
+        item_template = smriti.db.get("Item", rule.item_variant, "variant_of")
         if not item_template:
             continue
 
-        variants = frappe.get_all(
+        variants = smriti.db.get_list(
             "Item",
             filters={"variant_of": item_template},
             fields=["name", "item_name"]
@@ -136,8 +137,8 @@ def generate_reorder_suggestions(customer: str):
          "target_qty": 10, "priority": "High"}
 
     BUG-005 FIX:
-    - Old: frappe.get_all("PSV Reorder Rule", ...) — DocType does not exist
-    - Old: frappe.db.get_value("PSV Balance", ...) — DocType does not exist
+    - Old: smriti.db.get_list("PSV Reorder Rule", ...) — DocType does not exist
+    - Old: smriti.db.get("PSV Balance", ...) — DocType does not exist
     - New: Uses SMRITI PSV Reorder Rule + live ledger balance via balance_engine
     """
     if not customer:
@@ -150,7 +151,7 @@ def generate_reorder_suggestions(customer: str):
     psa_names = [p.name for p in psas]
 
     # Fetch variant-level reorder rules for this customer's accounts
-    rules = frappe.get_all(
+    rules = smriti.db.get_list(
         "SMRITI PSV Reorder Rule",
         filters={
             "party_stock_account": ["in", psa_names],
@@ -202,8 +203,8 @@ def generate_reorder_suggestions(customer: str):
 def _get_psv_settings() -> dict:
     """Safely retrieves PSV Settings. Returns empty dict if not configured."""
     try:
-        if frappe.db.exists("DocType", "SMRITI PSV Settings"):
-            return frappe.get_cached_doc("SMRITI PSV Settings").as_dict()
+        if smriti.db.exists("DocType", "SMRITI PSV Settings"):
+            return smriti.documents.get("SMRITI PSV Settings").as_dict()
     except Exception:
         import sys
         _frappe = sys.modules.get('frappe')

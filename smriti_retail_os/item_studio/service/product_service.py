@@ -6,8 +6,9 @@
 # @author:  Jawahar R. Mallah
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from smriti_retail_os.item_studio.repository.product_repository import ProductRepository
 
 
@@ -51,20 +52,20 @@ class ProductService:
             # Verify code is alphanumeric without spaces
             if not code.isalnum():
                 frappe.throw(_("Barcode / Item Code must be alphanumeric with no spaces or special characters."))
-            if frappe.db.exists("Item", code):
+            if smriti.db.exists("Item", code):
                 frappe.throw(_("Product with Barcode {0} already exists.").format(code))
         else:
             code = item_code
 
         # Seeding defaults
         if not item_data.get("item_group"):
-            item_data["item_group"] = frappe.db.get_single_value("SMRITI Settings", "default_item_group") or "Products"
+            item_data["item_group"] = smriti.db.get_single("SMRITI Settings", "default_item_group") or "Products"
 
         if not item_data.get("gst_percentage"):
             item_data["gst_percentage"] = "18"
 
         if not item_data.get("hsn_code"):
-            item_data["hsn_code"] = frappe.db.get_single_value("SMRITI Settings", "default_hsn_code") or "64029990"
+            item_data["hsn_code"] = smriti.db.get_single("SMRITI Settings", "default_hsn_code") or "64029990"
 
         # 2. Invoke persistence layer
         if item_code:

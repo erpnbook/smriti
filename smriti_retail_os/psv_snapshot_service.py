@@ -13,8 +13,9 @@
 #       psv_service.py re-imports all public names for backward compatibility.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.utils import today, now_datetime, get_datetime
 
 
@@ -45,7 +46,7 @@ def get_landing_cost(variant):
 
 
 def _get_landing_cost_from_db(variant):
-    item_details = frappe.db.get_value(
+    item_details = smriti.db.get(
         "Item", variant, ["valuation_rate", "standard_rate", "variant_of", "name"], as_dict=True
     )
     if not item_details:
@@ -57,7 +58,7 @@ def _get_landing_cost_from_db(variant):
     if item_details.get("standard_rate"):
         return float(item_details["standard_rate"])
         
-    buying_price = frappe.db.get_value(
+    buying_price = smriti.db.get(
         "Item Price", {"item_code": variant, "price_list": "Standard Buying"}, "price_list_rate"
     )
     if buying_price:
@@ -65,7 +66,7 @@ def _get_landing_cost_from_db(variant):
         
     parent_code = item_details.get("variant_of")
     if parent_code:
-        parent_details = frappe.db.get_value(
+        parent_details = smriti.db.get(
             "Item", parent_code, ["valuation_rate", "standard_rate"], as_dict=True
         )
         if parent_details:
@@ -75,7 +76,7 @@ def _get_landing_cost_from_db(variant):
             if parent_details.get("standard_rate"):
                 return float(parent_details["standard_rate"])
                 
-            parent_buying_price = frappe.db.get_value(
+            parent_buying_price = smriti.db.get(
                 "Item Price", {"item_code": parent_code, "price_list": "Standard Buying"}, "price_list_rate"
             )
             if parent_buying_price:
@@ -107,7 +108,7 @@ def calculate_aging_for_variant(partner, variant, current_qty, snapshot_date=Non
         return buckets
         
     # Fetch positive ledger entries ordered by posting_datetime desc (FIFO)
-    entries = frappe.db.sql("""
+    entries = smriti.db.sql("""
         SELECT qty, posting_datetime
         FROM `tabPSV Ledger Entry`
         WHERE channel_partner = %s AND item_variant = %s AND qty > 0
@@ -115,7 +116,7 @@ def calculate_aging_for_variant(partner, variant, current_qty, snapshot_date=Non
     """, (partner, variant), as_dict=True)
     
     if not entries:
-        entries = frappe.db.sql("""
+        entries = smriti.db.sql("""
             SELECT qty, posting_datetime
             FROM `tabSMRITI Party Stock Ledger Entry`
             WHERE party_stock_account = %s AND item_code = %s AND qty > 0
@@ -186,7 +187,7 @@ def generate_snapshots():
         batch_size = int(settings.snapshot_batch_size or 500)
         last_processed = settings.last_processed_partner
         
-        partners = frappe.get_all(
+        partners = smriti.db.get_list(
             "PSV Channel Partner",
             filters={"active": 1},
             fields=["name", "company", "territory", "region"],
@@ -194,7 +195,7 @@ def generate_snapshots():
         )
         
         if not partners:
-            partners = frappe.get_all(
+            partners = smriti.db.get_list(
                 "SMRITI Party Stock Account",
                 filters={"active": 1},
                 fields=["name", "company", "region"],
@@ -221,12 +222,12 @@ def generate_snapshots():
         snapshot_date = frappe.utils.getdate(today())
         
         for partner in batch:
-            frappe.db.delete("PSV Stock Aging Snapshot", {
+            smriti.db.delete("PSV Stock Aging Snapshot", {
                 "snapshot_date": snapshot_date,
                 "channel_partner": partner.name
             })
             
-            balances = frappe.db.sql("""
+            balances = smriti.db.sql("""
                 SELECT item_variant, SUM(qty) as balance
                 FROM `tabPSV Ledger Entry`
                 WHERE channel_partner = %s
@@ -235,7 +236,7 @@ def generate_snapshots():
             """, (partner.name,), as_dict=True)
             
             if not balances:
-                balances = frappe.db.sql("""
+                balances = smriti.db.sql("""
                     SELECT item_code as item_variant, SUM(qty) as balance
                     FROM `tabSMRITI Party Stock Ledger Entry`
                     WHERE party_stock_account = %s
@@ -247,15 +248,15 @@ def generate_snapshots():
                 variant = bal["item_variant"]
                 current_qty = float(bal["balance"])
                 
-                item_info = frappe.db.get_value("Item", variant, ["brand", "item_group"], as_dict=True)
+                item_info = smriti.db.get("Item", variant, ["brand", "item_group"], as_dict=True)
                 brand_name = item_info.get("brand") if item_info else ""
                 item_group_name = item_info.get("item_group") if item_info else ""
                 
                 buckets = calculate_aging_for_variant(partner.name, variant, current_qty, snapshot_date)
                 aging_alert = get_aging_alert(buckets, current_qty)
                 
-                snap = frappe.get_doc({
-                    "doctype": "PSV Stock Aging Snapshot",
+                snap = smriti.documents.new("PSVStockAgingSnapshot")
+                snap.update({
                     "snapshot_date": snapshot_date,
                     "channel_partner": partner.name,
                     "item_variant": variant,
@@ -289,7 +290,7 @@ def generate_snapshots():
             
         # reviewed-ignore-permissions: bypass for whitelisted generate_snapshots endpoint
         settings.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         
         return f"Success: Processed {len(batch)} partners"
         

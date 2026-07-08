@@ -12,6 +12,7 @@
 
 import frappe
 from frappe import _
+from smriti_retail_os import smriti
 from smriti_retail_os.clienteling.service import clienteling_service, walk_in_service
 
 @frappe.whitelist()
@@ -23,14 +24,14 @@ def get_customer_profile(customer):
     if not customer:
         frappe.throw(_("Customer is required."))
         
-    if not frappe.db.exists("Customer", customer):
+    if not smriti.db.exists("Customer", customer):
         frappe.throw(_("Customer {0} not found.").format(customer))
         
     # If the profile doesn't exist, build it synchronously for the first lookup
-    if not frappe.db.exists("SMRITI Customer Profile", customer):
+    if not smriti.db.exists("SMRITI Customer Profile", customer):
         clienteling_service.regenerate_customer_data(customer)
         
-    profile = frappe.get_doc("SMRITI Customer Profile", customer)
+    profile = smriti.documents.get("SMRITI Customer Profile", customer)
     
     # If it is dirty, trigger background refresh
     if profile.is_dirty:
@@ -39,7 +40,7 @@ def get_customer_profile(customer):
     profile_dict = profile.as_dict()
     
     # Attach SMRITI Customer Intelligence Graph details for explainability transparency
-    intel_doc = frappe.db.get_value(
+    intel_doc = smriti.db.get(
         "SMRITI Customer Intelligence Graph",
         customer,
         [
@@ -57,7 +58,7 @@ def get_customer_profile(customer):
     for key, f_id in [("churn_expr", "TST-CHURN"), ("vip_expr", "TST-VIP"), ("affinity_expr", "TST-AFFINITY")]:
         expr = None
         if f_id:
-            expr = frappe.db.get_value("SMRITI Formula Definition", {"formula_id": f_id}, "formula_expression")
+            expr = smriti.db.get("SMRITI Formula Definition", {"formula_id": f_id}, "formula_expression")
         profile_dict[key] = expr
         
     return profile_dict
@@ -70,7 +71,7 @@ def log_customer_interaction(customer, interaction_type, employee, interaction_o
     if not customer or not interaction_type or not employee or not interaction_outcome or not store or not channel:
         frappe.throw(_("Missing mandatory fields for logging customer interaction."))
         
-    doc = frappe.new_doc("SMRITI Customer Interaction")
+    doc = smriti.documents.new("SMRITI Customer Interaction")
     doc.customer = customer
     doc.interaction_date = frappe.utils.today()
     doc.interaction_time = frappe.utils.nowtime()
@@ -122,7 +123,7 @@ def get_store_walk_in_analytics(store, date=None):
     target_date = date or frappe.utils.today()
     walk_in_service.aggregate_daily_analytics(target_date)
     
-    analytics = frappe.get_all(
+    analytics = smriti.db.get_list(
         "SMRITI Walk In Analytics",
         filters={"store": store, "date": target_date},
         fields=["total_walk_ins", "total_conversions", "conversion_rate", "total_revenue", "avg_engagement_minutes"]
@@ -146,14 +147,14 @@ def log_explain_audit(metric, customer, formula_id=None, session_id=None, source
     if not metric or not customer:
         frappe.throw(_("Metric and Customer are required to log an explain audit event."))
         
-    doc = frappe.new_doc("SMRITI Explain Audit Event")
+    doc = smriti.documents.new("SMRITI Explain Audit Event")
     doc.user = frappe.session.user
     doc.metric = metric
     doc.customer = customer
     
     # Resolve formula ref link if formula_id (e.g. TST-VIP) is provided
     if formula_id:
-        doc.formula_id = frappe.db.get_value("SMRITI Formula Definition", {"formula_id": formula_id}, "name")
+        doc.formula_id = smriti.db.get("SMRITI Formula Definition", {"formula_id": formula_id}, "name")
         
     doc.timestamp = frappe.utils.now_datetime()
     doc.session_id = session_id

@@ -8,9 +8,10 @@
 # @version: 1.0.0
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe.utils import cint
 from frappe import _
+from smriti_retail_os import smriti
 
 
 # ---------------------------------------------------------------------------
@@ -22,13 +23,13 @@ def get_barcode_filters():
     Returns available brands, categories, barcode sizes and print templates
     to populate filters/dropdowns on the barcode printing interface.
     """
-    brands     = [b.name for b in frappe.get_all("Brand", fields=["name"], order_by="name asc")]
-    categories = [ig.name for ig in frappe.get_all("Item Group", fields=["name"], order_by="name asc")]
+    brands     = [b.name for b in smriti.db.get_list("Brand", fields=["name"], order_by="name asc")]
+    categories = [ig.name for ig in smriti.db.get_list("Item Group", fields=["name"], order_by="name asc")]
     sizes      = ["50x25", "50x30", "75x50", "100x50", "106x55"]
 
     templates = []
-    if frappe.db.exists("DocType", "SMRITI Print Template"):
-        templates = frappe.get_all(
+    if smriti.db.exists("DocType", "SMRITI Print Template"):
+        templates = smriti.db.get_list(
             "SMRITI Print Template",
             fields=["name", "template_title", "label_size", "printer_language",
                     "printer_family", "raw_template", "custom_field_mappings_json"],
@@ -37,15 +38,15 @@ def get_barcode_filters():
         for t in templates:
             t["template_name"] = t["template_title"]
 
-    departments = [d.name for d in frappe.get_all("Department", fields=["name"], order_by="name asc")]
+    departments = [d.name for d in smriti.db.get_list("Department", fields=["name"], order_by="name asc")]
 
     genders = []
-    if frappe.db.exists("DocType", "SMRITI Gender"):
-        genders = [g.name for g in frappe.get_all("SMRITI Gender", fields=["name"], order_by="name asc")]
+    if smriti.db.exists("DocType", "SMRITI Gender"):
+        genders = [g.name for g in smriti.db.get_list("SMRITI Gender", fields=["name"], order_by="name asc")]
     else:
         genders = ["MENS", "LADIES", "BOYS", "GIRLS", "UNISEX", "KIDS"]
 
-    seasons_res = frappe.db.get_all("Item Attribute Value",
+    seasons_res = smriti.db.get_list("Item Attribute Value",
                                     filters={"parent": ["like", "%season%"]},
                                     fields=["attribute_value"], distinct=True)
     seasons = [s.attribute_value for s in seasons_res] if seasons_res else []
@@ -53,7 +54,7 @@ def get_barcode_filters():
         seasons = ["Spring/Summer", "Autumn/Winter", "Festive", "Core", "All Season"]
     seasons = sorted(list(set(seasons)))
 
-    collections_res = frappe.db.get_all("Item Attribute Value",
+    collections_res = smriti.db.get_list("Item Attribute Value",
                                         filters={"parent": ["like", "%collection%"]},
                                         fields=["attribute_value"], distinct=True)
     collections = [c.attribute_value for c in collections_res] if collections_res else []
@@ -61,7 +62,7 @@ def get_barcode_filters():
         collections = ["Classic", "Sportswear", "Casuals", "Formal", "Limited Edition"]
     collections = sorted(list(set(collections)))
 
-    suppliers = [s.name for s in frappe.get_all("Supplier", fields=["name"], order_by="name asc")]
+    suppliers = [s.name for s in smriti.db.get_list("Supplier", fields=["name"], order_by="name asc")]
 
     return {
         "brands":          brands,
@@ -78,9 +79,9 @@ def get_barcode_filters():
 
 def get_print_templates():
     """Returns all available SMRITI Print Templates for dropdown selection."""
-    if not frappe.db.exists("DocType", "SMRITI Print Template"):
+    if not smriti.db.exists("DocType", "SMRITI Print Template"):
         return []
-    templates = frappe.get_all(
+    templates = smriti.db.get_list(
         "SMRITI Print Template",
         fields=["name", "template_title", "label_size", "printer_language",
                 "printer_family", "raw_template", "custom_field_mappings_json"],
@@ -97,10 +98,10 @@ def get_print_templates():
 
 def get_print_profiles():
     """Retrieves print profiles JSON from SMRITI Company Settings."""
-    settings_name = frappe.db.get_value("SMRITI Company Settings", {}, "name")
+    settings_name = smriti.db.get("SMRITI Company Settings", {}, "name")
     if not settings_name:
         return {}
-    profiles_json = frappe.db.get_value("SMRITI Company Settings", settings_name, "custom_print_profiles_json")
+    profiles_json = smriti.db.get("SMRITI Company Settings", settings_name, "custom_print_profiles_json")
     if not profiles_json:
         return {}
     try:
@@ -113,17 +114,17 @@ def save_print_profile(profile_name, template_name, printer_ip, printer_port=910
                        dpi="203 DPI", copies=1, label_size="50x25", is_default=0):
     """Saves a print profile in SMRITI Company Settings as a keyed JSON object."""
     import json
-    settings_name = frappe.db.get_value("SMRITI Company Settings", {}, "name")
+    settings_name = smriti.db.get("SMRITI Company Settings", {}, "name")
     if not settings_name:
-        comp = frappe.db.get_value("Company", {}, "name")
+        comp = smriti.db.get("Company", {}, "name")
         if not comp:
             frappe.throw(_("Please create a Company record first."))
-        doc = frappe.new_doc("SMRITI Company Settings")
+        doc = smriti.documents.new("SMRITI Company Settings")
         doc.company = comp
         doc.insert(ignore_permissions=True)
         settings_name = doc.name
 
-    doc = frappe.get_doc("SMRITI Company Settings", settings_name)
+    doc = smriti.documents.get("SMRITI Company Settings", settings_name)
     profiles = {}
     if doc.custom_print_profiles_json:
         try:
@@ -149,17 +150,17 @@ def save_print_profile(profile_name, template_name, printer_ip, printer_port=910
 
     doc.custom_print_profiles_json = json.dumps(profiles)
     doc.save(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
     return profiles
 
 
 def delete_print_profile(profile_name):
     """Deletes a print profile from SMRITI Company Settings."""
     import json
-    settings_name = frappe.db.get_value("SMRITI Company Settings", {}, "name")
+    settings_name = smriti.db.get("SMRITI Company Settings", {}, "name")
     if not settings_name:
         return {}
-    doc = frappe.get_doc("SMRITI Company Settings", settings_name)
+    doc = smriti.documents.get("SMRITI Company Settings", settings_name)
     if not doc.custom_print_profiles_json:
         return {}
     try:
@@ -170,7 +171,7 @@ def delete_print_profile(profile_name):
         del profiles[profile_name]
         doc.custom_print_profiles_json = json.dumps(profiles)
         doc.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
     return profiles
 
 
@@ -188,7 +189,7 @@ def save_print_template(template_name, label_size, printer_language, raw_templat
     if len(raw_template.encode('utf-8')) > 102400:
         frappe.throw(_("Template exceeds 100KB limit"))
 
-    if not frappe.db.exists("DocType", "SMRITI Print Template"):
+    if not smriti.db.exists("DocType", "SMRITI Print Template"):
         frappe.throw(_("DocType SMRITI Print Template not found."))
 
     def _slugify_name(val):
@@ -199,13 +200,13 @@ def save_print_template(template_name, label_size, printer_language, raw_templat
 
     name_id = _slugify_name(template_name)
 
-    if frappe.db.exists("SMRITI Print Template", name_id):
-        doc = frappe.get_doc("SMRITI Print Template", name_id)
-    elif frappe.db.exists("SMRITI Print Template", {"template_title": template_name}):
-        matched_name = frappe.db.get_value("SMRITI Print Template", {"template_title": template_name}, "name")
-        doc = frappe.get_doc("SMRITI Print Template", matched_name)
+    if smriti.db.exists("SMRITI Print Template", name_id):
+        doc = smriti.documents.get("SMRITI Print Template", name_id)
+    elif smriti.db.exists("SMRITI Print Template", {"template_title": template_name}):
+        matched_name = smriti.db.get("SMRITI Print Template", {"template_title": template_name}, "name")
+        doc = smriti.documents.get("SMRITI Print Template", matched_name)
     else:
-        doc = frappe.new_doc("SMRITI Print Template")
+        doc = smriti.documents.new("SMRITI Print Template")
         doc.name = name_id
 
     doc.template_title            = template_name
@@ -223,7 +224,7 @@ def save_print_template(template_name, label_size, printer_language, raw_templat
         doc.flags.version_label = version_label
 
     if int(custom_is_default) == 1:
-        frappe.db.sql(
+        smriti.db.sql(
             "UPDATE `tabSMRITI Print Template` SET custom_is_default = 0 WHERE label_size = %s",
             (label_size,)
         )
@@ -249,26 +250,24 @@ def save_print_template(template_name, label_size, printer_language, raw_templat
 
     try:
         doc.save(ignore_permissions=True)
-        frappe.db.commit()
-        frappe.get_doc({
-            "doctype":   "Activity Log",
+        smriti.db.commit()
+        smriti.documents.new("ActivityLog").update({
             "user":      frappe.session.user,
             "operation": "SMRITI Visual Template Saved",
             "status":    "Success",
             "subject":   f"Saved print template {template_name}",
             "remarks":   f"Template saved. Active version: {doc.custom_version}"
         }).insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
     except Exception as e:
-        frappe.get_doc({
-            "doctype":   "Activity Log",
+        smriti.documents.new("ActivityLog").update({
             "user":      frappe.session.user,
             "operation": "SMRITI Visual Template Compilation Failed",
             "status":    "Failed",
             "subject":   f"Failed to save print template {template_name}",
             "remarks":   str(e)
         }).insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         raise e
 
     return get_print_templates()
@@ -276,11 +275,11 @@ def save_print_template(template_name, label_size, printer_language, raw_templat
 
 def delete_print_template(name_id):
     """Deletes a SMRITI Print Template record."""
-    if not frappe.db.exists("DocType", "SMRITI Print Template"):
+    if not smriti.db.exists("DocType", "SMRITI Print Template"):
         frappe.throw(_("DocType SMRITI Print Template not found."))
-    if frappe.db.exists("SMRITI Print Template", name_id):
+    if smriti.db.exists("SMRITI Print Template", name_id):
         frappe.delete_doc("SMRITI Print Template", name_id, ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
     return get_print_templates()
 
 
@@ -330,7 +329,7 @@ def search_barcode_items(txt):
             AND ({" OR ".join(where_clauses)})
         LIMIT 20
     """
-    return frappe.db.sql(query, {"search_val": search_val}, as_dict=True)
+    return smriti.db.sql(query, {"search_val": search_val}, as_dict=True)
 
 
 # ---------------------------------------------------------------------------
@@ -339,10 +338,10 @@ def search_barcode_items(txt):
 
 def get_print_template_versions(template_name):
     """Returns linked version history for the specified template."""
-    name_id = frappe.db.get_value("SMRITI Print Template", {"template_title": template_name}, "name") or template_name
-    if not frappe.db.exists("SMRITI Print Template", name_id):
+    name_id = smriti.db.get("SMRITI Print Template", {"template_title": template_name}, "name") or template_name
+    if not smriti.db.exists("SMRITI Print Template", name_id):
         return []
-    return frappe.get_all(
+    return smriti.db.get_list(
         "SMRITI Print Template Version",
         filters={"template": name_id},
         fields=[
@@ -359,11 +358,11 @@ def restore_print_template_version(template_name, version_number, expected_check
     Restores template from a specific version.
     Includes optimistic locking to prevent overwriting intermediate changes.
     """
-    name_id = frappe.db.get_value("SMRITI Print Template", {"template_title": template_name}, "name") or template_name
-    if not frappe.db.exists("SMRITI Print Template", name_id):
+    name_id = smriti.db.get("SMRITI Print Template", {"template_title": template_name}, "name") or template_name
+    if not smriti.db.exists("SMRITI Print Template", name_id):
         frappe.throw(_("Template {0} not found.").format(template_name))
 
-    doc = frappe.get_doc("SMRITI Print Template", name_id)
+    doc = smriti.documents.get("SMRITI Print Template", name_id)
 
     # Optimistic lock
     if doc.template_checksum != expected_checksum:
@@ -372,7 +371,7 @@ def restore_print_template_version(template_name, version_number, expected_check
             frappe.ValidationError
         )
 
-    v_name = frappe.db.get_value(
+    v_name = smriti.db.get(
         "SMRITI Print Template Version",
         {"template": name_id, "version_number": version_number},
         "name"
@@ -380,26 +379,25 @@ def restore_print_template_version(template_name, version_number, expected_check
     if not v_name:
         frappe.throw(_("Version {0} of template {1} not found.").format(version_number, template_name))
 
-    v_doc = frappe.get_doc("SMRITI Print Template Version", v_name)
+    v_doc = smriti.documents.get("SMRITI Print Template Version", v_name)
     doc.raw_template              = v_doc.raw_template
     doc.custom_field_mappings_json = v_doc.custom_field_mappings_json
     doc.custom_visual_layout_json  = v_doc.custom_visual_layout_json
     doc.flags.restored_from_version = version_number
 
     doc.save(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
 
     try:
-        frappe.get_doc({
-            "doctype":   "Activity Log",
+        smriti.documents.new("ActivityLog").update({
             "user":      frappe.session.user,
             "operation": "SMRITI Print Template Version Restored",
             "status":    "Success",
             "subject":   f"Restored print template {template_name} to version {version_number}",
             "remarks":   f"Restored from version {version_number}. New active version: {doc.custom_version}"
         }).insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
     except Exception as e:
-        frappe.log_error(f"Error logging template version restored: {str(e)}")
+        smriti.errors.log_error(f"Error logging template version restored: {str(e)}")
 
     return get_print_templates()

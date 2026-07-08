@@ -16,6 +16,7 @@
 import json
 import unittest
 import frappe
+from smriti_retail_os import smriti
 from smriti_retail_os.services.dictionary_service import get_active_terms, get_term_detail
 
 class TestBusinessDictionary(unittest.TestCase):
@@ -24,27 +25,27 @@ class TestBusinessDictionary(unittest.TestCase):
         # Seed default SMRITI Business terms once for all tests to speed up execution
         from smriti_retail_os.patches.seed_default_terms import execute as seed_terms
         # Clean all Business Terms first to ensure clean default state
-        frappe.db.delete("SMRITI Business Term")
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Business Term")
+        smriti.db.commit()
         seed_terms()
-        frappe.db.commit()
+        smriti.db.commit()
 
     def setUp(self):
         # Clean up test terms to avoid collision
-        frappe.db.delete("SMRITI Business Term", {"term_id": "TST-BD-001"})
-        frappe.db.delete("SMRITI PSV Activity Log", {"reference_name": "TST-BD-001"})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Business Term", {"term_id": "TST-BD-001"})
+        smriti.db.delete("SMRITI PSV Activity Log", {"reference_name": "TST-BD-001"})
+        smriti.db.commit()
 
         # Seed test user to avoid LinkValidationError in activity log creation
-        if not frappe.db.exists("User", "test@example.com"):
-            user = frappe.new_doc("User")
+        if not smriti.db.exists("User", "test@example.com"):
+            user = smriti.documents.new("User")
             user.email = "test@example.com"
             user.first_name = "Test User"
             user.insert(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
 
         # Ensure KGF-001 formula exists for link testing
-        formula_doc_name = frappe.db.get_value("SMRITI Formula Definition", {"formula_id": "KGF-001"})
+        formula_doc_name = smriti.db.get("SMRITI Formula Definition", {"formula_id": "KGF-001"})
         if not formula_doc_name:
             mock_formula = frappe.get_doc({
                 "doctype": "SMRITI Formula Definition",
@@ -62,7 +63,7 @@ class TestBusinessDictionary(unittest.TestCase):
             })
             mock_formula.insert(ignore_permissions=True)
             formula_doc_name = mock_formula.name
-            frappe.db.commit()
+            smriti.db.commit()
 
         # Seed child table records
         self.doc = frappe.get_doc({
@@ -85,7 +86,7 @@ class TestBusinessDictionary(unittest.TestCase):
             "related_terms": []
         })
         self.doc.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # Clean Redis cache
         cache_key = "smriti:dictionary:TST-BD-001:1.0.0"
@@ -96,19 +97,19 @@ class TestBusinessDictionary(unittest.TestCase):
         # performing cleanup deletes. This releases intention locks held by
         # seed_default_terms() which otherwise cause 1205 lock wait timeout.
         try:
-            frappe.db.rollback()
+            smriti.db.rollback()
         except Exception:
             pass
-        frappe.db.delete("SMRITI Business Term", {"term_id": "TST-BD-001"})
-        frappe.db.delete("SMRITI PSV Activity Log", {"reference_name": "TST-BD-001"})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Business Term", {"term_id": "TST-BD-001"})
+        smriti.db.delete("SMRITI PSV Activity Log", {"reference_name": "TST-BD-001"})
+        smriti.db.commit()
 
         cache_key = "smriti:dictionary:TST-BD-001:1.0.0"
         frappe.cache().delete_value(cache_key)
 
     def test_schema_and_validation(self):
         # 1. Assert DocType exists
-        self.assertTrue(frappe.db.exists("DocType", "SMRITI Business Term"))
+        self.assertTrue(smriti.db.exists("DocType", "SMRITI Business Term"))
 
         # 2. Duplicate term_id + term_version throws ValidationError
         dup = frappe.get_doc({
@@ -165,7 +166,7 @@ class TestBusinessDictionary(unittest.TestCase):
         self.assertEqual(payload_2["term_name"], "Test Dictionary Term")
 
         # Audit logs should record 2 accesses
-        logs = frappe.get_all(
+        logs = smriti.db.get_list(
             "SMRITI PSV Activity Log",
             filters={"reference_name": "TST-BD-001"},
             fields=["action_type", "event_type", "details"]
@@ -180,7 +181,7 @@ class TestBusinessDictionary(unittest.TestCase):
         core_terms = ["PSA", "PSV", "PDT", "WOC", "Dead Stock", "Variant Curve"]
         for tid in core_terms:
             self.assertTrue(
-                frappe.db.exists("SMRITI Business Term", {"term_id": tid, "is_active": 1}),
+                smriti.db.exists("SMRITI Business Term", {"term_id": tid, "is_active": 1}),
                 f"Default term {tid} was not seeded."
             )
 
@@ -200,7 +201,7 @@ class TestBusinessDictionary(unittest.TestCase):
 
         missing = []
         for tid in TERM_INDEX:
-            exists = frappe.db.exists("SMRITI Business Term", {"term_id": tid})
+            exists = smriti.db.exists("SMRITI Business Term", {"term_id": tid})
             if not exists:
                 missing.append(tid)
 

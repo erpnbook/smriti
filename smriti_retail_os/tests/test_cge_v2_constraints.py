@@ -16,6 +16,7 @@
 #
 
 import frappe
+from smriti_retail_os import smriti
 import unittest
 
 class TestCGEV2Constraints(unittest.TestCase):
@@ -34,7 +35,7 @@ class TestCGEV2Constraints(unittest.TestCase):
             self.skipTest(f"Table for {self.wallet_table} does not exist in DB yet.")
             
         table_name = f"tab{self.wallet_table}"
-        idx_rows = frappe.db.sql(
+        idx_rows = smriti.db.sql(
             f"SHOW INDEX FROM `{table_name}` WHERE Key_name = 'uq_wallet_cust_comp_inst'",
             as_dict=True
         )
@@ -60,7 +61,7 @@ class TestCGEV2Constraints(unittest.TestCase):
             self.skipTest(f"Table for {self.ledger_table} does not exist in DB yet.")
             
         table_name = f"tab{self.ledger_table}"
-        idx_rows = frappe.db.sql(
+        idx_rows = smriti.db.sql(
             f"SHOW INDEX FROM `{table_name}` WHERE Key_name = 'idx_ledger_cust_inst_date'",
             as_dict=True
         )
@@ -80,7 +81,7 @@ class TestCGEV2Constraints(unittest.TestCase):
             self.skipTest(f"Table for {self.ledger_table} does not exist in DB yet.")
             
         table_name = f"tab{self.ledger_table}"
-        idx_rows = frappe.db.sql(
+        idx_rows = smriti.db.sql(
             f"SHOW INDEX FROM `{table_name}` WHERE Key_name = 'idx_ledger_ref'",
             as_dict=True
         )
@@ -101,31 +102,31 @@ class TestCGEV2Constraints(unittest.TestCase):
             
         # Ensure we have a clean state for test data
         test_cust = "_Test Hardening Customer"
-        test_comp = frappe.get_all("Company", limit=1)[0].name
+        test_comp = smriti.db.get_list("Company", limit=1)[0].name
         test_inst = "_Test Hardening Instrument"
         
         # Seed test customer if missing
-        if not frappe.db.exists("Customer", test_cust):
-            cust_doc = frappe.get_doc({
-                "doctype": "Customer",
+        if not smriti.db.exists("Customer", test_cust):
+            cust_doc = smriti.documents.new("Customer")
+            cust_doc.update({
                 "customer_name": test_cust,
                 "customer_group": "Individual"
             })
             cust_doc.insert(ignore_permissions=True)
 
         # Seed test instrument type if missing (Phase 4C Fix)
-        if not frappe.db.exists("SMRITI Benefit Instrument Type", "CASHBACK"):
-            type_doc = frappe.get_doc({
-                "doctype": "SMRITI Benefit Instrument Type",
+        if not smriti.db.exists("SMRITI Benefit Instrument Type", "CASHBACK"):
+            type_doc = smriti.documents.new("BenefitInstrumentType")
+            type_doc.update({
                 "type_name": "CASHBACK",
                 "description": "Cashback Benefit Classification"
             })
             type_doc.insert(ignore_permissions=True)
             
         # Seed test instrument if missing
-        if not frappe.db.exists("SMRITI Benefit Instrument", test_inst):
-            inst_doc = frappe.get_doc({
-                "doctype": "SMRITI Benefit Instrument",
+        if not smriti.db.exists("SMRITI Benefit Instrument", test_inst):
+            inst_doc = smriti.documents.new("BenefitInstrument")
+            inst_doc.update({
                 "instrument_name": test_inst,
                 "instrument_type": "CASHBACK",
                 "validity_days": 90,
@@ -134,27 +135,27 @@ class TestCGEV2Constraints(unittest.TestCase):
             inst_doc.insert(ignore_permissions=True)
 
         # Clear existing wallet for this combo if any (to make test reproducible)
-        frappe.db.delete("SMRITI Benefit Wallet", {
+        smriti.db.delete("SMRITI Benefit Wallet", {
             "customer": test_cust,
             "company": test_comp,
             "benefit_instrument": test_inst
         })
-        frappe.db.commit()
+        smriti.db.commit()
 
         # 1. Create first wallet
-        wallet1 = frappe.get_doc({
-            "doctype": "SMRITI Benefit Wallet",
+        wallet1 = smriti.documents.new("BenefitWallet")
+        wallet1.update({
             "customer": test_cust,
             "company": test_comp,
             "benefit_instrument": test_inst,
             "balance": 100.0
         })
         wallet1.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
         # 2. Attempt to create second wallet with identical key combo (expect ValidationError)
-        wallet2 = frappe.get_doc({
-            "doctype": "SMRITI Benefit Wallet",
+        wallet2 = smriti.documents.new("BenefitWallet")
+        wallet2.update({
             "customer": test_cust,
             "company": test_comp,
             "benefit_instrument": test_inst,
@@ -164,7 +165,7 @@ class TestCGEV2Constraints(unittest.TestCase):
         self.assertRaises(frappe.ValidationError, wallet2.insert, ignore_permissions=True)
         
         # Clean up
-        frappe.db.delete("SMRITI Benefit Wallet", {"customer": test_cust})
-        frappe.db.delete("SMRITI Benefit Instrument", {"name": test_inst})
-        frappe.db.delete("Customer", {"name": test_cust})
-        frappe.db.commit()
+        smriti.db.delete("SMRITI Benefit Wallet", {"customer": test_cust})
+        smriti.db.delete("SMRITI Benefit Instrument", {"name": test_inst})
+        smriti.db.delete("Customer", {"name": test_cust})
+        smriti.db.commit()

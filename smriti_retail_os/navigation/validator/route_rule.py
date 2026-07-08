@@ -14,7 +14,7 @@ class RouteRule(BaseValidator):
     title = "Broken Routes & Dead Links"
 
     def validate(self, nav_config):
-        import frappe
+        import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
         warnings = []
         if not nav_config or "sections" not in nav_config:
             return warnings
@@ -94,9 +94,9 @@ class RouteRule(BaseValidator):
                     doctype_name = " ".join(word.capitalize() for word in target.split("-"))
                     
                     # Check if target is a valid DocType
-                    if not frappe.db.exists("DocType", doctype_name):
+                    if not smriti.db.exists("DocType", doctype_name):
                         # Check if target is a valid Page
-                        if not frappe.db.exists("Page", target):
+                        if not smriti.db.exists("Page", target):
                             # Check if matches actual route keys
                             if target not in ["smriti", "masters", "inventory", "purchase", "billing", "reports"]:
                                 warnings.append({

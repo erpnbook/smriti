@@ -10,6 +10,7 @@
 #
 
 import frappe
+from smriti_retail_os import smriti
 import unittest
 from smriti_retail_os.services.lookup_service import LookupService
 
@@ -17,10 +18,10 @@ from smriti_retail_os.services.lookup_service import LookupService
 class TestSmartLookup(unittest.TestCase):
     def setUp(self):
         # Resolve HSN code for items
-        self.hsn_code = frappe.db.get_value("GST HSN Code", {}, "name")
+        self.hsn_code = smriti.db.get("GST HSN Code", {}, "name")
         if not self.hsn_code:
             try:
-                hsn = frappe.new_doc("GST HSN Code")
+                hsn = smriti.documents.new("GST HSN Code")
                 hsn.name = "999999"
                 hsn.hsn_code = "999999"
                 hsn.insert(ignore_permissions=True)
@@ -44,8 +45,8 @@ class TestSmartLookup(unittest.TestCase):
     def test_quick_create_customer(self):
         cust_name = "SMRITI Test Quick Customer A"
         # Cleanup
-        frappe.db.delete("Customer", {"customer_name": cust_name})
-        frappe.db.delete("Customer", {"name": cust_name})
+        smriti.db.delete("Customer", {"customer_name": cust_name})
+        smriti.db.delete("Customer", {"name": cust_name})
 
         # Create
         res = LookupService.create("Customer", {
@@ -53,16 +54,16 @@ class TestSmartLookup(unittest.TestCase):
             "mobile_no": "9876543210"
         })
         self.assertEqual(res["label"], cust_name)
-        self.assertTrue(frappe.db.exists("Customer", res["value"]))
+        self.assertTrue(smriti.db.exists("Customer", res["value"]))
 
         # Cleanup
-        frappe.db.delete("Customer", {"name": res["value"]})
+        smriti.db.delete("Customer", {"name": res["value"]})
 
     def test_quick_create_supplier(self):
         sup_name = "SMRITI Test Quick Supplier A"
         # Cleanup
-        frappe.db.delete("SMRITI Supplier", {"supplier_name": sup_name})
-        frappe.db.delete("SMRITI Supplier", {"name": sup_name})
+        smriti.db.delete("SMRITI Supplier", {"supplier_name": sup_name})
+        smriti.db.delete("SMRITI Supplier", {"name": sup_name})
 
         # Create
         res = LookupService.create("Supplier", {
@@ -71,10 +72,10 @@ class TestSmartLookup(unittest.TestCase):
             "email_id": "quick_sup@smriti.com"
         })
         self.assertEqual(res["label"], sup_name)
-        self.assertTrue(frappe.db.exists("SMRITI Supplier", res["value"]))
+        self.assertTrue(smriti.db.exists("SMRITI Supplier", res["value"]))
 
         # Cleanup
-        frappe.db.delete("SMRITI Supplier", {"name": res["value"]})
+        smriti.db.delete("SMRITI Supplier", {"name": res["value"]})
 
     def test_recent_records(self):
         recents = LookupService.recent("Customer")

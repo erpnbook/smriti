@@ -4,7 +4,8 @@ smriti_retail_os/notification_studio/service/scheduled_checks.py
 Daily scheduled background checks for SMRITI Notification Studio.
 Author: Jawahar R. Mallah
 """
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from frappe.utils import today
 from smriti_retail_os.notification_studio.service.notification_service import create_notification
 from smriti_retail_os.notification_studio.service.notification_triggers import get_users_by_role, ROLE_STORE_MANAGER, ROLE_SYSTEM_MANAGER
@@ -15,7 +16,7 @@ def _already_notified_today(user, notif_type, reference_doctype, reference_name)
     Dedup safety check: returns True if a notification has already been created today
     for this user, type, and reference key.
     """
-    count = frappe.db.count("SMRITI Notification Log", {
+    count = smriti.db.count("SMRITI Notification Log", {
         "for_user": user,
         "notif_type": notif_type,
         "reference_doctype": reference_doctype,
@@ -64,7 +65,7 @@ def run_low_stock_checks():
                         action_url="/inventory"
                     )
     except Exception as e:
-        frappe.log_error(f"SMRITI Scheduled Low Stock Check Error: {e}", "scheduled_checks")
+        smriti.errors.log_error(f"SMRITI Scheduled Low Stock Check Error: {e}", "scheduled_checks")
 
 def run_due_invoice_checks():
     """
@@ -72,7 +73,7 @@ def run_due_invoice_checks():
     """
     try:
         # Fetch Sales Invoices that are unpaid and past due date
-        overdue_invoices = frappe.get_all("Sales Invoice", filters={
+        overdue_invoices = smriti.db.get_list("Sales Invoice", filters={
             "docstatus": 1,
             "outstanding_amount": (">", 0),
             "due_date": ("<", today())
@@ -98,4 +99,4 @@ def run_due_invoice_checks():
                         action_url="/sales-invoices"
                     )
     except Exception as e:
-        frappe.log_error(f"SMRITI Scheduled Overdue Invoice Check Error: {e}", "scheduled_checks")
+        smriti.errors.log_error(f"SMRITI Scheduled Overdue Invoice Check Error: {e}", "scheduled_checks")

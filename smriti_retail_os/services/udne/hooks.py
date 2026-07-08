@@ -1,4 +1,5 @@
 import frappe
+from smriti_retail_os import smriti
 from frappe.utils import getdate
 from smriti_retail_os.services.udne.interfaces import GenerationContext
 from smriti_retail_os.services.udne import generate
@@ -9,7 +10,7 @@ def autoname_document(doc, method=None):
     Autoname hook interceptor. Fetches identity and display number from UDNE
     if a rule is configured, falling back to Frappe default autoname otherwise.
     """
-    if not frappe.db.exists("SMRITI Numbering Rule", {"document_type": doc.doctype, "is_active": 1}):
+    if not smriti.db.exists("SMRITI Numbering Rule", {"document_type": doc.doctype, "is_active": 1}):
         return
         
     try:

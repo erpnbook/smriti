@@ -5,7 +5,8 @@
 # @author:  Jawahar R. Mallah
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 
 class LabelLayoutRepository:
     """
@@ -15,7 +16,7 @@ class LabelLayoutRepository:
     @staticmethod
     def get_layout(layout_name):
         """Retrieves page size layout specs."""
-        return frappe.get_doc("SMRITI Label Layout", layout_name)
+        return smriti.documents.get("SMRITI Label Layout", layout_name)
 
     @staticmethod
     def get_layouts_list(filters=None):

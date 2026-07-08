@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # @file:    smriti_retail_os/core/themes/__init__.py
 # @desc:    SMRITI Core Framework — themes layer.
 #           Reserved for Phase 3/4 implementation.

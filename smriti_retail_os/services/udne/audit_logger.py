@@ -1,5 +1,6 @@
 import datetime
 import frappe
+from smriti_retail_os import smriti
 
 def log_audit(
     doctype: str,
@@ -22,8 +23,8 @@ def log_audit(
     Logs metadata about the generated number into SMRITI Numbering Audit Log.
     """
     try:
-        doc = frappe.get_doc({
-            "doctype": "SMRITI Numbering Audit Log",
+        doc = smriti.documents.new("NumberingAuditLog")
+        doc.update({
             "document_type": doctype,
             "document_name": docname,
             "generated_number": generated_number,
@@ -42,6 +43,6 @@ def log_audit(
             "timestamp": datetime.datetime.now()
         })
         doc.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
     except Exception as e:
-        frappe.log_error(f"Error logging UDNE audit: {str(e)}", "UDNE Audit Logger")
+        smriti.errors.log_error(f"Error logging UDNE audit: {str(e)}", "UDNE Audit Logger")

@@ -1,4 +1,5 @@
 import frappe
+from smriti_retail_os import smriti
 from smriti_retail_os.services.udne.exceptions import UDNECollisionError
 
 def validate_uniqueness(doctype: str, identifier: str) -> None:
@@ -6,7 +7,7 @@ def validate_uniqueness(doctype: str, identifier: str) -> None:
     Verifies that the generated identifier is unique in both the primary key
     'name' and the custom business display number fields.
     """
-    if frappe.db.exists(doctype, identifier):
+    if smriti.db.exists(doctype, identifier):
         raise UDNECollisionError(
             f"Collision detected: Primary Key '{identifier}' already exists in DocType '{doctype}'."
         )
@@ -14,7 +15,7 @@ def validate_uniqueness(doctype: str, identifier: str) -> None:
     try:
         meta = frappe.get_meta(doctype)
         if meta.has_field("custom_business_display_number"):
-            exists = frappe.get_all(
+            exists = smriti.db.get_list(
                 doctype,
                 filters={"custom_business_display_number": identifier},
                 limit=1

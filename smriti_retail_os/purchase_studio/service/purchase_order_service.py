@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # SMRITI Purchase Studio — Purchase Order Service
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.utils import flt, cint, nowdate, now_datetime
 from smriti_retail_os.purchase_studio.repository import PurchaseRepository
 from smriti_retail_os.purchase_studio.service.purchase_calculation_service import PurchaseCalculationService
@@ -53,10 +54,10 @@ class PurchaseOrderService:
     def create_purchase_order(supplier, items_list, schedule_date=None, remarks=None, warehouse=None, company=None):
         po = PurchaseRepository.new_doc("SMRITI Purchase Order")
         po.supplier = supplier
-        po.supplier_name = frappe.db.get_value("SMRITI Supplier", supplier, "supplier_name") or supplier
+        po.supplier_name = smriti.db.get("SMRITI Supplier", supplier, "supplier_name") or supplier
         po.transaction_date = nowdate()
         po.schedule_date = schedule_date or nowdate()
-        po.company = company or frappe.defaults.get_user_default("Company") or frappe.db.get_value("Company", {}, "name")
+        po.company = company or frappe.defaults.get_user_default("Company") or smriti.db.get("Company", {}, "name")
         po.remarks = remarks
         po.status = "Draft"
         po.naming_series = "SMRITI-PO-.YYYY.-"
@@ -64,11 +65,11 @@ class PurchaseOrderService:
         for it in items_list:
             po.append("items", {
                 "item_code": it.get("item_code"),
-                "item_name": it.get("item_name") or frappe.db.get_value("Item", it.get("item_code"), "item_name"),
+                "item_name": it.get("item_name") or smriti.db.get("Item", it.get("item_code"), "item_name"),
                 "qty": flt(it.get("qty")),
                 "rate": flt(it.get("rate")),
                 "warehouse": it.get("warehouse") or warehouse,
-                "uom": it.get("uom") or frappe.db.get_value("Item", it.get("item_code"), "stock_uom"),
+                "uom": it.get("uom") or smriti.db.get("Item", it.get("item_code"), "stock_uom"),
                 "article": it.get("article"),
                 "attribute_summary": it.get("attribute_summary"),
                 "barcode": it.get("barcode")
@@ -177,7 +178,7 @@ class PurchaseOrderService:
             limit_start=limit_start,
             limit_page_length=int(page_size)
         )
-        total = frappe.db.count("SMRITI Purchase Order", filters=filters)
+        total = smriti.db.count("SMRITI Purchase Order", filters=filters)
         return {
             "items": pos,
             "total": total
@@ -185,10 +186,10 @@ class PurchaseOrderService:
 
     @staticmethod
     def get_dashboard_data(company=None):
-        company = company or frappe.defaults.get_user_default("Company") or frappe.db.get_value("Company", {}, "name")
+        company = company or frappe.defaults.get_user_default("Company") or smriti.db.get("Company", {}, "name")
 
         # Count open SMRITI POs (intent + approval layer)
-        open_pos = frappe.db.count("SMRITI Purchase Order", {
+        open_pos = smriti.db.count("SMRITI Purchase Order", {
             "company": company,
             "status": ["in", ["Submitted", "Approved", "Ordered", "Partially Received"]]
         })

@@ -9,7 +9,8 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 
 
 def execute():
@@ -26,7 +27,7 @@ def execute():
 
     try:
         # Secondary: tabSingles direct update (belt + suspenders)
-        frappe.db.sql("""
+        smriti.db.sql("""
             INSERT INTO `tabSingles` (doctype, field, value)
             VALUES ('System Settings', 'setup_complete', '1')
             ON DUPLICATE KEY UPDATE value = '1'
@@ -39,5 +40,5 @@ def execute():
     # Global Defaults is a Single DocType with no 'setup_complete' field
     # in standard ERPNext — this would cause migration failure
 
-    frappe.db.commit()
+    smriti.db.commit()
     print("✅ SMRITI: Setup Wizard patch complete")

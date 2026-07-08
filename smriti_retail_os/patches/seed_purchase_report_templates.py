@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 @patch: smriti_retail_os.patches.seed_purchase_report_templates
 @version: v3.1.0
@@ -7,6 +7,7 @@
 """
 
 import frappe
+from smriti_retail_os import smriti
 import json
 
 
@@ -195,18 +196,18 @@ def execute():
     """Idempotent seed: upserts 6 Purchase Report Templates."""
     for tmpl in PURCHASE_TEMPLATES:
         report_key = tmpl["report_key"]
-        if frappe.db.exists("SMRITI Report Template", report_key):
-            doc = frappe.get_doc("SMRITI Report Template", report_key)
+        if smriti.db.exists("SMRITI Report Template", report_key):
+            doc = smriti.documents.get("SMRITI Report Template", report_key)
             for k, v in tmpl.items():
                 if k != "report_key":
                     doc.set(k, v)
             doc.save(ignore_permissions=True)
         else:
-            doc = frappe.new_doc("SMRITI Report Template")
+            doc = smriti.documents.new("SMRITI Report Template")
             doc.name = report_key
             for k, v in tmpl.items():
                 doc.set(k, v)
             doc.insert(ignore_permissions=True)
 
-    frappe.db.commit()
+    smriti.db.commit()
     print(f"[seed_purchase_report_templates] Seeded {len(PURCHASE_TEMPLATES)} Purchase Report Templates.")

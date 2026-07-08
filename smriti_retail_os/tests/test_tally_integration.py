@@ -3,6 +3,7 @@
 # For license information, please see license.txt
 
 import frappe
+from smriti_retail_os import smriti
 import unittest
 from smriti_retail_os.smriti_retail_os.services import tally_service
 from smriti_retail_os.smriti_retail_os.api import tally_api
@@ -13,18 +14,18 @@ class TestTallyIntegration(unittest.TestCase):
 		super().setUpClass()
 		from smriti_retail_os.setup import setup_smriti_retail_os
 		setup_smriti_retail_os()
-		frappe.db.commit()
+		smriti.db.commit()
 
 	def _ensure_fiscal_year_for_company(self, company):
 		fy_name = "2026-2027"
-		if not frappe.db.exists("Fiscal Year", fy_name):
-			fy = frappe.new_doc("Fiscal Year")
+		if not smriti.db.exists("Fiscal Year", fy_name):
+			fy = smriti.documents.new("Fiscal Year")
 			fy.year = fy_name
 			fy.year_start_date = "2026-04-01"
 			fy.year_end_date = "2027-03-31"
 			fy.insert(ignore_permissions=True)
 		else:
-			fy = frappe.get_doc("Fiscal Year", fy_name)
+			fy = smriti.documents.get("Fiscal Year", fy_name)
 		
 		if fy.companies:
 			company_names = [c.company for c in fy.companies]
@@ -35,68 +36,68 @@ class TestTallyIntegration(unittest.TestCase):
 			fy.append("companies", {"company": company})
 			fy.save(ignore_permissions=True)
 			
-		frappe.db.commit()
+		smriti.db.commit()
 
 	def setUp(self):
 		# Provision test Company if it doesn't exist
 		self.company = "Test SMRITI Company"
-		if not frappe.db.exists("Company", self.company):
-			comp = frappe.new_doc("Company")
+		if not smriti.db.exists("Company", self.company):
+			comp = smriti.documents.new("Company")
 			comp.company_name = self.company
 			comp.default_currency = "INR"
 			comp.country = "India"
 			comp.insert(ignore_permissions=True)
-			frappe.db.commit()
+			smriti.db.commit()
 		self._ensure_fiscal_year_for_company(self.company)
 
-		cust_group = frappe.db.get_value("Customer Group", {"is_group": 0}) or "Individual"
-		territory = frappe.db.get_value("Territory", {"is_group": 0}) or "All Territories"
+		cust_group = smriti.db.get("Customer Group", {"is_group": 0}) or "Individual"
+		territory = smriti.db.get("Territory", {"is_group": 0}) or "All Territories"
 
 		# Create a dummy customer
-		if not frappe.db.exists("Customer", "Tally Test Customer"):
-			cust = frappe.new_doc("Customer")
+		if not smriti.db.exists("Customer", "Tally Test Customer"):
+			cust = smriti.documents.new("Customer")
 			cust.customer_name = "Tally Test Customer"
 			cust.customer_group = cust_group
 			cust.territory = territory
 			cust.insert(ignore_permissions=True)
 
 		# Find a valid sales item (excluding template items with variants)
-		item_code = frappe.db.get_value("Item", {"is_sales_item": 1, "disabled": 0, "has_variants": 0})
+		item_code = smriti.db.get("Item", {"is_sales_item": 1, "disabled": 0, "has_variants": 0})
 
 		if not item_code:
 			# Create a dummy item
-			item = frappe.new_doc("Item")
+			item = smriti.documents.new("Item")
 			item.item_code = "Tally Test Item"
 			item.item_name = "Tally Test Item"
-			item.item_group = frappe.db.get_value("Item Group", {"is_group": 0}) or "All Item Groups"
+			item.item_group = smriti.db.get("Item Group", {"is_group": 0}) or "All Item Groups"
 			item.is_stock_item = 0
 			item.insert(ignore_permissions=True)
 			item_code = "Tally Test Item"
 
 		# Get income account
-		income_account = frappe.db.get_value("Account", {"company": self.company, "account_type": "Income"})
+		income_account = smriti.db.get("Account", {"company": self.company, "account_type": "Income"})
 		if not income_account:
-			income_account = frappe.db.get_value("Account", {"company": self.company, "is_group": 0})
+			income_account = smriti.db.get("Account", {"company": self.company, "is_group": 0})
 
 		# Get warehouse
-		warehouse = frappe.db.get_value("Warehouse", {"company": self.company})
+		warehouse = smriti.db.get("Warehouse", {"company": self.company})
 		if not warehouse:
-			wh = frappe.new_doc("Warehouse")
+			wh = smriti.documents.new("Warehouse")
 			wh.warehouse_name = "Test WH"
 			wh.company = self.company
 			wh.insert(ignore_permissions=True)
 			warehouse = wh.name
-			frappe.db.commit()
+			smriti.db.commit()
 
 		# Ensure cost center exists for the test company
-		cost_center = frappe.db.get_value("Company", self.company, "cost_center")
+		cost_center = smriti.db.get("Company", self.company, "cost_center")
 		if not cost_center:
-			cost_center = frappe.db.get_value("Cost Center", {"company": self.company, "is_group": 0}, "name")
+			cost_center = smriti.db.get("Cost Center", {"company": self.company, "is_group": 0}, "name")
 		if not cost_center:
 			# The root cost center name MUST equal company name to pass parent_cost_center check!
-			parent_cc = frappe.db.get_value("Cost Center", {"cost_center_name": self.company}, "name")
+			parent_cc = smriti.db.get("Cost Center", {"cost_center_name": self.company}, "name")
 			if not parent_cc:
-				pcc = frappe.new_doc("Cost Center")
+				pcc = smriti.documents.new("Cost Center")
 				pcc.cost_center_name = self.company
 				pcc.company = self.company
 				pcc.is_group = 1
@@ -104,7 +105,7 @@ class TestTallyIntegration(unittest.TestCase):
 				pcc.insert(ignore_permissions=True)
 				parent_cc = pcc.name
 			
-			cc = frappe.new_doc("Cost Center")
+			cc = smriti.documents.new("Cost Center")
 			cc.cost_center_name = "Test Cost Center"
 			cc.company = self.company
 			cc.is_group = 0
@@ -113,25 +114,25 @@ class TestTallyIntegration(unittest.TestCase):
 			cost_center = cc.name
 
 		# Ensure cost center and round off account are set on Company
-		round_off_account = frappe.db.get_value("Account", {"company": self.company, "account_name": "Round Off", "is_group": 0})
+		round_off_account = smriti.db.get("Account", {"company": self.company, "account_name": "Round Off", "is_group": 0})
 		if not round_off_account:
-			parent_exp = frappe.db.get_value("Account", {"company": self.company, "root_type": "Expense", "is_group": 1})
+			parent_exp = smriti.db.get("Account", {"company": self.company, "root_type": "Expense", "is_group": 1})
 			if not parent_exp:
-				parent_exp = frappe.db.get_value("Account", {"company": self.company, "is_group": 1})
-			acc = frappe.new_doc("Account")
+				parent_exp = smriti.db.get("Account", {"company": self.company, "is_group": 1})
+			acc = smriti.documents.new("Account")
 			acc.account_name = "Round Off"
 			acc.parent_account = parent_exp
 			acc.company = self.company
 			acc.insert(ignore_permissions=True)
 			round_off_account = acc.name
 		
-		frappe.db.set_value("Company", self.company, {
+		smriti.db.set_value("Company", self.company, {
 			"round_off_cost_center": cost_center,
 			"round_off_account": round_off_account
 		})
 
 		# Create a dummy Sales Invoice
-		self.invoice = frappe.new_doc("Sales Invoice")
+		self.invoice = smriti.documents.new("Sales Invoice")
 		self.invoice.customer = "Tally Test Customer"
 		self.invoice.company = self.company
 		self.invoice.posting_date = "2026-06-27"
@@ -183,7 +184,7 @@ class TestTallyIntegration(unittest.TestCase):
 
 	def test_xml_generation(self):
 		"""Tests generating Tally XML format from a Sales Invoice."""
-		settings = frappe.get_doc("SMRITI Tally Settings")
+		settings = smriti.documents.get_single("TallySettings")
 		settings.tally_company = "Unit Test Tally Company"
 		settings.sales_ledger = "Test Sales Account"
 		settings.cash_ledger = "Test Cash Ledger"
@@ -214,13 +215,13 @@ class TestTallyIntegration(unittest.TestCase):
 
 	def test_purchase_voucher_xml(self):
 		"""Tests generating Tally XML for a Purchase Invoice."""
-		settings = frappe.get_doc("SMRITI Tally Settings")
+		settings = smriti.documents.get_single("TallySettings")
 		settings.tally_company = "Purchase Test Company"
 		settings.purchase_ledger = "Test Purchase Account"
 		
 		# In-memory Purchase Invoice doc
-		mock_doc = frappe.get_doc({
-			"doctype": "Purchase Invoice",
+		mock_doc = smriti.documents.new("PurchaseInvoice")
+		mock_doc.update({
 			"name": "PINV-26-00001",
 			"posting_date": "2026-06-27",
 			"supplier": "Test Supplier",
@@ -237,11 +238,11 @@ class TestTallyIntegration(unittest.TestCase):
 
 	def test_credit_note_xml(self):
 		"""Tests generating Tally XML for a Credit Note."""
-		settings = frappe.get_doc("SMRITI Tally Settings")
+		settings = smriti.documents.get_single("TallySettings")
 		settings.sales_ledger = "Test Sales Account"
 		
-		mock_doc = frappe.get_doc({
-			"doctype": "Sales Invoice",
+		mock_doc = smriti.documents.new("SalesInvoice")
+		mock_doc.update({
 			"name": "SINV-26-CN001",
 			"posting_date": "2026-06-27",
 			"customer": "Test Customer",
@@ -258,11 +259,11 @@ class TestTallyIntegration(unittest.TestCase):
 
 	def test_debit_note_xml(self):
 		"""Tests generating Tally XML for a Debit Note."""
-		settings = frappe.get_doc("SMRITI Tally Settings")
+		settings = smriti.documents.get_single("TallySettings")
 		settings.purchase_ledger = "Test Purchase Account"
 		
-		mock_doc = frappe.get_doc({
-			"doctype": "Purchase Invoice",
+		mock_doc = smriti.documents.new("PurchaseInvoice")
+		mock_doc.update({
 			"name": "PINV-26-DN001",
 			"posting_date": "2026-06-27",
 			"supplier": "Test Supplier",
@@ -278,13 +279,13 @@ class TestTallyIntegration(unittest.TestCase):
 
 	def test_payment_entry_xml(self):
 		"""Tests generating Tally XML for Payment Entry Receipt & Payment."""
-		settings = frappe.get_doc("SMRITI Tally Settings")
+		settings = smriti.documents.get_single("TallySettings")
 		settings.cash_ledger = "Tally Cash"
 		settings.bank_ledger = "Tally Bank"
 		
 		# Receipt (Receive Advance)
-		receipt_doc = frappe.get_doc({
-			"doctype": "Payment Entry",
+		receipt_doc = smriti.documents.new("PaymentEntry")
+		receipt_doc.update({
 			"name": "PE-26-00001",
 			"posting_date": "2026-06-27",
 			"payment_type": "Receive",
@@ -300,8 +301,8 @@ class TestTallyIntegration(unittest.TestCase):
 		self.assertIn("<LEDGERNAME>Tally Cash</LEDGERNAME>", xml_receipt)
 		
 		# Payment (Pay Supplier)
-		payment_doc = frappe.get_doc({
-			"doctype": "Payment Entry",
+		payment_doc = smriti.documents.new("PaymentEntry")
+		payment_doc.update({
 			"name": "PE-26-00002",
 			"posting_date": "2026-06-27",
 			"payment_type": "Pay",

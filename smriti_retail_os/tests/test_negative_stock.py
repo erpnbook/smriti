@@ -11,6 +11,7 @@
 
 import unittest
 import frappe
+from smriti_retail_os import smriti
 from frappe.utils import today, add_days
 from smriti_retail_os.negative_stock.service.policy_resolver import SMRITINegativeStockPolicyResolver
 from smriti_retail_os.negative_stock.service.approval_service import SMRITINegativeStockApprovalService
@@ -21,43 +22,43 @@ class TestSMRITINegativeStock(unittest.TestCase):
 
 	def setUp(self):
 		# Clean existing test data to ensure isolated test environment
-		frappe.db.delete("SMRITI Negative Stock Policy")
-		frappe.db.delete("SMRITI Negative Stock Case")
-		frappe.db.delete("SMRITI Negative Stock Recovery")
-		frappe.db.commit()
+		smriti.db.delete("SMRITI Negative Stock Policy")
+		smriti.db.delete("SMRITI Negative Stock Case")
+		smriti.db.delete("SMRITI Negative Stock Recovery")
+		smriti.db.commit()
 
 		self.test_company = "_Test Company"
 		self.test_item = "_Test Item"
 		self.test_item_group = "All Item Groups"
 
 		# Create test company if it doesn't exist
-		if not frappe.db.exists("Company", self.test_company):
-			doc = frappe.new_doc("Company")
+		if not smriti.db.exists("Company", self.test_company):
+			doc = smriti.documents.new("Company")
 			doc.company_name = self.test_company
 			doc.default_currency = "INR"
 			doc.abbr = "TC"
 			doc.insert()
 
-		abbr = frappe.db.get_value("Company", self.test_company, "abbr") or "TC"
+		abbr = smriti.db.get("Company", self.test_company, "abbr") or "TC"
 		self.test_warehouse = f"Stores - {abbr}"
 
-		if not frappe.db.exists("Warehouse", self.test_warehouse):
+		if not smriti.db.exists("Warehouse", self.test_warehouse):
 			# Delete conflicting warehouse
-			frappe.db.delete("Warehouse", {"warehouse_name": "Stores", "company": self.test_company})
-			doc = frappe.new_doc("Warehouse")
+			smriti.db.delete("Warehouse", {"warehouse_name": "Stores", "company": self.test_company})
+			doc = smriti.documents.new("Warehouse")
 			doc.warehouse_name = "Stores"
 			doc.company = self.test_company
 			doc.insert()
 
-		if not frappe.db.exists("GST HSN Code", "999900"):
-			hsn = frappe.new_doc("GST HSN Code")
+		if not smriti.db.exists("GST HSN Code", "999900"):
+			hsn = smriti.documents.new("GST HSN Code")
 			hsn.name = "999900"
 			hsn.hsn_code = "999900"
 			hsn.description = "Test HSN Code"
 			hsn.insert()
 
-		if not frappe.db.exists("Item", self.test_item):
-			doc = frappe.new_doc("Item")
+		if not smriti.db.exists("Item", self.test_item):
+			doc = smriti.documents.new("Item")
 			doc.item_code = self.test_item
 			doc.item_name = "_Test Item"
 			doc.item_group = self.test_item_group
@@ -66,10 +67,10 @@ class TestSMRITINegativeStock(unittest.TestCase):
 			doc.insert()
 
 	def tearDown(self):
-		frappe.db.delete("SMRITI Negative Stock Policy")
-		frappe.db.delete("SMRITI Negative Stock Case")
-		frappe.db.delete("SMRITI Negative Stock Recovery")
-		frappe.db.commit()
+		smriti.db.delete("SMRITI Negative Stock Policy")
+		smriti.db.delete("SMRITI Negative Stock Case")
+		smriti.db.delete("SMRITI Negative Stock Recovery")
+		smriti.db.commit()
 
 	def test_policy_resolution_hierarchy(self):
 		"""
@@ -77,7 +78,7 @@ class TestSMRITINegativeStock(unittest.TestCase):
 		Item Group should win because of higher specificity in the hierarchy.
 		"""
 		# Global Policy (Priority 100) -> Allow + Reason
-		p_global = frappe.new_doc("SMRITI Negative Stock Policy")
+		p_global = smriti.documents.new("SMRITI Negative Stock Policy")
 		p_global.apply_to = "Global"
 		p_global.policy_mode = "Allow + Reason"
 		p_global.priority = 100
@@ -85,7 +86,7 @@ class TestSMRITINegativeStock(unittest.TestCase):
 		p_global.insert()
 
 		# Item Group Policy (Priority 10) -> Block
-		p_group = frappe.new_doc("SMRITI Negative Stock Policy")
+		p_group = smriti.documents.new("SMRITI Negative Stock Policy")
 		p_group.apply_to = "Item Group"
 		p_group.item_group = self.test_item_group
 		p_group.policy_mode = "Block"
@@ -105,7 +106,7 @@ class TestSMRITINegativeStock(unittest.TestCase):
 		Verifies priority-based conflict resolution at same hierarchy level.
 		"""
 		# Policy A (Priority 10) -> Warn
-		p_a = frappe.new_doc("SMRITI Negative Stock Policy")
+		p_a = smriti.documents.new("SMRITI Negative Stock Policy")
 		p_a.apply_to = "Global"
 		p_a.policy_mode = "Warn"
 		p_a.priority = 10
@@ -113,7 +114,7 @@ class TestSMRITINegativeStock(unittest.TestCase):
 		p_a.insert()
 
 		# Policy B (Priority 50) -> Block
-		p_b = frappe.new_doc("SMRITI Negative Stock Policy")
+		p_b = smriti.documents.new("SMRITI Negative Stock Policy")
 		p_b.apply_to = "Global"
 		p_b.policy_mode = "Block"
 		p_b.priority = 50
@@ -131,7 +132,7 @@ class TestSMRITINegativeStock(unittest.TestCase):
 		Verifies the 2-tier approval workflow lifecycle.
 		"""
 		# Policy allowing negative stock with approval
-		p = frappe.new_doc("SMRITI Negative Stock Policy")
+		p = smriti.documents.new("SMRITI Negative Stock Policy")
 		p.apply_to = "Global"
 		p.policy_mode = "Allow + Reason"
 		p.approval_required = 1
@@ -149,14 +150,14 @@ class TestSMRITINegativeStock(unittest.TestCase):
 		app_res = approve_case(case_id, comment="Approved for immediate dispatch", reference="PO-1002")
 		self.assertEqual(app_res["status"], "Approved")
 
-		case_status = frappe.db.get_value("SMRITI Negative Stock Case", case_id, "status")
+		case_status = smriti.db.get("SMRITI Negative Stock Case", case_id, "status")
 		self.assertEqual(case_status, "Approved")
 
 	def test_kgf_explainability(self):
 		"""
 		Verifies that KGF explainability logs are generated with worked examples.
 		"""
-		p = frappe.new_doc("SMRITI Negative Stock Policy")
+		p = smriti.documents.new("SMRITI Negative Stock Policy")
 		p.apply_to = "Global"
 		p.policy_mode = "Warn"
 		p.priority = 10
@@ -175,7 +176,7 @@ class TestSMRITINegativeStock(unittest.TestCase):
 		Verifies that recovery engine triggers when balance returns positive.
 		"""
 		# Create a negative stock case
-		case_doc = frappe.new_doc("SMRITI Negative Stock Case")
+		case_doc = smriti.documents.new("SMRITI Negative Stock Case")
 		case_doc.name = "NS/TEST/2026/00001"
 		case_doc.company = self.test_company
 		case_doc.warehouse = self.test_warehouse
@@ -185,22 +186,22 @@ class TestSMRITINegativeStock(unittest.TestCase):
 		case_doc.insert(ignore_permissions=True)
 
 		# Mock current stock balance by updating Bin actual_qty to positive
-		if not frappe.db.exists("Bin", {"item_code": self.test_item, "warehouse": self.test_warehouse}):
-			bin_doc = frappe.new_doc("Bin")
+		if not smriti.db.exists("Bin", {"item_code": self.test_item, "warehouse": self.test_warehouse}):
+			bin_doc = smriti.documents.new("Bin")
 			bin_doc.item_code = self.test_item
 			bin_doc.warehouse = self.test_warehouse
 			bin_doc.actual_qty = 10.0
 			bin_doc.insert(ignore_permissions=True)
 		else:
-			frappe.db.set_value("Bin", {"item_code": self.test_item, "warehouse": self.test_warehouse}, "actual_qty", 10.0)
+			smriti.db.set_value("Bin", {"item_code": self.test_item, "warehouse": self.test_warehouse}, "actual_qty", 10.0)
 
 		# Trigger recovery check
 		rec_srv = SMRITINegativeStockRecoveryService(self.test_item, self.test_warehouse)
 		rec_srv.check_and_recover(source_doctype="Stock Entry", source_name="STE-00021", recovery_type="Auto")
 
-		case_status = frappe.db.get_value("SMRITI Negative Stock Case", case_doc.name, "status")
+		case_status = smriti.db.get("SMRITI Negative Stock Case", case_doc.name, "status")
 		self.assertEqual(case_status, "Recovered")
 
 		# Verify SMRITI Negative Stock Recovery entry exists
-		recovery_exists = frappe.db.exists("SMRITI Negative Stock Recovery", {"case_id": case_doc.name})
+		recovery_exists = smriti.db.exists("SMRITI Negative Stock Recovery", {"case_id": case_doc.name})
 		self.assertTrue(recovery_exists)

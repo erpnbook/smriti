@@ -1,6 +1,7 @@
 import time
 import json
 import frappe
+from smriti_retail_os import smriti
 from smriti_retail_os.services.udne.interfaces import GenerationContext, UDNEResult
 from smriti_retail_os.services.udne.rule_loader import load_active_rule
 from smriti_retail_os.services.udne.context_resolver import resolve_context
@@ -39,7 +40,7 @@ def generate_number(doctype: str, context: GenerationContext) -> UDNEResult:
         try:
             if reservation_id:
                 # 3a. Consuming Offline Reserved Range
-                res_doc = frappe.get_doc("SMRITI Numbering Reserved Range", reservation_id)
+                res_doc = smriti.documents.get("SMRITI Numbering Reserved Range", reservation_id)
                 if res_doc.status not in ["Allocated", "Active"]:
                     raise frappe.ValidationError(f"Offline reservation range '{reservation_id}' is in '{res_doc.status}' state.")
                 
@@ -47,7 +48,7 @@ def generate_number(doctype: str, context: GenerationContext) -> UDNEResult:
                 if counter_val > res_doc.end_number:
                     res_doc.status = "Exhausted"
                     res_doc.save(ignore_permissions=True)
-                    frappe.db.commit()
+                    smriti.db.commit()
                     raise UDNEExhaustedError(f"Offline reservation range '{reservation_id}' has been exhausted.")
                 
                 res_doc.current_counter = counter_val + 1
@@ -56,7 +57,7 @@ def generate_number(doctype: str, context: GenerationContext) -> UDNEResult:
                 else:
                     res_doc.status = "Active"
                 res_doc.save(ignore_permissions=True)
-                frappe.db.commit()
+                smriti.db.commit()
             else:
                 # 3b. Atomic Counter Increment
                 counter_val = increment_counter(rule_name, reset_rule, ctx_dict)

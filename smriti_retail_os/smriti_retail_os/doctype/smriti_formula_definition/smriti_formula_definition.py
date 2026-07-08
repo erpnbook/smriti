@@ -14,13 +14,14 @@
 # For license information, please see license.txt
 
 import json
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from frappe.model.document import Document
 
 class SMRITIFormulaDefinition(Document):
     def validate(self):
         # 1. Uniqueness of formula_id + formula_version
-        duplicate = frappe.db.exists(
+        duplicate = smriti.db.exists(
             "SMRITI Formula Definition",
             {
                 "formula_id": self.formula_id,

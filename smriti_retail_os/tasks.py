@@ -2,7 +2,8 @@
 # Copyright (c) 2026, SMRITI Retail OS and contributors
 # For license information, please see license.txt
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from frappe.utils import add_days, today
 
 def daily_telemetry_cleanup():
@@ -20,5 +21,5 @@ def daily_telemetry_cleanup():
         pass
 
     purge_date = add_days(today(), -retention_days)
-    frappe.db.delete("SMRITI Knowledge Usage Log", {"timestamp": ["<", purge_date]})
-    frappe.db.commit()
+    smriti.db.delete("SMRITI Knowledge Usage Log", {"timestamp": ["<", purge_date]})
+    smriti.db.commit()

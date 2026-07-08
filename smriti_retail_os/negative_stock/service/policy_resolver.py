@@ -10,7 +10,8 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from frappe.utils import today
 
 class SMRITINegativeStockPolicyResolver(object):
@@ -29,7 +30,7 @@ class SMRITINegativeStockPolicyResolver(object):
 
 	def get_item_group(self):
 		if not self.item_doc and self.item_code:
-			self.item_doc = frappe.db.get_value("Item", self.item_code, ["item_group"], as_dict=True)
+			self.item_doc = smriti.db.get("Item", self.item_code, ["item_group"], as_dict=True)
 		return self.item_doc.item_group if self.item_doc else None
 
 	def resolve(self):
@@ -89,7 +90,7 @@ class SMRITINegativeStockPolicyResolver(object):
 		}
 
 		# Retrieve all policies and filter dates in Python to handle empty/null dates properly
-		policies = frappe.get_all("SMRITI Negative Stock Policy", fields=[
+		policies = smriti.db.get_list("SMRITI Negative Stock Policy", fields=[
 			"name", "apply_to", "company", "warehouse", "item_group", "item_code", 
 			"policy_mode", "priority", "approval_required", "approval_flow", 
 			"effective_from", "effective_to", "modified"

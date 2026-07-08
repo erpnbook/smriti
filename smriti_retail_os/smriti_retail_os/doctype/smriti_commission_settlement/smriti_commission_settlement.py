@@ -10,15 +10,16 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.model.document import Document
 from frappe.utils import flt, nowdate
 
 class SMRITICommissionSettlement(Document):
     def validate(self):
         # 1. Enforce uniqueness: one settlement per employee, company, fiscal_year, month
-        duplicate = frappe.db.exists("SMRITI Commission Settlement", {
+        duplicate = smriti.db.exists("SMRITI Commission Settlement", {
             "employee": self.employee,
             "company": self.company,
             "fiscal_year": self.fiscal_year,
@@ -34,7 +35,7 @@ class SMRITICommissionSettlement(Document):
 
         # 2. Immutability checks
         if not self.is_new():
-            db_status = frappe.db.get_value("SMRITI Commission Settlement", self.name, "status")
+            db_status = smriti.db.get("SMRITI Commission Settlement", self.name, "status")
             if db_status in ["Approved", "Paid"]:
                 if db_status == "Paid":
                     frappe.throw(
@@ -48,7 +49,7 @@ class SMRITICommissionSettlement(Document):
                         frappe.ValidationError
                     )
                 # Check if other fields are modified
-                db_doc = frappe.get_doc("SMRITI Commission Settlement", self.name)
+                db_doc = smriti.documents.get("SMRITI Commission Settlement", self.name)
                 for field in ["employee", "company", "fiscal_year", "month", "gross_commission"]:
                     if self.get(field) != db_doc.get(field):
                         frappe.throw(

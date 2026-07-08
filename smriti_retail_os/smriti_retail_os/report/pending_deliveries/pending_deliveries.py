@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # SMRITI Pending Deliveries Script Report
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.utils import flt
 
 def execute(filters=None):
@@ -56,4 +57,4 @@ def get_data(filters):
 
     query += " ORDER BY po.schedule_date ASC"
     
-    return frappe.db.sql(query, tuple(params), as_dict=True)
+    return smriti.db.sql(query, tuple(params), as_dict=True)

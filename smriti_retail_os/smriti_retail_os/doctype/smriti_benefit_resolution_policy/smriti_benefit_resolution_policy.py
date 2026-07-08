@@ -13,14 +13,15 @@
 # Copyright (c) 2026, AITDL and contributors
 # For license information, please see license.txt
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from frappe.model.document import Document
 
 class SMRITIBenefitResolutionPolicy(Document):
     def validate(self):
         if self.is_active:
             # Deactivate all other policies
-            frappe.db.sql(
+            smriti.db.sql(
                 "update `tabSMRITI Benefit Resolution Policy` set is_active = 0 where name != %s",
                 (self.name,)
             )

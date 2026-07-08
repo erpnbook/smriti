@@ -8,6 +8,7 @@
 import time
 import json
 import frappe
+from smriti_retail_os import smriti
 from frappe.utils import now_datetime, get_datetime, get_datetime_str
 from smriti_retail_os.integration.core.registry import IntegrationRegistry
 from smriti_retail_os.integration.repository.queue_repository import QueueRepository
@@ -62,7 +63,7 @@ class IntegrationEngine:
                     queue_id=queue_id, adapter_id=adapter_id, event_type=event_type,
                     doc_type=doc_type, doc_name=doc_name, payload={}, success=False, error=error_msg
                 )
-                frappe.db.commit()
+                smriti.db.commit()
                 continue
 
             # 3. Parse Payload
@@ -75,7 +76,7 @@ class IntegrationEngine:
                     queue_id=queue_id, adapter_id=adapter_id, event_type=event_type,
                     doc_type=doc_type, doc_name=doc_name, payload={}, success=False, error=error_msg
                 )
-                frappe.db.commit()
+                smriti.db.commit()
                 continue
 
             # 4. Dispatch transaction through the dynamic adapter
@@ -84,7 +85,7 @@ class IntegrationEngine:
             try:
                 # Mark queue as Sending to prevent concurrent runs
                 QueueRepository.update_queue_status(queue_id, "Sending", retry_count)
-                frappe.db.commit()
+                smriti.db.commit()
                 
                 # Execute adapter event handler
                 outcome = adapter.handle_event(event_type, payload)
@@ -114,7 +115,7 @@ class IntegrationEngine:
                 if next_retry >= 5:
                     next_status = "Dead-Letter"
                     # Log critical alert
-                    frappe.log_error(
+                    smriti.errors.log_error(
                         title=f"SMRITI Connect Dead-Letter Event: {doc_name}",
                         message=f"Event: {event_type}\nAdapter: {adapter_id}\nRetries exceeded.\nError: {error_msg}"
                     )
@@ -130,4 +131,4 @@ class IntegrationEngine:
                 QueueRepository.update_provider_health(adapter_id, "Unhealthy", duration, error_msg)
 
             # Commit current run to release DB locks
-            frappe.db.commit()
+            smriti.db.commit()

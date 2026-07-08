@@ -3,6 +3,7 @@
 # For license information, please see license.txt
 
 import frappe
+from smriti_retail_os import smriti
 import json
 
 def build_payload(doc, integration):
@@ -30,7 +31,7 @@ def build_payload(doc, integration):
 			
 			payload_str = json.dumps(payload_dict, default=str)
 		except Exception as e:
-			frappe.log_error(f"UIE Payload Builder mapping error: {str(e)}", "UIE Mapping Error")
+			smriti.errors.log_error(f"UIE Payload Builder mapping error: {str(e)}", "UIE Mapping Error")
 			payload_str = json.dumps(doc_dict, default=str)
 	else:
 		# Fallback to standard JSON serialization

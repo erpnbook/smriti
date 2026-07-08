@@ -12,7 +12,8 @@
 #
 
 import json
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from frappe.utils import now_datetime
 
 
@@ -51,11 +52,11 @@ def log(event_type, payload, before=None, after=None, reason=None, user=None):
         reason (str):       Mandatory for rejection, cancellation, return events
         user (str):         Defaults to frappe.session.user
 
-    This function is called AFTER frappe.db.commit() to ensure the audit entry
+    This function is called AFTER smriti.db.commit() to ensure the audit entry
     only exists if the primary action succeeded.
     """
     try:
-        doc = frappe.new_doc("SMRITI Purchase Audit Log")
+        doc = smriti.documents.new("SMRITI Purchase Audit Log")
         doc.event_type    = event_type
         doc.document_type = payload.get("doctype", "")
         doc.document_name = payload.get("name", "")
@@ -68,11 +69,11 @@ def log(event_type, payload, before=None, after=None, reason=None, user=None):
         doc.insert(ignore_permissions=True)
         # Audit log has its own commit to ensure it persists even if
         # the caller's outer scope rolls back for unrelated reasons.
-        frappe.db.commit()
+        smriti.db.commit()
     except Exception as e:
         # Audit failure must NEVER block the primary business operation.
         # Log to Error Log but do not re-raise.
-        frappe.log_error(
+        smriti.errors.log_error(
             f"SMRITI Audit Log failure — event: {event_type} — {str(e)}",
             "Purchase Studio Audit Error"
         )

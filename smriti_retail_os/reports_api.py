@@ -16,8 +16,9 @@ All data sourced from existing ERPNext DocTypes.
 No custom DocTypes. No duplicate logic.
 """
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.utils import (
     getdate, nowdate, add_days, add_months,
     flt, fmt_money, get_first_day, get_last_day, cint
@@ -45,7 +46,7 @@ def get_sales_report(from_date=None, to_date=None, granularity="daily"):
         to_date = nowdate()
 
     # ── Summary totals via single SQL aggregate query ──────────────────────────────
-    totals_rows = frappe.db.sql("""
+    totals_rows = smriti.db.sql("""
         SELECT
             COUNT(*) AS total_bills,
             COALESCE(SUM(grand_total), 0) AS total_sales,
@@ -101,7 +102,7 @@ def get_sales_report(from_date=None, to_date=None, granularity="daily"):
 def _get_payment_breakdown(from_date, to_date):
     """Payment mode totals from POS Payment entries."""
     try:
-        rows = frappe.db.sql("""
+        rows = smriti.db.sql("""
             SELECT pp.mode_of_payment, SUM(pp.amount) as total
             FROM `tabPOS Invoice` pi
             JOIN `tabSales Invoice Payment` pp ON pp.parent = pi.name
@@ -118,7 +119,7 @@ def _get_payment_breakdown(from_date, to_date):
 def _get_top_items(from_date, to_date, limit=10):
     """Top selling items by quantity."""
     try:
-        rows = frappe.db.sql("""
+        rows = smriti.db.sql("""
             SELECT
                 pii.item_code,
                 pii.item_name,
@@ -140,7 +141,7 @@ def _get_top_items(from_date, to_date, limit=10):
 def _get_cashier_summary(from_date, to_date):
     """Sales totals per cashier."""
     try:
-        rows = frappe.db.sql("""
+        rows = smriti.db.sql("""
             SELECT
                 owner as cashier,
                 COUNT(*) as bills,
@@ -159,7 +160,7 @@ def _get_cashier_summary(from_date, to_date):
 def _get_daily_breakdown_sql(from_date, to_date):
     """Group invoices by date using SQL GROUP BY — zero in-memory invoice loading."""
     try:
-        rows = frappe.db.sql("""
+        rows = smriti.db.sql("""
             SELECT
                 posting_date AS date,
                 COUNT(*) AS bills,
@@ -178,7 +179,7 @@ def _get_daily_breakdown_sql(from_date, to_date):
 def _get_hourly_breakdown_sql(date):
     """Group invoices by hour for single-day view using SQL GROUP BY."""
     try:
-        rows = frappe.db.sql("""
+        rows = smriti.db.sql("""
             SELECT
                 LPAD(HOUR(posting_time), 2, '0') AS hour,
                 COUNT(*) AS bills,
@@ -241,7 +242,7 @@ def get_stock_report(warehouse=None, item_group=None, show_zero=0):
     if not int(show_zero):
         filters["actual_qty"] = [">", 0]
 
-    bins = frappe.get_all(
+    bins = smriti.db.get_list(
         "Bin",
         filters=filters,
         fields=[
@@ -260,7 +261,7 @@ def get_stock_report(warehouse=None, item_group=None, show_zero=0):
     # Single bulk fetch — replaces N individual DB calls
     item_map = {}
     if item_codes:
-        items = frappe.get_all(
+        items = smriti.db.get_list(
             "Item",
             filters={"name": ["in", item_codes]},
             fields=["name", "item_name", "item_group",
@@ -308,7 +309,7 @@ def get_stock_report(warehouse=None, item_group=None, show_zero=0):
 
 def _get_warehouses():
     """List of all store warehouses."""
-    return frappe.get_all(
+    return smriti.db.get_list(
         "Warehouse",
         filters={"is_group": 0, "disabled": 0},
         fields=["name", "warehouse_name"],
@@ -335,7 +336,7 @@ def get_gst_report(from_date=None, to_date=None):
 
     # Tax detail rows from POS Invoice taxes table
     try:
-        tax_rows = frappe.db.sql("""
+        tax_rows = smriti.db.sql("""
             SELECT
                 pt.account_head,
                 pt.description,
@@ -356,7 +357,7 @@ def get_gst_report(from_date=None, to_date=None):
 
     # Invoice-level totals
     try:
-        inv_summary = frappe.db.sql("""
+        inv_summary = smriti.db.sql("""
             SELECT
                 SUM(CASE WHEN is_return = 1 THEN -1 ELSE 1 END) as total_invoices,
                 SUM(net_total) as taxable_value,
@@ -372,7 +373,7 @@ def get_gst_report(from_date=None, to_date=None):
 
     # B2C summary (retail — all walk-in / non-GSTIN customers)
     try:
-        b2c = frappe.db.sql("""
+        b2c = smriti.db.sql("""
             SELECT
                 SUM(net_total) as taxable,
                 SUM(total_taxes_and_charges) as tax,
@@ -413,7 +414,7 @@ def get_outstanding_report(customer=None, days_overdue=0):
     if customer:
         filters["customer"] = customer
 
-    invoices = frappe.get_all(
+    invoices = smriti.db.get_list(
         "Sales Invoice",
         filters=filters,
         fields=[
@@ -482,7 +483,7 @@ def get_quick_stats():
     month_start = str(get_first_day(today))
 
     # Today's sales
-    today_sales = frappe.db.sql("""
+    today_sales = smriti.db.sql("""
         SELECT COALESCE(SUM(grand_total), 0) as total,
                COUNT(*) as bills
         FROM `tabPOS Invoice`
@@ -490,14 +491,14 @@ def get_quick_stats():
     """, {"today": today}, as_dict=True)[0]
 
     # Yesterday's sales (for comparison)
-    yesterday_sales = frappe.db.sql("""
+    yesterday_sales = smriti.db.sql("""
         SELECT COALESCE(SUM(grand_total), 0) as total
         FROM `tabPOS Invoice`
         WHERE docstatus = 1 AND posting_date = %(yesterday)s
     """, {"yesterday": yesterday}, as_dict=True)[0]
 
     # Month sales
-    month_sales = frappe.db.sql("""
+    month_sales = smriti.db.sql("""
         SELECT COALESCE(SUM(grand_total), 0) as total
         FROM `tabPOS Invoice`
         WHERE docstatus = 1
@@ -505,14 +506,14 @@ def get_quick_stats():
     """, {"start": month_start, "today": today}, as_dict=True)[0]
 
     # Stock value
-    stock_value = frappe.db.sql("""
+    stock_value = smriti.db.sql("""
         SELECT COALESCE(SUM(stock_value), 0) as total
         FROM `tabBin`
         WHERE actual_qty > 0
     """, as_dict=True)[0]
 
     # Outstanding
-    outstanding = frappe.db.sql("""
+    outstanding = smriti.db.sql("""
         SELECT COALESCE(SUM(outstanding_amount), 0) as total
         FROM `tabSales Invoice`
         WHERE docstatus = 1 AND outstanding_amount > 0
@@ -563,7 +564,7 @@ def get_sales_return_register(from_date=None, to_date=None):
     notes = []
     for doctype in ["Sales Invoice", "POS Invoice"]:
         try:
-            invs = frappe.db.get_all(
+            invs = smriti.db.get_list(
                 doctype,
                 filters={
                     "docstatus": 1,
@@ -579,7 +580,7 @@ def get_sales_return_register(from_date=None, to_date=None):
                 inv["doc_type"] = doctype
                 notes.append(inv)
         except Exception as e:
-            frappe.log_error(f"Error in get_sales_return_register for {doctype}", str(e))
+            smriti.errors.log_error(f"Error in get_sales_return_register for {doctype}", str(e))
 
     result = []
     for note in notes:
@@ -587,7 +588,7 @@ def get_sales_return_register(from_date=None, to_date=None):
         sgst = 0.0
         igst = 0.0
         
-        taxes = frappe.db.get_all(
+        taxes = smriti.db.get_list(
             "Sales Taxes and Charges",
             filters={"parent": note.name},
             fields=["account_head", "tax_amount"]
@@ -642,7 +643,7 @@ def get_purchase_return_register(from_date=None, to_date=None):
         to_date = nowdate()
 
     try:
-        invs = frappe.db.get_all(
+        invs = smriti.db.get_list(
             "Purchase Invoice",
             filters={
                 "docstatus": 1,
@@ -655,7 +656,7 @@ def get_purchase_return_register(from_date=None, to_date=None):
             ]
         )
     except Exception as e:
-        frappe.log_error("Error in get_purchase_return_register", str(e))
+        smriti.errors.log_error("Error in get_purchase_return_register", str(e))
         return []
 
     result = []
@@ -664,7 +665,7 @@ def get_purchase_return_register(from_date=None, to_date=None):
         sgst = 0.0
         igst = 0.0
         
-        taxes = frappe.db.get_all(
+        taxes = smriti.db.get_list(
             "Purchase Taxes and Charges",
             filters={"parent": inv.name},
             fields=["account_head", "tax_amount"]
@@ -723,7 +724,7 @@ def get_gstr1_9b_report(from_date=None, to_date=None):
     notes = []
     for doctype in ["Sales Invoice", "POS Invoice"]:
         try:
-            invs = frappe.db.get_all(
+            invs = smriti.db.get_list(
                 doctype,
                 filters={
                     "docstatus": 1,
@@ -741,11 +742,11 @@ def get_gstr1_9b_report(from_date=None, to_date=None):
                 inv["note_type"] = "C"
                 notes.append(inv)
         except Exception as e:
-            frappe.log_error(f"Error fetching GSTR-1 9B for {doctype}", str(e))
+            smriti.errors.log_error(f"Error fetching GSTR-1 9B for {doctype}", str(e))
 
         if doctype == "Sales Invoice":
             try:
-                deb_notes = frappe.db.get_all(
+                deb_notes = smriti.db.get_list(
                     doctype,
                     filters={
                         "docstatus": 1,
@@ -764,19 +765,19 @@ def get_gstr1_9b_report(from_date=None, to_date=None):
                     inv["return_against"] = ""
                     notes.append(inv)
             except Exception as e:
-                frappe.log_error("Error fetching Debit Notes for GSTR-1 9B", str(e))
+                smriti.errors.log_error("Error fetching Debit Notes for GSTR-1 9B", str(e))
 
     for note in notes:
         orig_date = ""
         if note.get("return_against"):
             orig_doctype = "Sales Invoice" if note.doc_type == "Sales Invoice" else "POS Invoice"
-            orig_date = frappe.db.get_value(orig_doctype, note.return_against, "posting_date") or ""
+            orig_date = smriti.db.get(orig_doctype, note.return_against, "posting_date") or ""
         
         cgst = 0.0
         sgst = 0.0
         igst = 0.0
         
-        taxes = frappe.db.get_all(
+        taxes = smriti.db.get_list(
             "Sales Taxes and Charges",
             filters={"parent": note.name},
             fields=["account_head", "tax_amount"]
@@ -857,7 +858,7 @@ def get_deadline_alerts():
                 fields.append("customer as party")
                 fields.append("customer_name as party_name")
                 
-            invs = frappe.db.get_all(
+            invs = smriti.db.get_list(
                 doctype,
                 filters={"docstatus": 1, "is_return": 1},
                 fields=fields
@@ -867,7 +868,7 @@ def get_deadline_alerts():
                 orig_date = None
                 if inv.return_against:
                     orig_doctype = "Purchase Invoice" if doctype == "Purchase Invoice" else ("POS Invoice" if doctype == "POS Invoice" else "Sales Invoice")
-                    orig_date = frappe.db.get_value(orig_doctype, inv.return_against, "posting_date")
+                    orig_date = smriti.db.get(orig_doctype, inv.return_against, "posting_date")
                 
                 ref_date = orig_date or inv.posting_date
                 if not ref_date:
@@ -898,7 +899,7 @@ def get_deadline_alerts():
                         "grand_total": flt(inv.grand_total)
                     })
         except Exception as e:
-            frappe.log_error(f"Error in get_deadline_alerts for {doctype}", str(e))
+            smriti.errors.log_error(f"Error in get_deadline_alerts for {doctype}", str(e))
             
     status_order = {"Red": 0, "Amber": 1, "Green": 2}
     alerts.sort(key=lambda x: (status_order.get(x["status"], 3), x["days_left"]))
@@ -1255,8 +1256,8 @@ class SMRITIReportEngine:
 
     def _load_template(self):
         """Loads SMRITI Report Template from DB."""
-        if frappe.db.exists("SMRITI Report Template", self.report_key):
-            return frappe.get_doc("SMRITI Report Template", self.report_key)
+        if smriti.db.exists("SMRITI Report Template", self.report_key):
+            return smriti.documents.get("SMRITI Report Template", self.report_key)
         else:
             frappe.throw(_("Report Template '{0}' not found").format(self.report_key))
 
@@ -1338,9 +1339,9 @@ class SMRITIReportEngine:
                 continue
             
             # Fetch term from database or cache
-            term_name = frappe.db.get_value("SMRITI Business Term", {"term_id": fieldname}, "name")
+            term_name = smriti.db.get("SMRITI Business Term", {"term_id": fieldname}, "name")
             if not term_name:
-                term_name = frappe.db.get_value("SMRITI Business Term", {"dictionary_key": fieldname}, "name")
+                term_name = smriti.db.get("SMRITI Business Term", {"dictionary_key": fieldname}, "name")
                 
             if not term_name:
                 frappe.throw(
@@ -1349,7 +1350,7 @@ class SMRITIReportEngine:
                     frappe.ValidationError
                 )
             
-            term = frappe.get_doc("SMRITI Business Term", term_name)
+            term = smriti.documents.get("SMRITI Business Term", term_name)
             
             # Check approval status and reportable flag
             if term.approval_status != "Approved":
@@ -1410,21 +1411,21 @@ class SMRITIReportEngine:
             if not fieldname:
                 continue
             
-            term_name = frappe.db.get_value("SMRITI Business Term", {"term_id": fieldname}) or frappe.db.get_value("SMRITI Business Term", {"dictionary_key": fieldname})
+            term_name = smriti.db.get("SMRITI Business Term", {"term_id": fieldname}) or smriti.db.get("SMRITI Business Term", {"dictionary_key": fieldname})
             if not term_name:
                 continue
                 
-            term = frappe.get_doc("SMRITI Business Term", term_name)
+            term = smriti.documents.get("SMRITI Business Term", term_name)
             for f_row in term.get("related_formulas", []):
                 formula_name = f_row.formula_id
-                if not formula_name or not frappe.db.exists("SMRITI Formula Definition", formula_name):
+                if not formula_name or not smriti.db.exists("SMRITI Formula Definition", formula_name):
                     frappe.throw(
                         frappe._("Governance Violation: Linked formula definition '{0}' on term '{1}' does not exist in the Formula Registry.")
                         .format(formula_name, fieldname),
                         frappe.ValidationError
                     )
                 
-                formula = frappe.get_doc("SMRITI Formula Definition", formula_name)
+                formula = smriti.documents.get("SMRITI Formula Definition", formula_name)
                 if formula.status != "Approved":
                     frappe.throw(
                         frappe._("Governance Violation: Linked formula '{0}' is not approved (Current status: {1}).")
@@ -1469,7 +1470,7 @@ class SMRITIReportEngine:
         
         # Performance Logging in Activity Log
         try:
-            log_doc = frappe.new_doc("Activity Log")
+            log_doc = smriti.documents.new("Activity Log")
             log_doc.user = frappe.session.user
             log_doc.operation = "SMRITI Report Run"
             log_doc.subject = f"Report {self.report_key} executed in {duration:.4f}s returning {len(results)} rows"
@@ -1480,9 +1481,9 @@ class SMRITIReportEngine:
                 "rows_count": len(results)
             })
             log_doc.insert(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
         except Exception as e:
-            frappe.log_error(f"Error logging report execution: {str(e)}")
+            smriti.errors.log_error(f"Error logging report execution: {str(e)}")
 
         # Log to SMRITI PSV Activity Log for Explainability & Audit
         try:
@@ -1502,16 +1503,16 @@ class SMRITIReportEngine:
             
             for col in columns:
                 fieldname = col.get("fieldname")
-                term_name = frappe.db.get_value("SMRITI Business Term", {"term_id": fieldname}) or frappe.db.get_value("SMRITI Business Term", {"dictionary_key": fieldname})
+                term_name = smriti.db.get("SMRITI Business Term", {"term_id": fieldname}) or smriti.db.get("SMRITI Business Term", {"dictionary_key": fieldname})
                 if term_name:
-                    term = frappe.get_doc("SMRITI Business Term", term_name)
+                    term = smriti.documents.get("SMRITI Business Term", term_name)
                     if term.measure_or_dimension == "Measure":
                         aggregations[fieldname] = term.default_aggregation
                     else:
                         group_by_fields.append(fieldname)
             
-            explain_log = frappe.get_doc({
-                "doctype": "SMRITI PSV Activity Log",
+            explain_log = smriti.documents.new("PSVActivityLog")
+            explain_log.update({
                 "timestamp": frappe.utils.now_datetime(),
                 "user": frappe.session.user or "Administrator",
                 "action_type": "Formula Explained",
@@ -1527,9 +1528,9 @@ class SMRITIReportEngine:
                 })
             })
             explain_log.insert(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
         except Exception as e:
-            frappe.log_error(f"Error logging report execution explain audit: {str(e)}")
+            smriti.errors.log_error(f"Error logging report execution explain audit: {str(e)}")
 
         # Write to Cache
         if cache_minutes > 0:
@@ -1578,7 +1579,7 @@ class SMRITIReportEngine:
     def _run_inventory_productivity(self):
         company = self.filters.get("company")
         if not company:
-            company = frappe.defaults.get_user_default("Company") or frappe.db.get_value("Company", {}, "name")
+            company = frappe.defaults.get_user_default("Company") or smriti.db.get("Company", {}, "name")
         timespan_days = self.filters.get("timespan_days") or 30
         
         from smriti_retail_os.psv_service import get_inventory_productivity_metrics
@@ -1593,21 +1594,21 @@ class SMRITIReportEngine:
         from frappe.utils import flt, nowdate
         company = self.filters.get("company")
         if not company:
-            company = frappe.defaults.get_user_default("Company") or frappe.db.get_value("Company", {}, "name")
+            company = frappe.defaults.get_user_default("Company") or smriti.db.get("Company", {}, "name")
             
         from_date = self.filters.get("from_date") or nowdate()
         to_date = self.filters.get("to_date") or nowdate()
         
         # 1. Resolve Cash Accounts
-        cash_accounts = frappe.get_all("Account", filters={"company": company, "account_type": "Cash"}, pluck="name")
+        cash_accounts = smriti.db.get_list("Account", filters={"company": company, "account_type": "Cash"}, pluck="name")
         if not cash_accounts:
-            cash_accounts = frappe.get_all("Account", filters={"company": company, "name": ["like", "%Cash%"]}, pluck="name")
+            cash_accounts = smriti.db.get_list("Account", filters={"company": company, "name": ["like", "%Cash%"]}, pluck="name")
             
         if not cash_accounts:
             return []
             
         # 2. Get opening balance before from_date
-        gl_sum = frappe.db.sql("""
+        gl_sum = smriti.db.sql("""
             SELECT SUM(debit) as debit, SUM(credit) as credit
             FROM `tabGL Entry`
             WHERE company = %s AND account IN %s AND posting_date < %s AND is_cancelled = 0
@@ -1618,7 +1619,7 @@ class SMRITIReportEngine:
             opening_bal = flt(gl_sum[0].get("debit") or 0.0) - flt(gl_sum[0].get("credit") or 0.0)
             
         # 3. Get transactions grouped by date
-        entries = frappe.db.sql("""
+        entries = smriti.db.sql("""
             SELECT 
                 posting_date,
                 SUM(debit) as receipts,
@@ -1654,7 +1655,7 @@ class SMRITIReportEngine:
         
         company = self.filters.get("company")
         if not company:
-            company = frappe.defaults.get_user_default("Company") or frappe.db.get_value("Company", {}, "name")
+            company = frappe.defaults.get_user_default("Company") or smriti.db.get("Company", {}, "name")
             
         from_date = self.filters.get("from_date") or nowdate()
         to_date = self.filters.get("to_date") or nowdate()
@@ -1672,7 +1673,7 @@ class SMRITIReportEngine:
         payment_map = {}
         
         # 1. Sales (excluding returns)
-        for r in frappe.db.sql("""
+        for r in smriti.db.sql("""
             SELECT posting_date, SUM(grand_total) as total 
             FROM `tabSales Invoice` 
             WHERE company = %s AND docstatus = 1 AND is_return = 0 AND posting_date BETWEEN %s AND %s 
@@ -1680,8 +1681,8 @@ class SMRITIReportEngine:
         """, (company, from_date, to_date), as_dict=True):
             sales_map[str(r.posting_date)] = flt(r.total)
             
-        if frappe.db.exists("DocType", "POS Invoice"):
-            for r in frappe.db.sql("""
+        if smriti.db.exists("DocType", "POS Invoice"):
+            for r in smriti.db.sql("""
                 SELECT posting_date, SUM(grand_total) as total 
                 FROM `tabPOS Invoice` 
                 WHERE company = %s AND docstatus = 1 AND is_return = 0 AND posting_date BETWEEN %s AND %s 
@@ -1690,7 +1691,7 @@ class SMRITIReportEngine:
                 sales_map[str(r.posting_date)] = sales_map.get(str(r.posting_date), 0.0) + flt(r.total)
                 
         # 2. Sales Returns
-        for r in frappe.db.sql("""
+        for r in smriti.db.sql("""
             SELECT posting_date, SUM(grand_total) as total 
             FROM `tabSales Invoice` 
             WHERE company = %s AND docstatus = 1 AND is_return = 1 AND posting_date BETWEEN %s AND %s 
@@ -1698,8 +1699,8 @@ class SMRITIReportEngine:
         """, (company, from_date, to_date), as_dict=True):
             sales_return_map[str(r.posting_date)] = flt(r.total)
             
-        if frappe.db.exists("DocType", "POS Invoice"):
-            for r in frappe.db.sql("""
+        if smriti.db.exists("DocType", "POS Invoice"):
+            for r in smriti.db.sql("""
                 SELECT posting_date, SUM(grand_total) as total 
                 FROM `tabPOS Invoice` 
                 WHERE company = %s AND docstatus = 1 AND is_return = 1 AND posting_date BETWEEN %s AND %s 
@@ -1708,7 +1709,7 @@ class SMRITIReportEngine:
                 sales_return_map[str(r.posting_date)] = sales_return_map.get(str(r.posting_date), 0.0) + flt(r.total)
                 
         # 3. Purchases (excluding returns)
-        for r in frappe.db.sql("""
+        for r in smriti.db.sql("""
             SELECT posting_date, SUM(grand_total) as total 
             FROM `tabPurchase Invoice` 
             WHERE company = %s AND docstatus = 1 AND is_return = 0 AND posting_date BETWEEN %s AND %s 
@@ -1717,7 +1718,7 @@ class SMRITIReportEngine:
             purchase_map[str(r.posting_date)] = flt(r.total)
             
         # 4. Purchase Returns
-        for r in frappe.db.sql("""
+        for r in smriti.db.sql("""
             SELECT posting_date, SUM(grand_total) as total 
             FROM `tabPurchase Invoice` 
             WHERE company = %s AND docstatus = 1 AND is_return = 1 AND posting_date BETWEEN %s AND %s 
@@ -1726,7 +1727,7 @@ class SMRITIReportEngine:
             purchase_return_map[str(r.posting_date)] = flt(r.total)
             
         # 5. Receipts
-        for r in frappe.db.sql("""
+        for r in smriti.db.sql("""
             SELECT posting_date, SUM(paid_amount) as total 
             FROM `tabPayment Entry` 
             WHERE company = %s AND docstatus = 1 AND payment_type = 'Receive' AND posting_date BETWEEN %s AND %s 
@@ -1735,7 +1736,7 @@ class SMRITIReportEngine:
             receipt_map[str(r.posting_date)] = flt(r.total)
             
         # 6. Payments
-        for r in frappe.db.sql("""
+        for r in smriti.db.sql("""
             SELECT posting_date, SUM(paid_amount) as total 
             FROM `tabPayment Entry` 
             WHERE company = %s AND docstatus = 1 AND payment_type = 'Pay' AND posting_date BETWEEN %s AND %s 
@@ -1783,10 +1784,10 @@ class SMRITIReportEngine:
         if cashier:
             opening_filters["user"] = cashier
             
-        opening_entries = frappe.get_all("POS Opening Entry", filters=opening_filters, fields=["name"])
+        opening_entries = smriti.db.get_list("POS Opening Entry", filters=opening_filters, fields=["name"])
         opening_cash = 0.0
         for oe in opening_entries:
-            details = frappe.get_all("POS Opening Entry Detail", filters={"parent": oe.name, "mode_of_payment": "Cash"}, fields=["opening_amount"])
+            details = smriti.db.get_list("POS Opening Entry Detail", filters={"parent": oe.name, "mode_of_payment": "Cash"}, fields=["opening_amount"])
             for d in details:
                 opening_cash += flt(d.opening_amount)
 
@@ -1807,7 +1808,7 @@ class SMRITIReportEngine:
         sales_where_str = " AND ".join(sales_where)
         
         # Sales summary
-        sales_sum = frappe.db.sql(f"""
+        sales_sum = smriti.db.sql(f"""
             SELECT 
                 COUNT(*) as total_bills,
                 COALESCE(SUM(grand_total), 0) as total_sales,
@@ -1830,7 +1831,7 @@ class SMRITIReportEngine:
             pay_where.append("pi.set_warehouse = %(warehouse)s")
         pay_where_str = " AND ".join(pay_where)
 
-        payments = frappe.db.sql(f"""
+        payments = smriti.db.sql(f"""
             SELECT 
                 pp.mode_of_payment,
                 SUM(pp.amount) as amount
@@ -1841,7 +1842,7 @@ class SMRITIReportEngine:
         """, sales_params, as_dict=True)
         
         # Refunds/Returns
-        refunds_sum = frappe.db.sql(f"""
+        refunds_sum = smriti.db.sql(f"""
             SELECT 
                 COUNT(*) as total_refund_bills,
                 COALESCE(SUM(grand_total), 0) as total_refunds
@@ -1916,9 +1917,9 @@ class SMRITIReportEngine:
             if not fieldname:
                 continue
             
-            term_name = frappe.db.get_value("SMRITI Business Term", {"term_id": fieldname}) or frappe.db.get_value("SMRITI Business Term", {"dictionary_key": fieldname})
+            term_name = smriti.db.get("SMRITI Business Term", {"term_id": fieldname}) or smriti.db.get("SMRITI Business Term", {"dictionary_key": fieldname})
             if term_name:
-                term = frappe.get_doc("SMRITI Business Term", term_name)
+                term = smriti.documents.get("SMRITI Business Term", term_name)
                 proj = term.projection_path or ""
                 resolved_proj = proj
                 if "." in proj:
@@ -2013,7 +2014,7 @@ class SMRITIReportEngine:
             where_clauses.append("parent.company = %(company)s" if "parent ON" in base_sql else "b.company = %(company)s" if "tabBin" in base_sql else "ce.company = %(company)s" if "tabPOS Closing Entry" in base_sql else "pr.company = %(company)s" if "tabPurchase Receipt" in base_sql else "po.company = %(company)s" if "tabPurchase Order" in base_sql else "company = %(company)s")
             params["company"] = company
         elif self.template.company_restricted:
-            default_company = frappe.defaults.get_user_default("Company") or frappe.db.get_value("Company", {}, "name")
+            default_company = frappe.defaults.get_user_default("Company") or smriti.db.get("Company", {}, "name")
             if default_company:
                 where_clauses.append("parent.company = %(company)s" if "parent ON" in base_sql else "b.company = %(company)s" if "tabBin" in base_sql else "ce.company = %(company)s" if "tabPOS Closing Entry" in base_sql else "pr.company = %(company)s" if "tabPurchase Receipt" in base_sql else "po.company = %(company)s" if "tabPurchase Order" in base_sql else "company = %(company)s")
                 params["company"] = default_company
@@ -2184,7 +2185,7 @@ class SMRITIReportEngine:
 
         validate_query_safety(full_sql)
 
-        return frappe.db.sql(full_sql, params, as_dict=True)
+        return smriti.db.sql(full_sql, params, as_dict=True)
 
 
 @frappe.whitelist()
@@ -2203,13 +2204,13 @@ def save_smriti_saved_view(view_name, report_key, applied_filters_json, visible_
     is_default = cint(is_default)
     
     if is_default:
-        frappe.db.sql("""
+        smriti.db.sql("""
             UPDATE `tabSMRITI Saved View`
             SET is_default = 0
             WHERE report_template = %s AND user = %s
         """, (report_key, user))
         
-    doc = frappe.new_doc("SMRITI Saved View")
+    doc = smriti.documents.new("SMRITI Saved View")
     doc.view_name = view_name
     doc.report_template = report_key
     doc.user = user
@@ -2218,14 +2219,14 @@ def save_smriti_saved_view(view_name, report_key, applied_filters_json, visible_
     doc.is_default = is_default
     # reviewed-ignore-permissions: no role restriction — any authenticated user may save views, by design
     doc.insert(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
     return doc.name
 
 
 @frappe.whitelist()
 def get_smriti_saved_views(report_key):
     """Retrieves all saved views for this report template for the current user."""
-    return frappe.get_all(
+    return smriti.db.get_list(
         "SMRITI Saved View",
         filters={"report_template": report_key, "user": frappe.session.user},
         fields=["name", "view_name", "applied_filters_json", "visible_columns_json", "is_default"],
@@ -2236,11 +2237,11 @@ def get_smriti_saved_views(report_key):
 @frappe.whitelist()
 def delete_smriti_saved_view(view_name):
     """Deletes a saved view if the user is owner or system manager."""
-    doc = frappe.get_doc("SMRITI Saved View", view_name)
+    doc = smriti.documents.get("SMRITI Saved View", view_name)
     if doc.user == frappe.session.user or "System Manager" in frappe.get_roles():
         # reviewed-ignore-permissions: user UI preference deletion, gated by view ownership or System Manager role
         frappe.delete_doc("SMRITI Saved View", view_name, ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         return {"success": True}
     else:
         frappe.throw(_("Not permitted to delete this saved view"), frappe.PermissionError)
@@ -2250,7 +2251,7 @@ def delete_smriti_saved_view(view_name):
 def get_smriti_reports_list():
     """Returns all report templates that the current user is permitted to view.
     M-05: Role access is resolved via a single batch query on SMRITI Report Role,
-    not one frappe.get_doc() call per template (N+1 pattern).
+    not one smriti.documents.get() call per template (N+1 pattern).
     """
     user = frappe.session.user
     roles = frappe.get_roles()
@@ -2261,13 +2262,13 @@ def get_smriti_reports_list():
         "cache_minutes", "schema_version", "is_public"
     ]
 
-    templates = frappe.get_all("SMRITI Report Template", fields=_fields)
+    templates = smriti.db.get_list("SMRITI Report Template", fields=_fields)
 
     if user == "Administrator" or "System Manager" in roles:
         return templates
 
     # Batch-fetch ALL role_access rows for ALL templates in one query
-    role_rows = frappe.db.get_all(
+    role_rows = smriti.db.get_list(
         "SMRITI Report Role",
         fields=["parent", "role"]
     )
@@ -2288,31 +2289,31 @@ def get_smriti_reports_list():
 @frappe.whitelist()
 def get_smriti_warehouses():
     """Returns list of active warehouses."""
-    return frappe.get_all("Warehouse", filters={"is_group": 0}, fields=["name", "warehouse_name", "company"], order_by="warehouse_name asc")
+    return smriti.db.get_list("Warehouse", filters={"is_group": 0}, fields=["name", "warehouse_name", "company"], order_by="warehouse_name asc")
 
 
 @frappe.whitelist()
 def get_smriti_item_groups():
     """Returns list of item groups."""
-    return frappe.get_all("Item Group", fields=["name"], order_by="name asc")
+    return smriti.db.get_list("Item Group", fields=["name"], order_by="name asc")
 
 
 @frappe.whitelist()
 def get_smriti_brands():
     """Returns list of brands."""
-    return frappe.get_all("Brand", fields=["name"], order_by="name asc")
+    return smriti.db.get_list("Brand", fields=["name"], order_by="name asc")
 
 
 @frappe.whitelist()
 def get_smriti_salespersons():
     """Returns list of sales persons."""
-    return frappe.get_all("Sales Person", fields=["name", "sales_person_name"], order_by="sales_person_name asc")
+    return smriti.db.get_list("Sales Person", fields=["name", "sales_person_name"], order_by="sales_person_name asc")
 
 
 @frappe.whitelist()
 def get_smriti_cashiers():
     """Returns active SMRITI cashiers/managers."""
-    return frappe.db.sql("""
+    return smriti.db.sql("""
         SELECT DISTINCT u.name, COALESCE(NULLIF(CONCAT(u.first_name, ' ', u.last_name), ' '), u.name) as fullname
         FROM `tabUser` u
         JOIN `tabHas Role` r ON r.parent = u.name
@@ -2334,8 +2335,8 @@ def log_explain_audit_event(event_type, report, fieldname, recovered_expression)
             "recovered_expression": recovered_expression
         }
         
-        log_doc = frappe.get_doc({
-            "doctype": "SMRITI Audit Event",
+        log_doc = smriti.documents.new("AuditEvent")
+        log_doc.update({
             "timestamp": frappe.utils.now_datetime(),
             "user": frappe.session.user or "Administrator",
             "event_type": event_type,
@@ -2345,9 +2346,9 @@ def log_explain_audit_event(event_type, report, fieldname, recovered_expression)
             "after_state": json.dumps(details)
         })
         log_doc.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
     except Exception as e:
-        frappe.log_error(f"Error in log_explain_audit_event: {str(e)}")
+        smriti.errors.log_error(f"Error in log_explain_audit_event: {str(e)}")
 
 
 REPORT_FILTER_CAPABILITIES = {
@@ -2527,8 +2528,8 @@ def export_smriti_report(report_key, filters=None, format_type="csv"):
         "filters": filters
     }
     
-    log_doc = frappe.get_doc({
-        "doctype": "SMRITI Audit Event",
+    log_doc = smriti.documents.new("AuditEvent")
+    log_doc.update({
         "timestamp": frappe.utils.now_datetime(),
         "user": frappe.session.user,
         "event_type": "REPORT_EXPORTED",
@@ -2539,7 +2540,7 @@ def export_smriti_report(report_key, filters=None, format_type="csv"):
     })
     # reviewed-ignore-permissions: telemetry logging for compliance exports, gated by engine.check_permissions
     log_doc.insert(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
     
     # Return file download response
     frappe.response['filename'] = f"{report_key}_{frappe.utils.nowdate()}.csv"
@@ -2558,7 +2559,7 @@ def get_report_glossary(report_key):
     if cached:
         return json.loads(cached)
         
-    template = frappe.get_doc("SMRITI Report Template", report_key)
+    template = smriti.documents.get("SMRITI Report Template", report_key)
     columns = []
     if template.columns_json:
         try:
@@ -2572,18 +2573,18 @@ def get_report_glossary(report_key):
         if not fieldname:
             continue
             
-        term_name = frappe.db.get_value("SMRITI Business Term", {"term_id": fieldname}, "name")
+        term_name = smriti.db.get("SMRITI Business Term", {"term_id": fieldname}, "name")
         if not term_name:
-            term_name = frappe.db.get_value("SMRITI Business Term", {"dictionary_key": fieldname}, "name")
+            term_name = smriti.db.get("SMRITI Business Term", {"dictionary_key": fieldname}, "name")
             
         if term_name:
-            term = frappe.get_doc("SMRITI Business Term", term_name)
+            term = smriti.documents.get("SMRITI Business Term", term_name)
             
             # Fetch formulas
             formulas = []
             for f_row in term.get("related_formulas", []):
-                if frappe.db.exists("SMRITI Formula Definition", f_row.formula_id):
-                    f_doc = frappe.get_doc("SMRITI Formula Definition", f_row.formula_id)
+                if smriti.db.exists("SMRITI Formula Definition", f_row.formula_id):
+                    f_doc = smriti.documents.get("SMRITI Formula Definition", f_row.formula_id)
                     formulas.append({
                         "formula_id": f_doc.formula_id,
                         "formula_name": f_doc.formula_name,
@@ -2628,17 +2629,17 @@ def execute_audit_retention_archival():
     """
     try:
         from frappe.utils import add_days, nowdate, cint
-        retention_days = cint(frappe.db.get_single_value("SMRITI Settings", "audit_log_retention_days") or 365)
+        retention_days = cint(smriti.db.get_single("SMRITI Settings", "audit_log_retention_days") or 365)
         if retention_days <= 0:
             retention_days = 365  # safety floor — never delete everything
         cutoff_date = add_days(nowdate(), -retention_days)
-        frappe.db.sql("""
+        smriti.db.sql("""
             DELETE FROM `tabSMRITI Audit Event`
             WHERE timestamp < %s
         """, cutoff_date)
-        frappe.db.commit()
+        smriti.db.commit()
     except Exception as e:
-        frappe.log_error(f"Error in execute_audit_retention_archival: {str(e)}")
+        smriti.errors.log_error(f"Error in execute_audit_retention_archival: {str(e)}")
 
 
 

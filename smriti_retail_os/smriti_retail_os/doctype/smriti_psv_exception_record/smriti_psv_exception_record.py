@@ -13,7 +13,8 @@
 # Copyright (c) 2026, SMRITI Retail OS and contributors
 # For license information, please see license.txt
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from frappe.model.document import Document
 
 class SMRITIPSVExceptionRecord(Document):
@@ -27,13 +28,13 @@ class SMRITIPSVExceptionRecord(Document):
 
     def check_and_restore_location_status(self):
         # Check if there are any other pending exceptions for this account
-        has_pending = frappe.db.exists("SMRITI PSV Exception Record", {
+        has_pending = smriti.db.exists("SMRITI PSV Exception Record", {
             "party_stock_account": self.party_stock_account,
             "status": "Pending Reconciliation",
             "name": ["!=", self.name]
         })
         if not has_pending:
-            frappe.db.set_value("SMRITI Party Stock Account", self.party_stock_account, "status", "Active")
+            smriti.db.set_value("SMRITI Party Stock Account", self.party_stock_account, "status", "Active")
             
     def db_essential(self, fieldname):
-        return frappe.db.get_value(self.doctype, self.name, fieldname)
+        return smriti.db.get(self.doctype, self.name, fieldname)

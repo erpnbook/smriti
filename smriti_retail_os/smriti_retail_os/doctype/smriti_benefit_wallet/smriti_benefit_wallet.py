@@ -13,14 +13,15 @@
 # Copyright (c) 2026, AITDL and contributors
 # For license information, please see license.txt
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.model.document import Document
 
 class SMRITIBenefitWallet(Document):
     def validate(self):
         # Programmatic check for unique (customer, company, benefit_instrument)
-        existing = frappe.db.exists("SMRITI Benefit Wallet", {
+        existing = smriti.db.exists("SMRITI Benefit Wallet", {
             "customer": self.customer,
             "company": self.company,
             "benefit_instrument": self.benefit_instrument,

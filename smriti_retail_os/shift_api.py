@@ -10,9 +10,10 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe.utils import flt, cint, nowdate, now_datetime, get_datetime
 from frappe import _
+from smriti_retail_os import smriti
 
 # ---------------------------------------------------------------------------
 # Day Open
@@ -41,12 +42,12 @@ def open_shift(cashier, pos_profile, opening_entries):
     entries = frappe.parse_json(opening_entries)
 
     company = (
-        frappe.db.get_value("POS Profile", pos_profile, "company")
+        smriti.db.get("POS Profile", pos_profile, "company")
         or frappe.defaults.get_user_default("company")
-        or frappe.get_all("Company", limit=1)[0].name
+        or smriti.db.get_list("Company", limit=1)[0].name
     )
 
-    opening = frappe.new_doc("POS Opening Entry")
+    opening = smriti.documents.new("POS Opening Entry")
     opening.user = cashier
     opening.pos_profile = pos_profile
     opening.company = company
@@ -66,10 +67,10 @@ def open_shift(cashier, pos_profile, opening_entries):
     opening.insert()
     try:
         opening.submit()
-        frappe.db.commit()
+        smriti.db.commit()
     except Exception:
-        frappe.db.rollback()
-        frappe.log_error(title="SMRITI open_shift Submit Failed", message=frappe.get_traceback())
+        smriti.db.rollback()
+        smriti.errors.log_error(title="SMRITI open_shift Submit Failed", message=frappe.get_traceback())
         frappe.throw(_("Failed to open shift for {0}. Please try again.").format(cashier))
 
     return {
@@ -91,7 +92,7 @@ def get_active_shift(cashier, pos_profile=None):
     if pos_profile:
         filters["pos_profile"] = pos_profile
 
-    opening = frappe.db.get_all(
+    opening = smriti.db.get_list(
         "POS Opening Entry",
         filters=filters,
         fields=["name", "pos_profile", "period_start_date", "posting_date", "company"],
@@ -104,7 +105,7 @@ def get_active_shift(cashier, pos_profile=None):
 
     oe = opening[0]
     # Fetch opening balance details
-    balance_details = frappe.db.get_all(
+    balance_details = smriti.db.get_list(
         "POS Opening Entry Detail",
         filters={"parent": oe.name},
         fields=["mode_of_payment", "opening_amount"]
@@ -120,13 +121,13 @@ def get_shift_summary(opening_entry_name):
     Calculates shift totals from submitted POS Invoices linked to the opening entry.
     Returns breakdown by payment mode + total expected closing balances.
     """
-    if not frappe.db.exists("POS Opening Entry", opening_entry_name):
+    if not smriti.db.exists("POS Opening Entry", opening_entry_name):
         frappe.throw(_("POS Opening Entry {0} not found.").format(opening_entry_name))
 
-    oe = frappe.get_doc("POS Opening Entry", opening_entry_name)
+    oe = smriti.documents.get("POS Opening Entry", opening_entry_name)
 
     # Get all submitted POS Invoices for this shift
-    invoices = frappe.db.get_all(
+    invoices = smriti.db.get_list(
         "POS Invoice",
         filters={
             "pos_profile": oe.pos_profile,
@@ -144,7 +145,7 @@ def get_shift_summary(opening_entry_name):
     # Payment mode breakdown from Sales Invoice Payment rows
     mode_totals = {}
     if invoice_names:
-        payments = frappe.db.get_all(
+        payments = smriti.db.get_list(
             "Sales Invoice Payment",
             filters={"parent": ["in", invoice_names]},
             fields=["mode_of_payment", "amount"]
@@ -193,10 +194,10 @@ def close_shift(opening_entry_name, closing_entries, manager_pin=None, notes=Non
         manager_pin        : Optional manager password for override on large variance
         notes              : Optional closing remarks
     """
-    if not frappe.db.exists("POS Opening Entry", opening_entry_name):
+    if not smriti.db.exists("POS Opening Entry", opening_entry_name):
         frappe.throw(_("POS Opening Entry {0} not found.").format(opening_entry_name))
 
-    oe = frappe.get_doc("POS Opening Entry", opening_entry_name)
+    oe = smriti.documents.get("POS Opening Entry", opening_entry_name)
 
     if oe.status != "Open":
         frappe.throw(_("This shift is already closed."))
@@ -209,7 +210,7 @@ def close_shift(opening_entry_name, closing_entries, manager_pin=None, notes=Non
 
     # Validate cash difference if manager_pin provided threshold check
     DIFFERENCE_THRESHOLD = flt(
-        frappe.db.get_single_value("POS Settings", "pos_closing_entry_validation_amount") or 500
+        smriti.db.get_single("POS Settings", "pos_closing_entry_validation_amount") or 500
     )
 
     closing_map = {e.get("mode_of_payment"): flt(e.get("closing_amount", 0)) for e in entries}
@@ -229,7 +230,7 @@ def close_shift(opening_entry_name, closing_entries, manager_pin=None, notes=Non
             frappe.throw(_("Manager authorization failed. Invalid PIN."))
 
     # Build and submit POS Closing Entry
-    closing = frappe.new_doc("POS Closing Entry")
+    closing = smriti.documents.new("POS Closing Entry")
     closing.pos_profile = oe.pos_profile
     closing.user = oe.user
     closing.company = oe.company
@@ -256,7 +257,7 @@ def close_shift(opening_entry_name, closing_entries, manager_pin=None, notes=Non
         })
 
     # Add invoice references
-    invoices = frappe.db.get_all(
+    invoices = smriti.db.get_list(
         "POS Invoice",
         filters={
             "pos_profile": oe.pos_profile,
@@ -283,10 +284,10 @@ def close_shift(opening_entry_name, closing_entries, manager_pin=None, notes=Non
     closing.insert()
     try:
         closing.submit()
-        frappe.db.commit()
+        smriti.db.commit()
     except Exception:
-        frappe.db.rollback()
-        frappe.log_error(title="SMRITI close_shift Submit Failed", message=frappe.get_traceback())
+        smriti.db.rollback()
+        smriti.errors.log_error(title="SMRITI close_shift Submit Failed", message=frappe.get_traceback())
         frappe.throw(_("Failed to close shift. Please try again or contact your administrator."))
 
     return {
@@ -303,17 +304,17 @@ def get_pos_profiles():
     """
     Returns available POS Profiles for the current user.
     """
-    user_profiles = frappe.db.get_all(
+    user_profiles = smriti.db.get_list(
         "POS Profile User",
         filters={"user": frappe.session.user, "default": 1},
         fields=["parent"]
     )
     if user_profiles:
-        return [frappe.db.get_value("POS Profile", p.parent, ["name", "company", "currency"], as_dict=True)
+        return [smriti.db.get("POS Profile", p.parent, ["name", "company", "currency"], as_dict=True)
                 for p in user_profiles]
 
     # Fallback: return all active profiles
-    return frappe.db.get_all(
+    return smriti.db.get_list(
         "POS Profile",
         filters={"disabled": 0},
         fields=["name", "company", "currency"],
@@ -326,7 +327,7 @@ def get_payment_modes():
     """
     Returns active modes of payment for shift opening/closing entry.
     """
-    modes = frappe.db.get_all(
+    modes = smriti.db.get_list(
         "Mode of Payment",
         filters={"enabled": 1},
         fields=["name", "type"],
@@ -340,7 +341,7 @@ def get_payment_modes():
 # ---------------------------------------------------------------------------
 
 def _get_open_shift(cashier, pos_profile):
-    result = frappe.db.get_value(
+    result = smriti.db.get(
         "POS Opening Entry",
         {"user": cashier, "pos_profile": pos_profile, "status": "Open", "docstatus": 1},
         "name"
@@ -361,7 +362,7 @@ def _validate_manager_pin(pin, action_type, reference_name=None):
 
     from frappe.utils.password import check_password as check_smriti_pin
 
-    managers = frappe.db.get_all(
+    managers = smriti.db.get_list(
         "Has Role",
         filters={"role": ["in", ["SMRITI Store Manager", "System Manager"]]},
         pluck="parent"
@@ -370,12 +371,12 @@ def _validate_manager_pin(pin, action_type, reference_name=None):
     authenticated = False
     auth_manager = None
     for mgr in set(managers):
-        if not frappe.db.get_value("User", mgr, "enabled"):
+        if not smriti.db.get("User", mgr, "enabled"):
             continue
 
         try:
             # Strictly use SMRITI Dedicated PIN
-            if frappe.db.get_value("User", mgr, "custom_smriti_pin"):
+            if smriti.db.get("User", mgr, "custom_smriti_pin"):
                 try:
                     check_smriti_pin(mgr, pin, fieldname="custom_smriti_pin")
                     roles = frappe.get_roles(mgr)
@@ -386,14 +387,13 @@ def _validate_manager_pin(pin, action_type, reference_name=None):
                 except frappe.AuthenticationError:
                     pass
         except Exception:
-            frappe.log_error(title="SMRITI Shift Manager Override Error", message=frappe.get_traceback())
+            smriti.errors.log_error(title="SMRITI Shift Manager Override Error", message=frappe.get_traceback())
 
     if authenticated and auth_manager:
         # Clear attempts on success
         frappe.cache().delete(rate_limit_key)
         if reference_name:
-            frappe.get_doc({
-                "doctype": "Comment",
+            smriti.documents.new("Comment").update({
                 "comment_type": "Comment",
                 "reference_doctype": "POS Opening Entry",
                 "reference_name": reference_name,
@@ -410,7 +410,7 @@ def _validate_manager_pin(pin, action_type, reference_name=None):
         frappe.cache().set(rate_limit_key, 1, ex=600)
 
     # Log failed PIN attempt to Error Log
-    frappe.log_error(
+    smriti.errors.log_error(
         title="SMRITI Failed Shift PIN Override Attempt",
         message=f"Failed shift PIN override attempt by user {frappe.session.user} for action {action_type}."
     )

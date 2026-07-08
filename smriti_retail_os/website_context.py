@@ -28,7 +28,7 @@ def get_context(context):
     {{ app_name }}, {{ brand_html }}, {{ favicon }} references
     render with SMRITI values — no JS patching needed on web pages.
     """
-    import frappe
+    import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 
     # Redirect to setup wizard if no company exists in the database
     current_path = frappe.local.request.path if (hasattr(frappe.local, "request") and frappe.local.request) else ""
@@ -36,7 +36,7 @@ def get_context(context):
         normalized_path = current_path.rstrip("/").lower()
         if normalized_path not in ["/setup-wizard", "/login"] and not normalized_path.startswith("/assets/") and not normalized_path.startswith("/api/"):
             try:
-                companies = frappe.get_all("Company", limit=1)
+                companies = smriti.db.get_list("Company", limit=1)
                 if not companies:
                     frappe.local.flags.redirect_location = "/setup-wizard"
                     raise frappe.Redirect
@@ -57,7 +57,7 @@ def get_context(context):
         frappe.flags.read_only = False
         try:
             frappe.local.session_obj.update(force=True)
-            frappe.db.commit()
+            smriti.db.commit()
         except Exception:
             import sys
             _frappe = sys.modules.get('frappe')

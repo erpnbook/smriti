@@ -13,7 +13,7 @@
 # Copyright (c) 2026, SMRITI Retail OS and contributors
 # For license information, please see license.txt
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from smriti_retail_os.balance_engine import (
 	get_party_balance,
 	get_bulk_party_balances,
@@ -30,9 +30,9 @@ def get_dashboard_summary(company):
 	- open_exceptions: count of exception records with status 'Pending Reconciliation'
 	- critical_alerts: count of exception records with severity 'Critical' and status 'Pending Reconciliation'
 	"""
-	use_new = frappe.db.exists("PSV Ledger Entry", {"company": company})
+	use_new = smriti.db.exists("PSV Ledger Entry", {"company": company})
 	if use_new:
-		total_units_res = frappe.db.sql("""
+		total_units_res = smriti.db.sql("""
 			SELECT COALESCE(SUM(item_bal), 0)
 			FROM (
 				SELECT SUM(ple.qty) as item_bal
@@ -44,12 +44,12 @@ def get_dashboard_summary(company):
 		""", (company,))
 		total_units = float(total_units_res[0][0]) if total_units_res else 0.0
 
-		total_locations = frappe.db.count("PSV Channel Partner", {
+		total_locations = smriti.db.count("PSV Channel Partner", {
 			"company": company,
 			"active": 1
 		})
 
-		negative_count_res = frappe.db.sql("""
+		negative_count_res = smriti.db.sql("""
 			SELECT COUNT(DISTINCT channel_partner)
 			FROM (
 				SELECT ple.channel_partner, SUM(ple.qty) as item_bal
@@ -62,7 +62,7 @@ def get_dashboard_summary(company):
 		negative_count = negative_count_res[0][0] if negative_count_res else 0
 
 	else:
-		total_units_res = frappe.db.sql("""
+		total_units_res = smriti.db.sql("""
 			SELECT COALESCE(SUM(item_bal), 0)
 			FROM (
 				SELECT SUM(ple.qty) as item_bal
@@ -74,12 +74,12 @@ def get_dashboard_summary(company):
 		""", (company,))
 		total_units = float(total_units_res[0][0]) if total_units_res else 0.0
 
-		total_locations = frappe.db.count("SMRITI Party Stock Account", {
+		total_locations = smriti.db.count("SMRITI Party Stock Account", {
 			"company": company,
 			"active": 1
 		})
 
-		negative_count_res = frappe.db.sql("""
+		negative_count_res = smriti.db.sql("""
 			SELECT COUNT(DISTINCT party_stock_account)
 			FROM (
 				SELECT ple.party_stock_account, SUM(ple.qty) as item_bal
@@ -91,24 +91,24 @@ def get_dashboard_summary(company):
 		""", (company,))
 		negative_count = negative_count_res[0][0] if negative_count_res else 0
 
-	open_exceptions = frappe.db.sql("""
+	open_exceptions = smriti.db.sql("""
 		SELECT COUNT(*)
 		FROM `tabSMRITI PSV Exception Record` er
 		INNER JOIN `tabSMRITI Party Stock Account` psa ON er.party_stock_account = psa.name
 		WHERE psa.company = %s AND er.status = 'Pending Reconciliation'
-	""", (company,))[0][0] if not use_new else frappe.db.sql("""
+	""", (company,))[0][0] if not use_new else smriti.db.sql("""
 		SELECT COUNT(*)
 		FROM `tabSMRITI PSV Exception Record` er
 		INNER JOIN `tabPSV Channel Partner` psa ON er.party_stock_account = psa.name
 		WHERE psa.company = %s AND er.status = 'Pending Reconciliation'
 	""", (company,))[0][0]
 
-	critical_alerts = frappe.db.sql("""
+	critical_alerts = smriti.db.sql("""
 		SELECT COUNT(*)
 		FROM `tabSMRITI PSV Exception Record` er
 		INNER JOIN `tabSMRITI Party Stock Account` psa ON er.party_stock_account = psa.name
 		WHERE psa.company = %s AND er.status = 'Pending Reconciliation' AND er.severity = 'Critical'
-	""", (company,))[0][0] if not use_new else frappe.db.sql("""
+	""", (company,))[0][0] if not use_new else smriti.db.sql("""
 		SELECT COUNT(*)
 		FROM `tabSMRITI PSV Exception Record` er
 		INNER JOIN `tabPSV Channel Partner` psa ON er.party_stock_account = psa.name
@@ -129,9 +129,9 @@ def get_party_balance_detail(company, party_stock_account):
 	Returns list of dicts with item_code and balance for all items at a location.
 	Uses a single aggregate SQL GROUP BY query.
 	"""
-	use_new = frappe.db.exists("PSV Ledger Entry", {"channel_partner": party_stock_account})
+	use_new = smriti.db.exists("PSV Ledger Entry", {"channel_partner": party_stock_account})
 	if use_new:
-		result = frappe.db.sql("""
+		result = smriti.db.sql("""
 			SELECT ple.item_variant as item_code, SUM(ple.qty) as balance
 			FROM `tabPSV Ledger Entry` ple
 			INNER JOIN `tabPSV Channel Partner` psa ON ple.channel_partner = psa.name
@@ -139,7 +139,7 @@ def get_party_balance_detail(company, party_stock_account):
 			GROUP BY ple.item_variant
 		""", (company, party_stock_account), as_dict=True)
 	else:
-		result = frappe.db.sql("""
+		result = smriti.db.sql("""
 			SELECT ple.item_code, SUM(ple.qty) as balance
 			FROM `tabSMRITI Party Stock Ledger Entry` ple
 			INNER JOIN `tabSMRITI Party Stock Account` psa ON ple.party_stock_account = psa.name
@@ -158,14 +158,14 @@ def get_reorder_dashboard_data(company):
 	Returns Top 10 replenishment needs across all active PSAs.
 	Sorted by priority order (Critical -> High -> Medium -> Low) and recommended_qty descending.
 	"""
-	use_new = frappe.db.exists("PSV Ledger Entry", {"company": company})
+	use_new = smriti.db.exists("PSV Ledger Entry", {"company": company})
 	if use_new:
-		psas = frappe.get_all("PSV Channel Partner",
+		psas = smriti.db.get_list("PSV Channel Partner",
 			filters={"company": company, "active": 1},
 			fields=["name"]
 		)
 	else:
-		psas = frappe.get_all("SMRITI Party Stock Account",
+		psas = smriti.db.get_list("SMRITI Party Stock Account",
 			filters={"company": company, "active": 1},
 			fields=["name"]
 		)
@@ -207,6 +207,7 @@ def get_reorder_dashboard_data(company):
 
 
 from frappe import _
+from smriti_retail_os import smriti
 from smriti_retail_os.psv_upload_service import process_upload
 from smriti_retail_os.psv_balance_service import get_channel_balance
 
@@ -226,7 +227,7 @@ def create_psa(company: str, customer: str, location_name: str,
         frappe.throw(_("Company, Customer, and Location Name are required."))
 
     # Prevent duplicate PSA for same customer + location
-    existing = frappe.db.exists(
+    existing = smriti.db.exists(
         "SMRITI Party Stock Account",
         {"customer": customer, "location_name": location_name}
     )
@@ -236,8 +237,8 @@ def create_psa(company: str, customer: str, location_name: str,
               ).format(customer, location_name, existing)
         )
 
-    doc = frappe.get_doc({
-        "doctype": "SMRITI Party Stock Account",
+    doc = smriti.documents.new("PartyStockAccount")
+    doc.update({
         "company": company,
         "customer": customer,
         "location_name": location_name,
@@ -251,7 +252,7 @@ def create_psa(company: str, customer: str, location_name: str,
         "status": "Active"
     })
     doc.insert(ignore_permissions=False)  # Respect Frappe role permissions
-    frappe.db.commit()
+    smriti.db.commit()
 
     return {"name": doc.name, "status": "created"}
 
@@ -267,10 +268,10 @@ def update_psa(name: str, zone: str = None, region: str = None,
     """
     frappe.only_for(["System Manager", "SMRITI Store Manager"])
 
-    if not frappe.db.exists("SMRITI Party Stock Account", name):
+    if not smriti.db.exists("SMRITI Party Stock Account", name):
         frappe.throw(_("Party Stock Account {0} not found.").format(name))
 
-    frappe.db.set_value(
+    smriti.db.set_value(
         "SMRITI Party Stock Account",
         name,
         {
@@ -283,7 +284,7 @@ def update_psa(name: str, zone: str = None, region: str = None,
             "active": int(active),
         }
     )
-    frappe.db.commit()
+    smriti.db.commit()
 
     return {"name": name, "status": "updated"}
 
@@ -292,11 +293,11 @@ def update_psa(name: str, zone: str = None, region: str = None,
 def get_psa(name: str):
     """
     Returns full details of a SMRITI Party Stock Account.
-    Requires read access to the DocType (enforced via frappe.get_doc).
+    Requires read access to the DocType (enforced via smriti.documents.get).
     """
     frappe.only_for(["System Manager", "SMRITI Store Manager", "SMRITI Cashier"])
 
-    doc = frappe.get_doc("SMRITI Party Stock Account", name)
+    doc = smriti.documents.get("SMRITI Party Stock Account", name)
     return {
         "name": doc.name,
         "company": doc.company,
@@ -328,7 +329,7 @@ def list_psas(company: str = None, active: int = None):
     if active is not None:
         filters["active"] = int(active)
 
-    return frappe.get_all(
+    return smriti.db.get_list(
         "SMRITI Party Stock Account",
         filters=filters,
         fields=[
@@ -349,7 +350,7 @@ def upload_sell_through(upload_doc_name: str):
     """
     frappe.only_for(["System Manager", "SMRITI Store Manager"])
 
-    doc = frappe.get_doc("PSV Sell-Through Upload", upload_doc_name)
+    doc = smriti.documents.get("PSV Sell-Through Upload", upload_doc_name)
     if doc.status == "Processed":
         return {"status": "failed", "message": "Document is already processed."}
 
@@ -394,11 +395,11 @@ def get_psv_health():
 	}
 
 	# 1. PSV Settings exists
-	if frappe.db.exists("DocType", "SMRITI PSV Settings"):
+	if smriti.db.exists("DocType", "SMRITI PSV Settings"):
 		checks["psv_settings_exists"] = True
 
 	# 2. PSA DocType exists
-	if frappe.db.exists("DocType", "SMRITI Party Stock Account"):
+	if smriti.db.exists("DocType", "SMRITI Party Stock Account"):
 		checks["psa_doctype_exists"] = True
 
 	# 3. Delivery Note PSA field exists
@@ -421,7 +422,7 @@ def get_psv_health():
 
 	# 5. Unique hash index exists
 	try:
-		indices = frappe.db.sql(f"SHOW INDEX FROM {chr(96)}tabSMRITI Party Stock Ledger Entry{chr(96)}", as_dict=True)
+		indices = smriti.db.sql(f"SHOW INDEX FROM {chr(96)}tabSMRITI Party Stock Ledger Entry{chr(96)}", as_dict=True)
 		if any(idx.get("Key_name") == "unique_hash" for idx in indices):
 			checks["unique_hash_index_exists"] = True
 	except Exception:
@@ -431,7 +432,7 @@ def get_psv_health():
 
 	# 6. Exception Record schema valid
 	try:
-		if frappe.db.exists("DocType", "SMRITI PSV Exception Record"):
+		if smriti.db.exists("DocType", "SMRITI PSV Exception Record"):
 			meta = frappe.get_meta("SMRITI PSV Exception Record")
 			if (meta.has_field("alert_type") and 
 				meta.has_field("reconciliation_notes") and 
@@ -494,8 +495,8 @@ def create_physical_audit(company, party_stock_account, audit_date, items):
 
 	item_list = json.loads(items) if isinstance(items, str) else items
 
-	doc = frappe.get_doc({
-		"doctype": "SMRITI Party Physical Snapshot",
+	doc = smriti.documents.new("PartyPhysicalSnapshot")
+	doc.update({
 		"company": company,
 		"party_stock_account": party_stock_account,
 		"audit_date": audit_date,
@@ -504,7 +505,7 @@ def create_physical_audit(company, party_stock_account, audit_date, items):
 	for item in item_list:
 		doc.append("items", item)
 	doc.insert(ignore_permissions=False)
-	frappe.db.commit()
+	smriti.db.commit()
 	return {"name": doc.name, "status": doc.status}
 
 
@@ -516,9 +517,9 @@ def submit_physical_audit(name):
 	"""
 	if not frappe.has_permission("SMRITI Party Physical Snapshot", "submit"):
 		frappe.throw(_("Not authorized to submit stock audits."), frappe.PermissionError)
-	doc = frappe.get_doc("SMRITI Party Physical Snapshot", name)
+	doc = smriti.documents.get("SMRITI Party Physical Snapshot", name)
 	doc.submit()
-	frappe.db.commit()
+	smriti.db.commit()
 	return {"name": doc.name, "status": doc.docstatus}
 
 
@@ -530,7 +531,7 @@ def get_physical_audit(name):
 	"""
 	if not frappe.has_permission("SMRITI Party Physical Snapshot", "read"):
 		frappe.throw(_("Not authorized to view stock audits."), frappe.PermissionError)
-	doc = frappe.get_doc("SMRITI Party Physical Snapshot", name)
+	doc = smriti.documents.get("SMRITI Party Physical Snapshot", name)
 	return {
 		"name": doc.name,
 		"company": doc.company,
@@ -580,8 +581,8 @@ def create_sales_upload(
 
 	item_list = json.loads(items) if isinstance(items, str) else (items or [])
 
-	doc = frappe.get_doc({
-		"doctype": "SMRITI Party Sales Upload",
+	doc = smriti.documents.new("PartySalesUpload")
+	doc.update({
 		"company": company,
 		"party_stock_account": party_stock_account,
 		"period_start_date": period_start_date,
@@ -591,7 +592,7 @@ def create_sales_upload(
 	for item in item_list:
 		doc.append("items", item)
 	doc.insert(ignore_permissions=False)
-	frappe.db.commit()
+	smriti.db.commit()
 	return {"name": doc.name}
 
 
@@ -603,7 +604,7 @@ def submit_sales_upload(name):
 	"""
 	if not frappe.has_permission("SMRITI Party Sales Upload", "submit"):
 		frappe.throw(_("Not authorized to submit sales uploads."), frappe.PermissionError)
-	doc = frappe.get_doc("SMRITI Party Sales Upload", name)
+	doc = smriti.documents.get("SMRITI Party Sales Upload", name)
 	doc.submit()
-	frappe.db.commit()
+	smriti.db.commit()
 	return {"name": doc.name, "status": doc.docstatus}

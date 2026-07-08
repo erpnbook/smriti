@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import frappe
+from smriti_retail_os import smriti
 import unittest
 from smriti_retail_os.tests.test_billing_api import TestSmritiRetailBillingAPI
 from smriti_retail_os.services.billing_summary_engine import calculate_billing_summary
@@ -14,22 +15,22 @@ class TestBillingDiscountsSalesperson(TestSmritiRetailBillingAPI):
         super().setUp()
         
         # Configure Selling Settings to allow multiple rows of the same item
-        selling_settings = frappe.get_doc("Selling Settings")
+        selling_settings = smriti.documents.get_single("SellingSettings")
         selling_settings.allow_multiple_items = 1
         selling_settings.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         # Seed test Salespersons
         for sp_name in ["Rahul Sharma", "Anita Deshmukh", "Sameer Verma"]:
-            if not frappe.db.exists("Sales Person", sp_name):
-                sp = frappe.new_doc("Sales Person")
+            if not smriti.db.exists("Sales Person", sp_name):
+                sp = smriti.documents.new("Sales Person")
                 sp.sales_person_name = sp_name
                 sp.commission_rate = 5.0
                 sp.insert(ignore_permissions=True)
         
         # Configure test discount settings on SMRITI Company Settings
-        settings_name = frappe.db.exists("SMRITI Company Settings", self.company)
+        settings_name = smriti.db.exists("SMRITI Company Settings", self.company)
         if not settings_name:
-            settings = frappe.new_doc("SMRITI Company Settings")
+            settings = smriti.documents.new("SMRITI Company Settings")
             settings.company = self.company
             settings.discount_mode = "Both"
             settings.mandatory_discount_reason = 1
@@ -37,13 +38,13 @@ class TestBillingDiscountsSalesperson(TestSmritiRetailBillingAPI):
             settings.max_offline_cashier_discount = 5.0
             settings.insert(ignore_permissions=True)
         else:
-            settings = frappe.get_doc("SMRITI Company Settings", settings_name)
+            settings = smriti.documents.get("SMRITI Company Settings", settings_name)
             settings.discount_mode = "Both"
             settings.mandatory_discount_reason = 1
             settings.discount_approval_limit = 10.0
             settings.max_offline_cashier_discount = 5.0
             settings.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
     def test_calculation_order_and_dual_discounts(self):
         """
@@ -125,8 +126,8 @@ class TestBillingDiscountsSalesperson(TestSmritiRetailBillingAPI):
         )
         
         self.assertIsNotNone(invoice_res.get("invoice"))
-        dt = "Sales Invoice" if frappe.db.exists("Sales Invoice", invoice_res["invoice"]) else "POS Invoice"
-        doc = frappe.get_doc(dt, invoice_res["invoice"])
+        dt = "Sales Invoice" if smriti.db.exists("Sales Invoice", invoice_res["invoice"]) else "POS Invoice"
+        doc = smriti.documents.get(dt, invoice_res["invoice"])
         
         # Check sales team allocations:
         # Row 1 salesperson should be Anita Deshmukh
@@ -169,22 +170,22 @@ class TestBillingDiscountsSalesperson(TestSmritiRetailBillingAPI):
             
         # Create a User with Pin
         mgr_email = "testmanager@smriti.com"
-        if not frappe.db.exists("User", mgr_email):
-            user = frappe.new_doc("User")
+        if not smriti.db.exists("User", mgr_email):
+            user = smriti.documents.new("User")
             user.email = mgr_email
             user.first_name = "Test Manager"
             user.insert(ignore_permissions=True)
             
         # Assign SMRITI Store Manager role
-        if not frappe.db.exists("Has Role", {"parent": mgr_email, "role": "SMRITI Store Manager"}):
-            user_doc = frappe.get_doc("User", mgr_email)
+        if not smriti.db.exists("Has Role", {"parent": mgr_email, "role": "SMRITI Store Manager"}):
+            user_doc = smriti.documents.get("User", mgr_email)
             user_doc.append("roles", {"role": "SMRITI Store Manager"})
             user_doc.save(ignore_permissions=True)
             
         # Update custom_smriti_pin securely
         from frappe.utils.password import update_password
         update_password(mgr_email, "9876", doctype="User", fieldname="custom_smriti_pin")
-        frappe.db.set_value("User", mgr_email, "custom_smriti_pin", "1")
+        smriti.db.set_value("User", mgr_email, "custom_smriti_pin", "1")
             
         # Submit with manager pin -> must pass
         invoice_res = submit_bill(

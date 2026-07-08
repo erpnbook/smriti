@@ -10,15 +10,16 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe.utils import flt, today, getdate, now_datetime
 from frappe import _
+from smriti_retail_os import smriti
 
 def record_walk_in(store, executive=None, customer=None, phone=None, status="Registered", duration=0):
     """
     Creates a new walk-in log entry.
     """
-    doc = frappe.new_doc("SMRITI Walk In Visit")
+    doc = smriti.documents.new("SMRITI Walk In Visit")
     doc.visit_date = today()
     doc.visit_time = frappe.utils.nowtime()
     doc.store = store
@@ -36,7 +37,7 @@ def update_walk_in_status(visit_id, status, reason=None, invoice_type=None, invo
     """
     Executes valid state transitions inside the walk-in state machine.
     """
-    doc = frappe.get_doc("SMRITI Walk In Visit", visit_id)
+    doc = smriti.documents.get("SMRITI Walk In Visit", visit_id)
     valid_states = ["Registered", "Browsing", "Assisted", "Converted", "Exited"]
     
     if status not in valid_states:
@@ -66,14 +67,14 @@ def aggregate_daily_analytics(date_str=None):
     target_date = date_str or today()
     
     # 1. Clear existing summaries for the target date
-    frappe.db.delete("SMRITI Walk In Analytics", {"date": target_date})
+    smriti.db.delete("SMRITI Walk In Analytics", {"date": target_date})
     
     # 2. Get active warehouses (stores)
-    stores = frappe.db.get_all("Warehouse", filters={"is_group": 0})
+    stores = smriti.db.get_list("Warehouse", filters={"is_group": 0})
     for s in stores:
         store = s.name
         
-        visits = frappe.db.get_all(
+        visits = smriti.db.get_list(
             "SMRITI Walk In Visit",
             filters={"visit_date": target_date, "store": store},
             fields=["status", "engagement_duration", "sales_invoice", "pos_invoice"]
@@ -95,11 +96,11 @@ def aggregate_daily_analytics(date_str=None):
         for v in visits:
             if v.status == "Converted":
                 if v.sales_invoice:
-                    revenue += flt(frappe.db.get_value("Sales Invoice", v.sales_invoice, "grand_total"))
+                    revenue += flt(smriti.db.get("Sales Invoice", v.sales_invoice, "grand_total"))
                 elif v.pos_invoice:
-                    revenue += flt(frappe.db.get_value("POS Invoice", v.pos_invoice, "grand_total"))
+                    revenue += flt(smriti.db.get("POS Invoice", v.pos_invoice, "grand_total"))
                     
-        analytics = frappe.new_doc("SMRITI Walk In Analytics")
+        analytics = smriti.documents.new("SMRITI Walk In Analytics")
         analytics.date = target_date
         analytics.store = store
         analytics.total_walk_ins = total_walk_ins

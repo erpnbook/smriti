@@ -8,7 +8,8 @@
 # @version: 1.0.0
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from frappe.utils import cint
 
 
@@ -43,10 +44,10 @@ def get_barcode_feature_flags():
     }
 
     try:
-        if frappe.db.exists("DocType", "SMRITI Barcode Settings") and frappe.db.exists("SMRITI Barcode Settings", "SMRITI Barcode Settings"):
-            capture = frappe.db.get_single_value("SMRITI Barcode Settings", "barcode_telemetry_capture_enabled")
-            aggregation = frappe.db.get_single_value("SMRITI Barcode Settings", "barcode_telemetry_aggregation_enabled")
-            learning = frappe.db.get_single_value("SMRITI Barcode Settings", "barcode_learning_enabled")
+        if smriti.db.exists("DocType", "SMRITI Barcode Settings") and smriti.db.exists("SMRITI Barcode Settings", "SMRITI Barcode Settings"):
+            capture = smriti.db.get_single("SMRITI Barcode Settings", "barcode_telemetry_capture_enabled")
+            aggregation = smriti.db.get_single("SMRITI Barcode Settings", "barcode_telemetry_aggregation_enabled")
+            learning = smriti.db.get_single("SMRITI Barcode Settings", "barcode_learning_enabled")
             
             flags["capture"] = bool(cint(capture)) if capture is not None else False
             flags["aggregation"] = bool(cint(aggregation)) if aggregation is not None else False
@@ -88,9 +89,9 @@ def log_barcode_scan_event(event_uuid, template_id, barcode_family, printer_prof
         frappe.throw(frappe._("Not authorized to log telemetry events."), frappe.PermissionError)
 
     # 2. Idempotency Check
-    existing = frappe.db.get_value("SMRITI Barcode Scan Event", {"event_uuid": event_uuid}, "name")
+    existing = smriti.db.get("SMRITI Barcode Scan Event", {"event_uuid": event_uuid}, "name")
     if existing:
-        return frappe.get_doc("SMRITI Barcode Scan Event", existing)
+        return smriti.documents.get("SMRITI Barcode Scan Event", existing)
 
     # 3. Determine Governance Event ID
     scan_attempts = int(scan_attempts)
@@ -106,14 +107,14 @@ def log_barcode_scan_event(event_uuid, template_id, barcode_family, printer_prof
 
     # Default store_id if not provided: retrieve first available non-group warehouse as fallback
     if not store_id:
-        store_id = frappe.db.get_value("Warehouse", {"is_group": 0, "disabled": 0}, "name")
+        store_id = smriti.db.get("Warehouse", {"is_group": 0, "disabled": 0}, "name")
 
     if not store_id:
         frappe.throw(frappe.ValidationError("A valid Store (Warehouse) is required to log telemetry."))
 
     # 4. Insert raw SMRITI Barcode Scan Event doc
-    doc = frappe.get_doc({
-        "doctype": "SMRITI Barcode Scan Event",
+    doc = smriti.documents.new("BarcodeScanEvent")
+    doc.update({
         "event_uuid": event_uuid,
         "timestamp": frappe.utils.now_datetime(),
         "store_id": store_id,
@@ -130,7 +131,7 @@ def log_barcode_scan_event(event_uuid, template_id, barcode_family, printer_prof
     })
     # reviewed-ignore-permissions: barcode scan telemetry logging, no business data modification
     doc.insert(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
     return doc
 
 
@@ -141,7 +142,7 @@ def delete_expired_scan_events():
     from frappe.utils import add_days, now_datetime
     cutoff = add_days(now_datetime(), -90)
     
-    expired_events = frappe.db.sql("""
+    expired_events = smriti.db.sql("""
         SELECT name FROM `tabSMRITI Barcode Scan Event`
         WHERE timestamp < %(cutoff)s
     """, {"cutoff": cutoff}, as_dict=True)
@@ -152,7 +153,7 @@ def delete_expired_scan_events():
         count += 1
 
     if count > 0:
-        frappe.db.commit()
+        smriti.db.commit()
         from smriti_retail_os.backup_api import log_audit_event
         log_audit_event(
             "SMRITI Telemetry Cleanup",
@@ -180,7 +181,7 @@ def aggregate_scan_telemetry(period="Daily", target_date=None):
     else:
         target_date = getdate(target_date)
 
-    data = frappe.db.sql("""
+    data = smriti.db.sql("""
         SELECT
             store_id,
             template_id,
@@ -221,11 +222,11 @@ def aggregate_scan_telemetry(period="Daily", target_date=None):
             "printer_profile": row["printer_profile"]
         }
 
-        existing_name = frappe.db.get_value("SMRITI Barcode Telemetry Snapshot", filters, "name")
+        existing_name = smriti.db.get("SMRITI Barcode Telemetry Snapshot", filters, "name")
         if existing_name:
-            snapshot = frappe.get_doc("SMRITI Barcode Telemetry Snapshot", existing_name)
+            snapshot = smriti.documents.get("SMRITI Barcode Telemetry Snapshot", existing_name)
         else:
-            snapshot = frappe.new_doc("SMRITI Barcode Telemetry Snapshot")
+            snapshot = smriti.documents.new("SMRITI Barcode Telemetry Snapshot")
             snapshot.update(filters)
 
         snapshot.total_scans = total
@@ -239,5 +240,5 @@ def aggregate_scan_telemetry(period="Daily", target_date=None):
         # reviewed-ignore-permissions: periodic barcode telemetry rollup, restricted to system runner
         snapshot.save(ignore_permissions=True)
 
-    frappe.db.commit()
+    smriti.db.commit()
     print(f"[SMRITI Telemetry] Completed aggregation for {target_date} ({len(data)} records).")

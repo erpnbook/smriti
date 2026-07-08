@@ -5,7 +5,8 @@
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from frappe.utils import date_diff, today
 
 def execute(filters=None):
@@ -22,7 +23,7 @@ def execute(filters=None):
         {"label": "Total",      "fieldname": "total",               "fieldtype": "Float", "width": 90},
     ]
 
-    dispatches = frappe.db.sql("""
+    dispatches = smriti.db.sql("""
         SELECT party_stock_account, item_code, qty, posting_datetime
         FROM `tabSMRITI Party Stock Ledger Entry`
         WHERE company = %s AND voucher_type = 'Dispatch'

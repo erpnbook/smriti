@@ -16,7 +16,8 @@
 #       The underscore variant psv_dashboard.py is kept as a legacy stub.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 
 no_cache = 1
 title = "SMRITI PSV Dashboard"
@@ -60,6 +61,6 @@ def get_context(context):
     context.csrf_token = csrf_token or ""
 
     # Get companies for dropdown filter
-    context.companies = frappe.get_all("Company", fields=["name"])
+    context.companies = smriti.db.get_list("Company", fields=["name"])
 
     return context

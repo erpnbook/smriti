@@ -17,8 +17,9 @@ import shutil
 import smtplib
 import subprocess
 import fnmatch
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
@@ -95,7 +96,7 @@ def migrate_legacy_smtp_password():
 
     # Re-save JSON without the password
     frappe.db.set_default("smriti_backup_settings", json.dumps(stored))
-    frappe.db.commit()
+    smriti.db.commit()
 
     return {"status": "migrated", "message": "SMTP password migrated to encrypted store and removed from plain-text blob."}
 
@@ -105,8 +106,7 @@ def migrate_legacy_smtp_password():
 def log_audit_event(event_type, message):
     """Writes a SMRITI audit event to the Frappe Activity Log."""
     try:
-        frappe.get_doc({
-            "doctype": "Activity Log",
+        smriti.documents.new("ActivityLog").update({
             "user": frappe.session.user,
             "operation": event_type,
             "subject": message,
@@ -114,10 +114,10 @@ def log_audit_event(event_type, message):
             "status": "Success",
             "content": message,
         }).insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
     except Exception:
         # Never raise — audit failure must not interrupt the caller
-        frappe.log_error("SMRITI Audit Log Error", frappe.get_traceback())
+        smriti.errors.log_error("SMRITI Audit Log Error", frappe.get_traceback())
 
 
 def _is_protected_file(name):
@@ -236,7 +236,7 @@ def save_settings(settings):
                 frappe.conf.active_backup_encryption_key_version = "v1"
 
     frappe.db.set_default("smriti_backup_settings", json.dumps(settings))
-    frappe.db.commit()
+    smriti.db.commit()
 
     if old_enabled != new_enabled:
         if new_enabled:
@@ -541,7 +541,7 @@ def take_backup_now(backup_type="Database Only"):
             "email_error": email_error
         }
     except Exception as e:
-        frappe.log_error("SMRITI Backup Error", str(e))
+        smriti.errors.log_error("SMRITI Backup Error", str(e))
         return {
             "status": "failed",
             "message": str(e)
@@ -711,7 +711,7 @@ def restore_backup(file_name):
         try:
             res = subprocess.run(cmd, capture_output=True, text=True)
             if res.returncode != 0:
-                frappe.log_error("SMRITI Backup Restore Failure", f"Command: {' '.join(cmd)}\nStderr: {res.stderr}\nStdout: {res.stdout}")
+                smriti.errors.log_error("SMRITI Backup Restore Failure", f"Command: {' '.join(cmd)}\nStderr: {res.stderr}\nStdout: {res.stdout}")
                 return {
                     "status": "failed",
                     "message": res.stderr or res.stdout or "Restoration process failed. Check Error Log."
@@ -732,7 +732,7 @@ def restore_backup(file_name):
                 "message": "Backup restored successfully. Logging out to reload session database."
             }
         except Exception as e:
-            frappe.log_error("SMRITI Backup Restore Exception", str(e))
+            smriti.errors.log_error("SMRITI Backup Restore Exception", str(e))
             return {
                 "status": "failed",
                 "message": str(e)
@@ -793,7 +793,7 @@ def run_scheduled_backup():
         backup_type = settings.get("backup_type", "Database Only")
         take_backup_now(backup_type)
     except Exception as ex:
-        frappe.log_error("SMRITI Scheduled Backup Error", str(ex))
+        smriti.errors.log_error("SMRITI Scheduled Backup Error", str(ex))
 
 
 def _cleanup_old_backups():
@@ -828,11 +828,11 @@ def rclone_sync(file_path):
     CLD-01: Syncs backup to cloud storage using rclone.
     Credentials fetched from SMRITI Company Settings.
     """
-    company = frappe.defaults.get_user_default("company") or frappe.get_all("Company", limit=1)[0].name
-    if not frappe.db.exists("SMRITI Company Settings", company):
+    company = frappe.defaults.get_user_default("company") or smriti.db.get_list("Company", limit=1)[0].name
+    if not smriti.db.exists("SMRITI Company Settings", company):
         return {"status": "skipped", "message": "Settings not configured."}
 
-    settings = frappe.get_doc("SMRITI Company Settings", company)
+    settings = smriti.documents.get("SMRITI Company Settings", company)
     if not settings.get("cloud_backup_enabled"):
         return {"status": "skipped", "message": "Cloud backup disabled in settings."}
 
@@ -854,7 +854,7 @@ def rclone_sync(file_path):
     except Exception as e:
         msg = str(e)
         if hasattr(e, 'stderr'): msg = e.stderr
-        frappe.log_error("SMRITI Rclone Error", msg)
+        smriti.errors.log_error("SMRITI Rclone Error", msg)
         return {"status": "failed", "message": msg}
 
 

@@ -9,7 +9,8 @@
 # @version: 1.0.0
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 import json
 from frappe.utils import flt, cint, nowdate
 
@@ -183,7 +184,7 @@ def get_sas_report_metadata(report_key):
     Returns the full expanded metadata for a report, merging
     SMRITI Report Template record with SAS-specific defaults.
     """
-    template = frappe.db.get_value(
+    template = smriti.db.get(
         "SMRITI Report Template",
         {"report_key": report_key},
         ["*"],
@@ -408,7 +409,7 @@ def get_report_categories_from_nav():
         return categories
 
     except Exception as e:
-        frappe.log_error(f"SAS: get_report_categories_from_nav error: {str(e)}")
+        smriti.errors.log_error(f"SAS: get_report_categories_from_nav error: {str(e)}")
         return []
 
 
@@ -418,7 +419,7 @@ def get_srs_report_list_for_sas():
     enriched with SAS metadata keys.
     """
     try:
-        all_templates = frappe.db.get_all(
+        all_templates = smriti.db.get_list(
             "SMRITI Report Template",
             filters={"is_public": 1},
             fields=[

@@ -9,8 +9,9 @@
 # * Copyright (c) 2026 AITDL NETWORK. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.utils import flt
 
 # smriti_foundation is not a deployed package — provide silent no-op stubs so
@@ -223,7 +224,7 @@ def save_settings(fields):
 		s.landed_cost_rule = fields["landed_cost_rule"]
 
 	s.save(ignore_permissions=True)
-	frappe.db.commit()
+	smriti.db.commit()
 
 	# Capture after snapshot
 	after = get_settings()
@@ -264,7 +265,7 @@ def _validate_settings(fields):
 			).format(fields["landed_cost_rule"]))
 
 	if "default_warehouse" in fields and fields["default_warehouse"]:
-		if not frappe.db.exists("Warehouse", fields["default_warehouse"]):
+		if not smriti.db.exists("Warehouse", fields["default_warehouse"]):
 			frappe.throw(_(
 				"Warehouse '{0}' does not exist."
 			).format(fields["default_warehouse"]))

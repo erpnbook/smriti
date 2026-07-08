@@ -29,9 +29,10 @@
 #
 # ─────────────────────────────────────────────────────────────────────────────
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 import json
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.utils import flt, cint, nowdate, now_datetime, cstr
 from smriti_retail_os.utils.invoice_utils import get_barcode_candidates
 
@@ -228,12 +229,12 @@ def _resolve_item_code_from_matrix(article, color, size, fallback):
         fallback                    if fallback else None,
     ]
     for code in candidates:
-        if code and frappe.db.exists("Item", code):
+        if code and smriti.db.exists("Item", code):
             return code
 
     # Fuzzy name match
     if article:
-        found = frappe.db.get_value(
+        found = smriti.db.get(
             "Item",
             {"item_name": ["like", f"%{article}%"], "disabled": 0},
             "name"
@@ -261,10 +262,9 @@ def _ensure_sentinel_item():
         _ensure_sentinel_item()
     """
     sentinel = "_SMRITI_GENERIC_ITEM_"
-    if not frappe.db.exists("Item", sentinel):
+    if not smriti.db.exists("Item", sentinel):
         try:
-            frappe.get_doc({
-                "doctype":          "Item",
+            smriti.documents.new("Item").update({
                 "item_code":        sentinel,
                 "item_name":        "SMRITI Generic Article (Kernel Sentinel)",
                 "item_group":       "All Item Groups",
@@ -273,10 +273,10 @@ def _ensure_sentinel_item():
                 "is_purchase_item": 1,
                 "stock_uom":        "Nos",
             }).insert(ignore_permissions=True)
-            frappe.db.commit()
+            smriti.db.commit()
         except Exception:
-            frappe.log_error(title="Sentinel Item creation failed")
-            first = frappe.db.get_value("Item", {"is_sales_item": 1, "disabled": 0}, "name")
+            smriti.errors.log_error(title="Sentinel Item creation failed")
+            first = smriti.db.get("Item", {"is_sales_item": 1, "disabled": 0}, "name")
             return first or ""
     return sentinel
 
@@ -374,7 +374,7 @@ def _enrich_child_row(row, child_field_map, child_meta, parent_doctype, company)
 
     # ── Item row enrichment ───────────────────────────────────────────────────
     item_code = enriched.get("item_code")
-    if item_code and frappe.db.exists("Item", item_code):
+    if item_code and smriti.db.exists("Item", item_code):
         item_data = _lookup_item_master(item_code, company)
 
         # Warehouse
@@ -411,11 +411,11 @@ def _enrich_child_row(row, child_field_map, child_meta, parent_doctype, company)
 def _lookup_item_master(item_code, company):
     """
     Stateless lookup of Item master + pricing + tax + warehouse.
-    Cached via frappe.get_cached_doc to avoid repeated DB hits per row.
+    Cached via smriti.documents.get to avoid repeated DB hits per row.
     Returns a flat enrichment dict.
     """
     try:
-        item = frappe.get_cached_doc("Item", item_code)
+        item = smriti.documents.get("Item", item_code)
     except Exception:  # swallow-by-design: item not found → caller handles {} gracefully
         return {}
 
@@ -428,7 +428,7 @@ def _lookup_item_master(item_code, company):
     }
 
     # Selling rate
-    rate = flt(frappe.db.get_value(
+    rate = flt(smriti.db.get(
         "Item Price",
         {"item_code": item_code, "price_list": "Standard Selling"},
         "price_list_rate"
@@ -436,7 +436,7 @@ def _lookup_item_master(item_code, company):
     result["rate"] = rate
 
     # MRP
-    mrp = flt(item.get("custom_mrp") or frappe.db.get_value(
+    mrp = flt(item.get("custom_mrp") or smriti.db.get(
         "Item Price",
         {"item_code": item_code, "price_list": "MRP"},
         "price_list_rate"
@@ -452,14 +452,14 @@ def _lookup_item_master(item_code, company):
         tmpl = t.item_tax_template
         if not tmpl:
             continue
-        tmpl_company = frappe.db.get_value("Item Tax Template", tmpl, "company")
+        tmpl_company = smriti.db.get("Item Tax Template", tmpl, "company")
         if tmpl_company == company:
             item_tax_template = tmpl
             break
     result["item_tax_template"] = item_tax_template
 
     # Default warehouse (Item Default child table)
-    wh = frappe.db.get_value(
+    wh = smriti.db.get(
         "Item Default",
         {"parent": item_code, "company": company},
         "default_warehouse"
@@ -469,9 +469,9 @@ def _lookup_item_master(item_code, company):
     result["warehouse"] = wh or ""
 
     # Cost center
-    cc = frappe.db.get_value("Company", company, "cost_center")
+    cc = smriti.db.get("Company", company, "cost_center")
     if not cc:
-        cc = frappe.db.get_value("Cost Center", {"company": company, "is_group": 0}, "name")
+        cc = smriti.db.get("Cost Center", {"company": company, "is_group": 0}, "name")
     result["cost_center"] = cc or ""
 
     return result
@@ -518,18 +518,18 @@ def _build_and_persist_doc(doctype, enriched, meta, company, action):
     existing_name = enriched.get("name")
     is_update = (
         existing_name
-        and frappe.db.exists(doctype, existing_name)
-        and frappe.db.get_value(doctype, existing_name, "docstatus") == 0
+        and smriti.db.exists(doctype, existing_name)
+        and smriti.db.get(doctype, existing_name, "docstatus") == 0
     )
 
     if is_update:
-        doc = frappe.get_doc(doctype, existing_name)
+        doc = smriti.documents.get(doctype, existing_name)
         # Clear child tables that we're about to repopulate
         for cf in meta.get_table_fields():
             if enriched.get(cf.fieldname):
                 doc.set(cf.fieldname, [])
     else:
-        doc = frappe.new_doc(doctype)
+        doc = smriti.documents.new(doctype)
 
     # ── Populate header fields ───────────────────────────────────────────────
     field_names = {f.fieldname for f in meta.fields if f.fieldname}
@@ -569,7 +569,7 @@ def _build_and_persist_doc(doctype, enriched, meta, company, action):
         try:
             doc.run_method("set_taxes")
         except Exception:
-            frappe.log_error(title="Transaction set_taxes failed")
+            smriti.errors.log_error(title="Transaction set_taxes failed")
 
     # ── Save / Submit ────────────────────────────────────────────────────────
     save_flags = dict(ignore_permissions=True)
@@ -583,10 +583,10 @@ def _build_and_persist_doc(doctype, enriched, meta, company, action):
         if action == "submit":
             doc.submit()
 
-        frappe.db.commit()
+        smriti.db.commit()
     except Exception:
-        frappe.db.rollback()
-        frappe.log_error(title=f"Transaction persist failed ({action})")
+        smriti.db.rollback()
+        smriti.errors.log_error(title=f"Transaction persist failed ({action})")
         raise
     return doc
 
@@ -605,7 +605,7 @@ def _resolve_company(data):
         or frappe.defaults.get_user_default("company")
     )
     if not company:
-        all_companies = frappe.get_all("Company", limit=1, pluck="name")
+        all_companies = smriti.db.get_list("Company", limit=1, pluck="name")
         company = all_companies[0] if all_companies else None
     if not company:
         frappe.throw(_("Kernel: Cannot resolve active company. Please set a company default."))
@@ -615,11 +615,11 @@ def _resolve_company(data):
 def _resolve_fallback_warehouse(company):
     """Returns the best available warehouse for a company."""
     wh = frappe.defaults.get_user_default("warehouse")
-    if wh and frappe.db.get_value("Warehouse", wh, "company") == company:
+    if wh and smriti.db.get("Warehouse", wh, "company") == company:
         return wh
     return (
-        frappe.db.get_value("Warehouse", {"warehouse_name": "Stores", "company": company}, "name")
-        or frappe.db.get_value("Warehouse", {"company": company, "is_group": 0}, "name")
+        smriti.db.get("Warehouse", {"warehouse_name": "Stores", "company": company}, "name")
+        or smriti.db.get("Warehouse", {"company": company, "is_group": 0}, "name")
     )
 
 
@@ -639,7 +639,7 @@ def _resolve_party_addresses(party_name, party_doctype):
     ]
 
     def _get_addr(address_type):
-        return frappe.db.get_value(
+        return smriti.db.get(
             "Address",
             {
                 "links.link_doctype": party_doctype,
@@ -689,7 +689,7 @@ def _resolve_default_tax_template(company, supply_type="intrastate"):
     If supply_type is 'interstate', looks for IGST template.
     """
     # Try is_default first
-    tmpl = frappe.db.get_value(
+    tmpl = smriti.db.get(
         "Sales Taxes and Charges Template",
         {"company": company, "is_default": 1},
         "name"
@@ -698,7 +698,7 @@ def _resolve_default_tax_template(company, supply_type="intrastate"):
         return tmpl
 
     # Fallback: any template for the company
-    tmpl = frappe.db.get_value(
+    tmpl = smriti.db.get(
         "Sales Taxes and Charges Template",
         {"company": company},
         "name"
@@ -712,7 +712,7 @@ def _resolve_tax_template_for_item(item_code, company, supply_type="intrastate")
     Returns template name or empty string.
     """
     try:
-        item = frappe.get_cached_doc("Item", item_code)
+        item = smriti.documents.get("Item", item_code)
     except Exception:  # swallow-by-design: item not found → no tax template, caller receives ""
         return ""
 
@@ -720,7 +720,7 @@ def _resolve_tax_template_for_item(item_code, company, supply_type="intrastate")
         tmpl = t.item_tax_template
         if not tmpl:
             continue
-        tmpl_company = frappe.db.get_value("Item Tax Template", tmpl, "company")
+        tmpl_company = smriti.db.get("Item Tax Template", tmpl, "company")
         if tmpl_company == company:
             # Supply type match: interstate templates typically have "IGST" in name
             if supply_type == "interstate" and "IGST" not in tmpl.upper():
@@ -732,7 +732,7 @@ def _resolve_tax_template_for_item(item_code, company, supply_type="intrastate")
     # Return first valid template regardless of supply type
     for t in (item.taxes or []):
         tmpl = t.item_tax_template
-        if tmpl and frappe.db.get_value("Item Tax Template", tmpl, "company") == company:
+        if tmpl and smriti.db.get("Item Tax Template", tmpl, "company") == company:
             return tmpl
     return ""
 
@@ -778,7 +778,7 @@ def resolve_identifiers(identifiers, company=None):
 
             elif id_type == "item_code":
                 code = cstr(ident.get("value") or "")
-                if frappe.db.exists("Item", code):
+                if smriti.db.exists("Item", code):
                     results.append(_lookup_item_master(code, company))
                 else:
                     results.append(None)
@@ -798,7 +798,7 @@ def resolve_identifiers(identifiers, company=None):
                 results.append({"error": f"Unknown identifier type: {id_type}"})
 
         except Exception as e:
-            frappe.log_error(
+            smriti.errors.log_error(
                 title="SMRITI Kernel resolve_identifiers error",
                 message=frappe.get_traceback()
             )
@@ -816,13 +816,13 @@ def _resolve_barcode(barcode, company):
     
     item_code = None
     for cand in candidates:
-        item_code = frappe.db.get_value("Item Barcode", {"barcode": cand}, "parent")
+        item_code = smriti.db.get("Item Barcode", {"barcode": cand}, "parent")
         if item_code:
             break
             
     if not item_code:
         for cand in candidates:
-            if frappe.db.exists("Item", cand):
+            if smriti.db.exists("Item", cand):
                 item_code = cand
                 break
                 
@@ -837,11 +837,11 @@ def _resolve_article_color(article, color, company):
         return None
 
     # Direct hit
-    if frappe.db.exists("Item", article):
+    if smriti.db.exists("Item", article):
         data = _lookup_item_master(article, company)
     else:
         # Fuzzy match
-        found = frappe.db.get_value(
+        found = smriti.db.get(
             "Item",
             {"item_code": ["like", f"%{article}%"], "disabled": 0},
             "name"
@@ -852,7 +852,7 @@ def _resolve_article_color(article, color, company):
 
     # Try to find color variant for more specific pricing
     if color and data:
-        variant = frappe.db.get_value(
+        variant = smriti.db.get(
             "Item",
             {"variant_of": data.get("item_code") or article,
              "item_code": ["like", f"%{color}%"], "disabled": 0},
@@ -877,14 +877,14 @@ def _resolve_customer(ident, id_type):
         return None
 
     if id_type == "customer_mobile":
-        cust = frappe.db.get_value(
+        cust = smriti.db.get(
             "Customer", {"mobile_no": value, "disabled": 0},
             ["name", "customer_name", "mobile_no", "loyalty_program",
              "custom_tax_inclusive_override", "customer_group"],
             as_dict=True
         )
     else:
-        cust = frappe.db.get_value(
+        cust = smriti.db.get(
             "Customer", {"customer_name": ["like", f"%{value}%"], "disabled": 0},
             ["name", "customer_name", "mobile_no", "loyalty_program",
              "custom_tax_inclusive_override", "customer_group"],
@@ -898,7 +898,7 @@ def _resolve_supplier(ident):
     value = cstr(ident.get("value") or "")
     if not value:
         return None
-    sup = frappe.db.get_value(
+    sup = smriti.db.get(
         "Supplier", {"supplier_name": ["like", f"%{value}%"], "disabled": 0},
         ["name", "supplier_name", "supplier_type", "supplier_group", "tax_id"],
         as_dict=True

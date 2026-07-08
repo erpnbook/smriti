@@ -6,8 +6,9 @@
 # @author:  Jawahar R. Mallah
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 
 
 class CustomerRepository:
@@ -37,15 +38,15 @@ class CustomerRepository:
     @staticmethod
     def get_detail(customer_id):
         """Retrieves detailed attributes of a customer."""
-        if not frappe.db.exists("Customer", customer_id):
+        if not smriti.db.exists("Customer", customer_id):
             frappe.throw(_("Customer {0} does not exist.").format(customer_id), frappe.DoesNotExistError)
 
-        doc = frappe.get_doc("Customer", customer_id)
+        doc = smriti.documents.get("Customer", customer_id)
         
         # Fetch associated primary address if exists
         billing_address = ""
         shipping_address = ""
-        address_list = frappe.get_all(
+        address_list = smriti.db.get_list(
             "Address",
             filters={"links.link_doctype": "Customer", "links.link_name": customer_id},
             fields=["name", "address_title", "address_line1", "address_line2", "city", "state", "pincode"]
@@ -72,7 +73,7 @@ class CustomerRepository:
     @staticmethod
     def create(customer_data):
         """Creates a new Customer Doc and links Address."""
-        cust = frappe.new_doc("Customer")
+        cust = smriti.documents.new("Customer")
         cust.customer_name = customer_data["customer_name"]
         cust.customer_type = customer_data.get("customer_type", "Individual")
         cust.mobile_no = customer_data.get("mobile_no", "")
@@ -84,7 +85,7 @@ class CustomerRepository:
 
         # Create primary address if provided
         if customer_data.get("address_line1"):
-            addr = frappe.new_doc("Address")
+            addr = smriti.documents.new("Address")
             addr.address_title = customer_data["customer_name"]
             addr.address_type = "Billing"
             addr.address_line1 = customer_data["address_line1"]
@@ -100,10 +101,10 @@ class CustomerRepository:
     @staticmethod
     def update(customer_id, customer_data):
         """Updates attributes of an existing Customer doc."""
-        if not frappe.db.exists("Customer", customer_id):
+        if not smriti.db.exists("Customer", customer_id):
             frappe.throw(_("Customer {0} not found.").format(customer_id), frappe.DoesNotExistError)
 
-        doc = frappe.get_doc("Customer", customer_id)
+        doc = smriti.documents.get("Customer", customer_id)
         if "customer_name" in customer_data:
             doc.customer_name = customer_data["customer_name"]
         if "customer_type" in customer_data:
@@ -123,8 +124,8 @@ class CustomerRepository:
     @staticmethod
     def delete(customer_id):
         """Disables/Soft-deletes the Customer."""
-        if not frappe.db.exists("Customer", customer_id):
+        if not smriti.db.exists("Customer", customer_id):
             return False
-        frappe.db.set_value("Customer", customer_id, "disabled", 1)
-        frappe.db.commit()
+        smriti.db.set_value("Customer", customer_id, "disabled", 1)
+        smriti.db.commit()
         return True

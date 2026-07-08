@@ -5,8 +5,9 @@
 # @author:  Jawahar R. Mallah
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.utils import flt
 
 class SalesValidationError(frappe.ValidationError):
@@ -33,7 +34,7 @@ class SalesValidationService:
         if not warehouse:
             return True # If no warehouse specified, skip stock validation (e.g. drop ship or service)
 
-        actual_qty = frappe.db.get_value("Bin", {"item_code": item_code, "warehouse": warehouse}, "actual_qty")
+        actual_qty = smriti.db.get("Bin", {"item_code": item_code, "warehouse": warehouse}, "actual_qty")
         actual_qty = flt(actual_qty or 0.0)
         
         if actual_qty < flt(qty):

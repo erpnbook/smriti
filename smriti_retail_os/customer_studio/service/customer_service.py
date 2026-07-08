@@ -6,8 +6,9 @@
 # @author:  Jawahar R. Mallah
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from smriti_retail_os.customer_studio.repository.customer_repository import CustomerRepository
 
 
@@ -53,7 +54,7 @@ class CustomerService:
             return CustomerRepository.update(customer_id, customer_data)
         else:
             # Verify unique name
-            if frappe.db.exists("Customer", customer_data["customer_name"]):
+            if smriti.db.exists("Customer", customer_data["customer_name"]):
                 frappe.throw(_("Customer with name {0} already exists.").format(customer_data["customer_name"]))
             return CustomerRepository.create(customer_data)
 
