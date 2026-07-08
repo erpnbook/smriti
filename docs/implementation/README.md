@@ -13,3 +13,6 @@ This index lists all SMRITI implementation plans in chronological order, in acco
 | 2026-07-06 | Releases    | Phase 1 | v2.1.6  | Completed | [Release_Publish_GitHub_v2.1.6.md](releases/Release_Publish_GitHub_v2.1.6.md) |
 | 2026-07-07 | Foundation  | Phase 1 | v2.1.7  | Draft     | [Foundation_Error_Pages_And_Branded_Experience_v2.1.7.md](foundation/Foundation_Error_Pages_And_Branded_Experience_v2.1.7.md) |
 | 2026-07-07 | Foundation  | Phase 1 | v1.0.0  | Draft     | [Governance_Consolidation_And_Validation_Gates_v1.0.0.md](foundation/Governance_Consolidation_And_Validation_Gates_v1.0.0.md) |
+| 2026-07-08 | Sales       | Phase 1 | v2.0.0  | Completed | [Sales_Studio_Phase1_v2.0.0.md](../walkthrough/sales/Sales_Studio_Phase1_v2.0.0.md) |
+| 2026-07-08 | Procurement | Phase 2 | v2.2.0  | Completed | [Procurement_PO_Service_Refactor_v2.2.0.md](procurement/Procurement_PO_Service_Refactor_v2.2.0.md) |
+

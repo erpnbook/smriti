@@ -5,7 +5,31 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.2.0] — 2026-07-08
+
+### Added
+- **Sales Studio Phase 1**: New `sales_studio` module with full service-repository-adapter layering for Quotation and Sales Order management (15 new files across adapter, API, repository, and service layers).
+- **Quotation Manager UI**: New `www/smriti-quotation.html` page with dual-mode entry (manual line items + matrix grid), converting Quotations to Sales Orders in one click.
+- **Sales Orders UI**: Rewired `www/sales_orders.html` to route all API calls through the new `sales_studio.api.sales_api` layer.
+- **Security**: Registered `smriti_quotation` page in `security_api.py` with manager-role access policy.
+- **Tests**: Added `tests/test_sales_studio.py` with 19 tests across 7 test classes.
+- **Docs**: Added `docs/walkthrough/sales/Sales_Studio_Phase1_v2.0.0.md` and `docs/walkthrough/procurement/Procurement_PO_Service_Refactor_v2.2.0.md`.
+
+### Changed
+- **Purchase Studio — Supplier Ledger** (`get_supplier_ledger`): Now reads real ERPNext GL entries via `erp_adapter.get_supplier_gl_entries()` instead of SMRITI Purchase Order totals. Returns accurate `total_payable` (outstanding PI amount) and `overdue` (overdue PI amount) instead of PO values with hardcoded `0.0` overdue.
+- **Purchase Studio — Dashboard KPIs** (`get_dashboard_data`): `pending_grns` now calls `erp_adapter.count_pending_grns()` (real unbilled GRN count); `unpaid_invoices_amt` now calls `erp_adapter.get_outstanding_payables_total()` (real outstanding); `month_spend` now calls `erp_adapter.get_monthly_spend_total()` (GST-inclusive PI-based); `recent_activity` now calls `erp_adapter.get_recent_activities()` (cross-doctype PO+GRN+PI feed). Removed fabricated `month_spend * 0.4` estimate.
+- **Purchase Studio — Analytics** (`get_purchase_analytics`): Replaced 3 direct SQL queries on `tabSMRITI Purchase Order` with `erp_adapter.get_purchase_spend_analytics()` which reads from `tabPurchase Invoice` (GST-inclusive actual payments). Analytics now reflect real financials, not pre-GST order intents.
+- **Purchase Studio — Variant Resolution** (`resolve_variant_item`): Replaced N+1 attribute query loop (one DB call per variant) with a single batch `frappe.db.get_all("Item Variant Attribute")` call for all variants, then grouped by parent in Python. Reduces DB queries from O(n) to O(1) for variant resolution.
+- **Purchase Studio — Search** (`search_suppliers`): Merged as thin alias of `get_suppliers()`. Removed duplicate `PurchaseOrderService.list_suppliers()` call. SC-13 API endpoint unchanged.
+
+### Infrastructure
+- Merged `smriti-next` branch into `main` via fast-forward. `smriti-next` deleted locally and on remote.
+- Both dev (`D:\Smriti_Retail_OS`) and test (`F:\Smriti9`) environments at commit `782917c`.
+
+---
+
 ## [2.1.7] — 2026-07-07
+
 
 ### Added
 - Created a dedicated `error_pages` module containing Jinja-resolved `404.html`, `403.html`, `500.html`, and `503.html` templates.
