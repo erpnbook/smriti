@@ -5,7 +5,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.2.1] — 2026-07-08
+
+### Changed
+- **Purchase Studio — Supplier Performance** (`get_supplier_performance`): Removed raw SQL on `tabSMRITI Purchase Order`. Now delegates to `erp_adapter.get_supplier_performance_data()` which reads ERPNext PO + PI KPIs with real overdue payable amounts per supplier.
+- **Purchase Studio — Size Presets** (`get_size_presets`): Added `Generic (Single Size)` fallback preset so non-apparel stores can use matrix PO entry without configuring size groups. Return shape changed to `{"presets": {...}, "using_defaults": bool}` — UI reading this endpoint must read `result["presets"]`.
+
+---
+
 ## [2.2.0] — 2026-07-08
+
 
 ### Added
 - **Sales Studio Phase 1**: New `sales_studio` module with full service-repository-adapter layering for Quotation and Sales Order management (15 new files across adapter, API, repository, and service layers).
