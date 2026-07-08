@@ -287,6 +287,30 @@ body.popout-mode #smriti-sidebar-target.sidebar {
   transition: opacity 0.15s ease;
 }
 
+/* Amber "SOON" badge variant for coming-soon items */
+.smriti-nav-badge--soon {
+  background: rgba(245, 158, 11, 0.18);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+/* ── Coming-Soon sidebar items ────────────────────────────────────────── */
+.smriti-sidebar-item.coming-soon {
+  opacity: 0.55;
+  cursor: default;
+  pointer-events: auto;
+}
+.smriti-sidebar-item.coming-soon:hover {
+  background: transparent;
+  opacity: 0.7;
+}
+.smriti-sidebar-item.coming-soon .smriti-sidebar-item-label {
+  font-style: italic;
+}
+.smriti-sidebar-item.coming-soon .smriti-sidebar-item-icon {
+  opacity: 0.5;
+}
+
 /* Hide badge when sidebar is collapsed — no room to show it */
 .smriti-sidebar.collapsed .smriti-nav-badge,
 #smriti-sidebar-target.sidebar.collapsed .smriti-nav-badge {

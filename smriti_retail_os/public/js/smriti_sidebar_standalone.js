@@ -192,23 +192,30 @@ window.SMRITI = window.SMRITI || {};
                         return;
                     }
 
-                    var isItemActive = (item.id === activePageId || item.route === activeRoute || item.standalone_route === activeRoute);
+                    var isComingSoon = (item.status === "coming_soon");
+                    var isItemActive = !isComingSoon && (item.id === activePageId || item.route === activeRoute || item.standalone_route === activeRoute);
                     var iconHtml = ICONS[sec.id] || ICONS.default;
-                    var itemRoute = item.route || "#";
+                    var itemRoute = isComingSoon ? "/smriti-coming-soon" : (item.route || "#");
+                    var itemClasses = "smriti-sidebar-item" + (isItemActive ? " active" : "") + (isComingSoon ? " coming-soon" : "");
+                    var titleAttr = isComingSoon ? (item.eta ? " title=\"Coming " + item.eta + "\"" : " title=\"Coming Soon\"") : "";
 
-                    html.push('<a class="smriti-sidebar-item' + (isItemActive ? ' active' : '') + '" href="' + itemRoute + '" role="treeitem" tabindex="0"' + (isItemActive ? ' aria-current="page"' : '') + '>');
+                    html.push('<a class="' + itemClasses + '" href="' + itemRoute + '" role="treeitem" tabindex="' + (isComingSoon ? '-1' : '0') + '"' + (isItemActive ? ' aria-current="page"' : '') + titleAttr + '>');
                     html.push('  <div class="smriti-sidebar-item-icon">' + iconHtml + '</div>');
                     html.push('  <span class="smriti-sidebar-item-label">' + item.label + '</span>');
                     if (item.badge) {
-                        html.push('  <span class="smriti-nav-badge">' + item.badge + '</span>');
+                        var badgeClass = isComingSoon ? 'smriti-nav-badge smriti-nav-badge--soon' : 'smriti-nav-badge';
+                        html.push('  <span class="' + badgeClass + '">' + item.badge + '</span>');
                     }
-                    var isFav = favorites.indexOf(item.id) !== -1;
-                    html.push('  <div class="smriti-sidebar-item-actions">');
-                    html.push('    <button class="smriti-popout-icon-btn" onclick="SMRITI.triggerPopout(event, \'' + itemRoute + '\')" title="Open in Popout Window">📺</button>');
-                    html.push('    <button class="smriti-star-btn' + (isFav ? ' active' : '') + '" data-item-id="' + item.id + '" title="' + (isFav ? 'Unpin' : 'Pin to Favorites') + '">' + (isFav ? '⭐' : '☆') + '</button>');
-                    html.push('  </div>');
+                    if (!isComingSoon) {
+                        var isFav = favorites.indexOf(item.id) !== -1;
+                        html.push('  <div class="smriti-sidebar-item-actions">');
+                        html.push('    <button class="smriti-popout-icon-btn" onclick="SMRITI.triggerPopout(event, \'' + itemRoute + '\')" title="Open in Popout Window">📺</button>');
+                        html.push('    <button class="smriti-star-btn' + (isFav ? ' active' : '') + '" data-item-id="' + item.id + '" title="' + (isFav ? 'Unpin' : 'Pin to Favorites') + '">' + (isFav ? '⭐' : '☆') + '</button>');
+                        html.push('  </div>');
+                    }
                     html.push('</a>');
                 });
+
 
                 html.push('    </div>');
                 html.push('  </div>');
