@@ -1,482 +1,1076 @@
-<!DOCTYPE html>
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+<!--
+  @file:    smriti_retail_os/www/smriti-po-print.html
+  @desc:    SMRITI Purchase Order — View, Print & PDF. Mirrors sizewise_invoice design.
+  @author:  Jawahar R. Mallah <jawahar.mallah@gmail.com>
+  @version: 1.0.0
+  @license: GPL-3.0-only
+-->
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Purchase Order Print</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-      color: #000;
-      background: #fff;
-    }
-
-    .print-container {
-      max-width: 900px;
-      margin: 0 auto;
-      border: 1px solid #000;
-      padding: 0;
-    }
-
-    /* Grid lines */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    th, td {
-      border: 1px solid #000;
-      padding: 6px 8px;
-      font-size: 13px;
-      vertical-align: middle;
-    }
-
-    /* Header styling */
-    .header-table td {
-      border: none;
-      border-bottom: 2px solid #000;
-    }
-
-    .logo-cell {
-      width: 30%;
-      text-align: center;
-      border-right: 1px solid #000 !important;
-      padding: 10px;
-    }
-
-    .logo-text-title {
-      font-size: 14px;
-      font-weight: bold;
-      letter-spacing: 2px;
-      margin-top: 5px;
-    }
-
-    .info-cell {
-      width: 70%;
-      padding: 10px 15px;
-    }
-
-    .comp-title {
-      font-size: 32px;
-      font-weight: 800;
-      text-align: center;
-      margin: 0 0 10px 0;
-      letter-spacing: 1px;
-    }
-
-    .comp-meta-line {
-      font-size: 11px;
-      font-weight: bold;
-      margin-bottom: 4px;
-    }
-
-    /* Meta section */
-    .meta-table {
-      border-bottom: 2px solid #000;
-    }
-
-    .meta-table td {
-      border: none;
-      border-bottom: 1px solid #000;
-      border-right: 1px solid #000;
-    }
-
-    .vendor-header {
-      background: #f3f4f6;
-      font-weight: bold;
-      font-size: 11px;
-    }
-
-    .vendor-details-box {
-      font-size: 14px;
-      font-weight: bold;
-      height: 40px;
-      vertical-align: top;
-      padding-top: 8px;
-    }
-
-    .meta-label {
-      font-size: 13px;
-      font-weight: bold;
-      width: 150px;
-    }
-
-    .meta-val {
-      font-size: 13px;
-      font-weight: bold;
-      text-align: center;
-    }
-
-    .image-box-cell {
-      width: 45%;
-      text-align: center;
-      vertical-align: middle;
-      border-right: none !important;
-      padding: 5px;
-    }
-
-    .po-product-image {
-      max-width: 100%;
-      max-height: 180px;
-      object-fit: contain;
-    }
-
-    /* Matrix items table */
-    .matrix-table {
-      margin-top: -1px;
-      border-bottom: 2px solid #000;
-    }
-
-    .matrix-table th {
-      background: #fff;
-      font-weight: bold;
-      font-size: 12px;
-      text-align: center;
-      border-bottom: 2px solid #000;
-    }
-
-    .matrix-table td {
-      text-align: center;
-    }
-
-    .total-row td {
-      font-weight: bold;
-      border-top: 2px solid #000;
-      border-bottom: 2px solid #000;
-    }
-
-    /* Notes section */
-    .notes-box {
-      padding: 15px;
-      font-size: 11px;
-      line-height: 1.4;
-      font-weight: bold;
-      border-bottom: 1px solid #000;
-    }
-
-    .notes-title {
-      font-size: 11px;
-      margin-bottom: 6px;
-    }
-
-    /* Signature footer */
-    .footer-sig-table td {
-      border: none;
-      width: 50%;
-      padding: 15px;
-    }
-
-    .sig-box {
-      border: 1px solid #000;
-      height: 70px;
-      margin-top: 5px;
-    }
-
-    .sig-title {
-      font-size: 11px;
-      font-weight: bold;
-    }
-
-    /* Print utility */
-    @media print {
-      body {
-        padding: 0;
-      }
-      .print-container {
-        border: none;
-      }
-      .no-print {
-        display: none;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMRITI – Purchase Order</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>window.CSRF = '{{ csrf_token }}'; window.CASHIER = '{{ cashier }}';</script>
+<link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_tokens.css">
+<link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css">
+<style>
+/* ── Reset & Base ─────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--smriti-color-bg-primary, #0d1117);
+  color: var(--smriti-color-text-primary, #e2e8f0);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+/* ── Background decoration ───────────────────────── */
+.bg-grid {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    linear-gradient(rgba(37,99,235,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(37,99,235,0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+.bg-glow {
+  position: fixed; top: -200px; right: -200px; width: 600px; height: 600px;
+  border-radius: 50%; pointer-events: none; z-index: 0;
+  background: radial-gradient(circle, rgba(37,99,235,0.08) 0%, transparent 70%);
+}
+/* ── App shell ────────────────────────────────────── */
+#app { display: flex; min-height: 100vh; position: relative; z-index: 1; }
+.main-wrapper { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+/* ── Topbar ───────────────────────────────────────── */
+.topbar {
+  height: 56px; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 20px;
+  background: var(--smriti-color-bg-elevated, rgba(22,33,62,0.95));
+  border-bottom: 1px solid var(--smriti-color-border-default, #2a3a5c);
+  backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 100;
+}
+.topbar-breadcrumbs { display: flex; align-items: center; gap: 6px; font-size: 0.82rem; }
+.breadcrumb-link { color: var(--smriti-color-brand-light, #60a5fa); text-decoration: none; }
+.breadcrumb-link:hover { text-decoration: underline; }
+.sep { color: var(--smriti-color-text-muted, #8892a4); }
+.topbar-breadcrumbs .active { color: var(--smriti-color-text-primary, #e2e8f0); font-weight: 600; }
+.topbar-right { display: flex; align-items: center; gap: 8px; }
+.topbtn {
+  display: flex; align-items: center; gap: 5px; padding: 6px 12px;
+  background: transparent; border: 1px solid var(--smriti-color-border-default, #2a3a5c);
+  border-radius: 6px; color: var(--smriti-color-text-primary, #e2e8f0);
+  font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: all 0.15s;
+  font-family: 'Inter', sans-serif;
+}
+.topbtn:hover { background: var(--smriti-color-bg-secondary, #1a2744); border-color: var(--smriti-color-brand-primary, #2563eb); }
+.topbtn .material-symbols-outlined { font-size: 18px; }
+/* ── Page content ─────────────────────────────────── */
+.page-content { flex: 1; padding: 24px; max-width: 1100px; width: 100%; margin: 0 auto; }
+.page-title-bar {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+}
+.page-title { font-size: 1.4rem; font-weight: 800; font-family: 'Outfit', sans-serif; letter-spacing: -0.5px; }
+.page-subtitle { font-size: 0.82rem; color: var(--smriti-color-text-muted, #8892a4); margin-top: 3px; }
+.action-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+/* ── Buttons ──────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px;
+  border-radius: 7px; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+  border: 1px solid transparent; transition: all 0.15s; font-family: 'Inter', sans-serif;
+}
+.btn .material-symbols-outlined { font-size: 17px; }
+.btn-primary { background: var(--smriti-color-brand-primary, #2563eb); color: #fff; border-color: var(--smriti-color-brand-primary, #2563eb); }
+.btn-primary:hover { background: #1d4ed8; }
+.btn-ghost { background: transparent; color: var(--smriti-color-text-primary, #e2e8f0); border-color: var(--smriti-color-border-default, #2a3a5c); }
+.btn-ghost:hover { background: var(--smriti-color-bg-secondary, #1a2744); }
+.btn-danger { background: var(--smriti-color-status-danger, #ef4444); color: #fff; border-color: var(--smriti-color-status-danger, #ef4444); }
+.btn-warning { background: var(--smriti-color-status-warning, #f59e0b); color: #000; }
+/* ── Panels ───────────────────────────────────────── */
+.panel {
+  background: var(--smriti-color-bg-elevated, rgba(22,33,62,0.7));
+  border: 1px solid var(--smriti-color-border-default, #2a3a5c);
+  border-radius: 12px; margin-bottom: 16px; overflow: hidden;
+  backdrop-filter: blur(8px);
+}
+.panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--smriti-color-border-default, #2a3a5c);
+  background: var(--smriti-color-bg-secondary, rgba(26,39,68,0.5));
+}
+.panel-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.9rem; font-weight: 700; color: var(--smriti-color-text-primary, #e2e8f0);
+  font-family: 'Outfit', sans-serif;
+}
+.panel-title .material-symbols-outlined { font-size: 20px; color: var(--smriti-color-brand-light, #60a5fa); }
+.panel-body { padding: 20px; }
+/* ── Form elements ────────────────────────────────── */
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-label { font-size: 0.75rem; font-weight: 600; color: var(--smriti-color-text-muted, #8892a4); text-transform: uppercase; letter-spacing: 0.05em; }
+.form-control {
+  padding: 9px 12px; border-radius: 7px; font-size: 0.87rem;
+  background: var(--smriti-color-bg-primary, #0d1117);
+  border: 1px solid var(--smriti-color-border-default, #2a3a5c);
+  color: var(--smriti-color-text-primary, #e2e8f0);
+  font-family: 'Inter', sans-serif; outline: none; width: 100%;
+}
+.form-control:focus { border-color: var(--smriti-color-brand-primary, #2563eb); }
+.form-control[readonly], .form-control[disabled] { opacity: 0.7; cursor: default; }
+.form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+/* ── Company card ─────────────────────────────────── */
+.company-card {
+  background: var(--smriti-color-bg-primary, #0d1117);
+  border: 1px solid var(--smriti-color-border-default, #2a3a5c);
+  border-radius: 9px; padding: 14px 16px;
+}
+.company-name-big { font-size: 1.1rem; font-weight: 800; font-family: 'Outfit', sans-serif; margin-bottom: 5px; }
+.company-meta { font-size: 0.78rem; color: var(--smriti-color-text-muted, #8892a4); line-height: 1.5; }
+.gstin-badge {
+  display: inline-block; margin-top: 8px; padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 700;
+  background: rgba(37,99,235,0.15); border: 1px solid rgba(37,99,235,0.3);
+  color: var(--smriti-color-brand-light, #60a5fa);
+}
+.status-badge {
+  display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 700;
+}
+.status-submitted { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); color: #22c55e; }
+.status-draft { background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); color: #f59e0b; }
+.status-cancelled { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; }
+.status-approved { background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); color: #3b82f6; }
+/* ── Matrix table ─────────────────────────────────── */
+.grid-wrap { overflow-x: auto; }
+.item-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.item-table thead tr { background: var(--smriti-color-bg-secondary, #1a2744); }
+.item-table th {
+  padding: 10px 12px; text-align: center; font-size: 0.72rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--smriti-color-text-muted, #8892a4);
+  border-bottom: 2px solid var(--smriti-color-border-default, #2a3a5c);
+  white-space: nowrap;
+}
+.item-table th:first-child, .item-table th:nth-child(2) { text-align: left; }
+.item-table td {
+  padding: 9px 12px; border-bottom: 1px solid var(--smriti-color-border-default, #2a3a5c);
+  text-align: center; vertical-align: middle;
+}
+.item-table td:first-child { text-align: left; font-weight: 700; color: var(--smriti-color-brand-light, #60a5fa); }
+.item-table td:nth-child(2) { text-align: left; font-weight: 600; }
+.item-table tfoot td { font-weight: 700; background: var(--smriti-color-bg-secondary, #1a2744); border-top: 2px solid var(--smriti-color-border-default, #2a3a5c); }
+.item-table tr:hover td { background: rgba(37,99,235,0.04); }
+.item-table .cell-zero { color: var(--smriti-color-text-muted, #8892a4); }
+/* ── Totals block ─────────────────────────────────── */
+.totals-block {
+  background: var(--smriti-color-bg-primary, #0d1117);
+  border: 1px solid var(--smriti-color-border-default, #2a3a5c);
+  border-radius: 9px; overflow: hidden;
+}
+.total-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid var(--smriti-color-border-default, #2a3a5c); font-size: 0.87rem; }
+.total-row:last-child { border-bottom: none; }
+.total-row .lbl { color: var(--smriti-color-text-muted, #8892a4); }
+.total-row .val { font-weight: 700; color: var(--smriti-color-text-primary, #e2e8f0); }
+.total-row.grand { background: var(--smriti-color-bg-secondary, #1a2744); }
+.total-row.grand .lbl { color: var(--smriti-color-text-primary, #e2e8f0); font-weight: 700; }
+.total-row.grand .val { font-size: 1.1rem; color: var(--smriti-color-brand-light, #60a5fa); }
+/* ── Signature grid ───────────────────────────────── */
+.sig-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 16px; }
+.sig-box {
+  border: 1px solid var(--smriti-color-border-default, #2a3a5c);
+  border-radius: 8px; padding: 14px;
+  background: var(--smriti-color-bg-primary, #0d1117);
+}
+.sig-title { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--smriti-color-text-muted, #8892a4); margin-bottom: 8px; }
+/* ── Drawer ───────────────────────────────────────── */
+.drawer-overlay {
+  position: fixed; inset: 0; z-index: 500; display: none;
+  background: rgba(0,0,0,0.5); flex-direction: row;
+}
+.drawer-overlay.open { display: flex; }
+.drawer {
+  width: 360px; height: 100%; background: var(--smriti-color-bg-elevated, #16213e);
+  border-left: 1px solid var(--smriti-color-border-default, #2a3a5c);
+  display: flex; flex-direction: column; margin-left: auto;
+}
+.drawer-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-bottom: 1px solid var(--smriti-color-border-default, #2a3a5c);
+}
+.drawer-title { font-size: 1rem; font-weight: 700; font-family: 'Outfit', sans-serif; }
+#drawer-list { flex: 1; overflow-y: auto; padding: 12px; }
+.drawer-item {
+  padding: 12px 14px; border-radius: 8px; cursor: pointer; margin-bottom: 8px;
+  border: 1px solid var(--smriti-color-border-default, #2a3a5c);
+  background: var(--smriti-color-bg-primary, #0d1117);
+  transition: all 0.15s;
+}
+.drawer-item:hover { border-color: var(--smriti-color-brand-primary, #2563eb); }
+.drawer-item .di-name { font-weight: 700; font-size: 0.87rem; color: var(--smriti-color-brand-light, #60a5fa); }
+.drawer-item .di-sub { font-size: 0.75rem; color: var(--smriti-color-text-muted, #8892a4); margin-top: 3px; }
+/* ── Modal ────────────────────────────────────────── */
+.modal-backdrop {
+  position: fixed; inset: 0; z-index: 600; display: none;
+  background: rgba(0,0,0,0.6); align-items: center; justify-content: center;
+}
+.modal-backdrop.open { display: flex; }
+.modal {
+  background: var(--smriti-color-bg-elevated, #16213e);
+  border: 1px solid var(--smriti-color-border-default, #2a3a5c);
+  border-radius: 12px; padding: 24px; width: 90%; max-width: 460px;
+}
+.modal-title { font-size: 1rem; font-weight: 700; font-family: 'Outfit', sans-serif; display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.modal-close { background: none; border: none; color: var(--smriti-color-text-muted, #8892a4); cursor: pointer; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+/* ── Toast ────────────────────────────────────────── */
+#toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+.toast {
+  min-width: 280px; padding: 12px 16px; border-radius: 9px; font-size: 0.84rem; font-weight: 500;
+  background: var(--smriti-color-bg-elevated, #16213e); border: 1px solid var(--smriti-color-border-default, #2a3a5c);
+  display: flex; gap: 10px; align-items: flex-start; animation: slideIn 0.2s ease;
+}
+.toast-icon { font-size: 16px; flex-shrink: 0; }
+.toast-body .toast-title { font-weight: 700; }
+.toast-body .toast-msg { color: var(--smriti-color-text-muted, #8892a4); font-size: 0.78rem; margin-top: 2px; }
+.toast.success { border-color: rgba(34,197,94,0.4); }
+.toast.error { border-color: rgba(239,68,68,0.4); }
+.toast.info { border-color: rgba(59,130,246,0.4); }
+.toast.warn { border-color: rgba(245,158,11,0.4); }
+@keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+/* ── Print layout (chrome-free) ───────────────────── */
+#print-layout { display: none; }
+@media print {
+  body { background: #fff !important; color: #000 !important; }
+  #app, #toast-container, .drawer-overlay, .modal-backdrop { display: none !important; }
+  #print-layout {
+    display: block !important; font-family: Arial, sans-serif;
+    color: #000; padding: 10mm; max-width: 100%;
+  }
+  .p-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 8px; }
+  .p-company-name { font-size: 22pt; font-weight: 800; }
+  .p-company-meta { font-size: 8pt; line-height: 1.5; color: #333; }
+  .p-company-logo img { max-height: 60px; object-fit: contain; }
+  .p-title-box { text-align: center; font-size: 14pt; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; padding: 6px; border: 2px solid #000; margin: 8px 0; }
+  .p-details-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; border: 1px solid #000; margin-bottom: 6px; }
+  .p-details-col { padding: 8px 10px; border-right: 1px solid #000; }
+  .p-details-col:last-child { border-right: none; }
+  .p-col-title { font-size: 7pt; font-weight: 800; text-transform: uppercase; letter-spacing: 0.07em; color: #555; display: block; margin-bottom: 4px; }
+  .p-details-table { width: 100%; font-size: 8pt; border-collapse: collapse; }
+  .p-details-table td { padding: 2px 0; }
+  .p-item-table { width: 100%; border-collapse: collapse; font-size: 8pt; margin-bottom: 6px; }
+  .p-item-table th, .p-item-table td { border: 1px solid #000; padding: 4px 6px; text-align: center; }
+  .p-item-table th { background: #f3f4f6; font-weight: 800; font-size: 7pt; text-transform: uppercase; }
+  .p-item-table td:first-child, .p-item-table td:nth-child(2) { text-align: left; font-weight: 700; }
+  .p-item-table tfoot td { font-weight: 800; background: #f3f4f6; }
+  .p-summary-grid { display: grid; grid-template-columns: 1fr 220px; gap: 6px; margin-top: 6px; }
+  .p-totals-table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+  .p-totals-table tr { border-bottom: 1px solid #ddd; }
+  .p-totals-table td { padding: 4px 8px; }
+  .p-totals-table td:last-child { text-align: right; font-weight: 700; }
+  .p-grand-row td { font-size: 11pt; font-weight: 800; border-top: 2px solid #000; }
+  .p-footer-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-top: 10px; border-top: 1px solid #000; padding-top: 8px; }
+  .p-sig-box { border: 1px solid #000; min-height: 50px; padding: 6px 8px; }
+  .p-sig-label { font-size: 7pt; font-weight: 800; text-transform: uppercase; color: #555; }
+  .bold { font-weight: 800; }
+}
+/* ── Image preview ────────────────────────────────── */
+.product-image-preview { max-width: 100%; max-height: 220px; object-fit: contain; border-radius: 8px; border: 1px solid var(--smriti-color-border-default, #2a3a5c); }
+/* ── Loading state ────────────────────────────────── */
+.loading-placeholder { color: var(--smriti-color-text-muted, #8892a4); font-style: italic; font-size: 0.85rem; }
+.empty-state { text-align: center; padding: 40px; color: var(--smriti-color-text-muted, #8892a4); }
+.empty-state .material-symbols-outlined { font-size: 48px; display: block; margin-bottom: 12px; opacity: 0.4; }
+</style>
 </head>
 <body>
+<script>if (new URLSearchParams(window.location.search).get('popout') === 'true') { document.body.classList.add('popout-mode'); }</script>
 
-  <div class="print-container">
-    <!-- Header Letterhead -->
-    <table class="header-table">
-      <tr>
-        <td class="logo-cell">
-          <img id="logo-img" src="" style="max-height:60px; display:none;">
-          <div class="logo-text-title" id="logo-fallback-text">TATTLY THREADS</div>
-        </td>
-        <td class="info-cell">
-          <div class="comp-title" id="comp-name">TATTLY THREADS</div>
-          <div class="comp-meta-line" id="comp-address">Office No. 81, Ibrahim Rehmatulla Road, Beside Jio Gallary, Mumbai - 03</div>
-          <table style="border:none; width:100%; margin-top:5px;">
-            <tr style="border:none;">
-              <td style="border:none; padding:0; font-size:11px; font-weight:bold; width:50%;" id="comp-gst">GSTIN : 27AAXFT2508H1ZR</td>
-              <td style="border:none; padding:0; font-size:11px; font-weight:bold; width:50%; text-align:right;">State : 27 - Maharashtra</td>
-            </tr>
-          </table>
-          <div class="comp-meta-line" style="margin-top:5px;" id="comp-contact">Cont : 9820960076 / 8055566672</div>
-          <div class="comp-meta-line" id="comp-email">Email : tattlythreadssales@gmail.com &nbsp;&nbsp;|&nbsp;&nbsp; tattlythreads@gmail.com</div>
-        </td>
-      </tr>
-    </table>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
 
-    <!-- Metadata & Image Section -->
-    <table class="meta-table">
-      <tr>
-        <td style="width:55%; padding:0; vertical-align:top;">
-          <table style="width:100%; height:100%;">
-            <tr>
-              <td class="vendor-header" colspan="2">VENDOR DETAILS :</td>
-            </tr>
-            <tr>
-              <td class="vendor-details-box" colspan="2" id="vendor-name">HANYA FOOTWEAR</td>
-            </tr>
-            <tr>
-              <td class="meta-label">Order No.</td>
-              <td class="meta-val" id="po-no">-</td>
-            </tr>
-            <tr>
-              <td class="meta-label">Order Date</td>
-              <td class="meta-val" id="po-date">-</td>
-            </tr>
-            <tr>
-              <td class="meta-label">Delivery Date</td>
-              <td class="meta-val" id="po-del-date">-</td>
-            </tr>
-            <tr>
-              <td class="meta-label">Article No if common.</td>
-              <td class="meta-val" id="po-art-no">-</td>
-            </tr>
-            <tr>
-              <td class="meta-label" style="border-bottom:none;">Purchase Price (Common for all)</td>
-              <td class="meta-val" style="border-bottom:none;" id="po-rate">-</td>
-            </tr>
-          </table>
-        </td>
-        <td class="image-box-cell">
-          <img id="product-image" class="po-product-image" src="" style="display:none;">
-        </td>
-      </tr>
-    </table>
+<div id="app">
+  <!-- Sidebar -->
+  <div id="smriti-sidebar-target" class="sidebar"></div>
 
-    <!-- Matrix Grid Table -->
-    <table class="matrix-table" id="matrix-grid">
-      <thead>
-        <tr id="grid-header">
-          <th>Article No</th>
-          <th>Color</th>
-          <!-- dynamic sizes go here -->
-          <th>Total</th>
-          <th>Purchase Price</th>
-          <th>Remark</th>
-        </tr>
-      </thead>
-      <tbody id="grid-body">
-        <!-- dynamic rows go here -->
-      </tbody>
-      <tfoot>
-        <tr class="total-row" id="grid-total-row">
-          <td colspan="2" style="text-align:right;">TOTAL</td>
-          <!-- dynamic totals go here -->
-          <td id="grand-total-qty">0</td>
-          <td colspan="2"></td>
-        </tr>
-      </tfoot>
-    </table>
+  <!-- Main Wrapper -->
+  <div class="main-wrapper">
 
-    <!-- Notes / Terms section -->
-    <div class="notes-box">
-      <div class="notes-title">NOTES :</div>
-      <div id="notes-content" style="white-space: pre-line;"></div>
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="topbar-breadcrumbs">
+        <a href="/smriti" class="breadcrumb-link">SMRITI</a>
+        <span class="sep">/</span>
+        <a href="/smriti-purchase" class="breadcrumb-link">Purchase</a>
+        <span class="sep">/</span>
+        <span class="active" id="topbar-po-name">Purchase Order</span>
+      </div>
+      <div class="topbar-right">
+        <button class="topbtn" onclick="history.back()">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <button class="topbtn" onclick="openDrawer()">
+          <span class="material-symbols-outlined">receipt_long</span> History
+        </button>
+        <button class="topbtn" onclick="window.print()">
+          <span class="material-symbols-outlined">print</span> Print
+        </button>
+        <button class="topbtn" onclick="exportPDF()" style="color:var(--smriti-color-status-warning,#f59e0b);">
+          <span class="material-symbols-outlined">picture_as_pdf</span> PDF
+        </button>
+      </div>
     </div>
 
-    <!-- Signatures -->
-    <table class="footer-sig-table">
-      <tr>
-        <td>
-          <div class="sig-title">AUTHORISED BY :</div>
-          <div class="sig-box"></div>
-        </td>
-        <td>
-          <div class="sig-title" style="text-align:right;">AUTHORISED BY :</div>
-          <div class="sig-box"></div>
-        </td>
-      </tr>
-    </table>
+    <!-- Page Content -->
+    <div class="page-content">
+
+      <!-- Title bar -->
+      <div class="page-title-bar">
+        <div>
+          <div class="page-title">📦 Purchase Order</div>
+          <div class="page-subtitle" id="subtitle-text">Loading purchase order…</div>
+        </div>
+        <div class="action-bar">
+          <button class="btn btn-ghost" onclick="openModal('modal-load-po')">
+            <span class="material-symbols-outlined">folder_open</span> Load PO
+          </button>
+          <button class="btn btn-ghost" onclick="window.print()">
+            <span class="material-symbols-outlined">print</span> Print
+          </button>
+          <button class="btn btn-danger" onclick="exportPDF()">
+            <span class="material-symbols-outlined">picture_as_pdf</span> Export PDF
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Panel 1: PO Header ──────────────────── -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="material-symbols-outlined">business</span>
+            PO Header — Company &amp; Order Details
+          </div>
+          <span id="po-status-badge" class="status-badge"></span>
+        </div>
+        <div class="panel-body">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+            <!-- Left: Company -->
+            <div>
+              <div class="form-label" style="margin-bottom:6px;">Our Company (Buyer)</div>
+              <div class="company-card" id="company-card">
+                <div class="company-name-big loading-placeholder" id="co-name">Loading…</div>
+                <div class="company-meta loading-placeholder" id="co-meta">Loading company details…</div>
+                <div class="gstin-badge" id="co-gstin">GSTIN: —</div>
+              </div>
+              <div style="margin-top:10px; display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                <div class="form-group">
+                  <label class="form-label">Order No.</label>
+                  <input type="text" id="po-number" class="form-control" readonly placeholder="—">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Order Date</label>
+                  <input type="text" id="po-date" class="form-control" readonly placeholder="—">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Delivery Date</label>
+                  <input type="text" id="po-sched-date" class="form-control" readonly placeholder="—">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Status</label>
+                  <input type="text" id="po-status-input" class="form-control" readonly placeholder="—">
+                </div>
+              </div>
+            </div>
+            <!-- Right: Supplier -->
+            <div>
+              <div class="form-label" style="margin-bottom:6px;">Supplier / Vendor</div>
+              <div class="company-card" id="supplier-card">
+                <div class="company-name-big loading-placeholder" id="sup-name">—</div>
+                <div class="company-meta" id="sup-meta"></div>
+                <div class="gstin-badge" id="sup-gstin" style="display:none;">GSTIN: —</div>
+              </div>
+              <div style="margin-top:10px; display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                <div class="form-group">
+                  <label class="form-label">Mobile</label>
+                  <input type="text" id="sup-mobile" class="form-control" readonly placeholder="—">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Email</label>
+                  <input type="text" id="sup-email" class="form-control" readonly placeholder="—">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Panel 2: Transport / Remarks (collapsible) ── -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="material-symbols-outlined">local_shipping</span>
+            Transport &amp; Additional Details
+          </div>
+          <button class="btn btn-ghost" style="padding:5px 12px;font-size:0.8rem;" onclick="togglePanel('transport-body', this)">
+            <span class="material-symbols-outlined" style="font-size:16px;">expand_more</span>
+          </button>
+        </div>
+        <div class="panel-body" id="transport-body" style="display:none;">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Delivery Warehouse</label>
+              <input type="text" id="po-warehouse" class="form-control" readonly placeholder="—">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Grand Total (Pre-GST)</label>
+              <input type="text" id="po-grand-total" class="form-control" readonly placeholder="—">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Total Qty</label>
+              <input type="text" id="po-total-qty" class="form-control" readonly placeholder="—">
+            </div>
+          </div>
+          <div class="form-group" style="margin-top:14px;">
+            <label class="form-label">Remarks / Terms</label>
+            <textarea id="po-remarks" class="form-control" rows="3" readonly placeholder="No remarks"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Panel 3: Product Image (collapsible) ── -->
+      <div class="panel" id="image-panel" style="display:none;">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="material-symbols-outlined">image</span>
+            Product / Style Image
+          </div>
+          <button class="btn btn-ghost" style="padding:5px 12px;font-size:0.8rem;" onclick="togglePanel('image-body', this)">
+            <span class="material-symbols-outlined" style="font-size:16px;">expand_more</span>
+          </button>
+        </div>
+        <div class="panel-body" id="image-body">
+          <div style="text-align:center;">
+            <img id="product-image" class="product-image-preview" src="" alt="Product image">
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Panel 4: Size Matrix Grid ─────────────── -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="material-symbols-outlined">table</span>
+            Sizewise Item Grid
+            <span style="color:var(--smriti-color-text-muted,#8892a4); font-size:0.78rem; font-weight:400;" id="grid-row-count">— loading</span>
+          </div>
+        </div>
+        <div class="panel-body" style="padding:0; overflow:visible;">
+          <div style="padding:16px; overflow-x:auto;">
+            <div class="grid-wrap">
+              <table class="item-table" id="item-table">
+                <thead id="grid-thead"></thead>
+                <tbody id="grid-tbody"></tbody>
+                <tfoot id="grid-tfoot"></tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Panel 5: Order Totals ───────────────── -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="material-symbols-outlined">calculate</span>
+            Order Summary &amp; Totals
+          </div>
+        </div>
+        <div class="panel-body">
+          <div style="display:grid; grid-template-columns:1fr 340px; gap:16px;">
+            <div>
+              <div style="font-size:0.8rem; font-weight:700; color:var(--smriti-color-text-muted,#8892a4); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:8px;">Style / Article Breakdown</div>
+              <table class="item-table" id="article-summary-table" style="font-size:0.8rem;">
+                <thead>
+                  <tr>
+                    <th style="text-align:left;">Article</th>
+                    <th>Colors</th>
+                    <th>Total Qty</th>
+                    <th>Avg. Rate</th>
+                    <th>Amount</th>
+                  </tr>
+                </thead>
+                <tbody id="article-summary-tbody"></tbody>
+              </table>
+            </div>
+            <div>
+              <div style="font-size:0.8rem; font-weight:700; color:var(--smriti-color-text-muted,#8892a4); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:8px;">Order Totals</div>
+              <div class="totals-block">
+                <div class="total-row"><span class="lbl">Total Styles</span><span class="val" id="tot-articles">0</span></div>
+                <div class="total-row"><span class="lbl">Total Colors</span><span class="val" id="tot-colors">0</span></div>
+                <div class="total-row"><span class="lbl">Total Pairs / Units</span><span class="val" id="tot-qty">0</span></div>
+                <div class="total-row grand"><span class="lbl">Grand Total (Pre-GST)</span><span class="val" id="tot-grand">₹0.00</span></div>
+              </div>
+              <div style="margin-top:12px; padding:10px 14px; background:rgba(37,99,235,0.08); border:1px solid rgba(37,99,235,0.2); border-radius:8px; font-size:0.75rem; color:var(--smriti-color-text-muted,#8892a4);">
+                ℹ️ This is a Purchase Order (pre-GST intent). GST will be applied on the actual Purchase Invoice.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Panel 6: Authorized Signatory ─────── -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="material-symbols-outlined">account_circle</span>
+            Authorized Signatory
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="sig-grid">
+            <div class="sig-box">
+              <div class="sig-title">Prepared By</div>
+              <input type="text" class="form-control" id="sig-prepared" placeholder="Name" style="margin-top:8px;">
+            </div>
+            <div class="sig-box">
+              <div class="sig-title">Checked By</div>
+              <input type="text" class="form-control" id="sig-checked" placeholder="Name" style="margin-top:8px;">
+            </div>
+            <div class="sig-box">
+              <div class="sig-title">Authorized Signatory</div>
+              <input type="text" class="form-control" id="sig-auth" placeholder="Name &amp; Designation" style="margin-top:8px;">
+              <div style="color:var(--smriti-color-text-muted,#8892a4); font-size:0.75rem; margin-top:6px;">
+                For <span id="co-sig-company" style="font-weight:600;">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /page-content -->
+  </div><!-- /main-wrapper -->
+</div><!-- /app -->
+
+
+<!-- ═══════════════════════════════════════════════════
+     PRINT LAYOUT (chrome-free — only visible on print)
+════════════════════════════════════════════════════ -->
+<div id="print-layout">
+  <!-- Company Header -->
+  <div class="p-header">
+    <div class="p-company-info">
+      <div class="p-company-name" id="p-co-name"></div>
+      <div class="p-company-meta" id="p-co-meta"></div>
+    </div>
+    <div class="p-company-logo">
+      <img src="" alt="Logo" id="p-logo-img" style="max-height:60px; display:none;">
+    </div>
   </div>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", async () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const poName = urlParams.get("po");
-      if (!poName) {
-        alert("No Purchase Order specified.");
-        return;
-      }
+  <!-- Title -->
+  <div class="p-title-box">Purchase Order</div>
 
-      await loadPoData(poName);
-    });
+  <!-- 3-Column Details -->
+  <div class="p-details-grid">
+    <div class="p-details-col">
+      <span class="p-col-title">Vendor / Supplier</span>
+      <div id="p-vendor"></div>
+    </div>
+    <div class="p-details-col">
+      <span class="p-col-title">Delivery To</span>
+      <div id="p-delivery"></div>
+    </div>
+    <div class="p-details-col">
+      <span class="p-col-title">Order Details</span>
+      <table class="p-details-table">
+        <tr><td>PO No.:</td><td class="bold" id="p-po-no"></td></tr>
+        <tr><td>Date:</td><td id="p-po-date"></td></tr>
+        <tr><td>Delivery By:</td><td id="p-po-sched"></td></tr>
+        <tr><td>Status:</td><td id="p-po-status"></td></tr>
+      </table>
+    </div>
+  </div>
 
-    async function loadPoData(poName) {
-      try {
-        const res = await fetch(`/api/method/smriti_retail_os.purchase_studio.api.get_po_matrix_print_data?po_name=${encodeURIComponent(poName)}`);
-        const data = await res.json();
-        const payload = data.message;
+  <!-- Matrix Table -->
+  <table class="p-item-table" id="p-item-table">
+    <thead></thead>
+    <tbody></tbody>
+    <tfoot></tfoot>
+  </table>
 
-        if (!payload) {
-          alert("Could not load PO print data.");
-          return;
+  <!-- Summary -->
+  <div class="p-summary-grid">
+    <div>
+      <div style="font-size:8pt; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">Remarks / Terms</div>
+      <div id="p-remarks" style="font-size:8pt; line-height:1.5;"></div>
+    </div>
+    <div>
+      <table class="p-totals-table">
+        <tr><td>Total Units:</td><td id="p-tot-qty"></td></tr>
+        <tr class="p-grand-row"><td>Grand Total (Pre-GST):</td><td id="p-grand-total"></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Signatures -->
+  <div class="p-footer-grid">
+    <div class="p-sig-box"><div class="p-sig-label">Prepared By</div><div id="p-sig-prep" style="font-size:8pt; margin-top:4px;"></div></div>
+    <div class="p-sig-box"><div class="p-sig-label">Checked By</div><div id="p-sig-chk" style="font-size:8pt; margin-top:4px;"></div></div>
+    <div class="p-sig-box" style="text-align:right;">
+      <div class="p-sig-label">Authorized Signatory</div>
+      <div id="p-sig-auth" style="font-size:8pt; margin-top:4px;"></div>
+      <div id="p-sig-for" style="font-size:7pt; color:#555; margin-top:20px;"></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PO HISTORY DRAWER
+════════════════════════════════════════════════════ -->
+<div class="drawer-overlay" id="po-drawer">
+  <div style="flex:1; height:100%;" onclick="closeDrawer()"></div>
+  <div class="drawer">
+    <div class="drawer-header">
+      <div class="drawer-title">📋 Recent Purchase Orders</div>
+      <button class="btn btn-ghost" style="padding:5px 10px;" onclick="closeDrawer()">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <div style="padding:12px;">
+      <input type="text" class="form-control" id="drawer-search" placeholder="Search supplier or PO name…" oninput="filterDrawerList(this.value)">
+    </div>
+    <div id="drawer-list">
+      <div style="color:var(--smriti-color-text-muted,#8892a4); text-align:center; padding:30px;">Loading orders…</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     LOAD PO MODAL
+════════════════════════════════════════════════════ -->
+<div class="modal-backdrop" id="modal-load-po">
+  <div class="modal">
+    <div class="modal-title">
+      📂 Load Purchase Order
+      <button class="modal-close" onclick="closeModal('modal-load-po')">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Purchase Order Name</label>
+      <input type="text" id="load-po-input" class="form-control" placeholder="e.g. SMRITI-PO-2026-00001"
+             onkeydown="if(event.key==='Enter') loadPOFromModal()">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-load-po')">Cancel</button>
+      <button class="btn btn-primary" onclick="loadPOFromModal()">Load PO</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     JAVASCRIPT ENGINE
+════════════════════════════════════════════════════ -->
+<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js"></script>
+<script>SMRITI.renderFlexibleSidebar("smriti-purchase");</script>
+<script src="/assets/smriti_retail_os/js/smriti_ui_resolver.js"></script>
+<script src="/assets/smriti_retail_os/js/smriti_theme_manager.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  if (window.SMRITI && typeof SMRITI.initUIEngine === 'function') SMRITI.initUIEngine();
+});
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   SMRITI PO PRINT ENGINE v1.0.0
+════════════════════════════════════════════════════ */
+const API_BASE = '/api/method/smriti_retail_os.purchase_studio.api.purchase_api';
+let _poData = null;   // holds the last loaded payload
+let _drawerItems = [];
+
+/* ── Utility ──────────────────────────────────────── */
+function fmt(n) {
+  const v = parseFloat(n) || 0;
+  return '₹' + v.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function fmtDate(d) {
+  if (!d) return '—';
+  const p = d.split('-');
+  if (p.length === 3) return `${p[2]}/${p[1]}/${p[0]}`;
+  return d;
+}
+function toast(type, title, msg) {
+  const icons = { success: '✅', error: '❌', warn: '⚠️', info: 'ℹ️' };
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<span class="toast-icon">${icons[type]||'ℹ️'}</span><div class="toast-body"><div class="toast-title">${title}</div><div class="toast-msg">${msg || ''}</div></div>`;
+  document.getElementById('toast-container').appendChild(t);
+  setTimeout(() => t.remove(), 4000);
+}
+async function apiGet(method, params={}) {
+  const q = new URLSearchParams(params).toString();
+  const r = await fetch(`/api/method/${method}${q?'?'+q:''}`);
+  const j = await r.json();
+  if (!r.ok || j.exc) throw new Error(j.exc_type || j.exception || 'API error');
+  return j.message;
+}
+function togglePanel(id, btn) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const open = el.style.display !== 'none';
+  el.style.display = open ? 'none' : 'block';
+  const icon = btn.querySelector('.material-symbols-outlined');
+  if (icon) icon.textContent = open ? 'expand_more' : 'expand_less';
+}
+function openDrawer() {
+  document.getElementById('po-drawer').classList.add('open');
+  loadDrawerList();
+}
+function closeDrawer() { document.getElementById('po-drawer').classList.remove('open'); }
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+/* ── Load PO data ─────────────────────────────────── */
+async function loadPO(poName) {
+  if (!poName) return;
+  toast('info', 'Loading', `Fetching PO ${poName}…`);
+  try {
+    const data = await apiGet('smriti_retail_os.purchase_studio.api.purchase_api.get_po_matrix_print_data', { po_name: poName });
+    _poData = data;
+    renderAll(data);
+    toast('success', 'Loaded', `Purchase Order ${poName} loaded.`);
+    // Update URL without reload
+    const url = new URL(window.location);
+    url.searchParams.set('po', poName);
+    window.history.replaceState({}, '', url);
+  } catch(e) {
+    toast('error', 'Load Failed', e.message || 'Could not load PO data.');
+  }
+}
+function loadPOFromModal() {
+  const v = document.getElementById('load-po-input').value.trim();
+  if (!v) { toast('warn', 'Required', 'Enter a PO name.'); return; }
+  closeModal('modal-load-po');
+  loadPO(v);
+}
+
+/* ── Render all sections ──────────────────────────── */
+function renderAll(d) {
+  renderHeader(d);
+  renderSupplier(d);
+  renderTransport(d);
+  renderImage(d);
+  renderMatrix(d);
+  renderTotals(d);
+  renderPrintLayout(d);
+}
+
+function renderHeader(d) {
+  const ci = d.company_info || {};
+  const po = d.po || {};
+
+  // Company card
+  const coName = ci.company_name || '—';
+  document.getElementById('co-name').textContent = coName;
+  document.getElementById('co-sig-company').textContent = coName;
+  document.getElementById('p-co-name').textContent = coName;
+  document.getElementById('co-sig-company').textContent = coName;
+
+  let meta = [];
+  if (ci.address) meta.push(ci.address);
+  if (ci.phone_no) meta.push('📞 ' + ci.phone_no);
+  if (ci.email) meta.push('✉ ' + ci.email);
+  document.getElementById('co-meta').textContent = meta.join(' · ');
+  document.getElementById('p-co-meta').textContent = meta.join(' | ');
+
+  if (ci.tax_id) document.getElementById('co-gstin').textContent = 'GSTIN: ' + ci.tax_id;
+
+  if (ci.logo_url) {
+    const li = document.getElementById('p-logo-img');
+    li.src = ci.logo_url; li.style.display = 'block';
+  }
+
+  // PO meta
+  document.getElementById('po-number').value = po.name || '—';
+  document.getElementById('po-date').value = fmtDate(po.transaction_date);
+  document.getElementById('po-sched-date').value = fmtDate(po.schedule_date);
+  document.getElementById('po-status-input').value = po.status || '—';
+  document.getElementById('topbar-po-name').textContent = po.name || 'Purchase Order';
+  document.getElementById('subtitle-text').textContent = `${po.name || ''} · ${(d.supplier||{}).supplier_name || ''} · ${fmtDate(po.transaction_date)}`;
+
+  // Status badge
+  const badge = document.getElementById('po-status-badge');
+  badge.textContent = po.status || '';
+  const sc = {
+    'Submitted': 'submitted', 'Draft': 'draft', 'Cancelled': 'cancelled',
+    'Approved': 'approved', 'Completed': 'submitted', 'Closed': 'approved'
+  };
+  badge.className = 'status-badge status-' + (sc[po.status] || 'draft');
+}
+
+function renderSupplier(d) {
+  const s = d.supplier || {};
+  document.getElementById('sup-name').textContent = s.supplier_name || '—';
+  const meta = [];
+  if (s.address) meta.push(s.address);
+  document.getElementById('sup-meta').textContent = meta.join(' · ');
+  if (s.tax_id) {
+    const el = document.getElementById('sup-gstin');
+    el.textContent = 'GSTIN: ' + s.tax_id; el.style.display = 'inline-block';
+  }
+  document.getElementById('sup-mobile').value = s.mobile_no || '—';
+  document.getElementById('sup-email').value = s.email_id || '—';
+}
+
+function renderTransport(d) {
+  const po = d.po || {};
+  document.getElementById('po-remarks').value = po.remarks || '';
+  document.getElementById('po-grand-total').value = fmt(po.grand_total);
+  document.getElementById('po-total-qty').value = (po.total_qty || 0) + ' units';
+}
+
+function renderImage(d) {
+  const panel = document.getElementById('image-panel');
+  if (d.image_url) {
+    panel.style.display = 'block';
+    document.getElementById('product-image').src = d.image_url;
+  } else {
+    panel.style.display = 'none';
+  }
+}
+
+function renderMatrix(d) {
+  const sizes = d.sizes || [];
+  const matrix = d.matrix || {};
+
+  // Build header
+  const thead = document.getElementById('grid-thead');
+  let hdr = '<tr>';
+  hdr += '<th style="text-align:left;">Article</th>';
+  hdr += '<th style="text-align:left;">Color</th>';
+  sizes.forEach(s => { hdr += `<th>${s}</th>`; });
+  hdr += '<th>Total</th><th>Rate</th><th>Amount</th>';
+  hdr += '</tr>';
+  thead.innerHTML = hdr;
+
+  // Build body
+  const tbody = document.getElementById('grid-tbody');
+  tbody.innerHTML = '';
+  let grandQty = 0;
+  const sizeTotals = {};
+  sizes.forEach(s => { sizeTotals[s] = 0; });
+  let rowCount = 0;
+
+  for (const article in matrix) {
+    for (const color in matrix[article]) {
+      rowCount++;
+      let rowQty = 0, rowRate = 0, rowAmt = 0;
+      let cells = '';
+      sizes.forEach(s => {
+        const c = matrix[article][color][s];
+        if (c && c.qty > 0) {
+          cells += `<td>${c.qty}</td>`;
+          rowQty += c.qty; sizeTotals[s] += c.qty;
+          rowRate = c.rate;
+        } else {
+          cells += `<td class="cell-zero">—</td>`;
         }
+      });
+      rowAmt = rowQty * rowRate;
+      grandQty += rowQty;
 
-        // 1. Populate Company info
-        if (payload.company_info) {
-          const ci = payload.company_info;
-          document.getElementById("comp-name").innerText = ci.company_name;
-          document.getElementById("logo-fallback-text").innerText = ci.company_name;
-          document.getElementById("comp-address").innerText = ci.address || "Office Address Not Configured";
-          document.getElementById("comp-gst").innerText = "GSTIN : " + (ci.tax_id || "");
-          document.getElementById("comp-contact").innerText = "Cont : " + (ci.phone_no || "");
-          document.getElementById("comp-email").innerText = "Email : " + (ci.email || "");
-          
-          if (ci.logo_url) {
-            const logo = document.getElementById("logo-img");
-            logo.src = ci.logo_url;
-            logo.style.display = "block";
-            document.getElementById("logo-fallback-text").style.display = "none";
-          }
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${article}</td><td>${color}</td>${cells}<td><strong>${rowQty}</strong></td><td>${fmt(rowRate)}</td><td>${fmt(rowAmt)}</td>`;
+      tbody.appendChild(tr);
+    }
+  }
+
+  // Footer totals
+  const tfoot = document.getElementById('grid-tfoot');
+  let ftd = '<tr>';
+  ftd += '<td colspan="2" style="text-align:right; font-weight:800;">TOTAL</td>';
+  sizes.forEach(s => { ftd += `<td>${sizeTotals[s] > 0 ? sizeTotals[s] : '—'}</td>`; });
+  ftd += `<td><strong>${grandQty}</strong></td><td colspan="2"></td>`;
+  ftd += '</tr>';
+  tfoot.innerHTML = ftd;
+
+  document.getElementById('grid-row-count').textContent = `— ${rowCount} rows`;
+}
+
+function renderTotals(d) {
+  const matrix = d.matrix || {};
+  let totalQty = 0, totalAmt = 0;
+  let articles = 0, colors = 0;
+  const tbody = document.getElementById('article-summary-tbody');
+  tbody.innerHTML = '';
+
+  for (const article in matrix) {
+    articles++;
+    let artQty = 0, artAmt = 0, artColors = 0, artRateSum = 0, artRateCount = 0;
+    for (const color in matrix[article]) {
+      artColors++;
+      colors++;
+      for (const size in matrix[article][color]) {
+        const c = matrix[article][color][size];
+        if (c && c.qty > 0) {
+          artQty += c.qty; artAmt += c.qty * c.rate;
+          artRateSum += c.rate; artRateCount++;
         }
-
-        // 2. Populate PO meta
-        const po = payload.po;
-        document.getElementById("vendor-name").innerText = payload.supplier.supplier_name.toUpperCase();
-        document.getElementById("po-no").innerText = po.name;
-        document.getElementById("po-date").innerText = formatDate(po.transaction_date);
-        document.getElementById("po-del-date").innerText = formatDate(po.schedule_date);
-        document.getElementById("notes-content").innerText = po.remarks || "";
-
-        // 3. Populate product image
-        if (payload.image_url) {
-          const img = document.getElementById("product-image");
-          img.src = payload.image_url;
-          img.style.display = "inline-block";
-        }
-
-        // 4. Build Matrix Table Columns
-        const sizes = payload.sizes || [];
-        const gridHeader = document.getElementById("grid-header");
-        
-        // Rebuild header
-        let headerHtml = `
-          <th>Article No</th>
-          <th>Color</th>
-        `;
-        sizes.forEach(size => {
-          headerHtml += `<th>${size}</th>`;
-        });
-        headerHtml += `
-          <th>Total</th>
-          <th>Purchase Price</th>
-          <th>Remark</th>
-        `;
-        gridHeader.innerHTML = headerHtml;
-
-        // 5. Build Matrix Rows
-        const gridBody = document.getElementById("grid-body");
-        gridBody.innerHTML = "";
-        
-        const matrix = payload.matrix || {};
-        let grandTotal = 0;
-        const sizeTotals = {};
-        sizes.forEach(size => { sizeTotals[size] = 0; });
-
-        let commonArticle = "";
-        let commonRate = "";
-        let articleCount = 0;
-        let rateCount = 0;
-
-        for (const article in matrix) {
-          articleCount++;
-          commonArticle = article;
-          
-          for (const color in matrix[article]) {
-            let rowHtml = `
-              <td>${article}</td>
-              <td style="text-align:left; font-weight:bold;">${color}</td>
-            `;
-
-            let rowTotal = 0;
-            let rowRate = "";
-
-            sizes.forEach(size => {
-              const cell = matrix[article][color][size];
-              if (cell && cell.qty > 0) {
-                rowHtml += `<td>${cell.qty}</td>`;
-                rowTotal += cell.qty;
-                sizeTotals[size] += cell.qty;
-                rowRate = cell.rate;
-              } else {
-                rowHtml += `<td>-</td>`;
-              }
-            });
-
-            if (rowRate !== "") {
-              rateCount++;
-              commonRate = rowRate;
-            }
-
-            rowHtml += `
-              <td style="font-weight:bold;">${rowTotal}</td>
-              <td style="text-align:right;">${rowRate || '-'}</td>
-              <td></td>
-            `;
-
-            grandTotal += rowTotal;
-
-            const tr = document.createElement("tr");
-            tr.innerHTML = rowHtml;
-            gridBody.appendChild(tr);
-          }
-        }
-
-        // Fill meta fields if common article/rate exists
-        if (articleCount === 1) {
-          document.getElementById("po-art-no").innerText = commonArticle;
-        }
-        if (rateCount > 0) {
-          document.getElementById("po-rate").innerText = commonRate;
-        }
-
-        // 6. Build Matrix Footer Totals
-        const gridTotalRow = document.getElementById("grid-total-row");
-        let totalRowHtml = `
-          <td colspan="2" style="text-align:right; font-weight:bold;">TOTAL</td>
-        `;
-        sizes.forEach(size => {
-          totalRowHtml += `<td>${sizeTotals[size] > 0 ? sizeTotals[size] : '-'}</td>`;
-        });
-        totalRowHtml += `
-          <td style="font-weight:bold;">${grandTotal}</td>
-          <td colspan="2"></td>
-        `;
-        gridTotalRow.innerHTML = totalRowHtml;
-
-        // Auto trigger print in a short moment
-        setTimeout(() => {
-          window.print();
-        }, 800);
-
-      } catch (err) {
-        console.error(err);
-        alert("Failed to load PO matrix details.");
       }
     }
+    totalQty += artQty; totalAmt += artAmt;
+    const avgRate = artRateCount ? artRateSum / artRateCount : 0;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${article}</td><td>${artColors}</td><td>${artQty}</td><td>${fmt(avgRate)}</td><td>${fmt(artAmt)}</td>`;
+    tbody.appendChild(tr);
+  }
 
-    function formatDate(dateStr) {
-      if (!dateStr) return "-";
-      const parts = dateStr.split("-");
-      if (parts.length === 3) {
-        return `${parts[1]}/${parts[2]}/${parts[0]}`; // MM/DD/YYYY
-      }
-      return dateStr;
+  document.getElementById('tot-articles').textContent = articles;
+  document.getElementById('tot-colors').textContent = colors;
+  document.getElementById('tot-qty').textContent = totalQty.toLocaleString();
+  document.getElementById('tot-grand').textContent = fmt(totalAmt);
+}
+
+function renderPrintLayout(d) {
+  const po = d.po || {}, ci = d.company_info || {}, s = d.supplier || {};
+  const sizes = d.sizes || [], matrix = d.matrix || {};
+
+  // Company meta
+  document.getElementById('p-po-no').textContent = po.name || '—';
+  document.getElementById('p-po-date').textContent = fmtDate(po.transaction_date);
+  document.getElementById('p-po-sched').textContent = fmtDate(po.schedule_date);
+  document.getElementById('p-po-status').textContent = po.status || '—';
+
+  // Vendor
+  const vLines = [s.supplier_name || '—'];
+  if (s.address) vLines.push(s.address);
+  if (s.tax_id) vLines.push('GSTIN: ' + s.tax_id);
+  if (s.mobile_no) vLines.push('📞 ' + s.mobile_no);
+  document.getElementById('p-vendor').innerHTML = vLines.map(l => `<div style="font-size:8.5pt;">${l}</div>`).join('');
+
+  // Delivery
+  const dLines = [ci.company_name || '—'];
+  if (ci.address) dLines.push(ci.address);
+  if (ci.tax_id) dLines.push('GSTIN: ' + ci.tax_id);
+  document.getElementById('p-delivery').innerHTML = dLines.map(l => `<div style="font-size:8.5pt;">${l}</div>`).join('');
+
+  // Remarks
+  document.getElementById('p-remarks').textContent = po.remarks || '—';
+
+  // Print matrix
+  const pt = document.getElementById('p-item-table');
+  let hdr = '<thead><tr><th>Article</th><th>Color</th>';
+  sizes.forEach(s => { hdr += `<th>${s}</th>`; });
+  hdr += '<th>Total</th><th>Rate</th><th>Amt</th></tr></thead>';
+
+  let body = '<tbody>'; let grandQty = 0, grandAmt = 0;
+  const stotals = {}; sizes.forEach(s => { stotals[s] = 0; });
+  for (const article in matrix) {
+    for (const color in matrix[article]) {
+      let rq = 0, rr = 0; let cells = '';
+      sizes.forEach(sz => {
+        const c = matrix[article][color][sz];
+        if (c && c.qty > 0) { cells += `<td>${c.qty}</td>`; rq += c.qty; stotals[sz] += c.qty; rr = c.rate; }
+        else cells += '<td>—</td>';
+      });
+      grandQty += rq; grandAmt += rq * rr;
+      body += `<tr><td>${article}</td><td>${color}</td>${cells}<td>${rq}</td><td>₹${(rr||0).toFixed(2)}</td><td>₹${(rq*rr).toFixed(2)}</td></tr>`;
     }
-  </script>
+  }
+  body += '</tbody>';
+  let foot = '<tfoot><tr><td colspan="2">TOTAL</td>';
+  sizes.forEach(sz => { foot += `<td>${stotals[sz]||'—'}</td>`; });
+  foot += `<td>${grandQty}</td><td></td><td>₹${grandAmt.toFixed(2)}</td></tr></tfoot>`;
+  pt.innerHTML = hdr + body + foot;
+
+  document.getElementById('p-tot-qty').textContent = grandQty.toLocaleString();
+  document.getElementById('p-grand-total').textContent = fmt(grandAmt);
+
+  // Sig
+  document.getElementById('p-sig-prep').textContent = document.getElementById('sig-prepared').value || '';
+  document.getElementById('p-sig-chk').textContent = document.getElementById('sig-checked').value || '';
+  document.getElementById('p-sig-auth').textContent = document.getElementById('sig-auth').value || '';
+  document.getElementById('p-sig-for').textContent = 'For: ' + (ci.company_name || '');
+}
+
+/* ── PDF Export ───────────────────────────────────── */
+async function exportPDF() {
+  if (!_poData) { toast('warn', 'No Data', 'Load a PO first.'); return; }
+  renderPrintLayout(_poData);
+  const el = document.getElementById('print-layout');
+  el.style.display = 'block';
+  const opt = {
+    margin: [8, 8, 8, 8],
+    filename: `PO_${(_poData.po||{}).name||'purchase_order'}.pdf`,
+    image: { type: 'jpeg', quality: 0.95 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+  };
+  toast('info', 'Exporting', 'Generating PDF…');
+  try {
+    await html2pdf().from(el).set(opt).save();
+    toast('success', 'Done', 'PDF exported.');
+  } catch(e) {
+    toast('error', 'Export Failed', e.message);
+  } finally {
+    el.style.display = 'none';
+  }
+}
+
+/* ── Drawer ───────────────────────────────────────── */
+async function loadDrawerList() {
+  const list = document.getElementById('drawer-list');
+  list.innerHTML = `<div style="color:var(--smriti-color-text-muted,#8892a4);text-align:center;padding:30px;">Loading orders…</div>`;
+  try {
+    const res = await apiGet('smriti_retail_os.purchase_studio.api.purchase_api.get_purchase_orders', { page: 1, page_size: 50 });
+    _drawerItems = (res && res.items) ? res.items : (Array.isArray(res) ? res : []);
+    renderDrawerItems(_drawerItems);
+  } catch(e) {
+    list.innerHTML = `<div style="color:var(--smriti-color-status-danger,#ef4444);text-align:center;padding:20px;">${e.message}</div>`;
+  }
+}
+function renderDrawerItems(items) {
+  const list = document.getElementById('drawer-list');
+  if (!items.length) { list.innerHTML = `<div style="color:var(--smriti-color-text-muted,#8892a4);text-align:center;padding:30px;">No orders found.</div>`; return; }
+  list.innerHTML = items.map(po => `
+    <div class="drawer-item" onclick="closeDrawer(); loadPO('${po.name}');">
+      <div class="di-name">${po.name}</div>
+      <div class="di-sub">${po.supplier_name || po.supplier || ''} · ${fmtDate(po.transaction_date)} · ${po.status || ''}</div>
+      <div class="di-sub">${fmt(po.grand_total)} · ${po.total_qty||0} units</div>
+    </div>`).join('');
+}
+function filterDrawerList(q) {
+  const filtered = _drawerItems.filter(p =>
+    (p.name||'').toLowerCase().includes(q.toLowerCase()) ||
+    (p.supplier_name||'').toLowerCase().includes(q.toLowerCase()) ||
+    (p.supplier||'').toLowerCase().includes(q.toLowerCase())
+  );
+  renderDrawerItems(filtered);
+}
+
+/* ── Signature → print sync ───────────────────────── */
+['sig-prepared','sig-checked','sig-auth'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', () => { if (_poData) renderPrintLayout(_poData); });
+});
+
+/* ── Init ─────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  const poName = new URLSearchParams(window.location.search).get('po');
+  if (poName) {
+    loadPO(poName);
+  } else {
+    document.getElementById('subtitle-text').textContent = 'No PO loaded — use Load PO or History';
+    document.getElementById('grid-row-count').textContent = '— no data';
+    document.getElementById('grid-thead').innerHTML = '<tr><th colspan="5" style="text-align:center; color:var(--smriti-color-text-muted,#8892a4);">Load a Purchase Order to view the size matrix</th></tr>';
+  }
+});
+</script>
 </body>
 </html>
+{% endblock %}
