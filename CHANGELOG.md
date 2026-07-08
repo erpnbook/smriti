@@ -5,7 +5,28 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.3.1] — 2026-07-08
+
+### Fixed
+
+#### Purchase Studio — Size Preset UI (Issues consumer of v2.2.1 API change)
+- **`smriti-po-create.html`** `loadSizePresets()`: Unpacks `data.message.presets` from the v2.2.1 `{presets, using_defaults}` return shape. Old plain-dict fallback retained for zero-downtime compatibility. When `using_defaults=true` an inline info banner ("Using default size groups — Configure size groups") is injected above the preset selector.
+- **`smriti-quotation.html`** `loadSizePresets()`: Same fix applied to the Quotation matrix-grid path (`sales_studio.api.sales_api.get_size_presets`).
+- Both banners are idempotent — stale copies removed before re-injection.
+
+#### Purchase Studio — TDS Category Sync (Issue #4)
+- **`SMRITI Supplier` doctype** (`smriti_supplier.json`): Added `tds_category` Link field (→ `Tax Withholding Category`) inserted after `disabled`. No existing field changed.
+- **`erp_adapter.get_or_create_bridge_supplier`**: Update path and create path both now sync `tds_category → tax_withholding_category` on the ERPNext Supplier. Guard: `frappe.db.exists("Tax Withholding Category", …)` prevents errors on installations without india_compliance.
+
+#### Purchase Studio — Approval Threshold Basis (Issue #5)
+- **`purchase_settings_service.py`**: Added `approval_threshold_inclusive_of_tax` boolean to all three settings return paths (SDK provider, DocType fallback, safe defaults). Default `False` = compare against pre-GST `net_total`.
+- **`check_approval_required(grand_total, net_total=None)`**: New optional `net_total` parameter. When `approval_threshold_inclusive_of_tax=True` compares `grand_total` (GST-inclusive); when `False` compares `net_total` if supplied, else falls back to `grand_total`. SDK Policy Engine path also reads the new flag.
+- **`purchase_workflow_service.submit()`**: Replaced inline `threshold > grand_total` comparison with delegating call to `check_approval_required(grand_total, net_total)` so the setting is always respected.
+
+---
+
 ## [2.3.0] — 2026-07-08
+
 
 ### Added
 - **SMRITI Retail OS Layout Engine (SRLE) v1.0 — all 4 phases** delivered in a single release.
