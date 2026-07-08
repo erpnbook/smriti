@@ -1,0 +1,53 @@
+/**
+ * @file:    public/css/layout_engine/layout_tokens.css
+ * @desc:    SMRITI Retail OS Layout Engine — CSS custom property tokens.
+ *           All SRLE dimensions, z-indices, and timing values live here.
+ *           Use --srle-* namespace; never conflict with --smriti-* tokens.
+ * @version: 1.0.0
+ * Copyright (c) 2026 AITDL NETWORK. All rights reserved.
+ */
+
+:root {
+    /* ── Sidebar Dimensions ─────────────────────────────────────────── */
+    --srle-sidebar-width:              260px;
+    --srle-sidebar-collapsed-width:    68px;
+    --srle-sidebar-min-width:          180px;
+    --srle-sidebar-max-width:          480px;
+
+    /* Top / Bottom dock bar heights */
+    --srle-sidebar-top-height:         52px;
+    --srle-sidebar-bottom-height:      60px;
+
+    /* ── Workspace Offsets (updated at runtime by dock_manager.js) ──── */
+    --srle-workspace-offset-left:      260px;
+    --srle-workspace-offset-top:       0px;
+    --srle-workspace-offset-right:     0px;
+    --srle-workspace-offset-bottom:    0px;
+
+    /* Collapsed-state overrides (set by layout_manager.js) */
+    --srle-workspace-offset-left-collapsed:   68px;
+
+    /* ── Z-Index Stack ──────────────────────────────────────────────── */
+    --srle-z-workspace:    1;
+    --srle-z-toolbar:      100;
+    --srle-z-header:       1040;
+    --srle-z-sidebar:      1041;
+    --srle-z-overlay:      1200;
+    --srle-z-modal:        1300;
+    --srle-z-toast:        1400;
+
+    /* ── Transition ─────────────────────────────────────────────────── */
+    --srle-transition-speed:   250ms;
+    --srle-transition-curve:   cubic-bezier(0.4, 0, 0.2, 1);
+    --srle-transition:         var(--srle-transition-speed) var(--srle-transition-curve);
+
+    /* ── Breakpoints (reference; JS reads matchMedia) ───────────────── */
+    /* Desktop:  >= 1280px  — user dock preference applies              */
+    /* Tablet:   768–1279px — left or bottom dock                       */
+    /* Mobile:   < 768px   — bottom dock + hamburger drawer             */
+
+    /* ── Resize Handle ─────────────────────────────────────────────── */
+    --srle-resize-handle-width:   4px;
+    --srle-resize-handle-color:   transparent;
+    --srle-resize-handle-hover:   var(--smriti-color-accent, #7c3aed);
+}

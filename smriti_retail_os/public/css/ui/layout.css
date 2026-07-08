@@ -30,3 +30,28 @@ body {
     border-radius: var(--radius-md);
     padding: 20px;
 }
+
+/**
+ * SRLE opt-in workspace container.
+ * Add class="srle-workspace" to the main content div on any page that
+ * wants the Layout Engine to control its scroll and margin behaviour.
+ * Detailed dock-specific rules live in public/css/layout_engine/layout.css.
+ * Existing pages without this class are completely unaffected.
+ */
+.srle-workspace {
+    margin-left:   var(--srle-workspace-offset-left,   260px);
+    margin-top:    var(--srle-workspace-offset-top,    0px);
+    margin-right:  var(--srle-workspace-offset-right,  0px);
+    margin-bottom: var(--srle-workspace-offset-bottom, 0px);
+    height:     100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    will-change: transform;
+    position:    relative;
+    transition:
+        margin-left   250ms cubic-bezier(0.4, 0, 0.2, 1),
+        margin-top    250ms cubic-bezier(0.4, 0, 0.2, 1),
+        margin-right  250ms cubic-bezier(0.4, 0, 0.2, 1),
+        margin-bottom 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+

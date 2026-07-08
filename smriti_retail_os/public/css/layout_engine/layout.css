@@ -1,0 +1,115 @@
+/**
+ * @file:    public/css/layout_engine/layout.css
+ * @desc:    SMRITI Retail OS Layout Engine — Shell layout rules.
+ *           Opt-in: pages add class="srle-workspace" to their main content
+ *           container. All existing pages without this class are unaffected.
+ * @version: 1.0.0
+ * Copyright (c) 2026 AITDL NETWORK. All rights reserved.
+ */
+
+/* ── Body: prevent double-scroll when SRLE is active ─────────────────────── */
+body.srle-active {
+    overflow: hidden;
+    height: 100vh;
+}
+
+/* ── Workspace: the scrollable content area ──────────────────────────────── */
+.srle-workspace {
+    /* Offset from the left dock (default) */
+    margin-left:   var(--srle-workspace-offset-left, 260px);
+    margin-top:    var(--srle-workspace-offset-top, 0px);
+    margin-right:  var(--srle-workspace-offset-right, 0px);
+    margin-bottom: var(--srle-workspace-offset-bottom, 0px);
+
+    /* Only the workspace scrolls */
+    height:     100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    /* GPU-accelerated paint — avoids compositing the sidebar every scroll */
+    will-change:    transform;
+    position:       relative;
+    z-index:        var(--srle-z-workspace, 1);
+
+    /* Smooth offset transitions when dock switches */
+    transition:
+        margin-left   var(--srle-transition),
+        margin-top    var(--srle-transition),
+        margin-right  var(--srle-transition),
+        margin-bottom var(--srle-transition);
+}
+
+/* ── Collapsed sidebar: shrink workspace offset ──────────────────────────── */
+body.srle-active.srle-sidebar-collapsed .srle-workspace {
+    margin-left: var(--srle-workspace-offset-left-collapsed, 68px);
+}
+
+/* ── Right dock ──────────────────────────────────────────────────────────── */
+body.srle-active.sidebar-position-right .srle-workspace {
+    margin-left:  0;
+    margin-right: var(--srle-sidebar-width, 260px);
+}
+body.srle-active.sidebar-position-right.srle-sidebar-collapsed .srle-workspace {
+    margin-right: var(--srle-sidebar-collapsed-width, 68px);
+}
+
+/* ── Top dock ────────────────────────────────────────────────────────────── */
+body.srle-active.sidebar-position-top .srle-workspace {
+    margin-left:  0;
+    margin-right: 0;
+    margin-top:   var(--srle-sidebar-top-height, 52px);
+    height:       calc(100vh - var(--srle-sidebar-top-height, 52px));
+}
+
+/* ── Bottom dock ─────────────────────────────────────────────────────────── */
+body.srle-active.sidebar-position-bottom .srle-workspace {
+    margin-left:   0;
+    margin-right:  0;
+    margin-bottom: var(--srle-sidebar-bottom-height, 60px);
+    height:        calc(100vh - var(--srle-sidebar-bottom-height, 60px));
+}
+
+/* ── Fixed toolbar / report bar stay above workspace ─────────────────────── */
+.srle-toolbar {
+    position:   sticky;
+    top:        0;
+    z-index:    var(--srle-z-toolbar, 100);
+    background: var(--smriti-color-bg-primary, #111827);
+}
+
+/* ── Workspace inner padding (matches studio-container) ─────────────────── */
+.srle-workspace-inner {
+    padding: var(--smriti-spacing-xl, 24px);
+    min-height: 100%;
+}
+
+/* ── Resize handle (Phase 2 — inert in Phase 1) ─────────────────────────── */
+.srle-resize-handle {
+    position:   absolute;
+    top:        0;
+    right:      0;
+    width:      var(--srle-resize-handle-width, 4px);
+    height:     100%;
+    cursor:     col-resize;
+    background: var(--srle-resize-handle-color, transparent);
+    transition: background 120ms ease;
+    z-index:    var(--srle-z-sidebar, 1041);
+}
+.srle-resize-handle:hover,
+.srle-resize-handle:active {
+    background: var(--srle-resize-handle-hover, #7c3aed);
+}
+
+/* ── ARIA / focus-visible for keyboard nav ───────────────────────────────── */
+.smriti-sidebar-item:focus-visible,
+.smriti-sidebar-group-header:focus-visible {
+    outline:        2px solid var(--smriti-color-accent, #7c3aed);
+    outline-offset: 2px;
+    border-radius:  var(--radius-sm, 4px);
+}
+
+/* ── High-contrast mode ─────────────────────────────────────────────────── */
+@media (forced-colors: active) {
+    .srle-workspace { border-left: 1px solid ButtonText; }
+    .smriti-sidebar-item:focus-visible { outline: 3px solid Highlight; }
+}
