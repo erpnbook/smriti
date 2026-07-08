@@ -13,13 +13,13 @@
 #
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
-# @version: 1.8.6
+# @version: 1.9.0 — Migrated to smriti.core.platform (SPC-012)
 # @license: GPL-3.0-only
 # SPDX-License-Identifier: GPL-3.0-only
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+from smriti_retail_os import smriti
 from smriti_retail_os.balance_engine import get_party_balance, get_reorder_recommendation
 
 def optimize_network_transfer(company, target_psa, item_code, current_stock):
@@ -48,17 +48,17 @@ def optimize_network_transfer(company, target_psa, item_code, current_stock):
         }
 
     # Fetch item valuation or standard selling rate
-    item_rate = frappe.db.get_value("Item Price", {"item_code": item_code, "price_list": "Standard Selling"}, "price_list_rate")
+    item_rate = smriti.db.get("ItemPrice", {"item_code": item_code, "price_list": "Standard Selling"}, "price_list_rate")
     if not item_rate:
-        item_rate = frappe.db.get_value("Item", item_code, "valuation_rate") or 100.0
+        item_rate = smriti.db.get("Product", item_code, "valuation_rate") or 100.0
     item_rate = float(item_rate)
 
     # 2. Fetch target PSA's zone
-    target_zone = frappe.db.get_value("SMRITI Party Stock Account", target_psa, "zone") or "West"
+    target_zone = smriti.db.get("PartyStockAccount", target_psa, "zone") or "West"
 
     # 3. Find candidates (all active PSAs for this company, excluding target)
-    candidates = frappe.get_all(
-        "SMRITI Party Stock Account",
+    candidates = smriti.db.get_list(
+        "PartyStockAccount",
         filters={"company": company, "name": ["!=", target_psa], "active": 1},
         fields=["name", "zone", "location_name"]
     )
@@ -78,16 +78,15 @@ def optimize_network_transfer(company, target_psa, item_code, current_stock):
         
         # Safety stock buffer calculation
         safety_stock = 0.0
-        rule = frappe.db.get_value(
-            "SMRITI PSV Reorder Rule",
+        rule = smriti.db.get(
+            "ReorderRule",
             {"company": company, "party_stock_account": source_psa, "item_variant": item_code, "active": 1},
             "safety_stock"
         )
         if rule:
             safety_stock = float(rule)
         else:
-            # Fallback to group rule or global default
-            settings = frappe.get_cached_doc("SMRITI PSV Settings") if frappe.db.exists("DocType", "SMRITI PSV Settings") else None
+            settings = smriti.documents.get("PSVSettings", "SMRITI PSV Settings") if smriti.db.exists("PSVSettings", "SMRITI PSV Settings") else None
             safety_stock = float(settings.default_safety_stock or 0.0) if settings else 0.0
 
         # Excess stock is stock above safety buffer
@@ -118,8 +117,8 @@ def optimize_network_transfer(company, target_psa, item_code, current_stock):
 
     # 4. Final recommendation criteria
     if best_source and best_score > 0.0:
-        source_name = frappe.db.get_value("SMRITI Party Stock Account", best_source, "location_name")
-        target_name = frappe.db.get_value("SMRITI Party Stock Account", target_psa, "location_name")
+        source_name = smriti.db.get("PartyStockAccount", best_source, "location_name")
+        target_name = smriti.db.get("PartyStockAccount", target_psa, "location_name")
         reason_codes = "EXCESS_WOC_AT_SOURCE,POSITIVE_TRANSFER_BENEFIT"
         if reco.get("priority") == "Critical":
             reason_codes += ",STOCKOUT_RISK"

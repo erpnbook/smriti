@@ -4,13 +4,13 @@
 # @description: Business logic and validation layer for SMRITI POS Profile Management.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-06-25
-# @version: 1.8.6
+# @version: 1.9.0 — Migrated to smriti.core.platform (SPC-012)
 # @sprint: 3C — POS Profile Custom Manager
-# @authority: Jawahar R. Mallah, Founder & Chief Architect, AITDL
 #
 
-import frappe
-from frappe import _
+import frappe                  # frappe.throw — framework utility (permitted)
+from frappe import _           # i18n only
+from smriti_retail_os import smriti
 from smriti_retail_os.repositories import pos_profile_repository
 
 def get_active_shift_for_profile(pos_profile):
@@ -18,8 +18,8 @@ def get_active_shift_for_profile(pos_profile):
     Checks if there is an active (Open) shift for the given POS Profile.
     Returns the POS Opening Entry name and user if found, else None.
     """
-    open_shifts = frappe.db.get_all(
-        "POS Opening Entry",
+    open_shifts = smriti.db.get_list(
+        "POSOpeningEntry",
         filters={
             "pos_profile": pos_profile,
             "status": "Open",
@@ -76,7 +76,7 @@ def clone_profile(source_name, target_name):
     if not source_name or not target_name:
         frappe.throw(_("Source and Target Profile names are required for cloning."))
 
-    if frappe.db.exists("POS Profile", target_name):
+    if smriti.db.exists("POSProfile", target_name):
         frappe.throw(_("Target POS Profile '{0}' already exists.").format(target_name))
 
     source_doc = pos_profile_repository.get_profile_by_name(source_name)
@@ -115,15 +115,14 @@ def get_dropdown_data():
     Payment Modes, Accounts, and Users to send to the UI.
     """
     # Fetch active ledgers in Chart of Accounts for payments mapping
-    accounts = frappe.get_all(
+    accounts = smriti.db.get_list(
         "Account",
         filters={"is_group": 0, "disabled": 0},
         fields=["name", "company"],
         limit=5000
     )
 
-    # Fetch users who are enabled
-    users = frappe.get_all(
+    users = smriti.db.get_list(
         "User",
         filters={"enabled": 1},
         fields=["name", "first_name", "last_name"],
@@ -138,10 +137,10 @@ def get_dropdown_data():
     ]
 
     return {
-        "companies": frappe.get_all("Company", pluck="name"),
-        "warehouses": frappe.get_all("Warehouse", filters={"is_group": 0, "disabled": 0}, pluck="name"),
-        "price_lists": frappe.get_all("Price List", filters={"enabled": 1}, pluck="name"),
-        "payment_modes": frappe.get_all("Mode of Payment", filters={"disabled": 0}, pluck="name"),
+        "companies":     smriti.db.get_list("Company",       fields=["name"]),
+        "warehouses":    smriti.db.get_list("Warehouse",     filters={"is_group": 0, "disabled": 0}, fields=["name"]),
+        "price_lists":   smriti.db.get_list("PriceList",     filters={"enabled": 1}, fields=["name"]),
+        "payment_modes": smriti.db.get_list("PaymentMode",   filters={"disabled": 0}, fields=["name"]),
         "accounts": accounts,
         "users": user_list
     }

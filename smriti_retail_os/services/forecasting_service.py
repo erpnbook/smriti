@@ -5,16 +5,15 @@
 #               and predicted stockout date calculations.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
-# @version: 1.8.6
+# @version: 1.9.0 — Migrated to smriti.core.platform (SPC-012)
 # @license: GPL-3.0-only
 # SPDX-License-Identifier: GPL-3.0-only
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-
-import frappe
 import math
-from frappe.utils import add_days, getdate, today
+from frappe.utils import add_days, getdate, today  # framework utilities — permitted
+from smriti_retail_os import smriti
 
 def calculate_weekly_velocity_stats(company, party_stock_account, item_code):
     """
@@ -28,22 +27,20 @@ def calculate_weekly_velocity_stats(company, party_stock_account, item_code):
     avg_weeks = 4
     alpha = 0.3  # Default: higher weight to recent sales (recommended for retail)
     try:
-        if frappe.db.exists("DocType", "SMRITI PSV Settings"):
-            settings = frappe.get_cached_doc("SMRITI PSV Settings")
+        if smriti.db.exists("PSVSettings", "SMRITI PSV Settings"):
+            settings = smriti.documents.get("PSVSettings", "SMRITI PSV Settings")
             avg_weeks = settings.reorder_avg_weeks or 4
-            # ema_alpha is configurable: 0.05 (slow/stable) to 0.95 (reactive/volatile)
-            # Default 0.3 is appropriate for standard retail SKUs.
             raw_alpha = float(settings.get("ema_alpha") or 0.3)
-            alpha = max(0.05, min(0.95, raw_alpha))  # Clamp to valid range
-    except Exception:
-        frappe.log_error(frappe.get_traceback(), "SMRITI: forecasting_service settings read failed")
+            alpha = max(0.05, min(0.95, raw_alpha))
+    except Exception as e:
+        smriti.errors.log_error("SMRITI forecasting_service settings read failed", exc=e)
     
     lookback_days = avg_weeks * 7
     start_date = add_days(today(), -lookback_days)
     
     # 2. Query sales entries from ledger (sales are represented by negative qty)
     # We support voucher_type as 'Sales' or 'Sales Upload' where qty < 0
-    sales_entries = frappe.db.sql("""
+    sales_entries = smriti.db.sql("""
         SELECT DATE(posting_datetime) as sale_date, SUM(ABS(qty)) as daily_qty
         FROM `tabSMRITI Party Stock Ledger Entry`
         WHERE party_stock_account = %s

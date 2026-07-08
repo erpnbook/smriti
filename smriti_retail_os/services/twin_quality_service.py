@@ -5,15 +5,14 @@
 #               Quality score is based on physical audit and sales upload timeliness.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
-# @version: 1.8.6
+# @version: 1.9.0 — Migrated to smriti.core.platform (SPC-012)
 # @license: GPL-3.0-only
 # SPDX-License-Identifier: GPL-3.0-only
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-
-import frappe
-from frappe.utils import now_datetime, getdate, today
+from frappe.utils import now_datetime, getdate, today  # framework utilities — permitted
+from smriti_retail_os import smriti
 from smriti_retail_os.balance_engine import get_party_balance, get_bulk_party_balances
 
 def evaluate_twin_quality(party_stock_account, item_code):
@@ -26,11 +25,10 @@ def evaluate_twin_quality(party_stock_account, item_code):
     score = 0
     
     # 1. Check last physical snapshot
-    last_audit = frappe.db.get_value(
-        "SMRITI Party Physical Snapshot",
+    last_audit = smriti.db.get(
+        "PhysicalSnapshot",
         {"party_stock_account": party_stock_account, "docstatus": 1},
-        "audit_date",
-        order_by="audit_date desc"
+        "audit_date"
     )
     if last_audit:
         days_since_audit = (getdate(today()) - getdate(last_audit)).days
@@ -44,11 +42,10 @@ def evaluate_twin_quality(party_stock_account, item_code):
         score += 5  # No audit ever
         
     # 2. Check last sales upload
-    last_upload = frappe.db.get_value(
-        "SMRITI Party Sales Upload",
+    last_upload = smriti.db.get(
+        "SalesUpload",
         {"party_stock_account": party_stock_account, "docstatus": 1},
-        "period_end_date",
-        order_by="period_end_date desc"
+        "period_end_date"
     )
     if last_upload:
         days_since_upload = (getdate(today()) - getdate(last_upload)).days
@@ -82,7 +79,7 @@ def evaluate_variant_curve(item_code, party_stock_account):
     - Total style stock is positive (> 0).
     - One or more core sizes have zero balance.
     """
-    item_template = frappe.db.get_value("Item", item_code, "variant_of")
+    item_template = smriti.db.get("Product", item_code, "variant_of")
     if not item_template:
         return {
             "variant_curve_status": "Complete",
@@ -90,8 +87,8 @@ def evaluate_variant_curve(item_code, party_stock_account):
         }
         
     # Fetch all sibling variants under the same template
-    variants = frappe.get_all(
-        "Item",
+    variants = smriti.db.get_list(
+        "Product",
         filters={"variant_of": item_template},
         fields=["name"]
     )
@@ -125,16 +122,16 @@ def evaluate_variant_curve(item_code, party_stock_account):
         # This prevents ambiguous first-attribute lookup on multi-attribute items (Size + Colour + Width).
         variant_dimension = "Size"  # Sensible retail default
         try:
-            if frappe.db.exists("DocType", "SMRITI PSV Settings"):
-                settings = frappe.get_cached_doc("SMRITI PSV Settings")
+            if smriti.db.exists("PSVSettings", "SMRITI PSV Settings"):
+                settings = smriti.documents.get("PSVSettings", "SMRITI PSV Settings")
                 variant_dimension = settings.get("variant_dimension") or "Size"
         except Exception:
-            pass  # Use default dimension — settings read failure is non-critical for this path
+            pass
 
         missing_labels = []
         for code in missing_variants:
-            attr_val = frappe.db.get_value(
-                "Item Variant Attribute",
+            attr_val = smriti.db.get(
+                "ItemVariantAttribute",
                 {"parent": code, "attribute": variant_dimension},
                 "attribute_value"
             )

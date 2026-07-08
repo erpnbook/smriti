@@ -4,21 +4,23 @@
 # @description: Decoupled salesperson resolution, commission structure, and active list service.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-06-27
-# @version: 1.8.6
+# @version: 1.9.0 — Migrated to smriti.core.platform (SPC-012)
 # @license: GPL-3.0-only
 # SPDX-License-Identifier: GPL-3.0-only
 #
 
-import frappe
-from frappe import _
+import frappe          # whitelist decorator only
+from frappe import _   # i18n only
+from frappe.utils import cint  # framework utility
+from smriti_retail_os import smriti
 
 @frappe.whitelist()
 def get_active_salespersons():
     """
     Returns list of active Sales Persons from ERPNext database to populate UI quick-chips and selectors.
     """
-    return frappe.get_all(
-        "Sales Person",
+    return smriti.db.get_list(
+        "SalesPerson",
         filters={"enabled": 1},
         fields=["name", "sales_person_name", "commission_rate"],
         order_by="sales_person_name asc",
@@ -30,7 +32,7 @@ def get_company_salesperson_settings(company=None):
     Retrieves salesperson settings from SMRITI Company Settings.
     """
     if not company:
-        company = frappe.defaults.get_user_default("company") or frappe.db.get_single_value("Global Defaults", "default_company")
+        company = smriti.db.get_single("GlobalDefaults", "default_company")
 
     settings = {
         "enable_bill_sales_person": 1,
@@ -42,11 +44,11 @@ def get_company_salesperson_settings(company=None):
         return settings
 
     try:
-        doc = frappe.get_doc("SMRITI Company Settings", company)
-        settings["enable_bill_sales_person"] = frappe.utils.cint(doc.custom_enable_bill_sales_person)
-        settings["enable_item_sales_person"] = frappe.utils.cint(doc.custom_enable_item_sales_person)
-        settings["allow_item_sales_person_override"] = frappe.utils.cint(doc.custom_allow_item_sales_person_override)
-    except frappe.DoesNotExistError:
+        doc = smriti.documents.get("CompanySettings", company)
+        settings["enable_bill_sales_person"] = cint(doc.custom_enable_bill_sales_person)
+        settings["enable_item_sales_person"] = cint(doc.custom_enable_item_sales_person)
+        settings["allow_item_sales_person_override"] = cint(doc.custom_allow_item_sales_person_override)
+    except smriti.errors.NotFoundError:
         pass
 
     return settings
