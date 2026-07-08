@@ -414,25 +414,15 @@ def get_purchase_analytics(company=None, from_date=None, to_date=None):
 
 
 def get_supplier_performance(company=None, from_date=None, to_date=None, top_n=10):
+    """
+    Returns supplier KPIs from ERPNext Purchase Orders and Purchase Invoices.
+    Delegates to erp_adapter to keep all DocType queries in the adapter layer.
+    """
     check_any_purchase_role()
     company = company or frappe.defaults.get_user_default("Company") or frappe.db.get_value("Company", {}, "name")
-    
-    perf = frappe.db.sql("""
-        SELECT 
-            supplier as supplier,
-            MAX(supplier_name) as supplier_name,
-            COUNT(name) as po_count,
-            SUM(grand_total) as po_value,
-            SUM(grand_total * (per_received / 100)) as received_value,
-            AVG(per_received) as fill_rate,
-            SUM(CASE WHEN schedule_date < CURDATE() AND per_received < 100 AND status != 'Cancelled' THEN grand_total * (1.0 - (per_received / 100.0)) ELSE 0.0 END) as overdue_amount
-        FROM `tabSMRITI Purchase Order`
-        WHERE company = %s AND docstatus = 1
-        GROUP BY supplier
-        ORDER BY po_value DESC
-        LIMIT %s
-    """, (company, int(top_n)), as_dict=True)
-    return perf
+    return erp_adapter.get_supplier_performance_data(
+        company, from_date=from_date, to_date=to_date, top_n=top_n
+    )
 
 
 def get_items_for_grn(po_name):
@@ -589,7 +579,12 @@ def get_po_matrix_print_data(po_name):
 # ─────────────────────────────────────────────────────────────────────────────
 
 def get_size_presets():
-    """Returns size preset definitions from SMRITI Company Settings."""
+    """
+    Returns size preset definitions from SMRITI Company Settings.
+    Falls back to built-in presets when none are configured.
+    Returns {"presets": {...}, "using_defaults": bool} so the UI can prompt
+    the user to configure size groups when defaults are active.
+    """
     import json
     company = frappe.defaults.get_user_default("Company") or frappe.db.get_value("Company", {}, "name")
     raw = frappe.db.get_value("SMRITI Company Settings", {"company": company}, "size_groups_json") or ""
@@ -598,19 +593,15 @@ def get_size_presets():
     except Exception:
         presets = {}
 
-    # Default footwear preset if none configured
-    if not presets:
+    using_defaults = not bool(presets)
+    if using_defaults:
         presets = {
-            "Footwear (35–43)": ["35", "36", "37", "38", "39", "40", "41", "42", "43"],
-            "Kids (20–30)":     ["20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30"],
-            "Open (XS–XXL)":    ["XS", "S", "M", "L", "XL", "XXL"],
+            "Footwear (35-43)": ["35", "36", "37", "38", "39", "40", "41", "42", "43"],
+            "Kids (20-30)":     ["20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30"],
+            "Open (XS-XXL)":    ["XS", "S", "M", "L", "XL", "XXL"],
+            "Generic (Single Size)": ["-"],
         }
-    return presets
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# SC-24 — Resolve Variant Item
-# ─────────────────────────────────────────────────────────────────────────────
+    return {"presets": presets, "using_defaults": using_defaults}
 
 def resolve_variant_item(article, color, size):
     """
