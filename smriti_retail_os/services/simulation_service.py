@@ -4,13 +4,13 @@
 # @description: In-memory simulation sandbox for SMRITI Product Twin scenarios.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
-# @version: 1.8.6
+# @version: 1.9.0 — Migrated to smriti.core.platform (SPC-012)
 # @license: GPL-3.0-only
 # SPDX-License-Identifier: GPL-3.0-only
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+from smriti_retail_os import smriti
 from smriti_retail_os.balance_engine import get_party_balance
 from smriti_retail_os.services.forecasting_service import calculate_weeks_of_cover
 from smriti_retail_os.services.optimization_service import optimize_network_transfer
@@ -35,8 +35,8 @@ def run_sandbox_simulation(simulation_config):
         filters["item_code"] = ["in", simulation_config["item_codes"]]
 
     # Load active twins from the database
-    twins = frappe.get_all(
-        "SMRITI SKU Twin",
+    twins = smriti.db.get_list(
+        "SKUTwin",
         filters=filters,
         fields=[
             "name", "company", "party_stock_account", "item_code", "current_stock",

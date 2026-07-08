@@ -3,7 +3,7 @@
 # @file: smriti_retail_os/services/ai_context_service.py
 # @description: SMRITI AI Context Builder — Retrieval-Augmented Context Generation.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
-# @version: 1.8.6
+# @version: 1.9.0 — Migrated to smriti.core.platform (SPC-012)
 # @license: GPL-3.0-only
 # SPDX-License-Identifier: GPL-3.0-only
 #
@@ -11,7 +11,8 @@
 import sys
 import os
 import datetime
-import frappe
+import frappe                   # frappe.get_app_path — framework utility (not platform coupling)
+from smriti_retail_os import smriti
 
 def _get_ske_engine():
     app_path = frappe.get_app_path("smriti_retail_os")
@@ -157,7 +158,7 @@ def build_context_pack(query, return_metadata=False):
         return context_str
 
     except Exception as e:
-        frappe.log_error(message=str(e), title="SKE Context Builder Failed")
+        smriti.errors.log_error(str(e), title="SKE Context Builder Failed")
         res_err = f"ERROR: SKE Context Generation failed due to an exception: {str(e)}"
         if return_metadata:
             return res_err, {"num_links": 0, "validation_status": "Unverified"}

@@ -67,38 +67,88 @@
          * @param {Array}  [fields] - Fields to return
          * @returns {Promise<object>}
          */
-        get(model, name, fields = []) {
+        /**
+         * Fetch a single SMRITI document by model and name.
+         * @param {string} model - SMRITI model name (e.g. "Customer")
+         * @param {string} name  - Document ID (e.g. "CUST-001")
+         * @returns {Promise<object>}
+         */
+        get(model, name) {
             return smriti.api.call(
-                "smriti_retail_os.core.api.get_document",
-                { model, name, fields }
+                "smriti_retail_os.core.api.get",
+                { model, name }
             );
         },
 
         /**
-         * Fetch a list of SMRITI documents matching filters.
-         * @param {string} model    - SMRITI model name
-         * @param {object} filters  - Filter conditions
-         * @param {Array}  fields   - Fields to return
-         * @param {number} [limit]  - Max records to return
+         * Fetch a single field value from a SMRITI document.
+         * @param {string} model     - SMRITI model name
+         * @param {string} name      - Document ID
+         * @param {string} fieldname - Field to fetch
+         * @returns {Promise<*>}
+         */
+        getField(model, name, fieldname) {
+            return smriti.api.call(
+                "smriti_retail_os.core.api.get_field",
+                { model, name, fieldname }
+            );
+        },
+
+        /**
+         * Fetch a filtered list of SMRITI documents.
+         * @param {string} model           - SMRITI model name
+         * @param {object} [opts]          - Options: filters, fields, order_by, limit, start
+         * @param {object} [opts.filters]  - Filter conditions {fieldname: value}
+         * @param {Array}  [opts.fields]   - Fields to return (default: ["name"])
+         * @param {string} [opts.order_by] - Sort expression (e.g. "modified desc")
+         * @param {number} [opts.limit]    - Max records (default: 20)
+         * @param {number} [opts.start]    - Pagination offset
          * @returns {Promise<Array>}
          */
-        getList(model, filters = {}, fields = [], limit = 20) {
+        getList(model, opts = {}) {
             return smriti.api.call(
-                "smriti_retail_os.core.api.get_document_list",
-                { model, filters, fields, limit }
+                "smriti_retail_os.core.api.get_list",
+                { model, filters: opts.filters || {}, fields: opts.fields || ["name"],
+                  order_by: opts.order_by || null, limit: opts.limit || 20, start: opts.start || 0 }
             );
         },
 
         /**
-         * Save a SMRITI document (insert or update).
+         * Check if a SMRITI document exists.
          * @param {string} model - SMRITI model name
-         * @param {object} data  - Document data
+         * @param {string} name  - Document ID
+         * @returns {Promise<boolean>}
+         */
+        exists(model, name) {
+            return smriti.api.call(
+                "smriti_retail_os.core.api.exists",
+                { model, name }
+            );
+        },
+
+        /**
+         * Save (create or update) a SMRITI document.
+         * @param {string} model - SMRITI model name
+         * @param {object} data  - Document data (include 'name' to update, omit to create)
          * @returns {Promise<object>}
          */
         save(model, data) {
             return smriti.api.call(
-                "smriti_retail_os.core.api.save_document",
+                "smriti_retail_os.core.api.save",
                 { model, data }
+            );
+        },
+
+        /**
+         * Submit (post) a SMRITI document.
+         * @param {string} model - SMRITI model name
+         * @param {string} name  - Document ID to submit
+         * @returns {Promise<object>}
+         */
+        submit(model, name) {
+            return smriti.api.call(
+                "smriti_retail_os.core.api.submit",
+                { model, name }
             );
         },
 
@@ -106,12 +156,43 @@
          * Delete a SMRITI document.
          * @param {string} model - SMRITI model name
          * @param {string} name  - Document ID
-         * @returns {Promise<void>}
+         * @returns {Promise<{ok: true, deleted: string}>}
          */
         delete(model, name) {
             return smriti.api.call(
-                "smriti_retail_os.core.api.delete_document",
+                "smriti_retail_os.core.api.delete",
                 { model, name }
+            );
+        },
+
+        /**
+         * Fetch the Form Engine schema for a model.
+         * Used by smriti.forms.render() to build the form UI.
+         * @param {string} model - SMRITI model name (e.g. "Purchase")
+         * @returns {Promise<{model, title, fields}>}
+         */
+        schema(model) {
+            return smriti.api.call(
+                "smriti_retail_os.core.api.schema",
+                { model }
+            );
+        },
+
+        /**
+         * Typeahead / lookup search for a LookupField.
+         * @param {string} model           - SMRITI model name
+         * @param {object} [opts]
+         * @param {string} [opts.query]         - Search string
+         * @param {object} [opts.filters]        - Additional static filters
+         * @param {string} [opts.display_field]  - Field to use as label
+         * @param {number} [opts.limit]          - Max results
+         * @returns {Promise<Array<{value, label}>>}
+         */
+        lookup(model, opts = {}) {
+            return smriti.api.call(
+                "smriti_retail_os.core.api.lookup",
+                { model, query: opts.query || "", filters: opts.filters || {},
+                  display_field: opts.display_field || "name", limit: opts.limit || 20 }
             );
         }
     };

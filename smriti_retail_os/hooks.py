@@ -95,6 +95,9 @@ app_include_js = [
     # SMRITI Core Framework — must be first; defines smriti.* namespace used by all scripts below.
     # Architecture: SMRITI Core Framework v1.0 — docs/implementation/foundation/
     "/assets/smriti_retail_os/js/smriti_core.js",
+    # SMRITI Form Renderer — extends smriti.forms.render(); must follow smriti_core.js
+    # Architecture: Phase D — JS Form Renderer
+    "/assets/smriti_retail_os/js/smriti_form_renderer.js",
     "/assets/smriti_retail_os/js/smriti_ui_resolver.js",
     "/assets/smriti_retail_os/js/smriti_theme_manager.js",
     "/assets/smriti_retail_os/js/smriti-ui-hardening.js",

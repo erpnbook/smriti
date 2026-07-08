@@ -4,13 +4,10 @@
 # @description: Decoupled manager PIN override and approval validation service.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-06-27
-# @version: 1.8.6
-# @license: GPL-3.0-only
-# SPDX-License-Identifier: GPL-3.0-only
-#
+# @version: 1.9.0 — Migrated to smriti.core.platform (SPC-012)
 
-import frappe
-from frappe import _
+import frappe                                              # whitelist decorator only
+from frappe import _                                       # i18n only — no platform coupling
 from smriti_retail_os.services.discount_service import get_company_discount_settings
 
 @frappe.whitelist()

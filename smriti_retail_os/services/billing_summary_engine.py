@@ -4,13 +4,14 @@
 # @description: Central monetary calculations authority (Monetary Authority Rule compliant).
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-06-27
-# @version: 1.8.6
+# @version: 1.9.0 — Migrated to smriti.core.platform (SPC-012)
 # @license: GPL-3.0-only
 # SPDX-License-Identifier: GPL-3.0-only
 #
 
-import frappe
-from frappe.utils import flt, cint
+import frappe                           # whitelist decorator only
+from frappe.utils import flt, cint     # frappe.utils — framework utility, permitted
+from smriti_retail_os import smriti
 
 @frappe.whitelist()
 def calculate_billing_summary(items, bill_discount_percentage=0.0, bill_discount_amount=0.0, tax_inclusive=True, company=None):
@@ -25,8 +26,8 @@ def calculate_billing_summary(items, bill_discount_percentage=0.0, bill_discount
     item_codes = [it.get("item_code") for it in items if it.get("item_code")]
     item_gst_map = {}
     if item_codes:
-        rows = frappe.db.get_all(
-            "Item",
+        rows = smriti.db.get_list(
+            "Product",
             filters={"name": ["in", item_codes]},
             fields=["name", "custom_gst_percentage"]
         )

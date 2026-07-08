@@ -4,13 +4,13 @@
 # @description: Decoupled translation service mapping SMRITI session states to ERPNext invoice schemas.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-06-27
-# @version: 1.8.6
+# @version: 1.9.0 — Migrated to smriti.core.platform (SPC-012)
 # @license: GPL-3.0-only
 # SPDX-License-Identifier: GPL-3.0-only
 #
 
-import frappe
-from frappe.utils import flt, cint
+from frappe.utils import flt, cint          # frappe.utils — framework utilities, not platform coupling
+from smriti_retail_os import smriti
 
 def map_smriti_session_to_invoice(invoice_doc, summary_data, sales_staff=None, remarks=None, company=None):
     """
@@ -50,7 +50,7 @@ def map_smriti_session_to_invoice(invoice_doc, summary_data, sales_staff=None, r
     
     for sp, val in salesperson_shares.items():
         allocated_pct = (val / total_sales_value * 100.0) if total_sales_value > 0.0 else (100.0 / len(salesperson_shares))
-        commission_rate = frappe.db.get_value("Sales Person", sp, "commission_rate") or 0.0
+        commission_rate = smriti.db.get("SalesPerson", sp, "commission_rate") or 0.0
         allocated_amt = invoice_grand_total * (allocated_pct / 100.0)
         
         invoice_doc.append("sales_team", {

@@ -4,13 +4,15 @@
 # @description: Decoupled discount adjustment calculator and permission validation service.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-06-27
-# @version: 1.8.6
+# @version: 1.9.0 — Migrated to smriti.core.platform (SPC-012)
 # @license: GPL-3.0-only
 # SPDX-License-Identifier: GPL-3.0-only
 #
 
-import frappe
-from frappe import _
+import frappe                  # whitelist decorator only
+from frappe import _           # i18n only
+from frappe.utils import cint  # framework utility
+from smriti_retail_os import smriti
 
 @frappe.whitelist()
 def validate_discount_limit(discount_percentage, is_offline=False, company=None):
@@ -49,7 +51,7 @@ def get_company_discount_settings(company=None):
     Safely retrieves discount config parameters from SMRITI Company Settings.
     """
     if not company:
-        company = frappe.defaults.get_user_default("company") or frappe.db.get_single_value("Global Defaults", "default_company")
+        company = smriti.db.get_single("GlobalDefaults", "default_company")
 
     settings = {
         "discount_mode": "Both",
@@ -62,12 +64,12 @@ def get_company_discount_settings(company=None):
         return settings
 
     try:
-        doc = frappe.get_doc("SMRITI Company Settings", company)
+        doc = smriti.documents.get("CompanySettings", company)
         settings["discount_mode"] = doc.custom_discount_mode or "Both"
-        settings["mandatory_discount_reason"] = frappe.utils.cint(doc.custom_mandatory_discount_reason)
+        settings["mandatory_discount_reason"] = cint(doc.custom_mandatory_discount_reason)
         settings["discount_approval_limit"] = float(doc.custom_discount_approval_limit or 10.0)
         settings["max_offline_cashier_discount"] = float(doc.custom_max_offline_cashier_discount or 5.0)
-    except frappe.DoesNotExistError:
+    except smriti.errors.NotFoundError:
         pass
 
     return settings
