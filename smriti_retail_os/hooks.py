@@ -908,5 +908,10 @@ fixtures = [
     {
         "dt": "SMRITI Report Template",
         "filters": [["report_category", "=", "Purchase"]]
+    },
+    # SRLE Layout Engine — smriti_layout_prefs field on Frappe User
+    {
+        "dt": "Custom Field",
+        "filters": [["name", "=", "User-smriti_layout_prefs"]]
     }
 ]

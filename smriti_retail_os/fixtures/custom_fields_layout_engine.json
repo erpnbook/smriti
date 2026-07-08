@@ -1,0 +1,15 @@
+[
+  {
+    "doctype": "Custom Field",
+    "name": "User-smriti_layout_prefs",
+    "dt": "User",
+    "fieldname": "smriti_layout_prefs",
+    "label": "SMRITI Layout Preferences",
+    "fieldtype": "Small Text",
+    "insert_after": "last_active",
+    "read_only": 1,
+    "hidden": 1,
+    "description": "Stores SMRITI Retail OS Layout Engine (SRLE) preferences as a JSON blob. Managed automatically by the platform.",
+    "module": "Smriti Retail OS"
+  }
+]

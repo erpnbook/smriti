@@ -8,18 +8,40 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [2.3.0] — 2026-07-08
 
 ### Added
-- **SMRITI Retail OS Layout Engine (SRLE) v1.0 — Phase 1**: New `layout_engine/` Python module + 4-file JS stack + 2 CSS files establishing the platform-wide layout API.
-- **`window.SRLE` Public API**: `setLayout(pos)`, `getLayout()`, `toggleSidebar()`, `setCollapsed(state)`, `savePreferences()`, `restorePreferences()`, `registerWorkspace(config)`, `refreshLayout()`, `init(options)`, `getVersion()`.
-- **`SRLE_Store`**: Unified localStorage state store with legacy `smriti-sidebar-*` bridge (backward compatible) and Frappe server sync via `layout_service.py`.
-- **`SRLE_DockManager`**: Applies dock CSS classes and sets `--srle-workspace-offset-*` CSS custom properties on `:root` so workspace margins self-adjust on dock switch.
-- **`SRLE_Responsive`**: ResizeObserver breakpoint manager — auto-switches to bottom dock on mobile (<768px), constrains to left/bottom on tablet (768–1279px), respects saved preference on desktop (≥1280px).
-- **CSS tokens** (`layout_tokens.css`): `--srle-*` namespace custom properties for all SRLE dimensions, z-indices, timing, and workspace offsets.
-- **`.srle-workspace` opt-in class**: Opt-in CSS class that causes a page's content area to track dock position via CSS custom properties. Existing pages unaffected until they add the class.
-- **Server-side preferences** (`layout_service.py`): `@frappe.whitelist` `get_layout_preferences` / `save_layout_preferences` endpoints with graceful fallback when the User custom field doesn't exist.
+- **SMRITI Retail OS Layout Engine (SRLE) v1.0 — all 4 phases** delivered in a single release.
+
+#### Phase 1 — Core Module and Public API
+- `layout_engine/` Python package with `layout_preferences.py` (validation) and `layout_service.py` (`@frappe.whitelist` get/save endpoints with graceful fallback).
+- `window.SRLE` public API: `setLayout`, `getLayout`, `toggleSidebar`, `setCollapsed`, `savePreferences`, `restorePreferences`, `registerWorkspace`, `refreshLayout`, `init`, `getVersion`.
+- `SRLE_Store` (`layout_store.js`): localStorage store with legacy `smriti-sidebar-*` bridge + Frappe server sync.
+- `SRLE_DockManager` (`dock_manager.js`): dock CSS classes + `--srle-workspace-offset-*` custom property updates.
+- `SRLE_Responsive` (`responsive_manager.js`): ResizeObserver breakpoints — bottom dock on mobile, left/bottom on tablet, user preference on desktop.
+- CSS: `layout_tokens.css` (`--srle-*` namespace tokens) + `layout.css` (`.srle-workspace` opt-in, dock-specific workspace rules).
+
+#### Phase 2 — Resizable Sidebar
+- `smriti_sidebar.js`: `.srle-resize-handle` element injected after sidebar renders; mousedown/move/up drag logic sets `--srle-sidebar-width` + `--sidebar-width` CSS custom properties live; width persisted to `SRLE_Store` and `localStorage`; restores saved width on re-render; disabled in top/bottom dock modes.
+- `smriti_sidebar.css`: resize handle positioning (right edge left-dock / left edge right-dock), hover accent highlight, hidden in top/bottom, `body.srle-resizing` prevents text selection during drag.
+
+#### Phase 3 — Top Dock "More ▾" Overflow Menu
+- `SRLE_NavRenderer` (`navigation_renderer.js`): ResizeObserver + MutationObserver watches sidebar content and dock class changes; nav items that overflow top-bar width collected into a "More ▾" dropdown (fixed-position, `@keyframes srle-dropdown-in` animation); keyboard: Escape closes and returns focus; fully ARIA-annotated (`aria-haspopup`, `aria-expanded`, `role="menu"`, `role="menuitem"`); no-op in non-top-dock modes.
+- `layout.css`: `.srle-more-btn`, `.srle-more-dropdown` styles with open/close animation.
+
+#### Phase 4 — ARIA and Keyboard Navigation
+- `smriti_sidebar.js`: sidebar root gets `role="navigation"` + `aria-label` on every render; Arrow Up/Down moves focus between visible items and group headers; Home/End jump to first/last; Enter/Space activates group header toggle.
+- `layout.css`: `aria-expanded` chevron rotation transition; `.srle-skip-link` hidden-until-focused helper; focus-visible outlines for all interactive sidebar elements; high-contrast mode overrides.
+
+#### Custom Field and Migration
+- `fixtures/custom_fields_layout_engine.json`: `smriti_layout_prefs` Small Text hidden field on Frappe User — enables cross-device SRLE preference persistence.
+- `patches/install_srle_layout_prefs_field.py`: idempotent migration patch creates the field on `bench migrate`.
+- `patches.txt`: patch registered for automatic execution.
+- `hooks.py` fixtures list: Custom Field registered for `bench import-fixtures`.
 
 ### Changed
-- **`hooks.py`**: SRLE CSS (`layout_tokens.css`, `layout.css`) and JS (`layout_store.js`, `dock_manager.js`, `responsive_manager.js`, `layout_manager.js`) registered in `app_include_css` / `app_include_js` with strict load-order comments.
-- **`public/css/ui/layout.css`**: Added `.srle-workspace` class definition (opt-in, additive only).
+- **`hooks.py`** `app_include_css`: `layout_tokens.css`, `layout.css` added after `smriti_sidebar.css`.
+- **`hooks.py`** `app_include_js`: `layout_store.js` → `dock_manager.js` → `responsive_manager.js` → `layout_manager.js` → `navigation_renderer.js` added after `smriti_sidebar.js`.
+- **`public/css/ui/layout.css`**: Added `.srle-workspace` opt-in class (additive, no existing pages affected).
+- **`smriti_sidebar.js`**: ARIA landmark attributes + Arrow key handler + resize handle injection (all additive — no existing behaviour removed).
+- **`smriti_sidebar.css`**: Resize handle styles appended (additive).
 
 ---
 

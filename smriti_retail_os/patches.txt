@@ -42,3 +42,5 @@ smriti_retail_os.patches.seed_intelligence_terms
 smriti_retail_os.patches.v1_8_7.add_idempotency_key_index
 # v3.1.0 -- Purchase Analytics Studio: Seed 6 Purchase Report Templates
 smriti_retail_os.patches.seed_purchase_report_templates
+# v2.3.0 -- SRLE Layout Engine: create smriti_layout_prefs Custom Field on User
+smriti_retail_os.patches.install_srle_layout_prefs_field
