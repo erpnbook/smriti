@@ -1543,7 +1543,7 @@ const PS = {
           </div>
           <div class="fg">
             <label class="fl">Currency</label>
-            <input type="text" class="fi" value="INR" disabled/>
+            <input type="text" class="fi" id="po-inline-currency" value="${S.po_create.currency || frappe.boot?.sysdefaults?.currency || 'INR'}" disabled/>
           </div>
         </div>
       </div>
@@ -1578,8 +1578,9 @@ const PS = {
           <button class="po-btn-add" onclick="PS.poInlineAddBlankRow()">+ Add Item Row</button>
           <div class="po-totals">
             <div class="po-total-box">
-              <div class="total-label" style="font-size:10px;color:var(--text-muted);text-transform:uppercase;margin-bottom:2px;">Grand Total</div>
+              <div class="total-label" style="font-size:10px;color:var(--text-muted);text-transform:uppercase;margin-bottom:2px;">Running Total</div>
               <div class="po-total-val" id="po-inline-grand-total">₹0.00</div>
+              <div id="po-inline-total-note" style="font-size:10px;color:var(--text-muted);margin-top:3px;"></div>
             </div>
           </div>
         </div>
@@ -1644,6 +1645,9 @@ const PS = {
       pc.schedule_date = document.getElementById("po-inline-sched-date").value;
       pc.remarks       = document.getElementById("po-inline-remarks").value;
       pc.warehouse     = document.getElementById("po-inline-warehouse").value;
+      // FIX 3: capture currency binding
+      const curEl = document.getElementById("po-inline-currency");
+      if (curEl) pc.currency = curEl.value || "INR";
       if (!pc.supplier) { toast("warn","Required","Please select a supplier."); return; }
       if (!pc.schedule_date) { toast("warn","Required","Please set a schedule date."); return; }
       PS.poInlineGoStep(2);
@@ -1670,17 +1674,28 @@ const PS = {
           });
         });
       }
-      
+
       const valid = finalItems.filter(i=>i.item_code&&(parseFloat(i.qty)||0)>0);
       if (!valid.length) { toast("warn","Required","Add at least one item with qty > 0."); return; }
-      
+
+      // FIX 1 — Block ₹0-rate lines from silently entering the PO
+      const zeroPriceItems = valid.filter(i => (parseFloat(i.rate)||0) === 0);
+      if (zeroPriceItems.length > 0) {
+        const names = zeroPriceItems.slice(0,3).map(i=>i.item_code).join(", ");
+        const more = zeroPriceItems.length > 3 ? ` and ${zeroPriceItems.length-3} more` : "";
+        const confirmed = window.confirm(
+          `⚠️ Price Warning\n\n${zeroPriceItems.length} item(s) have a ₹0 rate:\n${names}${more}\n\nA zero-priced item will create a PO line with no cost. This may indicate a missing price on the Item master.\n\nClick OK to proceed anyway, or Cancel to go back and fix the prices.`
+        );
+        if (!confirmed) return;
+      }
+
       pc.final_items_to_submit = valid;
-      
+
       const originalItems = pc.items;
       pc.items = valid;
       PS.poInlineRenderReview();
       pc.items = originalItems;
-      
+
       PS.poInlineGoStep(3);
     } else if (pc.step===3) {
       PS.poInlineSubmit();
@@ -1788,10 +1803,16 @@ const PS = {
                     input.classList.add("smriti-state-new");
                   }
                 } catch(e) {
-                  toast("error", "Error", e.message || "Failed to auto-create variant.");
+                  toast("error", "Variant Failed", e.message || "Failed to resolve/create variant.");
                   cell.qty = 0;
+                  // FIX 4: mark the failed cell with a visible red error state
                   const input = document.getElementById(`matrix-mount-${styleCode}`).querySelector(`input[data-x="${x}"][data-y="${y}"]`);
-                  if (input) input.value = "";
+                  if (input) {
+                    input.value = "";
+                    input.style.border = "2px solid var(--danger)";
+                    input.style.background = "rgba(239,68,68,0.10)";
+                    input.title = `Resolution failed: ${e.message || "Unknown error"}. Clear this cell or retry.`;
+                  }
                 }
               }
               PS.poInlineUpdateTotal();
@@ -1810,21 +1831,39 @@ const PS = {
   poInlineUpdateTotal() {
     const pc = S.po_create;
     let t = pc.items.reduce((s,it)=>s+(parseFloat(it.qty)||0)*(parseFloat(it.rate)||0),0);
-    
+    let pendingCells = 0;
+
     if (pc.styles) {
       Object.keys(pc.styles).forEach(styleCode => {
         const session = pc.styles[styleCode];
         session.cells.forEach(c => {
           const qty = parseFloat(c.qty) || 0;
-          const rate = c.variant ? parseFloat(c.variant.rate || 0) : parseFloat(session.mrp || 0);
-          t += qty * rate;
+          if (qty <= 0) return;
+          if (c.variant) {
+            // FIX 2: resolved variant — use real rate
+            const rate = parseFloat(c.variant.rate || 0);
+            t += qty * rate;
+          } else {
+            // FIX 2: unresolved cell — use session MRP as estimate, flag as pending
+            const estRate = parseFloat(session.mrp || 0);
+            t += qty * estRate;
+            pendingCells++;
+          }
         });
       });
     }
 
     const gt = document.getElementById("po-inline-grand-total");
     if (gt) gt.textContent = fmt.cur(t);
-    
+
+    // FIX 2: show note if any cells are still resolving
+    const note = document.getElementById("po-inline-total-note");
+    if (note) {
+      note.textContent = pendingCells > 0
+        ? `⏳ ${pendingCells} cell(s) still resolving — estimate uses MRP`
+        : "";
+    }
+
     pc.items.forEach((it,idx)=>{
       const el = document.getElementById(`po-r-amt-${idx}`);
       if (el) el.textContent = fmt.cur((parseFloat(it.qty)||0)*(parseFloat(it.rate)||0));
