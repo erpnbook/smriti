@@ -4,20 +4,20 @@
 
 | Field              | Value                          |
 |--------------------|--------------------------------|
-| Version            | 2.1.6                          |
-| Release Date       | 2026-07-06                     |
-| Release Type       | Patch                          |
-| Codename           | Security Remediation           |
-| Git Tag            | v2.1.6                         |
-| Previous Version   | 2.1.1                          |
-| Previous Tag       | v2.1.1                         |
+| Version            | 2.2.0                          |
+| Release Date       | 2026-07-09                     |
+| Release Type       | Minor                          |
+| Codename           | Architecture Compliance        |
+| Git Tag            | v2.2.0                         |
+| Previous Version   | 2.1.6                          |
+| Previous Tag       | v2.1.6                         |
 
 ## Repository Versions
 
 | Repository              | Version | Tag     | Remote                              |
 |-------------------------|---------|---------|-------------------------------------|
-| erpnbook/smriti         | 2.1.6   | v2.1.6  | git@github-erpnbook:erpnbook/smriti |
-| erpnbook/smriti-docker  | 2.4.0   | v2.4.0  | github-erpnbook:erpnbook/smriti-docker |
+| erpnbook/smriti         | 2.2.0   | v2.2.0  | git@github-erpnbook:erpnbook/smriti |
+| erpnbook/smriti-docker  | 2.4.2   | v2.4.2  | github-erpnbook:erpnbook/smriti-docker |
 
 ## Dependency Versions (Verified on this release)
 

@@ -1,74 +1,38 @@
-# SMRITI Retail OS — Release Notes v2.1.6
+# SMRITI Retail OS — Release Notes v2.2.0
 
-**Release Date**: 2026-07-06
-**Codename**: Security Remediation
-**Previous Version**: v2.1.1
+**Release Date**: 2026-07-09
+**Codename**: Architecture Compliance
+**Previous Version**: v2.1.6
 
 ---
 
-## 📢 Announcement: Official SMRITI Wiki Documentation Portal is Live!
+## 📢 Announcement: Complete UI Persistence Boundary Clean and Enforced!
 
-We are thrilled to announce the official launch of the **SMRITI Retail OS Documentation Wiki**! 
+We are thrilled to announce that we have successfully completed the migration of all legacy platform persistence dependencies on the client-side of the SMRITI Retail OS experience layer.
 
-This new documentation portal serves as the single source of truth for customers, partners, developers, and administrators deploying and managing SMRITI Retail OS.
-
-### 🌟 Highlights of the New Wiki
-The wiki covers all core modules, engines, and configuration interfaces of the standalone SMRITI enterprise retail platform:
-
-1. **Getting Started & Deployments**: Step-by-step setup guides, installation instructions, and quick-start checklists.
-2. **Product Studios**: Complete guides to:
-   - **Product Studio**: Catalog and variant lifecycle management.
-   - **Purchase Studio**: Procurement workflows and supplier relationships.
-   - **Sales Studio**: POS cashier sessions, terminal management, and sales checkout.
-   - **Inventory Studio**: Multi-warehouse stock receipts, transfers, and physical snapshots.
-   - **Label Studio**: Queue-based barcode generation and printing.
-   - **Customer Studio**: Loyalty programs, demographic segmentation, and CRM.
-3. **Core Engines**:
-   - **Matrix Engine**: High-dimensional size/color grid configurations.
-   - **Customer Growth Engine**: Real-time customer lifetime value and campaign automation.
-   - **Theme Engine & Navigation Engine**: Custom branding stylesheets and role-based navigation access policies.
-   - **Explain Engine & Formula Registry**: Interactive explanation tooltips and locked mathematical equations for transparency.
-   - **Integration Engine**: Sales and inventory synchronization pipelines.
-4. **Administration & Security**: User roles, security hardening, REST API references, and system configuration guidelines.
-
-### 🔗 Quick Links
-- **SMRITI Wiki**: https://github.com/erpnbook/smriti/wiki
-- **Latest Release (v2.1.6)**: https://github.com/erpnbook/smriti/releases/tag/v2.1.6
-- **Documentation Home**: https://github.com/erpnbook/smriti/wiki/Home
-- **SMRITI Codebase**: https://github.com/erpnbook/smriti
+With this release, **Guard 6 (UI Persistence Boundary)** has been promoted from WARNING MODE to **ERROR MODE** in the development and CI environments. Any direct access to client-side Frappe persistence methods from within standalone SMRITI pages will now trigger a build/check failure.
 
 ---
 
 ## Highlights of this Release
 
-This release focuses on hardening SMRITI Retail OS security controls, integrating automated compliance linting and integration testing into the CI pipeline, and correcting persistence boundary violations.
+This release focuses entirely on code compliance, architectural isolation, and engineering governance.
 
 ---
 
 ## New Capabilities
 
-### 1. Automated Compliance CI Workflows
-- Integrated `check_ignore_permissions.py` (whitelisted permission check) into `.github/workflows/smriti_ci.yml`.
-- Integrated `validate_architecture.py` (compliance linter audit) into `.github/workflows/smriti_ci.yml`.
-- Added a self-hosted runner integration testing workflow to run the entire backend test suite.
-
-### 2. Architecture Boundary Isolation
-- Extracted persistence layer calls (`frappe.new_doc`, `frappe.get_doc`, `frappe.db.sql`) from services.
-- Created `LookupRepository` and `MatrixRepository` classes, wrapping all direct database operations to keep boundaries clean.
+### 1. UI Persistence Boundary Enforcement (ERROR MODE)
+- Configured `smriti_architecture_guard.py` to enforce Guard 6 as a build-breaking failure on any new violations.
+- Created `smriti_retail_os.api.platform_data_api` as a compliant backend data adapter that safely wraps and sanitizes raw data calls for standalone pages.
 
 ---
 
-## Fixes
+## Fixes & Refactoring
 
-- **Whitelisted API ignore-permissions Audit**: Reviewed and updated comments for all 161 endpoints that bypass standard permissions in whitelisted APIs, using unique contextual explanations.
-- **Tally Integration Test Database Setup**: Corrected the test suite to automatically configure root and child Cost Centers and the Company's `round_off_account` defaults in the database during test setups, resolving precision loss validation errors.
-- **Branding Integrity Tests**: Corrected expected SHA-256 hashes of the login page template and global logo SVG to match their current correct versions.
-
----
-
-## Commits Since v2.1.1
-
-7 commits covering API permission audits, repository extraction refactoring, CI workflow wiring, and test suite initialization corrections.
+- **UI Boundary Violations Cleared**: Successfully resolved all **188 violations** across 47 SMRITI pages (`www/*.html`), migrating them to use `smriti.api.call()`, `smriti.api.getList()`, `smriti.notify.*`, and other framework primitives.
+- **Removed Polyfills**: Cleaned redundant backend connection polyfills and customized local wrappers in favor of canonical `smriti.api` methods.
+- **Tuning and Documentation**: Addressed edge case false positives in release notes and presentations to keep the compliance check strictly accurate.
 
 ---
 
