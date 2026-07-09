@@ -181,7 +181,7 @@ def delete_scheme(name):
     if not name or not smriti.db.exists("PricingRule", name):
         frappe.throw(_("Scheme '{0}' does not exist.").format(name))
         
-    frappe.delete_doc("Pricing Rule", name, ignore_permissions=True)
+    smriti.documents.delete("Pricing Rule", name, ignore_permissions=True)
     return True
 
 def _set_pricing_rule_links(doc, apply_on, applied_to):

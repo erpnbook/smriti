@@ -332,7 +332,7 @@ class CGECampaignManager:
         cache_key = f"{session_id}_{coupon_code}"
         expires_at = add_to_date(now_datetime(), minutes=30)
         
-        frappe.cache().hset("cge_budget_reservations", cache_key, {
+        smriti.cache().hset("cge_budget_reservations", cache_key, {
             "amount": flt(estimated_discount),
             "campaign": campaign.name,
             "expires_at": str(expires_at)
@@ -351,13 +351,13 @@ class CGECampaignManager:
         campaign = smriti.documents.get("SMRITI Coupon Campaign", coupon.custom_campaign)
         
         cache_key = f"{session_id}_{coupon_code}"
-        reservation = frappe.cache().hget("cge_budget_reservations", cache_key)
+        reservation = smriti.cache().hget("cge_budget_reservations", cache_key)
         
         reserved_amount = 0.0
         if reservation:
             reserved_amount = flt(reservation.get("amount"))
             # remove reservation
-            frappe.cache().hdel("cge_budget_reservations", cache_key)
+            smriti.cache().hdel("cge_budget_reservations", cache_key)
             
         campaign.budget_reserved = max(0.0, flt(campaign.budget_reserved) - reserved_amount)
         campaign.budget_consumed = flt(campaign.budget_consumed) + flt(final_discount)
@@ -369,7 +369,7 @@ class CGECampaignManager:
         Cron trigger running every 30 minutes.
         Identifies expired reservations and releases budget_reserved.
         """
-        reservations = frappe.cache().hgetall("cge_budget_reservations") or {}
+        reservations = smriti.cache().hgetall("cge_budget_reservations") or {}
         now = now_datetime()
         
         for cache_key, val in reservations.items():
@@ -396,7 +396,7 @@ class CGECampaignManager:
                     campaign.save(ignore_permissions=True)
                     
                 # Delete from cache
-                frappe.cache().hdel("cge_budget_reservations", cache_key)
+                smriti.cache().hdel("cge_budget_reservations", cache_key)
 
 
 class CGEWalletLedger:
@@ -614,7 +614,7 @@ def reconcile_wallet_liability():
     
     today_snapshot = smriti.db.exists("SMRITI Wallet Reconciliation Snapshot", {"snapshot_date": nowdate()})
     if today_snapshot:
-        frappe.delete_doc("SMRITI Wallet Reconciliation Snapshot", today_snapshot, ignore_permissions=True)
+        smriti.documents.delete("SMRITI Wallet Reconciliation Snapshot", today_snapshot, ignore_permissions=True)
         
     snapshot.insert(ignore_permissions=True)
     smriti.db.commit()
@@ -950,7 +950,7 @@ def cleanup_expired_budget_reservations():
     4. Reconciles all active campaigns' budget_reserved with active Redis reservations to heal from Redis restarts.
     """
     # 1. Clean up Redis reservations older than 24 hours
-    reservations = frappe.cache().hgetall("cge_budget_reservations") or {}
+    reservations = smriti.cache().hgetall("cge_budget_reservations") or {}
     now = now_datetime()
     
     for cache_key, val in reservations.items():
@@ -994,14 +994,14 @@ def cleanup_expired_budget_reservations():
                         campaign.budget_reserved = max(0.0, flt(campaign.budget_reserved) - amount)
                         campaign.save(ignore_permissions=True)
                     
-                    frappe.cache().hdel("cge_budget_reservations", cache_key)
+                    smriti.cache().hdel("cge_budget_reservations", cache_key)
         except Exception as ex:
             smriti.errors.log_error(title="CGE Stale Reservation Cleanup Error", message=frappe.get_traceback())
             
     # 2. Reconcile campaign.budget_reserved with Redis to heal from restarts
     try:
         active_campaigns = smriti.db.get_list("SMRITI Coupon Campaign", filters={"status": "Active"}, fields=["name", "budget_reserved"])
-        redis_reservations = frappe.cache().hgetall("cge_budget_reservations") or {}
+        redis_reservations = smriti.cache().hgetall("cge_budget_reservations") or {}
         
         campaign_redis_sums = {}
         for cache_key, val in redis_reservations.items():
@@ -1039,9 +1039,9 @@ def execute_snapshot_cleanup():
         if s_date.day == 1:
             cutoff_5_years = add_to_date(nowdate(), years=-5)
             if s_date < cutoff_5_years:
-                frappe.delete_doc("SMRITI Liability Snapshot", s.name, ignore_permissions=True)
+                smriti.documents.delete("SMRITI Liability Snapshot", s.name, ignore_permissions=True)
         else:
-            frappe.delete_doc("SMRITI Liability Snapshot", s.name, ignore_permissions=True)
+            smriti.documents.delete("SMRITI Liability Snapshot", s.name, ignore_permissions=True)
             
     smriti.db.commit()
 
@@ -1420,7 +1420,7 @@ def get_offline_cache():
     # 1. Read from Redis cache first if enabled (AUD-13)
     settings = smriti.documents.get_single("CGESettings")
     if settings.enable_offline_cache:
-        cached = frappe.cache().hget("cge_offline_cache", "latest")
+        cached = smriti.cache().hget("cge_offline_cache", "latest")
         if cached:
             return cached
 
@@ -1502,7 +1502,7 @@ def get_offline_cache():
     
     # Cache in Redis if offline cache is enabled
     if settings.enable_offline_cache:
-        frappe.cache().hset("cge_offline_cache", "latest", result_dict)
+        smriti.cache().hset("cge_offline_cache", "latest", result_dict)
         
     return result_dict
 
@@ -1572,7 +1572,7 @@ def delete_cge_generic_doc_service(doctype, name):
     if not smriti.db.exists(doctype, name):
         frappe.throw(_("Document {0} of type {1} not found.").format(name, doctype))
 
-    frappe.delete_doc(doctype, name, ignore_permissions=True)
+    smriti.documents.delete(doctype, name, ignore_permissions=True)
     smriti.db.commit()
     return True
 

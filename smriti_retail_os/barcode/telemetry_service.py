@@ -31,7 +31,7 @@ def get_barcode_feature_flags():
     """
     cache_key = "smriti:barcode_feature_flags"
     try:
-        cached = frappe.cache().get_value(cache_key)
+        cached = smriti.cache().get_value(cache_key)
         if cached is not None:
             return cached
     except Exception:
@@ -56,7 +56,7 @@ def get_barcode_feature_flags():
         pass
 
     try:
-        frappe.cache().set_value(cache_key, flags, expires_in_sec=3600)
+        smriti.cache().set_value(cache_key, flags, expires_in_sec=3600)
     except Exception:
         pass
 
@@ -66,7 +66,7 @@ def get_barcode_feature_flags():
 def clear_barcode_feature_flags_cache(doc=None, method=None):
     """Clears cached SMRITI Barcode feature flags."""
     try:
-        frappe.cache().delete_value("smriti:barcode_feature_flags")
+        smriti.cache().delete_value("smriti:barcode_feature_flags")
     except Exception:
         pass
 
@@ -149,7 +149,7 @@ def delete_expired_scan_events():
 
     count = 0
     for ev in expired_events:
-        frappe.delete_doc("SMRITI Barcode Scan Event", ev["name"], ignore_permissions=True)
+        smriti.documents.delete("SMRITI Barcode Scan Event", ev["name"], ignore_permissions=True)
         count += 1
 
     if count > 0:

@@ -281,13 +281,7 @@ const PX_SET    = {{ purchase_settings | tojson }};
 const API       = "smriti_retail_os.purchase_studio.api.purchase_api";
 
 function apiCall(method, args={}) {
-  return new Promise((res, rej) => {
-    frappe.call({
-      method, args, headers: {"X-Frappe-CSRF-Token": CSRF_TOKEN},
-      callback: r => res(r.message !== undefined ? r.message : r),
-      error: e => rej(e)
-    });
-  });
+  return smriti.api.call(method, args);
 }
 const fmt = {
   cur: v => "₹" + parseFloat(v||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2}),

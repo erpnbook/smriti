@@ -764,7 +764,7 @@
   }
 
   function loadSnapshots() {
-    API.call('frappe.client.get_list', {
+    smriti.api.call('smriti_retail_os.api.platform_data_api.get_records', {
       doctype: 'SMRITI Liability Snapshot',
       fields: ['snapshot_date', 'loyalty_liability', 'cashback_liability', 'coupon_liability'],
       order_by: 'snapshot_date desc',
@@ -802,7 +802,7 @@
   // --- Promotions Tab ---
   let promotionsData = [];
   function loadPromotions() {
-    API.call('frappe.client.get_list', {
+    smriti.api.call('smriti_retail_os.api.platform_data_api.get_records', {
       doctype: 'Pricing Rule',
       filters: { disable: 0 },
       fields: ['name', 'title', 'selling', 'price_or_product_discount', 'apply_on', 'rate_or_discount', 'discount_percentage', 'discount_amount'],
@@ -873,7 +873,7 @@
   let loyaltyTiers = [];
   let loyaltyRules = [];
   function loadLoyalty() {
-    API.call('frappe.client.get_list', {
+    smriti.api.call('smriti_retail_os.api.platform_data_api.get_records', {
       doctype: 'SMRITI Loyalty Tier',
       fields: ['name', 'tier_name', 'min_points', 'tier_multiplier', 'active'],
       order_by: 'min_points asc',
@@ -881,7 +881,7 @@
     })
     .then(tiers => {
       loyaltyTiers = tiers || [];
-      return API.call('frappe.client.get_list', {
+      return smriti.api.call('smriti_retail_os.api.platform_data_api.get_records', {
         doctype: 'SMRITI Loyalty Rule',
         fields: ['name', 'rule_name', 'rule_type', 'dimension', 'dimension_value', 'rule_value', 'priority', 'status'],
         order_by: 'priority desc',
@@ -1032,7 +1032,7 @@
 
   function deleteLoyaltyTier(name) {
     if (!confirm('Are you sure you want to delete this Loyalty Tier?')) return;
-    API.call('frappe.client.delete', { doctype: 'SMRITI Loyalty Tier', name: name })
+    API.call('smriti_retail_os.api.platform_data_api.delete_record', { doctype: 'SMRITI Loyalty Tier', name: name })
       .then(() => {
         toast('Tier deleted successfully.', 'success');
         loadLoyalty();
@@ -1169,7 +1169,7 @@
 
   function deleteLoyaltyRule(name) {
     if (!confirm('Are you sure you want to delete this Loyalty Rule?')) return;
-    API.call('frappe.client.delete', { doctype: 'SMRITI Loyalty Rule', name: name })
+    API.call('smriti_retail_os.api.platform_data_api.delete_record', { doctype: 'SMRITI Loyalty Rule', name: name })
       .then(() => {
         toast('Rule deleted successfully.', 'success');
         loadLoyalty();
@@ -1342,7 +1342,7 @@
 
   function deleteCampaign(name) {
     if (!confirm('Are you sure you want to delete this Coupon Campaign?')) return;
-    API.call('frappe.client.delete', { doctype: 'SMRITI Coupon Campaign', name: name })
+    API.call('smriti_retail_os.api.platform_data_api.delete_record', { doctype: 'SMRITI Coupon Campaign', name: name })
       .then(() => {
         toast('Campaign deleted successfully.', 'success');
         loadCoupons();
@@ -1435,7 +1435,7 @@
   // --- Wallet Adjustment posting ---
   function openWalletAdjustmentModal() {
     // Load customer links into adjustment dropdown on open
-    API.call('frappe.client.get_list', {
+    smriti.api.call('smriti_retail_os.api.platform_data_api.get_records', {
       doctype: 'Customer',
       fields: ['name', 'customer_name'],
       order_by: 'customer_name asc',

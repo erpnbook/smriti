@@ -395,7 +395,7 @@ async function init() {
 
 async function loadInvoices() {
     try {
-        const data = await api('frappe.client.get_list', {
+        const data = await api('smriti_retail_os.api.platform_data_api.get_records', {
             doctype: 'Sales Invoice',
             fields: ['name', 'posting_date', 'posting_time', 'customer_name', 'grand_total', 'ewaybill', 'vehicle_no', 'distance', 'status'],
             filters: [['grand_total', '>=', 50000]], // E-way bill legal threshold is ?50,000
@@ -480,7 +480,7 @@ function applyFilters() {
 
 async function loadInvoiceDetails(invoiceId) {
     try {
-        const doc = await api('frappe.client.get', {
+        const doc = await api('smriti_retail_os.api.platform_data_api.get_value', {
             doctype: 'Sales Invoice',
             name: invoiceId
         });

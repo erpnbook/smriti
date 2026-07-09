@@ -34,12 +34,12 @@ class NotificationRepository:
     @staticmethod
     def get_doc(*args, **kwargs):
         """Fetches a document via smriti.documents layer (wraps frappe at boundary)."""
-        return frappe.get_doc(*args, **kwargs)  # smriti-adapter-boundary
+        return smriti.documents.get(*args, **kwargs)  # smriti-adapter-boundary
 
     @staticmethod
     def delete_doc(*args, **kwargs):
         """Wraps frappe.delete_doc."""
-        return frappe.delete_doc(*args, **kwargs)
+        return smriti.documents.delete(*args, **kwargs)
 
     @staticmethod
     def commit(*args, **kwargs):

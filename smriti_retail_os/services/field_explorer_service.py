@@ -18,7 +18,7 @@
 #   1. Field ID Registry: stable abstraction over underlying Frappe field paths.
 #   2. Cache: smriti.cache with 1-hour TTL; auto-invalidated on Custom Field / DocType save.
 #   3. No shadow database: reads Frappe meta live, stores nothing independently.
-#   4. Permission enforcement: frappe.has_permission() on every call.
+#   4. Permission enforcement: smriti.permissions.has_permission() on every call.
 
 import frappe   # frappe.get_meta, frappe.has_permission, frappe.cache, frappe.logger, frappe.get_roles — framework utilities
 import json
@@ -93,7 +93,7 @@ class FieldExplorerService:
         readable = []
         for dt in all_doctypes:
             try:
-                if frappe.has_permission(dt["name"], "read"):
+                if smriti.permissions.has_permission(dt["name"], "read"):
                     readable.append(dt)
             except Exception:
                 pass
@@ -114,7 +114,7 @@ class FieldExplorerService:
         Recurses into child tables when show_child_tables=True.
         Results are cached for CACHE_TTL_SEC.
         """
-        frappe.has_permission(doctype, "read", throw=True)
+        smriti.permissions.has_permission(doctype, "read", throw=True)
 
         cache_key = f"smriti:ufe:fields:{doctype}:{int(show_custom)}:{int(show_hidden)}:{int(show_child_tables)}"
         cached = smriti.cache.get(cache_key)
@@ -141,8 +141,8 @@ class FieldExplorerService:
         Returns all field values for a specific document.
         Blank fields are flagged. Permission enforced at document level.
         """
-        frappe.has_permission(doctype, "read", throw=True)
-        frappe.has_permission(doctype, doc=docname, throw=True)
+        smriti.permissions.has_permission(doctype, "read", throw=True)
+        smriti.permissions.has_permission(doctype, doc=docname, throw=True)
 
         doc = smriti.documents.get_raw(doctype, docname)
         meta = frappe.get_meta(doctype)
@@ -223,7 +223,7 @@ class FieldExplorerService:
 
         for doctype in doctypes:
             try:
-                if not frappe.has_permission(doctype, "read"):
+                if not smriti.permissions.has_permission(doctype, "read"):
                     continue
                 meta = frappe.get_meta(doctype)
                 for field in meta.fields:
@@ -254,7 +254,7 @@ class FieldExplorerService:
         Returns relationship tree of a DocType — linked doctypes and their fields.
         Depth 1 = immediate links only. Depth 2 = one level deeper.
         """
-        frappe.has_permission(doctype, "read", throw=True)
+        smriti.permissions.has_permission(doctype, "read", throw=True)
         return cls._build_tree(doctype, depth, visited=set())
 
     @classmethod
@@ -268,8 +268,8 @@ class FieldExplorerService:
           - Child table:    "Item.barcodes[].barcode"
           - Field IDs:      "ITEM_BARCODE" → resolved via FIELD_ID_REGISTRY
         """
-        frappe.has_permission(doctype, "read", throw=True)
-        frappe.has_permission(doctype, doc=docname, throw=True)
+        smriti.permissions.has_permission(doctype, "read", throw=True)
+        smriti.permissions.has_permission(doctype, doc=docname, throw=True)
 
         doc = smriti.documents.get_raw(doctype, docname)
         resolved = []

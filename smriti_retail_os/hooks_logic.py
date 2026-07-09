@@ -669,7 +669,7 @@ def release_reserved_budget_on_trash(doc, method=None):
     cache_key = f"{session_id}_{coupon_code}"
     
     # Check Redis reservation first
-    reservation = frappe.cache().hget("cge_budget_reservations", cache_key)
+    reservation = smriti.cache().hget("cge_budget_reservations", cache_key)
     if reservation:
         campaign_name = reservation.get("campaign")
         amount = flt(reservation.get("amount"))
@@ -679,4 +679,4 @@ def release_reserved_budget_on_trash(doc, method=None):
             campaign.budget_reserved = max(0.0, flt(campaign.budget_reserved) - amount)
             campaign.save(ignore_permissions=True)
             
-        frappe.cache().hdel("cge_budget_reservations", cache_key)
+        smriti.cache().hdel("cge_budget_reservations", cache_key)

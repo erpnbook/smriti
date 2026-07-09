@@ -173,7 +173,7 @@ def generate_snapshots():
     Uses a Redis lock to prevent concurrent runs.
     """
     lock_key = "smriti:psv:snapshot_generation"
-    cache = frappe.cache()
+    cache = smriti.cache()
     
     if cache.get(lock_key):
         frappe.logger().warning("PSV snapshot generation is already running. Skipping execution.")

@@ -129,7 +129,7 @@ def get_smriti_preferences():
     try:
         # Store SMRITI prefs as User Permission or in a simple key-value via frappe.db
         pref_key = f"smriti_prefs_{user.replace('@', '_').replace('.', '_')}"
-        val = frappe.cache().get_value(pref_key) or {}
+        val = smriti.cache().get_value(pref_key) or {}
         return val
     except Exception:
         return {}
@@ -144,7 +144,7 @@ def save_smriti_preferences(preferences):
         if isinstance(preferences, str):
             preferences = json.loads(preferences)
         pref_key = f"smriti_prefs_{user.replace('@', '_').replace('.', '_')}"
-        frappe.cache().set_value(pref_key, preferences, expires_in_sec=ONE_YEAR_SECONDS)
+        smriti.cache().set_value(pref_key, preferences, expires_in_sec=ONE_YEAR_SECONDS)
         return {"status": "ok"}
     except Exception as e:
         return {"status": "error", "message": str(e)}

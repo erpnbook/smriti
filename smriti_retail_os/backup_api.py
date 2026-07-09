@@ -583,7 +583,7 @@ def restore_backup(file_name):
 
     # Helper function to publish progress
     def publish_progress(message, percent):
-        frappe.publish_realtime(
+        smriti.realtime.publish(
             "smriti.backup.progress",
             {"message": message, "percent": percent},
             user=frappe.session.user

@@ -729,10 +729,7 @@
 
         // 2. Fetch Term Detail via Whitelisted API
         function openTermDetail(termId) {
-            frappe.call({
-                method: "smriti_retail_os.api.dictionary_api.get_term_detail",
-                args: { term_id: termId },
-                callback: function (r) {
+            smriti.api.call("smriti_retail_os.api.dictionary_api.get_term_detail", { term_id: termId }).then(r => {
                     if (r.message) {
                         renderTermDrawer(r.message);
                     }

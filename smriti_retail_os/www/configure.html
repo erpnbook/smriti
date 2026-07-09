@@ -939,7 +939,7 @@ function switchTab(id) {
 function initTopBar() {
   const username = '{{ frappe.session.user if frappe and frappe.session else "Guest" }}';
   if (username && username !== 'Guest') {
-    API.call('frappe.client.get_value', { doctype: 'User', filters: { name: username }, fieldname: ['full_name'] })
+    smriti.api.call('smriti_retail_os.api.platform_data_api.get_value', { doctype: 'User', filters: { name: username }, fieldname: ['full_name'] })
       .then(r => {
         if (r && r.full_name) {
           document.getElementById('topbar-user-name').textContent = r.full_name;
@@ -967,12 +967,12 @@ function loadCompanySettings(company = null) {
   if (!company) return;
 
   // get_company_settings now returns Company-level fields too, so we need
-  // only 4 parallel calls instead of 6 (no frappe.client.get_value needed).
+  // only 4 parallel calls instead of 6 (no platform_data_api.get_value needed).
   Promise.all([
     API.call('smriti_retail_os.company_api.get_company_settings', { company }),
-    API.call('frappe.client.get_list', { doctype: 'Warehouse', filters: { company, is_group: 0, disabled: 0 }, fields: ['name', 'warehouse_name'], limit: 1000 }),
-    API.call('frappe.client.get_list', { doctype: 'POS Profile', filters: { company, disabled: 0 }, fields: ['name'], limit: 1000 }),
-    API.call('frappe.client.get_list', { doctype: 'Sales Taxes and Charges Template', filters: { company }, fields: ['name'], limit: 1000 }),
+    smriti.api.call('smriti_retail_os.api.platform_data_api.get_records', { doctype: 'Warehouse', filters: { company, is_group: 0, disabled: 0 }, fields: ['name', 'warehouse_name'], limit: 1000 }),
+    smriti.api.call('smriti_retail_os.api.platform_data_api.get_records', { doctype: 'POS Profile', filters: { company, disabled: 0 }, fields: ['name'], limit: 1000 }),
+    smriti.api.call('smriti_retail_os.api.platform_data_api.get_records', { doctype: 'Sales Taxes and Charges Template', filters: { company }, fields: ['name'], limit: 1000 }),
     API.call('smriti_retail_os.company_api.get_store_address', { company })
   ]).then(([settings, warehouses, posProfiles, taxTemplates, address]) => {
     currentCompanySettings = settings || {};
@@ -1004,7 +1004,7 @@ function loadCompanySettings(company = null) {
     const walkInVal = settings.default_walk_in_customer || '';
     document.getElementById('cfg-default-walk-in-customer').value = walkInVal;
     if (walkInVal) {
-      API.call('frappe.client.get_value', {
+      smriti.api.call('smriti_retail_os.api.platform_data_api.get_value', {
         doctype: 'Customer', filters: { name: walkInVal }, fieldname: ['customer_name']
       }).then(r => {
         document.getElementById('cfg-walk-in-customer-display').value = (r && r.customer_name) || walkInVal;
@@ -1211,7 +1211,7 @@ function searchWalkInCustomer(query) {
     return;
   }
   _walkInTimer = setTimeout(() => {
-    API.call('frappe.client.get_list', {
+    smriti.api.call('smriti_retail_os.api.platform_data_api.get_records', {
       doctype: 'Customer',
       filters: [['customer_name', 'like', `%${query}%`]],
       fields: ['name', 'customer_name', 'mobile_no'],
@@ -1275,7 +1275,7 @@ function saveCompanySettings() {
   btn.innerHTML = '<span class="spinner"></span> Saving…';
 
   // Settings payload now includes custom_smriti_store_type so the backend
-  // can write it to the Company DocType — no separate frappe.client.set_value needed.
+  // can write it to the Company DocType — no separate platform_data_api.set_value needed.
   const settings = {
     custom_smriti_store_type: storeType,
       custom_business_type: businessType,

@@ -431,9 +431,7 @@
         btn.disabled = true;
         btn.classList.add("loading");
 
-        frappe.call({
-            method: "smriti_retail_os.navigation.navigation_service.run_navigation_health_check",
-            callback: function(r) {
+        smriti.api.call("smriti_retail_os.navigation.navigation_service.run_navigation_health_check").then(data => {
                 btn.disabled = false;
                 btn.classList.remove("loading");
 
@@ -535,9 +533,7 @@
 
     // ── Load Trend from History ──
     function loadTrend() {
-        frappe.call({
-            method: "smriti_retail_os.navigation.navigation_service.get_navigation_health_history",
-            callback: function(r) {
+        smriti.api.call("smriti_retail_os.navigation.navigation_service.get_navigation_health_history").then(data => {
                 if (!r || !r.message || !r.message.length) return;
                 renderTrend(r.message);
             }

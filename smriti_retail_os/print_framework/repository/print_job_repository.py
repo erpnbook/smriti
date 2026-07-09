@@ -17,7 +17,7 @@ class PrintJobRepository:
 
     @staticmethod
     def get_doc(*args, **kwargs):
-        return frappe.get_doc(*args, **kwargs)  # smriti-adapter-boundary
+        return smriti.documents.get(*args, **kwargs)  # smriti-adapter-boundary
 
     @staticmethod
     def new_doc(*args, **kwargs):
@@ -33,7 +33,7 @@ class PrintJobRepository:
 
     @staticmethod
     def delete_doc(*args, **kwargs):
-        return frappe.delete_doc(*args, **kwargs)
+        return smriti.documents.delete(*args, **kwargs)
 
     @staticmethod
     def commit(*args, **kwargs):

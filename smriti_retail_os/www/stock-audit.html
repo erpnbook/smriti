@@ -325,7 +325,7 @@ async function loadCompanyOptions() {
 
 async function loadPsaOptions(company) {
     try {
-        const psas = await api('frappe.client.get_list', {
+        const psas = await api('smriti_retail_os.api.platform_data_api.get_records', {
             doctype: 'SMRITI Party Stock Account',
             filters: { company: company, active: 1 },
             fields: ['name', 'customer', 'location_name']
@@ -471,7 +471,7 @@ async function addItemToAuditGrid(itemCode) {
     // Fetch system balance for this item
     toast('Fetching system balance...', 'info');
     try {
-        const doc = await api('frappe.client.get_value', {
+        const doc = await api('smriti_retail_os.api.platform_data_api.get_value', {
             doctype: 'Item',
             filters: { name: itemCode },
             fieldname: 'item_code'

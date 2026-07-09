@@ -32,7 +32,7 @@ def get_twin_status(party_stock_account, item_code):
     
     # 1. Try Redis cache lookup first
     try:
-        cached_data = frappe.cache().get_value(redis_key)
+        cached_data = smriti.cache().get_value(redis_key)
         if cached_data:
             # Check SLA freshness
             last_recalc = get_datetime(cached_data.get("last_recalculated"))
@@ -90,7 +90,7 @@ def get_twin_status(party_stock_account, item_code):
             
         # Seed cache
         try:
-            frappe.cache().set_value(redis_key, twin_dict, expires_in_sec=3600)
+            smriti.cache().set_value(redis_key, twin_dict, expires_in_sec=3600)
         except Exception:
             smriti.errors.log_error(frappe.get_traceback(), "SMRITI: Exception in api/pdt_api.py")
             

@@ -69,14 +69,14 @@ def enqueue_print_job(template_name, printer_ip, printer_port, payload,
         smriti.errors.log_error(f"Error logging print job queued: {str(e)}")
 
     # Realtime notification
-    frappe.publish_realtime(
+    smriti.realtime.publish(
         "smriti.barcode.print_status",
         {"event_version": 1, "job_id": job_id, "status": "Queued"},
         user=doc.created_by
     )
 
     # Background worker — path stays at barcode_api for backward compat with hooks
-    frappe.enqueue(
+    smriti.tasks.enqueue(
         "smriti_retail_os.barcode_api._process_print_job",
         print_job_id=job_id,
         queue="barcode",
@@ -123,7 +123,7 @@ def _process_print_job(job_id=None, print_job_id=None):
         f"Sending payload to {doc.printer_ip}:{doc.printer_port}"
     )
 
-    frappe.publish_realtime(
+    smriti.realtime.publish(
         "smriti.barcode.print_status",
         {"event_version": 1, "job_id": job_id, "status": "Sending"},
         user=doc.created_by or "Administrator"
@@ -163,7 +163,7 @@ def _process_print_job(job_id=None, print_job_id=None):
         doc.save(ignore_permissions=True)
         smriti.db.commit()
 
-        frappe.publish_realtime(
+        smriti.realtime.publish(
             "smriti.barcode.print_status",
             {"event_version": 1, "job_id": job_id, "status": "Success"},
             user=doc.created_by or "Administrator"
@@ -194,7 +194,7 @@ def _process_print_job(job_id=None, print_job_id=None):
             message=f"Printer: {doc.printer_ip}:{doc.printer_port}\nTemplate: {doc.template_name}\nError: {str(e)}"
         )
 
-        frappe.publish_realtime(
+        smriti.realtime.publish(
             "smriti.barcode.print_status",
             {"event_version": 1, "job_id": job_id, "status": "Failed"},
             user=doc.created_by or "Administrator"
@@ -277,7 +277,7 @@ def cleanup_old_print_jobs():
                     os.remove(prn_path)
                 except Exception:
                     pass
-            frappe.delete_doc("SMRITI Print Job", job.name, ignore_permissions=True)
+            smriti.documents.delete("SMRITI Print Job", job.name, ignore_permissions=True)
             success_deleted += 1
 
         failed_jobs = smriti.db.get_list(
@@ -293,7 +293,7 @@ def cleanup_old_print_jobs():
                     os.remove(prn_path)
                 except Exception:
                     pass
-            frappe.delete_doc("SMRITI Print Job", job.name, ignore_permissions=True)
+            smriti.documents.delete("SMRITI Print Job", job.name, ignore_permissions=True)
             failed_deleted += 1
 
         if success_deleted or failed_deleted:

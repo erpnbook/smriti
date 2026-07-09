@@ -933,7 +933,7 @@ async function submitOnboardCustodian() {
         // We set the custodian name (since the stub takes email only, we update name manually or key recovery takes email)
         // Wait, send_verification_email inserts or updates. Let's make sure custodian_name is saved!
         // Let's run a quick call to update the custodian_name directly:
-        await api('frappe.client.set_value', {
+        await api('smriti_retail_os.api.platform_data_api.set_value', {
             doctype: 'SMRITI Key Custodian',
             name: email,
             fieldname: 'custodian_name',

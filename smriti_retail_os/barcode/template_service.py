@@ -278,7 +278,7 @@ def delete_print_template(name_id):
     if not smriti.db.exists("DocType", "SMRITI Print Template"):
         frappe.throw(_("DocType SMRITI Print Template not found."))
     if smriti.db.exists("SMRITI Print Template", name_id):
-        frappe.delete_doc("SMRITI Print Template", name_id, ignore_permissions=True)
+        smriti.documents.delete("SMRITI Print Template", name_id, ignore_permissions=True)
         smriti.db.commit()
     return get_print_templates()
 

@@ -726,7 +726,7 @@
 
   function loadSelectDropdowns() {
     // Populate Companies
-    API.call('frappe.client.get_list', { doctype: 'Company', fields: ['name'] })
+    smriti.api.call('smriti_retail_os.api.platform_data_api.get_records', { doctype: 'Company', fields: ['name'] })
       .then(list => {
         cachedLists.companies = list || [];
         populateSelect('dash-company', cachedLists.companies);
@@ -746,7 +746,7 @@
       });
 
     // Populate Fiscal Years
-    API.call('frappe.client.get_list', { doctype: 'Fiscal Year', fields: ['name'], order_by: 'year_start_date desc' })
+    smriti.api.call('smriti_retail_os.api.platform_data_api.get_records', { doctype: 'Fiscal Year', fields: ['name'], order_by: 'year_start_date desc' })
       .then(list => {
         cachedLists.fiscalYears = list || [];
         populateSelect('dash-fiscal', cachedLists.fiscalYears);
@@ -754,7 +754,7 @@
       });
 
     // Populate Employees
-    API.call('frappe.client.get_list', { doctype: 'Employee', filters: { status: 'Active' }, fields: ['name', 'employee_name'], limit: 500 })
+    smriti.api.call('smriti_retail_os.api.platform_data_api.get_records', { doctype: 'Employee', filters: { status: 'Active' }, fields: ['name', 'employee_name'], limit: 500 })
       .then(list => {
         cachedLists.employees = list.map(e => ({ name: e.name, label: `${e.name} - ${e.employee_name}` }));
         populateSelect('target-employee', cachedLists.employees, true);
@@ -764,14 +764,14 @@
       });
 
     // Populate Customers
-    API.call('frappe.client.get_list', { doctype: 'Customer', fields: ['name', 'customer_name'], limit: 500 })
+    smriti.api.call('smriti_retail_os.api.platform_data_api.get_records', { doctype: 'Customer', fields: ['name', 'customer_name'], limit: 500 })
       .then(list => {
         cachedLists.customers = list.map(c => ({ name: c.name, label: `${c.name} - ${c.customer_name}` }));
         populateSelect('ownership-customer', cachedLists.customers, true);
       });
 
     // Populate Stores
-    API.call('frappe.client.get_list', { doctype: 'SMRITI Store', fields: ['name', 'store_name'] })
+    smriti.api.call('smriti_retail_os.api.platform_data_api.get_records', { doctype: 'SMRITI Store', fields: ['name', 'store_name'] })
       .then(list => {
         cachedLists.stores = [{name: '', label: 'All Stores'}].concat(list.map(s => ({ name: s.name, label: s.store_name })));
         populateSelect('dash-store', cachedLists.stores, true);
@@ -884,7 +884,7 @@
 
   // --- Targets Tab ---
   function loadTargets() {
-    API.call('frappe.client.get_list', {
+    smriti.api.call('smriti_retail_os.api.platform_data_api.get_records', {
       doctype: 'SMRITI Sales Target',
       fields: ['name', 'employee', 'fiscal_year', 'month', 'target_amount', 'target_qty', 'company'],
       order_by: 'fiscal_year desc, month desc',
@@ -923,7 +923,7 @@
   }
 
   function editTarget(name) {
-    API.call('frappe.client.get', { doctype: 'SMRITI Sales Target', name: name })
+    smriti.api.call('smriti_retail_os.api.platform_data_api.get_value', { doctype: 'SMRITI Sales Target', name: name })
       .then(doc => {
         document.getElementById('target-name').value = doc.name;
         document.getElementById('target-employee').value = doc.employee;
@@ -962,7 +962,7 @@
 
   // --- Customer Ownership Tab ---
   function loadOwnerships() {
-    API.call('frappe.client.get_list', {
+    smriti.api.call('smriti_retail_os.api.platform_data_api.get_records', {
       doctype: 'SMRITI Customer Ownership',
       fields: ['name', 'customer', 'primary_owner', 'secondary_owner', 'start_date', 'end_date', 'is_active', 'company'],
       order_by: 'start_date desc',
@@ -1006,7 +1006,7 @@
   }
 
   function editOwnership(name) {
-    API.call('frappe.client.get', { doctype: 'SMRITI Customer Ownership', name: name })
+    smriti.api.call('smriti_retail_os.api.platform_data_api.get_value', { doctype: 'SMRITI Customer Ownership', name: name })
       .then(doc => {
         document.getElementById('ownership-name').value = doc.name;
         document.getElementById('ownership-customer').value = doc.customer;

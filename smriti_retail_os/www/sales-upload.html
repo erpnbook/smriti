@@ -284,7 +284,7 @@ async function loadCompanyOptions() {
 
 async function loadPsaOptions(company) {
     try {
-        const psas = await api('frappe.client.get_list', {
+        const psas = await api('smriti_retail_os.api.platform_data_api.get_records', {
             doctype: 'SMRITI Party Stock Account',
             filters: { company: company, active: 1 },
             fields: ['name', 'customer', 'location_name']
@@ -437,7 +437,7 @@ async function cancelUpload(name) {
     if (!confirm('Are you sure you want to reverse this upload? This will restore the stock balances.')) return;
     try {
         toast('Reversing sales upload...', 'info');
-        await api('frappe.client.cancel', { doctype: 'SMRITI Party Sales Upload', name: name });
+        await api('smriti_retail_os.api.platform_data_api.cancel_record', { doctype: 'SMRITI Party Sales Upload', name: name });
         toast('Upload successfully reversed!', 'success');
         await loadUploadsList();
     } catch(e) {

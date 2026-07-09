@@ -779,7 +779,7 @@
   let selectedCustomerData = null;
 
   function loadDirectory() {
-    API.call('frappe.client.get_list', {
+    smriti.api.call('smriti_retail_os.api.platform_data_api.get_records', {
       doctype: 'Customer',
       fields: ['name', 'customer_name', 'mobile_no'],
       limit: 100
@@ -1034,21 +1034,21 @@
   // --- Walk-In Intelligence ---
   function loadWalkIns() {
     // Load stores
-    API.call('frappe.client.get_list', { doctype: 'Warehouse', filters: { is_group: 0 }, fields: ['name'] })
+    smriti.api.call('smriti_retail_os.api.platform_data_api.get_records', { doctype: 'Warehouse', filters: { is_group: 0 }, fields: ['name'] })
     .then(list => {
       const select = document.getElementById('walk-store');
       select.innerHTML = list.map(w => `<option value="${w.name}">${w.name}</option>`).join('');
     });
 
     // Load executives
-    API.call('frappe.client.get_list', { doctype: 'Employee', filters: { status: 'Active' }, fields: ['name', 'employee_name'] })
+    smriti.api.call('smriti_retail_os.api.platform_data_api.get_records', { doctype: 'Employee', filters: { status: 'Active' }, fields: ['name', 'employee_name'] })
     .then(list => {
       const select = document.getElementById('walk-executive');
       select.innerHTML = `<option value="">Select Executive</option>` + list.map(e => `<option value="${e.name}">${e.employee_name} (${e.name})</option>`).join('');
     });
 
     // Load customers
-    API.call('frappe.client.get_list', { doctype: 'Customer', fields: ['name', 'customer_name'] })
+    smriti.api.call('smriti_retail_os.api.platform_data_api.get_records', { doctype: 'Customer', fields: ['name', 'customer_name'] })
     .then(list => {
       const select = document.getElementById('walk-customer');
       select.innerHTML = `<option value="">Anonymous Walk-In</option>` + list.map(c => `<option value="${c.name}">${c.customer_name} (${c.name})</option>`).join('');
@@ -1058,7 +1058,7 @@
   }
 
   function loadActiveWalkInsTable() {
-    API.call('frappe.client.get_list', {
+    smriti.api.call('smriti_retail_os.api.platform_data_api.get_records', {
       doctype: 'SMRITI Walk In Visit',
       filters: { visit_date: today() },
       fields: ['name', 'visit_time', 'executive', 'customer', 'customer_phone', 'status'],
@@ -1173,7 +1173,7 @@
   // --- Funnel Analytics ---
   function loadAnalytics() {
     // Load stores list
-    API.call('frappe.client.get_list', { doctype: 'Warehouse', filters: { is_group: 0 }, fields: ['name'] })
+    smriti.api.call('smriti_retail_os.api.platform_data_api.get_records', { doctype: 'Warehouse', filters: { is_group: 0 }, fields: ['name'] })
     .then(list => {
       const select = document.getElementById('analytics-store');
       if (!select.innerHTML) {
@@ -1207,7 +1207,7 @@
   }
 
   function loadExitReasonsTable(store, date) {
-    API.call('frappe.client.get_list', {
+    smriti.api.call('smriti_retail_os.api.platform_data_api.get_records', {
       doctype: 'SMRITI Walk In Visit',
       filters: { visit_date: date, store: store, status: 'Exited' },
       fields: ['reason_for_no_purchase'],
@@ -1242,21 +1242,21 @@
   // --- Log Interactions ---
   function loadInteractionsDropdowns() {
     // Load customers
-    API.call('frappe.client.get_list', { doctype: 'Customer', fields: ['name', 'customer_name'] })
+    smriti.api.call('smriti_retail_os.api.platform_data_api.get_records', { doctype: 'Customer', fields: ['name', 'customer_name'] })
     .then(list => {
       const select = document.getElementById('inte-customer');
       select.innerHTML = list.map(c => `<option value="${c.name}">${c.customer_name} (${c.name})</option>`).join('');
     });
 
     // Load employees
-    API.call('frappe.client.get_list', { doctype: 'Employee', filters: { status: 'Active' }, fields: ['name', 'employee_name'] })
+    smriti.api.call('smriti_retail_os.api.platform_data_api.get_records', { doctype: 'Employee', filters: { status: 'Active' }, fields: ['name', 'employee_name'] })
     .then(list => {
       const select = document.getElementById('inte-employee');
       select.innerHTML = list.map(e => `<option value="${e.name}">${e.employee_name} (${e.name})</option>`).join('');
     });
 
     // Load stores
-    API.call('frappe.client.get_list', { doctype: 'Warehouse', filters: { is_group: 0 }, fields: ['name'] })
+    smriti.api.call('smriti_retail_os.api.platform_data_api.get_records', { doctype: 'Warehouse', filters: { is_group: 0 }, fields: ['name'] })
     .then(list => {
       const select = document.getElementById('inte-store');
       select.innerHTML = list.map(w => `<option value="${w.name}">${w.name}</option>`).join('');

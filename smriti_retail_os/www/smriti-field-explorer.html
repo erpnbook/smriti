@@ -999,11 +999,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 // ── DocType List ──────────────────────────────────────────────────────────────
 async function loadDocTypeList() {
     try {
-        const res = await frappe.call({
-            method: 'smriti_retail_os.api.field_explorer_api.get_doctype_list',
-            freeze: false,
-        });
-        const data = res.message || {};
+        const res = await smriti.api.call('smriti_retail_os.api.field_explorer_api.get_doctype_list');
+        const data = res || {};
         const modules = data.modules || {};
         UFE.allDocTypes = modules;
 
@@ -1106,20 +1103,16 @@ async function loadFields() {
     const search = document.getElementById('fields-search').value.trim();
 
     try {
-        const res = await frappe.call({
-            method: 'smriti_retail_os.api.field_explorer_api.get_doctype_fields',
-            args: {
+        const res = await smriti.api.call('smriti_retail_os.api.field_explorer_api.get_doctype_fields', {
                 doctype:          dt,
                 show_standard:    UFE.filters.standard,
                 show_custom:      UFE.filters.custom,
                 show_hidden:      UFE.filters.hidden,
                 show_child_tables: UFE.filters.child,
                 search:           search || null,
-            },
-            freeze: false,
-        });
+            });
 
-        const data = res.message || {};
+        const data = res || {};
         document.getElementById('stat-total').innerHTML =
             `<span>${data.total_fields || 0}</span> fields`;
 
@@ -1198,13 +1191,9 @@ async function loadDocumentData() {
     content.innerHTML = '<div class="state-box"><div class="spinner"></div></div>';
 
     try {
-        const res = await frappe.call({
-            method: 'smriti_retail_os.api.field_explorer_api.get_document_data',
-            args: { doctype: dt, docname: docname },
-            freeze: false,
-        });
+        const res = await smriti.api.call('smriti_retail_os.api.field_explorer_api.get_document_data', { doctype: dt, docname: docname });
 
-        const data = res.message || {};
+        const data = res || {};
         content.innerHTML = '';
 
         if (data.blank_count > 0) {
@@ -1288,13 +1277,9 @@ async function runCrossSearch() {
     content.innerHTML = '<div class="state-box"><div class="spinner"></div></div>';
 
     try {
-        const res = await frappe.call({
-            method: 'smriti_retail_os.api.field_explorer_api.search_fields',
-            args: { query: query },
-            freeze: false,
-        });
+        const res = await smriti.api.call('smriti_retail_os.api.field_explorer_api.search_fields', { query: query });
 
-        const results = res.message || [];
+        const results = res || [];
         document.getElementById('xsearch-count').innerHTML = `<span>${results.length}</span> results`;
 
         if (results.length === 0) {
@@ -1345,13 +1330,9 @@ async function runPreview() {
     content.innerHTML = '<div class="state-box"><div class="spinner"></div></div>';
 
     try {
-        const res = await frappe.call({
-            method: 'smriti_retail_os.api.field_explorer_api.resolve_label_preview',
-            args: { doctype: dt, docname: docname, field_paths: paths },
-            freeze: false,
-        });
+        const res = await smriti.api.call('smriti_retail_os.api.field_explorer_api.resolve_label_preview', { doctype: dt, docname: docname, field_paths: paths });
 
-        const data = res.message || {};
+        const data = res || {};
         content.innerHTML = '';
 
         if (data.warning) {
@@ -1398,13 +1379,9 @@ async function loadRelTree() {
     content.innerHTML = '<div class="state-box"><div class="spinner"></div></div>';
 
     try {
-        const res = await frappe.call({
-            method: 'smriti_retail_os.api.field_explorer_api.get_doctype_tree',
-            args: { doctype: dt, depth: depth },
-            freeze: false,
-        });
+        const res = await smriti.api.call('smriti_retail_os.api.field_explorer_api.get_doctype_tree', { doctype: dt, depth: depth });
 
-        const data = res.message || {};
+        const data = res || {};
         content.innerHTML = '';
         content.appendChild(renderTreeNode(data, true));
 
@@ -1447,11 +1424,8 @@ function renderTreeNode(node, isRoot) {
 // ── Barcode Mode Tab ──────────────────────────────────────────────────────────
 async function loadFieldIdRegistry() {
     try {
-        const res = await frappe.call({
-            method: 'smriti_retail_os.api.field_explorer_api.get_field_id_registry',
-            freeze: false,
-        });
-        UFE.fieldIdRegistry = res.message || [];
+        const res = await smriti.api.call('smriti_retail_os.api.field_explorer_api.get_field_id_registry');
+        UFE.fieldIdRegistry = res || [];
 
         // Populate DocType filter dropdown
         const dtFilter = document.getElementById('barcode-doctype-filter');
@@ -1566,13 +1540,9 @@ async function exportFieldCatalog() {
     if (!dt) { showToast('Select a DocType first.'); return; }
 
     try {
-        const res = await frappe.call({
-            method: 'smriti_retail_os.api.field_explorer_api.get_doctype_fields',
-            args: { doctype: dt, show_standard: true, show_custom: true, show_hidden: true, show_child_tables: true },
-            freeze: false,
-        });
+        const res = await smriti.api.call('smriti_retail_os.api.field_explorer_api.get_doctype_fields', { doctype: dt, show_standard: true, show_custom: true, show_hidden: true, show_child_tables: true });
 
-        const data = res.message || {};
+        const data = res || {};
         const rows = [['Section', 'Label', 'Field Name', 'Type', 'Mandatory', 'Custom', 'Path']];
 
         (data.sections || []).forEach(s => {

@@ -356,7 +356,7 @@ def _validate_manager_pin(pin, action_type, reference_name=None):
     """
     # Redis rate limit check
     rate_limit_key = f"smriti_pin_attempts:{frappe.session.user}"
-    attempts = frappe.cache().get(rate_limit_key)
+    attempts = smriti.cache().get(rate_limit_key)
     if attempts and int(attempts) >= 5:
         frappe.throw(_("Too many failed PIN attempts. Please try again in 10 minutes."), frappe.PermissionError)
 
@@ -391,7 +391,7 @@ def _validate_manager_pin(pin, action_type, reference_name=None):
 
     if authenticated and auth_manager:
         # Clear attempts on success
-        frappe.cache().delete(rate_limit_key)
+        smriti.cache().delete(rate_limit_key)
         if reference_name:
             smriti.documents.new("Comment").update({
                 "comment_type": "Comment",
@@ -405,9 +405,9 @@ def _validate_manager_pin(pin, action_type, reference_name=None):
 
     # Increment failed attempts
     if attempts:
-        frappe.cache().incr(rate_limit_key)
+        smriti.cache().incr(rate_limit_key)
     else:
-        frappe.cache().set(rate_limit_key, 1, ex=600)
+        smriti.cache().set(rate_limit_key, 1, ex=600)
 
     # Log failed PIN attempt to Error Log
     smriti.errors.log_error(

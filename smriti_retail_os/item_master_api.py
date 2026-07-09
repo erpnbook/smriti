@@ -1339,7 +1339,7 @@ def delete_size_variant(variant_code):
         
     smriti.db.delete("Item Barcode", {"parent": variant_code})
     smriti.db.delete("Item Price", {"item_code": variant_code})
-    frappe.delete_doc("Item", variant_code, ignore_missing=True, force=True)
+    smriti.documents.delete("Item", variant_code, ignore_missing=True, force=True)
     smriti.db.commit()
     return {"success": True, "message": frappe._("Size variant {0} deleted successfully.").format(variant_code)}
 
@@ -1366,7 +1366,7 @@ def delete_style_and_variants(style_code):
         smriti.db.delete("Item Barcode", {"parent": variant})
         # Delete the variant item itself
         # reviewed-ignore-permissions: bulk variant removal, gated by SMRITI Store Manager or System Manager roles
-        frappe.delete_doc("Item", variant, ignore_permissions=True, force=True)
+        smriti.documents.delete("Item", variant, ignore_permissions=True, force=True)
         deleted_variants += 1
 
     # Delete prices for the template itself
@@ -1375,7 +1375,7 @@ def delete_style_and_variants(style_code):
     smriti.db.delete("Item Barcode", {"parent": style_code})
     # Delete the template item
     # reviewed-ignore-permissions: bulk variant removal, gated by SMRITI Store Manager or System Manager roles
-    frappe.delete_doc("Item", style_code, ignore_permissions=True, force=True)
+    smriti.documents.delete("Item", style_code, ignore_permissions=True, force=True)
     smriti.db.commit()
 
     return {

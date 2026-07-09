@@ -55,7 +55,7 @@ GUARDS ROADMAP
   Guard 3 (planned):   UI Vocabulary Guard  — no DocType/Workspace/Repository in user-facing text
   Guard 4 (planned):   Brand Guard          — no 'ERPNext' in page titles or footers
   Guard 5 (planned):   UX Guard             — mandatory Search/Save/Cancel/Breadcrumb on every screen
-  Guard 6 (this file): UI Persistence Boundary — no frappe.* in www/ JS/HTML (WARNING MODE)
+  Guard 6 (this file): UI Persistence Boundary — no frappe.* in www/ JS/HTML (ERROR MODE)
                         Flags: frappe.call, frappe.client, frappe.show_alert,
                                frappe.msgprint, frappe.set_route, frappe.new_doc
                         Compliant pattern: smriti.api.call(), smriti.notify.*, smriti.navigation.*
@@ -265,10 +265,10 @@ def main():
     # ── Report mode ───────────────────────────────────────────────────────
     if args.report:
         print_report(current, baseline)
-        # Guard 6 runs in all modes (warning only — never fails the build)
+        # Guard 6 runs in all modes — ERROR MODE: fails the build on violations
         g6_violations = guard_6_ui_persistence()
-        print_guard6_report(g6_violations)
-        return 0
+        g6_failed = print_guard6_report(g6_violations)
+        return 1 if g6_failed else 0
 
     # ── Strict mode ───────────────────────────────────────────────────────
     if args.strict:
@@ -324,15 +324,15 @@ def main():
     else:
         print("[OK] No new architecture boundary violations.")
 
-    # Guard 6 always runs (warning mode — never fails the build)
+    # Guard 6 always runs — ERROR MODE: fails the build on violations
     g6_violations = guard_6_ui_persistence()
-    print_guard6_report(g6_violations)
-    return 0
+    g6_failed = print_guard6_report(g6_violations)
+    return 1 if g6_failed else 0
 
 
-# ── Guard 6 — UI Persistence Boundary (Warning Mode) ─────────────────────────
+# ── Guard 6 — UI Persistence Boundary (Error Mode) ───────────────────────────
 # Flags any www/ HTML or JS file that calls frappe.* directly instead of smriti.*
-# Status: WARNING MODE — reports violations but does not fail the build.
+# Status: ERROR MODE — violations WILL fail the build.
 # Transition to ERROR MODE once all www/ pages are migrated to smriti.api.*
 
 GUARD6_JS_PATTERNS = [
@@ -392,9 +392,10 @@ def guard_6_ui_persistence() -> list:
     # ── Scan 2: Python files with frappe.* ORM calls outside core/platform/ ──
     for path in ROOT.rglob("*.py"):
         rel_str = str(path.relative_to(ROOT)).replace("\\", "/")
-        # Exempt core/platform itself and tests
+        # Exempt core/platform itself, tests, and platform_data_api (bridge layer)
         if "core/platform" in rel_str or rel_str.startswith("tests/") or \
-                "/tests/" in rel_str or path.name.startswith("test_"):
+                "/tests/" in rel_str or path.name.startswith("test_") or \
+                path.name == "platform_data_api.py":
             continue
         try:
             lines = path.read_text(errors="ignore").splitlines()
@@ -412,24 +413,24 @@ def guard_6_ui_persistence() -> list:
     return violations
 
 
-def print_guard6_report(violations: list) -> None:
-    """Print a formatted Guard 6 warning report."""
+def print_guard6_report(violations: list) -> bool:
+    """Print a formatted Guard 6 report. Returns True if violations found."""
     print()
     print("=" * 64)
-    print("  Guard 6 — UI Persistence Boundary (WARNING MODE)")
+    print("  Guard 6 — UI Persistence Boundary (ERROR MODE)")
     print("=" * 64)
     if not violations:
         print("  [OK] No Guard 6 violations found.")
         print("       All scanned files use smriti.* APIs correctly.")
-        return
+        return False
 
     # Group by file
     by_file: dict = {}
     for (fpath, lineno, violation, hint) in violations:
         by_file.setdefault(fpath, []).append((lineno, violation, hint))
 
-    print(f"  WARNING: {len(violations)} violation(s) in {len(by_file)} file(s).")
-    print(f"  Status:  Warning mode — build NOT failed.")
+    print(f"  ERROR: {len(violations)} violation(s) in {len(by_file)} file(s).")
+    print(f"  Status:  Error mode — build WILL FAIL.")
     print(f"  Action:  Replace frappe.* calls with smriti.* equivalents.")
     print(f"  Guide:   public/js/smriti_core.js")
     print()
@@ -448,8 +449,9 @@ def print_guard6_report(violations: list) -> None:
                 print(f"  ... and {remaining} more file(s) not shown.")
             break
     print()
-    print("  Migration Backlog tracked in: ARCHITECTURE_MIGRATION_BACKLOG.md")
-    print("  Once all violations are cleared, switch Guard 6 to ERROR MODE.")
+    print("  Migration guide: see walkthrough.md from P5 sprint.")
+    print("  Platform bridge: api/platform_data_api.py")
+    return True
 
 
 if __name__ == "__main__":

@@ -556,13 +556,13 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
     if on_credit and invoice_name and smriti.db.exists("POS Invoice", invoice_name):
         try:
             # reviewed-ignore-permissions: no role restriction for standard sales; gated by manager PIN only when discount override is requested
-            frappe.delete_doc("POS Invoice", invoice_name, ignore_permissions=True)
+            smriti.documents.delete("POS Invoice", invoice_name, ignore_permissions=True)
         except Exception as del_ex:
             smriti.errors.log_error(f"[SMRITI] Could not delete recalled POS Invoice {invoice_name}: {del_ex}")
     
     # REL-02: Move non-critical post-billing tasks to background workers
     # This prevents UI blocking and DB lock contention
-    frappe.enqueue(
+    smriti.tasks.enqueue(
         "smriti_retail_os.billing_api.process_post_billing_tasks",
         invoice_name=invoice_doc.name,
         doctype=doctype,
@@ -801,7 +801,7 @@ def validate_manager_override(pin, action_type, invoice_name=None):
 
     # Redis rate limit check
     rate_limit_key = f"smriti_pin_attempts:{frappe.session.user}"
-    attempts = frappe.cache().get(rate_limit_key)
+    attempts = smriti.cache().get(rate_limit_key)
     if attempts and int(attempts) >= 5:
         frappe.throw(_("Too many failed PIN attempts. Please try again in 10 minutes."), frappe.PermissionError)
 
@@ -841,7 +841,7 @@ def validate_manager_override(pin, action_type, invoice_name=None):
 
     if authenticated and auth_manager:
         # Clear attempts on success
-        frappe.cache().delete(rate_limit_key)
+        smriti.cache().delete(rate_limit_key)
         # Log override action using standard Comment
         if invoice_name:
             smriti.documents.new("Comment").update({
@@ -857,9 +857,9 @@ def validate_manager_override(pin, action_type, invoice_name=None):
 
     # Increment failed attempts
     if attempts:
-        frappe.cache().incr(rate_limit_key)
+        smriti.cache().incr(rate_limit_key)
     else:
-        frappe.cache().set(rate_limit_key, 1, ex=600)
+        smriti.cache().set(rate_limit_key, 1, ex=600)
 
     # Log failed PIN attempt to Error Log
     smriti.errors.log_error(
@@ -1197,7 +1197,7 @@ def delete_sales_return(name, manager_pin=None):
         doc.flags.ignore_permissions = True
         if doc.docstatus == 0:
             # reviewed-ignore-permissions: gated by SMRITI Store Manager/System Manager role, or a valid manager PIN override
-            frappe.delete_doc("Sales Invoice", name, ignore_permissions=True)
+            smriti.documents.delete("Sales Invoice", name, ignore_permissions=True)
             message = _("Draft Sales Return {0} deleted successfully.").format(name)
         elif doc.docstatus == 1:
             doc.cancel()

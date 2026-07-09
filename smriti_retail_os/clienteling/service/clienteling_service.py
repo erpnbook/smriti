@@ -33,7 +33,7 @@ def mark_dirty(customer, source=None, source_document=None):
             })
             
     # Enqueue background job to calculate asynchronously
-    frappe.enqueue(
+    smriti.tasks.enqueue(
         "smriti_retail_os.clienteling.service.clienteling_service.regenerate_customer_data",
         queue="default",
         timeout=300,

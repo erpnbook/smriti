@@ -736,7 +736,7 @@ def delete_brand(brand_name):
     if linked:
         frappe.throw(_(f"Cannot delete brand '{brand_name}': {linked} item(s) are linked to it."))
     # reviewed-ignore-permissions: catalog brand deletion, gated by SMRITI Store Manager or System Manager roles
-    frappe.delete_doc("Brand", brand_name, ignore_permissions=True)
+    smriti.documents.delete("Brand", brand_name, ignore_permissions=True)
     smriti.db.commit()
     return {"success": True}
 

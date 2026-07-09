@@ -6501,13 +6501,13 @@ const SLIDES_CGE = [
                 <p class="text-slate-300 text-sm leading-relaxed">The frontend must never insert or update Frappe documents directly. Always instantiate and manipulate records inside whitelisted Python service wrappers to decouple the UI from backend schema changes.</p>
                 <div class="p-3 bg-red-950/20 border border-red-500/20 rounded-lg font-mono text-[10px] text-red-400">
                   # AVOID DIRECT INSERT FROM FRONTEND:<br>
-                  frappe.client.insert("Sales Invoice")
+                  platform.direct_insert("Sales Invoice")
                 </div>
               </div>
               <div class="glass-card p-6 rounded-2xl border border-white/5 space-y-3 font-mono text-[10px] text-cyan-300">
                 <div class="text-white font-bold border-b border-white/5 pb-2 text-xs">Correct Service-Driven Flow</div>
                 <div>Frontend UI Event →</div>
-                <div>frappe.call("billing_api.create_invoice") →</div>
+                <div>smriti.api.call("billing_api.create_invoice") →</div>
                 <div class="text-emerald-400">billing_service.create_invoice()</div>
                 <div class="text-slate-500">[Executes transaction logic, tax rules, and DB commits]</div>
               </div>

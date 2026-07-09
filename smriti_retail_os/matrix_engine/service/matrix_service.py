@@ -60,7 +60,7 @@ class MatrixService:
         Uses Redis cache for performance optimization.
         """
         cache_key = f"smriti_matrix_session:{article}:{matrix_name or 'default'}"
-        cached = frappe.cache().get_value(cache_key)
+        cached = smriti.cache().get_value(cache_key)
         if cached:
             try:
                 data = json.loads(cached)
@@ -79,7 +79,7 @@ class MatrixService:
                     mrp=float(data.get("mrp") or 0.0)
                 )
             except Exception:
-                frappe.cache().delete_key(cache_key)
+                smriti.cache().delete_key(cache_key)
 
         # 1. Fetch Definition
         definition = MatrixService.get_active_definition(matrix_name)
@@ -252,7 +252,7 @@ class MatrixService:
 
         # Cache session representation
         session_dict = session.to_dict()
-        frappe.cache().set_value(cache_key, json.dumps(session_dict), expires_in_sec=300)
+        smriti.cache().set_value(cache_key, json.dumps(session_dict), expires_in_sec=300)
 
         return session
 
@@ -302,7 +302,7 @@ class MatrixService:
         Invalidates redis matrix session cache for an article.
         """
         # Delete keys matching different definition name combinations
-        frappe.cache().delete_key(f"smriti_matrix_session:{article}:default")
+        smriti.cache().delete_key(f"smriti_matrix_session:{article}:default")
         definitions = smriti.db.get_list("SMRITI Matrix Definition", pluck="name")
         for d in definitions:
-            frappe.cache().delete_key(f"smriti_matrix_session:{article}:{d}")
+            smriti.cache().delete_key(f"smriti_matrix_session:{article}:{d}")

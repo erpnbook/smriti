@@ -70,18 +70,18 @@ class SMRITIBusinessTerm(Document):
                 frappe.throw(frappe._("Common Mistakes must be a valid JSON array string."))
 
     def on_update(self):
-        frappe.cache().delete_value(f"smriti:dictionary:{self.term_id}:{self.term_version}")
-        frappe.cache().delete_value(f"smriti:dictionary:{self.term_id}:latest")
-        frappe.enqueue(
+        smriti.cache().delete_value(f"smriti:dictionary:{self.term_id}:{self.term_version}")
+        smriti.cache().delete_value(f"smriti:dictionary:{self.term_id}:latest")
+        smriti.tasks.enqueue(
             "smriti_retail_os.services.knowledge_service.rebuild_knowledge_index",
             queue="short",
             now=frappe.flags.in_test
         )
 
     def on_trash(self):
-        frappe.cache().delete_value(f"smriti:dictionary:{self.term_id}:{self.term_version}")
-        frappe.cache().delete_value(f"smriti:dictionary:{self.term_id}:latest")
-        frappe.enqueue(
+        smriti.cache().delete_value(f"smriti:dictionary:{self.term_id}:{self.term_version}")
+        smriti.cache().delete_value(f"smriti:dictionary:{self.term_id}:latest")
+        smriti.tasks.enqueue(
             "smriti_retail_os.services.knowledge_service.rebuild_knowledge_index",
             queue="short",
             now=frappe.flags.in_test

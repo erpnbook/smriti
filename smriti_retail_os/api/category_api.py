@@ -116,7 +116,7 @@ def delete_category(category_name):
         frappe.throw(_("Cannot delete category '{0}' because it is linked to active items.").format(category_name))
         
     # reviewed-ignore-permissions: catalog group deletion, validated by product manager
-    frappe.delete_doc("Item Group", category_name, ignore_permissions=True)
+    smriti.documents.delete("Item Group", category_name, ignore_permissions=True)
     return True
 
 def check_manager_permission():

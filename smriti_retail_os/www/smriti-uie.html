@@ -645,183 +645,160 @@ function generatePayloadPreview() {
     document.getElementById('payload-code-block').innerText = JSON.stringify(mockJson, null, 2);
 }
 
-// standard Frappe API integrations
+// SMRITI Framework API — Guard 6 compliant
 function loadIntegrations() {
-    frappe.call({
-        method: 'frappe.client.get_list',
-        args: {
-            doctype: 'SMRITI UIE Integration',
-            fields: ['name', 'connector_type', 'endpoint', 'credential', 'retry_limit', 'priority', 'enabled']
-        },
-        callback: function(r) {
-            const body = document.getElementById('integrations-tbody');
-            body.innerHTML = '';
-            if (r.message && r.message.length > 0) {
-                r.message.forEach(i => {
-                    body.innerHTML += `
-                        <tr>
-                            <td><strong>${i.name}</strong></td>
-                            <td>${i.connector_type}</td>
-                            <td>${i.endpoint || ''}</td>
-                            <td>${i.credential || ''}</td>
-                            <td>${i.retry_limit}</td>
-                            <td>${i.priority}</td>
-                            <td>
-                                <span class="badge ${i.enabled ? 'badge-success' : 'badge-failed'}">
-                                    ${i.enabled ? 'Active' : 'Disabled'}
-                                </span>
-                            </td>
-                        </tr>
-                    `;
-                });
-            } else {
-                body.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">No integrations registered.</td></tr>';
-            }
+    smriti.api.call('smriti_retail_os.api.platform_data_api.get_records', {
+        doctype: 'SMRITI UIE Integration',
+        fields: ['name', 'connector_type', 'endpoint', 'credential', 'retry_limit', 'priority', 'enabled']
+    }).then(data => {
+        const body = document.getElementById('integrations-tbody');
+        body.innerHTML = '';
+        if (data && data.length > 0) {
+            data.forEach(i => {
+                body.innerHTML += `
+                    <tr>
+                        <td><strong>${i.name}</strong></td>
+                        <td>${i.connector_type}</td>
+                        <td>${i.endpoint || ''}</td>
+                        <td>${i.credential || ''}</td>
+                        <td>${i.retry_limit}</td>
+                        <td>${i.priority}</td>
+                        <td>
+                            <span class="badge ${i.enabled ? 'badge-success' : 'badge-failed'}">
+                                ${i.enabled ? 'Active' : 'Disabled'}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+        } else {
+            body.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">No integrations registered.</td></tr>';
         }
     });
 }
 
 function loadQueue() {
-    frappe.call({
-        method: 'frappe.client.get_list',
-        args: {
-            doctype: 'SMRITI UIE Sync Queue',
-            fields: ['document_type', 'document_name', 'integration', 'event_type', 'status', 'retry_count', 'last_attempt', 'priority'],
-            order_by: 'creation desc'
-        },
-        callback: function(r) {
-            const body = document.getElementById('queue-tbody');
-            body.innerHTML = '';
-            if (r.message && r.message.length > 0) {
-                r.message.forEach(i => {
-                    const statusClass = i.status === 'Success' ? 'badge-success' : (i.status === 'Dead-Letter' ? 'badge-dlq' : 'badge-pending');
-                    body.innerHTML += `
-                        <tr>
-                            <td><strong>${i.document_type} / ${i.document_name}</strong></td>
-                            <td>${i.integration}</td>
-                            <td>${i.event_type}</td>
-                            <td><span class="badge ${statusClass}">${i.status}</span></td>
-                            <td>${i.retry_count}</td>
-                            <td>${i.last_attempt || 'Pending'}</td>
-                            <td>${i.priority}</td>
-                        </tr>
-                    `;
-                });
-            } else {
-                body.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">Sync queue is empty.</td></tr>';
-            }
+    smriti.api.call('smriti_retail_os.api.platform_data_api.get_records', {
+        doctype: 'SMRITI UIE Sync Queue',
+        fields: ['document_type', 'document_name', 'integration', 'event_type', 'status', 'retry_count', 'last_attempt', 'priority'],
+        order_by: 'creation desc'
+    }).then(data => {
+        const body = document.getElementById('queue-tbody');
+        body.innerHTML = '';
+        if (data && data.length > 0) {
+            data.forEach(i => {
+                const statusClass = i.status === 'Success' ? 'badge-success' : (i.status === 'Dead-Letter' ? 'badge-dlq' : 'badge-pending');
+                body.innerHTML += `
+                    <tr>
+                        <td><strong>${i.document_type} / ${i.document_name}</strong></td>
+                        <td>${i.integration}</td>
+                        <td>${i.event_type}</td>
+                        <td><span class="badge ${statusClass}">${i.status}</span></td>
+                        <td>${i.retry_count}</td>
+                        <td>${i.last_attempt || 'Pending'}</td>
+                        <td>${i.priority}</td>
+                    </tr>
+                `;
+            });
+        } else {
+            body.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">Sync queue is empty.</td></tr>';
         }
     });
 }
 
 function loadEndpoints() {
-    frappe.call({
-        method: 'frappe.client.get_list',
-        args: {
-            doctype: 'SMRITI UIE Endpoint',
-            fields: ['name', 'url', 'method', 'content_type', 'timeout']
-        },
-        callback: function(r) {
-            const body = document.getElementById('endpoints-tbody');
-            body.innerHTML = '';
-            if (r.message && r.message.length > 0) {
-                r.message.forEach(i => {
-                    body.innerHTML += `
-                        <tr>
-                            <td><strong>${i.name}</strong></td>
-                            <td><span class="mono">${i.url}</span></td>
-                            <td>${i.method}</td>
-                            <td>${i.content_type}</td>
-                            <td>${i.timeout}s</td>
-                        </tr>
-                    `;
-                });
-            } else {
-                body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">No endpoints registered.</td></tr>';
-            }
+    smriti.api.call('smriti_retail_os.api.platform_data_api.get_records', {
+        doctype: 'SMRITI UIE Endpoint',
+        fields: ['name', 'url', 'method', 'content_type', 'timeout']
+    }).then(data => {
+        const body = document.getElementById('endpoints-tbody');
+        body.innerHTML = '';
+        if (data && data.length > 0) {
+            data.forEach(i => {
+                body.innerHTML += `
+                    <tr>
+                        <td><strong>${i.name}</strong></td>
+                        <td><span class="mono">${i.url}</span></td>
+                        <td>${i.method}</td>
+                        <td>${i.content_type}</td>
+                        <td>${i.timeout}s</td>
+                    </tr>
+                `;
+            });
+        } else {
+            body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">No endpoints registered.</td></tr>';
         }
     });
 }
 
 function loadCredentials() {
-    frappe.call({
-        method: 'frappe.client.get_list',
-        args: {
-            doctype: 'SMRITI UIE Credential',
-            fields: ['name', 'type', 'api_key_header', 'username']
-        },
-        callback: function(r) {
-            const body = document.getElementById('credentials-tbody');
-            body.innerHTML = '';
-            if (r.message && r.message.length > 0) {
-                r.message.forEach(i => {
-                    body.innerHTML += `
-                        <tr>
-                            <td><strong>${i.name}</strong></td>
-                            <td>${i.type}</td>
-                            <td>${i.api_key_header || 'N/A'}</td>
-                            <td>${i.username || 'N/A'}</td>
-                        </tr>
-                    `;
-                });
-            } else {
-                body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">No credentials registered.</td></tr>';
-            }
+    smriti.api.call('smriti_retail_os.api.platform_data_api.get_records', {
+        doctype: 'SMRITI UIE Credential',
+        fields: ['name', 'type', 'api_key_header', 'username']
+    }).then(data => {
+        const body = document.getElementById('credentials-tbody');
+        body.innerHTML = '';
+        if (data && data.length > 0) {
+            data.forEach(i => {
+                body.innerHTML += `
+                    <tr>
+                        <td><strong>${i.name}</strong></td>
+                        <td>${i.type}</td>
+                        <td>${i.api_key_header || 'N/A'}</td>
+                        <td>${i.username || 'N/A'}</td>
+                    </tr>
+                `;
+            });
+        } else {
+            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">No credentials registered.</td></tr>';
         }
     });
 }
 
 function loadLogs() {
-    frappe.call({
-        method: 'frappe.client.get_list',
-        args: {
-            doctype: 'SMRITI UIE Sync Log',
-            fields: ['timestamp', 'queue_item', 'http_status', 'duration_ms', 'result'],
-            order_by: 'timestamp desc',
-            limit: 20
-        },
-        callback: function(r) {
-            const body = document.getElementById('logs-tbody');
-            body.innerHTML = '';
-            if (r.message && r.message.length > 0) {
-                r.message.forEach(i => {
-                    body.innerHTML += `
-                        <tr>
-                            <td>${i.timestamp}</td>
-                            <td><span class="mono">${i.queue_item}</span></td>
-                            <td>${i.http_status}</td>
-                            <td>${i.duration_ms} ms</td>
-                            <td>
-                                <span class="badge ${i.result === 'Success' ? 'badge-success' : 'badge-failed'}">
-                                    ${i.result}
-                                </span>
-                            </td>
-                        </tr>
-                    `;
-                });
-            } else {
-                body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">No sync logs found.</td></tr>';
-            }
+    smriti.api.call('smriti_retail_os.api.platform_data_api.get_records', {
+        doctype: 'SMRITI UIE Sync Log',
+        fields: ['timestamp', 'queue_item', 'http_status', 'duration_ms', 'result'],
+        order_by: 'timestamp desc',
+        limit: 20
+    }).then(data => {
+        const body = document.getElementById('logs-tbody');
+        body.innerHTML = '';
+        if (data && data.length > 0) {
+            data.forEach(i => {
+                body.innerHTML += `
+                    <tr>
+                        <td>${i.timestamp}</td>
+                        <td><span class="mono">${i.queue_item}</span></td>
+                        <td>${i.http_status}</td>
+                        <td>${i.duration_ms} ms</td>
+                        <td>
+                            <span class="badge ${i.result === 'Success' ? 'badge-success' : 'badge-failed'}">
+                                ${i.result}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+        } else {
+            body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">No sync logs found.</td></tr>';
         }
     });
 }
 
 function loadTallySettings() {
-    frappe.call({
-        method: 'smriti_retail_os.smriti_retail_os.api.tally_api.get_settings',
-        callback: function(r) {
-            if (r.message) {
-                const s = r.message;
-                document.getElementById('tally-url').value = s.tally_url || '';
-                document.getElementById('tally-company').value = s.tally_company || '';
-                document.getElementById('cash-ledger').value = s.cash_ledger || '';
-                document.getElementById('bank-ledger').value = s.bank_ledger || '';
-                document.getElementById('sales-ledger').value = s.sales_ledger || '';
-                document.getElementById('purchase-ledger').value = s.purchase_ledger || '';
-                document.getElementById('cgst-ledger').value = s.cgst_ledger || '';
-                document.getElementById('sgst-ledger').value = s.sgst_ledger || '';
-                document.getElementById('igst-ledger').value = s.igst_ledger || '';
-            }
+    smriti.api.call('smriti_retail_os.smriti_retail_os.api.tally_api.get_settings')
+    .then(s => {
+        if (s) {
+            document.getElementById('tally-url').value = s.tally_url || '';
+            document.getElementById('tally-company').value = s.tally_company || '';
+            document.getElementById('cash-ledger').value = s.cash_ledger || '';
+            document.getElementById('bank-ledger').value = s.bank_ledger || '';
+            document.getElementById('sales-ledger').value = s.sales_ledger || '';
+            document.getElementById('purchase-ledger').value = s.purchase_ledger || '';
+            document.getElementById('cgst-ledger').value = s.cgst_ledger || '';
+            document.getElementById('sgst-ledger').value = s.sgst_ledger || '';
+            document.getElementById('igst-ledger').value = s.igst_ledger || '';
         }
     });
 }
@@ -839,15 +816,12 @@ function saveTallySettings() {
         igst_ledger: document.getElementById('igst-ledger').value
     };
 
-    frappe.call({
-        method: 'smriti_retail_os.smriti_retail_os.api.tally_api.save_settings',
-        args: { settings: settings },
-        callback: function(r) {
-            if (r.message && r.message.status === 'success') {
-                showToast('Tally Settings saved successfully!', 'ok');
-            } else {
-                showToast('Error saving Tally Settings.', 'err');
-            }
+    smriti.api.call('smriti_retail_os.smriti_retail_os.api.tally_api.save_settings', { settings: settings })
+    .then(data => {
+        if (data && data.status === 'success') {
+            showToast('Tally Settings saved successfully!', 'ok');
+        } else {
+            showToast('Error saving Tally Settings.', 'err');
         }
     });
 }

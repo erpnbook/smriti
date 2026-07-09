@@ -392,7 +392,7 @@ def sas_delete_view(view_name, report_key):
     )
     if existing:
         # reviewed-ignore-permissions: user UI preference deletion
-        frappe.delete_doc("SMRITI Saved View", existing, ignore_permissions=True)
+        smriti.documents.delete("SMRITI Saved View", existing, ignore_permissions=True)
         smriti.db.commit()
         return {"status": "deleted"}
     return {"status": "not_found"}

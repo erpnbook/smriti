@@ -288,7 +288,7 @@ async function init() {
 
 async function loadChallans() {
     try {
-        const data = await api('frappe.client.get_list', {
+        const data = await api('smriti_retail_os.api.platform_data_api.get_records', {
             doctype: 'Delivery Note',
             fields: ['name', 'posting_date', 'posting_time', 'customer_name', 'grand_total', 'status', 'docstatus'],
             order_by: 'posting_date desc, posting_time desc',
@@ -353,7 +353,7 @@ function applyFilters() {
 
 async function loadChallanDetails(challanId) {
     try {
-        const doc = await api('frappe.client.get', {
+        const doc = await api('smriti_retail_os.api.platform_data_api.get_value', {
             doctype: 'Delivery Note',
             name: challanId
         });

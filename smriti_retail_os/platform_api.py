@@ -87,8 +87,8 @@ def get_system_health():
     # 4. Redis Status
     redis_status = {}
     try:
-        redis_status["cache_ping"] = frappe.cache().ping()
-        info = frappe.cache().info()
+        redis_status["cache_ping"] = smriti.cache().ping()
+        info = smriti.cache().info()
         redis_status["used_memory_human"] = info.get("used_memory_human", "N/A")
         redis_status["redis_version"] = info.get("redis_version", "N/A")
         redis_status["uptime_in_days"] = info.get("uptime_in_days", "N/A")
@@ -219,7 +219,7 @@ def run_migration_action(action):
             logs.append("SMRITI custom DocTypes and attributes reloaded.")
         elif action == "run_migrate":
             cmd = ["bench", "--site", frappe.local.site, "migrate"]
-            frappe.enqueue("smriti_retail_os.platform_api.execute_command", cmd=cmd, queue="long", job_name="Platform Center Migrate")
+            smriti.tasks.enqueue("smriti_retail_os.platform_api.execute_command", cmd=cmd, queue="long", job_name="Platform Center Migrate")
             logs.append("Migration triggered in the background. Check logs shortly.")
         else:
             frappe.throw(_("Invalid migration action."))

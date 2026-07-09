@@ -175,5 +175,5 @@ class ProductRepository:
     @staticmethod
     def get_doc(*args, **kwargs):
         """Fetches a document via smriti.documents layer (wraps frappe at boundary)."""
-        return frappe.get_doc(*args, **kwargs)  # smriti-adapter-boundary
+        return smriti.documents.get(*args, **kwargs)  # smriti-adapter-boundary
 

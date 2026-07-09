@@ -490,7 +490,7 @@ def create_physical_audit(company, party_stock_account, audit_date, items):
 	items: JSON list of {item_code, system_qty, physical_qty, variance_reason}
 	"""
 	import json
-	if not frappe.has_permission("SMRITI Party Physical Snapshot", "create"):
+	if not smriti.permissions.has_permission("SMRITI Party Physical Snapshot", "create"):
 		frappe.throw(_("Not authorized to create stock audits."), frappe.PermissionError)
 
 	item_list = json.loads(items) if isinstance(items, str) else items
@@ -515,7 +515,7 @@ def submit_physical_audit(name):
 	Submit a SMRITI Party Physical Snapshot.
 	Replaces frappe.client.submit from stock-audit.html.
 	"""
-	if not frappe.has_permission("SMRITI Party Physical Snapshot", "submit"):
+	if not smriti.permissions.has_permission("SMRITI Party Physical Snapshot", "submit"):
 		frappe.throw(_("Not authorized to submit stock audits."), frappe.PermissionError)
 	doc = smriti.documents.get("SMRITI Party Physical Snapshot", name)
 	doc.submit()
@@ -529,7 +529,7 @@ def get_physical_audit(name):
 	Fetch a SMRITI Party Physical Snapshot with items.
 	Replaces frappe.client.get from stock-audit.html.
 	"""
-	if not frappe.has_permission("SMRITI Party Physical Snapshot", "read"):
+	if not smriti.permissions.has_permission("SMRITI Party Physical Snapshot", "read"):
 		frappe.throw(_("Not authorized to view stock audits."), frappe.PermissionError)
 	doc = smriti.documents.get("SMRITI Party Physical Snapshot", name)
 	return {
@@ -576,7 +576,7 @@ def create_sales_upload(
 	Replaces frappe.client.insert from sales-upload.html.
 	"""
 	import json
-	if not frappe.has_permission("SMRITI Party Sales Upload", "create"):
+	if not smriti.permissions.has_permission("SMRITI Party Sales Upload", "create"):
 		frappe.throw(_("Not authorized to create sales uploads."), frappe.PermissionError)
 
 	item_list = json.loads(items) if isinstance(items, str) else (items or [])
@@ -602,7 +602,7 @@ def submit_sales_upload(name):
 	Submit a SMRITI Party Sales Upload to trigger PSV ledger processing.
 	Replaces frappe.client.submit from sales-upload.html.
 	"""
-	if not frappe.has_permission("SMRITI Party Sales Upload", "submit"):
+	if not smriti.permissions.has_permission("SMRITI Party Sales Upload", "submit"):
 		frappe.throw(_("Not authorized to submit sales uploads."), frappe.PermissionError)
 	doc = smriti.documents.get("SMRITI Party Sales Upload", name)
 	doc.submit()

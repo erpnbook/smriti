@@ -279,7 +279,7 @@ async function init() {
 
 async function loadPsaAccounts() {
     try {
-        const psas = await api('frappe.client.get_list', {
+        const psas = await api('smriti_retail_os.api.platform_data_api.get_records', {
             doctype: 'SMRITI Party Stock Account',
             filters: { company: selectedCompany, active: 1 },
             fields: ['name', 'location_name', 'customer']

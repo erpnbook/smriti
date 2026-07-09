@@ -18,7 +18,7 @@ class VariantLifecycleService:
             doc.attribute_name = attribute
             doc.numeric = 0
             doc.insert(ignore_permissions=True)
-            frappe.publish_realtime("smriti_item_attribute_created", {"attribute": attribute})
+            smriti.realtime.publish("smriti_item_attribute_created", {"attribute": attribute})
         
         # Ensure Attribute Value exists
         attr_doc = ProductRepository.get_doc("Item Attribute", attribute)
@@ -82,7 +82,7 @@ class VariantLifecycleService:
         _attach_tax_template(item, None, gst_percentage, company)
         item.insert(ignore_permissions=True)
         
-        frappe.publish_realtime("smriti_article_created", {"article": item.name, "item_name": item.item_name})
+        smriti.realtime.publish("smriti_article_created", {"article": item.name, "item_name": item.item_name})
         return item.name
 
     @staticmethod
@@ -133,7 +133,7 @@ class VariantLifecycleService:
         from smriti_retail_os.matrix_engine.service.matrix_service import MatrixService
         MatrixService.clear_cache(article)
 
-        frappe.publish_realtime("smriti_variant_created", {
+        smriti.realtime.publish("smriti_variant_created", {
             "item_code": variant_doc.name,
             "article": article,
             "barcode": barcode,

@@ -538,7 +538,7 @@ async function loadDashboardData(company) {
     
     try {
         const summary = await api('smriti_retail_os.psv_api.get_dashboard_summary', { company });
-        const settings = await api('frappe.client.get_value', {
+        const settings = await api('smriti_retail_os.api.platform_data_api.get_value', {
             doctype: 'PSV System Settings',
             fieldname: ['channel_health_enabled', 'weeks_of_cover_critical', 'weeks_of_cover_warning']
         });
@@ -554,7 +554,7 @@ async function loadDashboardData(company) {
         } else {
             document.getElementById('health-overlay').style.display = 'none';
             document.getElementById('health-content').style.opacity = '1';
-            const partnerList = await api('frappe.client.get_list', {
+            const partnerList = await api('smriti_retail_os.api.platform_data_api.get_records', {
                 doctype: 'PSV Channel Partner',
                 filters: { company, active: 1 },
                 limit: 1

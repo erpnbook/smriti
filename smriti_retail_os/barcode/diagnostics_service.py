@@ -57,7 +57,7 @@ def get_printability_formula_config():
     """
     cache_key = "smriti:barcode_printability_formula_config"
     try:
-        cached = frappe.cache().get_value(cache_key)
+        cached = smriti.cache().get_value(cache_key)
         if cached:
             return cached
     except Exception:
@@ -113,7 +113,7 @@ def get_printability_formula_config():
         )
 
     try:
-        frappe.cache().set_value(cache_key, config, expires_in_sec=3600)
+        smriti.cache().set_value(cache_key, config, expires_in_sec=3600)
     except Exception:
         pass
     return config

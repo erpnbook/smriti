@@ -520,7 +520,7 @@
 
   // --- Dynamic Option Loading for Link Fields ---
   function fetchLinkOptions(linkDocType, selectElement, currentValue) {
-    API.call('frappe.client.get_list', { doctype: linkDocType, limit: 150 })
+    smriti.api.call('smriti_retail_os.api.platform_data_api.get_records', { doctype: linkDocType, limit: 150 })
       .then(list => {
         let options = `<option value="">Select...</option>`;
         list.forEach(item => {

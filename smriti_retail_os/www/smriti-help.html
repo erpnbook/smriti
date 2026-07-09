@@ -1891,7 +1891,7 @@
                 // 2. Cache miss — dynamic fetch from dictionary API
                 const detail = await api('smriti_retail_os.api.dictionary_api.get_term_detail', { term_id: termId });
                 if (!detail) {
-                    frappe.show_alert({ message: `Term "${termId}" not found or not yet approved.`, indicator: 'orange' });
+                    smriti.notify.warning('Notification', `Term "${termId}" not found or not yet approved.`);
                     return;
                 }
                 // Normalize API payload to match allTerms shape
@@ -2859,7 +2859,7 @@
                     startTimer();
                 }
             } else {
-                frappe.show_alert({ message: "Could not start exam. Make sure you do not have another active attempt.", indicator: 'red' });
+                smriti.notify.error('Notification', "Could not start exam. Make sure you do not have another active attempt.");
             }
         }
 
@@ -3052,7 +3052,7 @@
             if (res) {
                 showResultCard(res);
             } else {
-                frappe.show_alert({ message: "An error occurred during submission. Please check system logs.", indicator: 'red' });
+                smriti.notify.error('Notification', "An error occurred during submission. Please check system logs.");
                 resetCertView();
             }
         }

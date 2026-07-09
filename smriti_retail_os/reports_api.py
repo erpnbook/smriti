@@ -1450,7 +1450,7 @@ class SMRITIReportEngine:
         cache_minutes = cint(self.template.cache_minutes)
         if cache_minutes > 0:
             cache_key = self.get_cache_key()
-            cached_data = frappe.cache().get_value(cache_key)
+            cached_data = smriti.cache().get_value(cache_key)
             if cached_data:
                 return json.loads(cached_data)
 
@@ -1535,7 +1535,7 @@ class SMRITIReportEngine:
         # Write to Cache
         if cache_minutes > 0:
             cache_key = self.get_cache_key()
-            frappe.cache().set_value(cache_key, frappe.as_json(results), expires_in_sec=cache_minutes * 60)
+            smriti.cache().set_value(cache_key, frappe.as_json(results), expires_in_sec=cache_minutes * 60)
 
         return results
 
@@ -2240,7 +2240,7 @@ def delete_smriti_saved_view(view_name):
     doc = smriti.documents.get("SMRITI Saved View", view_name)
     if doc.user == frappe.session.user or "System Manager" in frappe.get_roles():
         # reviewed-ignore-permissions: user UI preference deletion, gated by view ownership or System Manager role
-        frappe.delete_doc("SMRITI Saved View", view_name, ignore_permissions=True)
+        smriti.documents.delete("SMRITI Saved View", view_name, ignore_permissions=True)
         smriti.db.commit()
         return {"success": True}
     else:
@@ -2555,7 +2555,7 @@ def get_report_glossary(report_key):
     and Formula Registry, cached in Redis to prevent database performance overhead.
     """
     cache_key = f"smriti:report_glossary:{report_key}"
-    cached = frappe.cache().get_value(cache_key)
+    cached = smriti.cache().get_value(cache_key)
     if cached:
         return json.loads(cached)
         
@@ -2601,7 +2601,7 @@ def get_report_glossary(report_key):
                 "formulas": formulas
             }
             
-    frappe.cache().set_value(cache_key, json.dumps(glossary), expires_in_sec=3600)
+    smriti.cache().set_value(cache_key, json.dumps(glossary), expires_in_sec=3600)
     return glossary
 
 
@@ -2610,13 +2610,13 @@ def invalidate_glossary_cache(doc, method=None):
     Invalidates glossary caches when SMRITI Business Term or SMRITI Formula Definition changes.
     """
     try:
-        keys = frappe.cache().get_keys("smriti:report_glossary:*")
+        keys = smriti.cache().get_keys("smriti:report_glossary:*")
         for k in keys:
             k_str = k.decode("utf-8") if isinstance(k, bytes) else k
             if ":" in k_str:
-                frappe.cache().delete_key(k_str)
+                smriti.cache().delete_key(k_str)
             else:
-                frappe.cache().delete_value(k_str)
+                smriti.cache().delete_value(k_str)
     except Exception:
         pass
 

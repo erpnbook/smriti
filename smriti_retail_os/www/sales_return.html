@@ -449,7 +449,7 @@ async function init() {
 
 async function loadReturns() {
     try {
-        const data = await api('frappe.client.get_list', {
+        const data = await api('smriti_retail_os.api.platform_data_api.get_records', {
             doctype: 'Sales Invoice',
             filters: { is_return: 1 },
             fields: ['name', 'posting_date', 'posting_time', 'customer_name', 'grand_total', 'outstanding_amount', 'status', 'docstatus'],
@@ -465,7 +465,7 @@ async function loadReturns() {
 
 async function loadWarehouses() {
     try {
-        const data = await api('frappe.client.get_list', {
+        const data = await api('smriti_retail_os.api.platform_data_api.get_records', {
             doctype: 'Warehouse',
             filters: { is_group: 0 },
             fields: ['name', 'warehouse_name'],
@@ -533,7 +533,7 @@ function applyFilters() {
 
 async function loadReturnDetails(returnId) {
     try {
-        const doc = await api('frappe.client.get', {
+        const doc = await api('smriti_retail_os.api.platform_data_api.get_value', {
             doctype: 'Sales Invoice',
             name: returnId
         });
@@ -695,7 +695,7 @@ async function handleBillSearch(query) {
         return;
     }
     try {
-        const list = await api('frappe.client.get_list', {
+        const list = await api('smriti_retail_os.api.platform_data_api.get_records', {
             doctype: 'Sales Invoice',
             filters: {
                 docstatus: 1,
@@ -729,7 +729,7 @@ async function handleBillSearch(query) {
 
 async function selectBill(invoiceName) {
     try {
-        const doc = await api('frappe.client.get', {
+        const doc = await api('smriti_retail_os.api.platform_data_api.get_value', {
             doctype: 'Sales Invoice',
             name: invoiceName
         });
@@ -1023,7 +1023,7 @@ async function saveReturn(draft) {
 
 async function editDraftReturn(returnName) {
     try {
-        const doc = await api('frappe.client.get', {
+        const doc = await api('smriti_retail_os.api.platform_data_api.get_value', {
             doctype: 'Sales Invoice',
             name: returnName
         });

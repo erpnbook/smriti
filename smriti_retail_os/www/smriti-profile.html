@@ -288,12 +288,7 @@ const CSRF  = "{{ csrf_token }}";
 const API_U = "smriti_retail_os.user_studio.api.smriti_user_api";
 
 function apiCall(method, args={}) {
-  return new Promise((res,rej) => {
-    frappe.call({ method, args, headers:{"X-Frappe-CSRF-Token":CSRF},
-      callback: r => res(r.message !== undefined ? r.message : r),
-      error: e => rej(e)
-    });
-  });
+  return smriti.api.call(method, args);
 }
 
 function toast(msg, type="ok") {

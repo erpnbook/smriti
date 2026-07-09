@@ -247,7 +247,7 @@ def get_user_navigation(user=None):
     cache_hash = _get_navigation_version_hash(user, active_company)
     cache_key = f"smriti:navigation:{user}:{active_company}:{cache_hash}"
     
-    cached_val = frappe.cache().get_value(cache_key)
+    cached_val = smriti.cache().get_value(cache_key)
     if cached_val:
         return json.loads(cached_val)
         
@@ -261,7 +261,7 @@ def get_user_navigation(user=None):
     resolved_nav["schema_version"] = "1.0.0"
     
     # 3. Save to cache
-    frappe.cache().set_value(cache_key, json.dumps(resolved_nav), expires_in_sec=86400)
+    smriti.cache().set_value(cache_key, json.dumps(resolved_nav), expires_in_sec=86400)
     return resolved_nav
 
 def invalidate_navigation_cache(user=None, company=None):
@@ -272,12 +272,12 @@ def invalidate_navigation_cache(user=None, company=None):
     # In Redis context, we can delete keys or clear user specific entries
     if user and company:
         cache_hash = _get_navigation_version_hash(user, company)
-        frappe.cache().delete_value(f"smriti:navigation:{user}:{company}:{cache_hash}")
+        smriti.cache().delete_value(f"smriti:navigation:{user}:{company}:{cache_hash}")
     else:
         # Clear all
-        keys = frappe.cache().get_keys("smriti:navigation:*")
+        keys = smriti.cache().get_keys("smriti:navigation:*")
         for k in keys:
-            frappe.cache().delete_value(k)
+            smriti.cache().delete_value(k)
 
 def _get_navigation_version_hash(user, company):
     """

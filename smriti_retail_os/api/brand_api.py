@@ -96,7 +96,7 @@ def delete_brand(brand_name):
         frappe.throw(_("Cannot delete brand '{0}' because it is linked to active items.").format(brand_name))
         
     # reviewed-ignore-permissions: catalog brand deletion, validated by product manager
-    frappe.delete_doc("Brand", brand_name, ignore_permissions=True)
+    smriti.documents.delete("Brand", brand_name, ignore_permissions=True)
     return True
 
 def check_manager_permission():

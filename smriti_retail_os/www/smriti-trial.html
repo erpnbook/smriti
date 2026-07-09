@@ -353,9 +353,7 @@
 
       btn.disabled = true; btn.textContent = 'Submitting...';
 
-      frappe.call({
-        method: 'smriti_retail_os.api.trial_api.submit_trial_lead',
-        args: {
+      smriti.api.call('smriti_retail_os.api.trial_api.submit_trial_lead', {
           store_name:    store,
           owner_name:    owner,
           mobile:        mobile,
@@ -364,8 +362,7 @@
           plan:          plan,
           warehouses:    wh,
           source:        'smriti-trial',
-        },
-        callback: function(r) {
+        }).then(r => {
           btn.disabled = false; btn.textContent = 'Start My 30-Day Free Trial →';
           if (r.message && r.message.status === 'success') {
             document.getElementById('form_view').style.display = 'none';

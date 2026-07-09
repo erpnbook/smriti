@@ -1096,7 +1096,7 @@ def _check_doctype_permission(doctype, action):
     }
     perm_type = perm_map.get(action, "read")
 
-    if not frappe.has_permission(doctype, perm_type, throw=False):
+    if not smriti.permissions.has_permission(doctype, perm_type, throw=False):
         frappe.throw(
             _("Kernel: You do not have {0} permission on {1}.").format(perm_type, doctype),
             frappe.PermissionError

@@ -671,21 +671,19 @@
 
   // Load Dropdown Options from Service Layer
   function loadDropdownData() {
-      frappe.call({
-          method: "smriti_retail_os.api.pos_profile_api.get_dropdowns",
-          callback: (r) => {
-              if (r.message) {
-                  dropdownData = r.message;
-                  
-                  // Fill list filters
-                  updateDropdown("company-filter", dropdownData.companies);
-                  updateDropdown("warehouse-filter", dropdownData.warehouses);
-                  
-                  // Fill form selects
-                  updateDropdown("profile-company", dropdownData.companies, "-- Select Company --");
-                  updateDropdown("profile-warehouse", dropdownData.warehouses, "-- Select Warehouse --");
-                  updateDropdown("profile-price-list", dropdownData.price_lists, "-- Select Price List --");
-              }
+      smriti.api.call("smriti_retail_os.api.pos_profile_api.get_dropdowns")
+      .then(data => {
+          if (data) {
+              dropdownData = data;
+              
+              // Fill list filters
+              updateDropdown("company-filter", dropdownData.companies);
+              updateDropdown("warehouse-filter", dropdownData.warehouses);
+              
+              // Fill form selects
+              updateDropdown("profile-company", dropdownData.companies, "-- Select Company --");
+              updateDropdown("profile-warehouse", dropdownData.warehouses, "-- Select Warehouse --");
+              updateDropdown("profile-price-list", dropdownData.price_lists, "-- Select Price List --");
           }
       });
   }
@@ -717,13 +715,11 @@
   // Load POS Profiles
   function loadProfilesList() {
       const body = document.getElementById("profile-list-body");
-      frappe.call({
-          method: "smriti_retail_os.api.pos_profile_api.get_profiles",
-          callback: (r) => {
-              if (r.message) {
-                  allProfiles = r.message;
-                  renderProfilesTable(allProfiles);
-              }
+      smriti.api.call("smriti_retail_os.api.pos_profile_api.get_profiles")
+      .then(data => {
+          if (data) {
+              allProfiles = data;
+              renderProfilesTable(allProfiles);
           }
       });
   }
@@ -809,20 +805,17 @@
           document.getElementById("drawer-title-text").innerHTML = `<span class="material-symbols-outlined">settings_input_composite</span> Edit POS Profile: ${name}`;
           
           // Check shift lock status first
-          frappe.call({
-              method: "smriti_retail_os.api.pos_profile_api.validate_profile",
-              args: { name },
-              callback: (r) => {
-                  if (r.message && r.message.is_locked) {
-                      currentOpenShift = r.message.active_shift;
-                      document.getElementById("shift-warning-message").innerHTML = `ⓘ Shift lock active: Shift <strong>${currentOpenShift.name}</strong> is open by <strong>${currentOpenShift.user}</strong>. Warehouse, Payments, and Cashiers cannot be modified.`;
-                      document.getElementById("shift-warning-banner").style.display = "flex";
-                      toggleFormControls(true);
-                  }
-                  
-                  // Load detailed fields
-                  loadProfileDetails(name);
+          smriti.api.call("smriti_retail_os.api.pos_profile_api.validate_profile", { name })
+          .then(data => {
+              if (data && data.is_locked) {
+                  currentOpenShift = data.active_shift;
+                  document.getElementById("shift-warning-message").innerHTML = `ⓘ Shift lock active: Shift <strong>${currentOpenShift.name}</strong> is open by <strong>${currentOpenShift.user}</strong>. Warehouse, Payments, and Cashiers cannot be modified.`;
+                  document.getElementById("shift-warning-banner").style.display = "flex";
+                  toggleFormControls(true);
               }
+              
+              // Load detailed fields
+              loadProfileDetails(name);
           });
       } else {
           document.getElementById("is-new-profile").value = "1";
@@ -860,13 +853,10 @@
   }
 
   function loadProfileDetails(name) {
-      frappe.call({
-          method: "smriti_retail_os.api.pos_profile_api.get_details",
-          args: { name },
-          callback: (r) => {
-              if (r.message) {
-                  const d = r.message;
-                  document.getElementById("profile-company").value = d.company;
+      smriti.api.call("smriti_retail_os.api.pos_profile_api.get_details", { name })
+      .then(d => {
+          if (d) {
+              document.getElementById("profile-company").value = d.company;
                   
                   // Re-filter accounts to ensure selects populate correctly
                   filterAccountsByCompany();
@@ -1052,20 +1042,17 @@
       
       document.getElementById("btn-save-profile").disabled = true;
       
-      frappe.call({
-          method: "smriti_retail_os.api.pos_profile_api.save_profile",
-          args: { doc_data: payload },
-          callback: (r) => {
-              document.getElementById("btn-save-profile").disabled = false;
-              if (r.message) {
-                  toast(`POS Profile '${r.message}' saved successfully`);
-                  closeProfileDrawer();
-                  loadProfilesList();
-              }
-          },
-          error: (err) => {
-              document.getElementById("btn-save-profile").disabled = false;
+      smriti.api.call("smriti_retail_os.api.pos_profile_api.save_profile", { doc_data: payload })
+      .then(data => {
+          document.getElementById("btn-save-profile").disabled = false;
+          if (data) {
+              toast(`POS Profile '${data}' saved successfully`);
+              closeProfileDrawer();
+              loadProfilesList();
           }
+      })
+      .catch(err => {
+          document.getElementById("btn-save-profile").disabled = false;
       });
   }
 
@@ -1079,15 +1066,12 @@
           return;
       }
       
-      frappe.call({
-          method: "smriti_retail_os.api.pos_profile_api.clone_profile",
-          args: { source_name: source, target_name: target },
-          callback: (r) => {
-              if (r.message) {
-                  toast(`Profile cloned successfully as '${r.message}'`);
-                  closeProfileDrawer();
-                  loadProfilesList();
-              }
+      smriti.api.call("smriti_retail_os.api.pos_profile_api.clone_profile", { source_name: source, target_name: target })
+      .then(data => {
+          if (data) {
+              toast(`Profile cloned successfully as '${data}'`);
+              closeProfileDrawer();
+              loadProfilesList();
           }
       });
   }
@@ -1095,14 +1079,11 @@
   // Archive / Disable POS Profile
   function confirmArchive(name) {
       if (confirm(`Are you sure you want to archive (disable) the POS Profile '${name}'? This keeps transaction histories intact but restricts it from shifts.`)) {
-          frappe.call({
-              method: "smriti_retail_os.api.pos_profile_api.archive_profile",
-              args: { name },
-              callback: (r) => {
-                  if (r.message) {
-                      toast(`POS Profile '${name}' archived successfully`);
-                      loadProfilesList();
-                  }
+          smriti.api.call("smriti_retail_os.api.pos_profile_api.archive_profile", { name })
+          .then(data => {
+              if (data) {
+                  toast(`POS Profile '${name}' archived successfully`);
+                  loadProfilesList();
               }
           });
       }

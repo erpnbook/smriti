@@ -205,7 +205,7 @@ async function init() {
 async function loadExceptions() {
   try {
     // Fetch all PSV accounts
-    const psas = await api('frappe.client.get_list', {
+    const psas = await api('smriti_retail_os.api.platform_data_api.get_records', {
       doctype:'SMRITI Party Stock Account',
       fields:['name','customer','location_name','company'],
       filters: {active:1},

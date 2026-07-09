@@ -147,7 +147,7 @@ def enqueue_document_sync(doc, method=None):
 		queue_item.insert(ignore_permissions=True)
 		smriti.db.commit()
 
-		frappe.enqueue(
+		smriti.tasks.enqueue(
 			"smriti_retail_os.smriti_retail_os.uie.services.dispatcher.dispatch_queue_item",
 			queue_name=queue_item.name,
 			queue="long" if integration.priority == "Low" else "default",

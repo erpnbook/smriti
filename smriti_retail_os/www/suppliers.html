@@ -550,7 +550,7 @@ async function loadSuppliers() {
 
 async function loadFilterOptions() {
     try {
-        const groups = await api('frappe.client.get_list', {
+        const groups = await api('smriti_retail_os.api.platform_data_api.get_records', {
             doctype: 'Supplier Group',
             fields: ['name'],
             order_by: 'name asc',
@@ -573,7 +573,7 @@ async function loadFilterOptions() {
 async function loadDropdownOptions() {
     try {
         // Load Supplier Group options
-        const groups = await api('frappe.client.get_list', {
+        const groups = await api('smriti_retail_os.api.platform_data_api.get_records', {
             doctype: 'Supplier Group',
             fields: ['name'],
             order_by: 'name asc',
@@ -592,7 +592,7 @@ async function loadDropdownOptions() {
         // Load Naming Series
         let seriesOptions = ['SUP-.YYYY.-'];
         try {
-            const res = await api('frappe.client.get_value', {
+            const res = await api('smriti_retail_os.api.platform_data_api.get_value', {
                 doctype: 'DocField',
                 filters: { parent: 'Supplier', fieldname: 'naming_series' },
                 fieldname: 'options'
@@ -614,7 +614,7 @@ async function loadDropdownOptions() {
 
         // Load Payment Terms Templates
         try {
-            const terms = await api('frappe.client.get_list', {
+            const terms = await api('smriti_retail_os.api.platform_data_api.get_records', {
                 doctype: 'Payment Terms Template',
                 fields: ['name'],
                 limit_page_length: 100
@@ -631,7 +631,7 @@ async function loadDropdownOptions() {
 
         // Load Currencies
         try {
-            const currencies = await api('frappe.client.get_list', {
+            const currencies = await api('smriti_retail_os.api.platform_data_api.get_records', {
                 doctype: 'Currency',
                 fields: ['name'],
                 filters: { enabled: 1 },
@@ -649,7 +649,7 @@ async function loadDropdownOptions() {
 
         // Load Price Lists (Buying, enabled)
         try {
-            const priceLists = await api('frappe.client.get_list', {
+            const priceLists = await api('smriti_retail_os.api.platform_data_api.get_records', {
                 doctype: 'Price List',
                 fields: ['name'],
                 filters: { buying: 1, enabled: 1 },
@@ -667,7 +667,7 @@ async function loadDropdownOptions() {
 
         // Load Bank Accounts
         try {
-            const bankAccounts = await api('frappe.client.get_list', {
+            const bankAccounts = await api('smriti_retail_os.api.platform_data_api.get_records', {
                 doctype: 'Bank Account',
                 fields: ['name'],
                 limit_page_length: 100
@@ -684,7 +684,7 @@ async function loadDropdownOptions() {
 
         // Load Companies
         try {
-            const companies = await api('frappe.client.get_list', {
+            const companies = await api('smriti_retail_os.api.platform_data_api.get_records', {
                 doctype: 'Company',
                 fields: ['name'],
                 limit_page_length: 50
@@ -701,7 +701,7 @@ async function loadDropdownOptions() {
 
         // Load Languages
         try {
-            const languages = await api('frappe.client.get_list', {
+            const languages = await api('smriti_retail_os.api.platform_data_api.get_records', {
                 doctype: 'Language',
                 fields: ['name'],
                 filters: { enabled: 1 },

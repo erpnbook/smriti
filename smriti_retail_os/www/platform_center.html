@@ -1563,7 +1563,7 @@ function executeRepairWithBackup() {
 function verifyDeployment() {
   log('Starting deployment validation audit...', 'input');
   
-  API.call('frappe.client.get_all', { doctype: 'Company', limit: 1 })
+  API.call('smriti_retail_os.api.platform_data_api.get_all', { doctype: 'Company', limit: 1 })
     .then(companies => {
       const wizardStatus = document.getElementById('deploy-wizard-status');
       if (companies.length > 0) {
@@ -1577,7 +1577,7 @@ function verifyDeployment() {
       }
     });
 
-  API.call('frappe.client.get_all', { doctype: 'Sales Taxes and Charges Template', limit: 1 })
+  API.call('smriti_retail_os.api.platform_data_api.get_all', { doctype: 'Sales Taxes and Charges Template', limit: 1 })
     .then(tax => {
       const gstStatus = document.getElementById('deploy-gst-status');
       if (tax.length > 0) {
@@ -1591,7 +1591,7 @@ function verifyDeployment() {
       }
     });
 
-  API.call('frappe.client.get_all', { doctype: 'Mode of Payment', limit: 1 })
+  API.call('smriti_retail_os.api.platform_data_api.get_all', { doctype: 'Mode of Payment', limit: 1 })
     .then(mop => {
       const paymentsStatus = document.getElementById('deploy-payments-status');
       if (mop.length > 0) {

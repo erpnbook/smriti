@@ -680,16 +680,11 @@
     }
 
     function fetchLeads() {
-      return frappe.call({
-        method: 'smriti_retail_os.api.trial_api.get_trial_leads',
-        args: { limit: 200 }
-      }).then(r => r.message || []);
+      return smriti.api.call('smriti_retail_os.api.trial_api.get_trial_leads', { limit: 200 }).then(r => r.message || []);
     }
 
     function fetchCounts() {
-      return frappe.call({
-        method: 'smriti_retail_os.api.trial_api.get_lead_counts',
-      }).then(r => r.message || {});
+      return smriti.api.call('smriti_retail_os.api.trial_api.get_lead_counts').then(r => r.message || {});
     }
 
     // ─── Counts ──────────────────────────────────────────────────────────────
@@ -865,14 +860,11 @@
       btn.disabled = true;
       btn.textContent = 'Saving...';
 
-      frappe.call({
-        method: 'smriti_retail_os.api.trial_api.update_lead_status',
-        args: {
+      smriti.api.call('smriti_retail_os.api.trial_api.update_lead_status', {
           lead_name:  currentLead.name,
           new_status: selectedStatus,
           notes:      notes || null,
-        }
-      }).then(r => {
+        }).then(r => {
         if (r.message && r.message.status === 'success') {
           showToast(`✅ ${currentLead.store} → ${selectedStatus}`, 'success');
           closeModal();
@@ -894,10 +886,7 @@
       btn.disabled = true;
       btn.textContent = 'Starting...';
 
-      frappe.call({
-        method: 'smriti_retail_os.api.trial_activation_api.create_activation',
-        args: { lead_name: leadName, activation_type: 'Trial', trial_days: 30 }
-      }).then(r => {
+      smriti.api.call('smriti_retail_os.api.trial_activation_api.create_activation', { lead_name: leadName, activation_type: 'Trial', trial_days: 30 }).then(r => {
         const m = r.message || {};
         if (m.status === 'success') {
           showToast(`🚀 Trial activation created for ${storeName}!`, 'success');
@@ -921,10 +910,7 @@
       btn.disabled = true;
       btn.textContent = 'Starting...';
 
-      frappe.call({
-        method: 'smriti_retail_os.api.trial_activation_api.create_activation',
-        args: { lead_name: currentLead.name, activation_type: 'Trial', trial_days: 30 }
-      }).then(r => {
+      smriti.api.call('smriti_retail_os.api.trial_activation_api.create_activation', { lead_name: currentLead.name, activation_type: 'Trial', trial_days: 30 }).then(r => {
         const m = r.message || {};
         if (m.status === 'success') {
           showToast(`🚀 Trial started for ${currentLead.store}!`, 'success');

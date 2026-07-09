@@ -514,7 +514,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
         const el = document.getElementById('customer-results');
         el.innerHTML = '<div style="color:var(--text-muted);padding:12px;text-align:center;">Searching…</div>';
         try {
-            const res = await api('frappe.client.get_list', {
+            const res = await api('smriti_retail_os.api.platform_data_api.get_records', {
                 doctype: 'Customer',
                 filters: [['customer_name', 'like', `%${q}%`]],
                 fields: ['name', 'customer_name', 'customer_type']
@@ -583,7 +583,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
         const el = document.getElementById('item-results');
         el.innerHTML = '<div style="color:var(--text-muted);padding:12px;text-align:center;">Searching…</div>';
         try {
-            const res = await api('frappe.client.get_list', {
+            const res = await api('smriti_retail_os.api.platform_data_api.get_records', {
                 doctype: 'Item',
                 filters: [['item_name', 'like', `%${q}%`]],
                 fields: ['name', 'item_name', 'stock_uom', 'standard_rate']

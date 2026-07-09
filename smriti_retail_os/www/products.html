@@ -196,9 +196,7 @@ async function initProductStudio() {
     let categories = [];
     try {
         const metadata = await new Promise((resolve, reject) => {
-            frappe.call({
-                method: "smriti_retail_os.item_studio.api.product_api.get_catalog_metadata",
-                callback: function(r) {
+            smriti.api.call("smriti_retail_os.item_studio.api.product_api.get_catalog_metadata").then(data => {
                     if (r.exc) reject(new Error(r.exc));
                     else resolve(r.message);
                 },

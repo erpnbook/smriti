@@ -374,7 +374,7 @@ async function loadInvoices() {
         const isReturn = params.get('is_return') === '1';
         const filters = { is_return: isReturn ? 1 : 0 };
 
-        const data = await api('frappe.client.get_list', {
+        const data = await api('smriti_retail_os.api.platform_data_api.get_records', {
             doctype: 'Sales Invoice',
             filters: filters,
             fields: ['name', 'custom_business_display_number', 'posting_date', 'posting_time', 'customer_name', 'grand_total', 'outstanding_amount', 'status'],
@@ -442,7 +442,7 @@ function applyFilters() {
 
 async function loadInvoiceDetails(invoiceId) {
     try {
-        const doc = await api('frappe.client.get', {
+        const doc = await api('smriti_retail_os.api.platform_data_api.get_value', {
             doctype: 'Sales Invoice',
             name: invoiceId
         });

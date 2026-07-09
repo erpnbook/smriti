@@ -464,7 +464,7 @@ async function init() {
     const _sba = document.getElementById('sb-avatar'); if (_sba) _sba.textContent = loggedUser.charAt(0).toUpperCase();
 
     try {
-        const whs = await api('frappe.client.get_list', {
+        const whs = await api('smriti_retail_os.api.platform_data_api.get_records', {
             doctype: 'Warehouse',
             filters: { is_group: 0 },
             fields: ['name', 'warehouse_name'],

@@ -293,7 +293,7 @@ async function init() {
 
 async function loadInvoices() {
     try {
-        // SPC Rule 6: route through purchase_studio service layer, not frappe.client directly
+        // SPC Rule 6: route through purchase_studio service layer, not platform_data_api directly
         const data = await api(
             'smriti_retail_os.purchase_studio.api.purchase_api.get_invoices',
             { page: 1, page_size: 150 }
@@ -354,7 +354,7 @@ function applyFilters() {
 
 async function loadInvoiceDetails(invoiceId) {
     try {
-        // SPC Rule 6: route through purchase_studio service layer, not frappe.client directly
+        // SPC Rule 6: route through purchase_studio service layer, not platform_data_api directly
         const doc = await api(
             'smriti_retail_os.purchase_studio.api.purchase_api.get_invoice_detail',
             { invoice_name: invoiceId }

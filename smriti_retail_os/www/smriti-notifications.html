@@ -685,7 +685,7 @@
         
         // Real-time listener
         if (window.frappe && frappe.realtime) {
-          frappe.realtime.on("smriti_notification", d => {
+          smriti.events.on("smriti_notification", d => {
             NC.load(); NC.loadBadge();
           });
         }

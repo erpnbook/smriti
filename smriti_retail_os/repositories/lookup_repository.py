@@ -41,4 +41,4 @@ class LookupRepository:
     def get_doc(model_name: str, name=None, *args, **kwargs):
         """Fetch a document. Accepts SMRITI model name or raw DocType."""
         import frappe
-        return frappe.get_doc(resolve_or_passthrough(model_name), name, *args, **kwargs)  # smriti-adapter-boundary
+        return smriti.documents.get(resolve_or_passthrough(model_name), name, *args, **kwargs)  # smriti-adapter-boundary

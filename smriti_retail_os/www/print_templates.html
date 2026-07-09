@@ -337,7 +337,7 @@ async function init() {
 
 async function loadTemplates() {
     try {
-        const data = await api('frappe.client.get_list', {
+        const data = await api('smriti_retail_os.api.platform_data_api.get_records', {
             doctype: 'SMRITI Print Template',
             fields: ['name', 'template_title', 'label_size', 'printer_language', 'printer_family', 'custom_active', 'custom_is_default', 'custom_version'],
             order_by: 'template_title asc',
@@ -432,7 +432,7 @@ function openAddTemplateModal() {
 async function openEditTemplateModal(name) {
     try {
         toast('Fetching template details...', 'info');
-        const doc = await api('frappe.client.get', {
+        const doc = await api('smriti_retail_os.api.platform_data_api.get_value', {
             doctype: 'SMRITI Print Template',
             name: name
         });

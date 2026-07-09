@@ -41,7 +41,7 @@ def invalidate_balance_cache(party_stock_account: str, item_code: str = None):
         item_code:           If provided, also invalidates the single-item key.
     """
     try:
-        cache = frappe.cache()
+        cache = smriti.cache()
         if item_code:
             cache.delete_key(_cache_key_single(party_stock_account, item_code))
         cache.delete_key(_cache_key_bulk(party_stock_account))
@@ -76,7 +76,7 @@ def get_party_balance(party_stock_account: str, item_code: str,
     # Real-time query: try cache first
     cache_key = _cache_key_single(party_stock_account, item_code)
     try:
-        cached = frappe.cache().get_value(cache_key)
+        cached = smriti.cache().get_value(cache_key)
         if cached is not None:
             return float(cached)
     except Exception:
@@ -88,7 +88,7 @@ def get_party_balance(party_stock_account: str, item_code: str,
 
     # Store in cache for next request
     try:
-        frappe.cache().set_value(cache_key, balance, expires_in_sec=_BALANCE_CACHE_TTL)
+        smriti.cache().set_value(cache_key, balance, expires_in_sec=_BALANCE_CACHE_TTL)
     except Exception:
         import sys
         _frappe = sys.modules.get('frappe')
@@ -136,7 +136,7 @@ def get_bulk_party_balances(party_stock_account: str, item_codes=None) -> dict:
 
     if use_cache:
         try:
-            cached = frappe.cache().get_value(cache_key)
+            cached = smriti.cache().get_value(cache_key)
             if cached is not None:
                 return cached
         except Exception:
@@ -148,7 +148,7 @@ def get_bulk_party_balances(party_stock_account: str, item_codes=None) -> dict:
 
     if use_cache:
         try:
-            frappe.cache().set_value(cache_key, result_dict, expires_in_sec=_BALANCE_CACHE_TTL)
+            smriti.cache().set_value(cache_key, result_dict, expires_in_sec=_BALANCE_CACHE_TTL)
         except Exception:
             import sys
             _frappe = sys.modules.get('frappe')

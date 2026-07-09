@@ -920,37 +920,9 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    // ── Frappe Call Mock for Standalone SMRITI execution ────────────────────
+    // ── SMRITI Framework API is used for all backend calls (Guard 6 compliant) ──
     window.csrf_token = "{{ csrf_token }}";
     window.frappe = window.frappe || {};
-    window.frappe.call = function(opts) {
-      return new Promise((resolve, reject) => {
-        fetch(`/api/method/${opts.method}`, {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Frappe-CSRF-Token': window.csrf_token
-          },
-          body: JSON.stringify(opts.args || {})
-        })
-        .then(res => res.json())
-        .then(data => {
-          if (data.exc) {
-            if (opts.error) opts.error(data);
-            reject(data);
-          } else {
-            const responseObj = { message: data.message };
-            if (opts.callback) opts.callback(responseObj);
-            resolve(responseObj);
-          }
-        })
-        .catch(err => {
-          if (opts.error) opts.error(err);
-          reject(err);
-        });
-      });
-    };
 
     // ── State ────────────────────────────────────────────────────────────────
     let queue         = [];
@@ -979,10 +951,9 @@
 
     // ── Dashboard KPIs ────────────────────────────────────────────────────────
     function refreshDashboard() {
-      frappe.call({
-        method: 'smriti_retail_os.api.trial_activation_api.get_activation_dashboard',
-      }).then(r => {
-        const d = r.message || {};
+      smriti.api.call('smriti_retail_os.api.trial_activation_api.get_activation_dashboard')
+      .then(d => {
+        d = d || {};
         const ac = d.act_counts || {};
         const sla = d.sla || {};
 
@@ -999,10 +970,9 @@
     // ── Load Queue ────────────────────────────────────────────────────────────
     function loadQueue() {
       document.getElementById('queue_body').innerHTML = '<div class="loading-row">Loading queue...</div>';
-      frappe.call({
-        method: 'smriti_retail_os.api.trial_activation_api.get_converted_leads',
-      }).then(r => {
-        queue = r.message || [];
+      smriti.api.call('smriti_retail_os.api.trial_activation_api.get_converted_leads')
+      .then(data => {
+        queue = data || [];
         renderQueue();
       }).catch(() => {
         document.getElementById('queue_body').innerHTML = '<div class="loading-row">Error loading queue.</div>';
@@ -1040,11 +1010,9 @@
       ['act_body','expiring_body'].forEach(id => {
         document.getElementById(id).innerHTML = '<div class="loading-row">Loading...</div>';
       });
-      frappe.call({
-        method: 'smriti_retail_os.api.trial_activation_api.get_activations',
-        args: { limit: 200 },
-      }).then(r => {
-        allActivations = r.message || [];
+      smriti.api.call('smriti_retail_os.api.trial_activation_api.get_activations', { limit: 200 })
+      .then(data => {
+        allActivations = data || [];
         filterActivations();
         renderExpiring();
       }).catch(() => {
@@ -1159,12 +1127,9 @@
         return;
       }
       document.getElementById('plog_body').innerHTML = '<div class="loading-row">Loading logs...</div>';
-      frappe.call({
-        method: 'smriti_retail_os.api.trial_activation_api.get_provision_logs',
-        args: { activation_name: actName },
-      }).then(r => {
-        const runs = r.message || [];
-        renderProvisionLogs(runs);
+      smriti.api.call('smriti_retail_os.api.trial_activation_api.get_provision_logs', { activation_name: actName })
+      .then(runs => {
+        renderProvisionLogs(runs || []);
       }).catch(() => {
         document.getElementById('plog_body').innerHTML =
           '<div class="plog-empty">Error loading provision logs.</div>';
@@ -1270,15 +1235,12 @@
       const btn  = document.getElementById('btn_create');
       btn.disabled = true; btn.textContent = 'Creating...';
 
-      frappe.call({
-        method: 'smriti_retail_os.api.trial_activation_api.create_activation',
-        args: {
+      smriti.api.call('smriti_retail_os.api.trial_activation_api.create_activation', {
           lead_name:       lead.name,
           activation_type: document.getElementById('create_type').value,
           trial_days:      parseInt(document.getElementById('create_days').value) || 30,
-        }
-      }).then(r => {
-        const m = r.message || {};
+      }).then(m => {
+        m = m || {};
         if (m.status === 'success' || m.status === 'duplicate') {
           showToast('✅ ' + (m.message || 'Activation created.'), 'success');
           closeModal('modal_create');
@@ -1299,15 +1261,12 @@
       const btn = document.getElementById('btn_activate');
       btn.disabled = true; btn.textContent = 'Activating...';
 
-      frappe.call({
-        method: 'smriti_retail_os.api.trial_activation_api.activate_account',
-        args: {
+      smriti.api.call('smriti_retail_os.api.trial_activation_api.activate_account', {
           activation_name: act.name,
           company_name:    document.getElementById('act_company').value.trim() || null,
           trial_days:      parseInt(document.getElementById('act_days').value) || 30,
-        }
-      }).then(r => {
-        const m = r.message || {};
+      }).then(m => {
+        m = m || {};
         if (m.status === 'success') {
           showToast(`✅ ${act.store_name} activated! Trial until ${m.trial_end}`, 'success');
           closeModal('modal_activate');
@@ -1328,15 +1287,12 @@
       const btn = document.getElementById('btn_extend');
       btn.disabled = true; btn.textContent = 'Extending...';
 
-      frappe.call({
-        method: 'smriti_retail_os.api.trial_activation_api.extend_trial',
-        args: {
+      smriti.api.call('smriti_retail_os.api.trial_activation_api.extend_trial', {
           activation_name:  act.name,
           additional_days:  parseInt(document.getElementById('extend_days').value) || 7,
           reason:           document.getElementById('extend_reason').value.trim() || null,
-        }
-      }).then(r => {
-        const m = r.message || {};
+      }).then(m => {
+        m = m || {};
         if (m.status === 'success') {
           showToast(`✅ Trial extended to ${m.new_end}`, 'success');
           closeModal('modal_extend');
@@ -1357,14 +1313,11 @@
       const btn = document.getElementById('btn_suspend');
       btn.disabled = true; btn.textContent = 'Suspending...';
 
-      frappe.call({
-        method: 'smriti_retail_os.api.trial_activation_api.suspend_activation',
-        args: {
+      smriti.api.call('smriti_retail_os.api.trial_activation_api.suspend_activation', {
           activation_name: act.name,
           reason:          document.getElementById('suspend_reason').value.trim() || null,
-        }
-      }).then(r => {
-        const m = r.message || {};
+      }).then(m => {
+        m = m || {};
         if (m.status === 'success') {
           showToast(`🛑 ${act.store_name} suspended.`, 'success');
           closeModal('modal_suspend');
@@ -1385,15 +1338,12 @@
       const btn = document.getElementById('btn_retry');
       btn.disabled = true; btn.textContent = 'Retrying...';
 
-      frappe.call({
-        method: 'smriti_retail_os.api.trial_activation_api.retry_provision',
-        args: {
+      smriti.api.call('smriti_retail_os.api.trial_activation_api.retry_provision', {
           activation_name: act.name,
           company_name:    document.getElementById('retry_company').value.trim() || null,
           trial_days:      parseInt(document.getElementById('retry_days').value) || 30,
-        }
-      }).then(r => {
-        const m = r.message || {};
+      }).then(m => {
+        m = m || {};
         if (m.status === 'success') {
           showToast(`✅ Retry succeeded! Trial until ${m.trial_end}`, 'success');
           closeModal('modal_retry');
@@ -1420,11 +1370,9 @@
 
       // Update activation_status to 'Converted to Paid' via direct frappe call
       // (platform admin action — no separate service needed for this status change)
-      frappe.call({
-        method: 'smriti_retail_os.api.trial_activation_api.mark_converted_to_paid',
-        args: { activation_name: act.name },
-      }).then(r => {
-        const m = r.message || {};
+      smriti.api.call('smriti_retail_os.api.trial_activation_api.mark_converted_to_paid', { activation_name: act.name })
+      .then(m => {
+        m = m || {};
         if (m.status === 'success') {
           showToast(`🎉 ${act.store_name} marked as Converted to Paid!`, 'success');
           closeModal('modal_convert');
@@ -1443,11 +1391,9 @@
     // ── Trial Health Snapshot ────────────────────────────────────────────────
     function loadHealth() {
       document.getElementById('health_history_body').innerHTML = '<div class="loading-row">Loading health history...</div>';
-      frappe.call({
-        method: 'smriti_retail_os.api.trial_activation_api.get_trial_health_snapshots',
-        args: { limit: 100 }
-      }).then(r => {
-        healthHistory = r.message || [];
+      smriti.api.call('smriti_retail_os.api.trial_activation_api.get_trial_health_snapshots', { limit: 100 })
+      .then(data => {
+        healthHistory = data || [];
         renderHealthDashboard();
         renderHealthHistory();
       }).catch(err => {
@@ -1457,9 +1403,8 @@
 
     function triggerSnapshot() {
       showToast('⏳ Generating on-demand snapshot...', 'success');
-      frappe.call({
-        method: 'smriti_retail_os.api.trial_activation_api.trigger_trial_health_snapshot'
-      }).then(r => {
+      smriti.api.call('smriti_retail_os.api.trial_activation_api.trigger_trial_health_snapshot')
+      .then(() => {
         showToast('✅ Snapshot generated successfully!', 'success');
         loadHealth();
       }).catch(err => {

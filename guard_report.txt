@@ -1,0 +1,136 @@
+﻿================================================================
+  SMRITI Architecture Guard ù Progress Report
+================================================================
+  Layer: UI -> api -> service -> Persistence Adapter -> Platform Engine
+
+  Baseline     83 files    698 legacy calls
+  Current       0 files      0 legacy calls
+  Progress     83 files cleared  (100.0%)     698 calls removed  (100.0%)
+
+  [OK]  83 file(s) improved since baseline
+  [OK]  No regressions. Architecture boundary is holding.
+================================================================
+
+================================================================
+  Guard 6 ù UI Persistence Boundary (WARNING MODE)
+================================================================
+  WARNING: 186 violation(s) in 46 file(s).
+  Status:  Warning mode ù build NOT failed.
+  Action:  Replace frappe.* calls with smriti.* equivalents.
+  Guide:   public/js/smriti_core.js
+
+  smriti_retail_os/www/backup.html  (1 violation(s))
+    Line  936: Forbidden: frappe.client
+             => Use: smriti.api.*
+  smriti_retail_os/www/cge_generic.html  (1 violation(s))
+    Line  523: Forbidden: frappe.client
+             => Use: smriti.api.*
+  smriti_retail_os/www/configure.html  (8 violation(s))
+    Line  942: Forbidden: frappe.client
+             => Use: smriti.api.*
+    Line  970: Forbidden: frappe.client
+             => Use: smriti.api.*
+    Line  973: Forbidden: frappe.client
+             => Use: smriti.api.*
+    Line  974: Forbidden: frappe.client
+             => Use: smriti.api.*
+    Line  975: Forbidden: frappe.client
+             => Use: smriti.api.*
+    ... and 3 more
+  smriti_retail_os/www/customers.html  (4 violation(s))
+    Line  405: Forbidden: frappe.client
+             => Use: smriti.api.*
+    Line  421: Forbidden: frappe.client
+             => Use: smriti.api.*
+    Line  443: Forbidden: frappe.client
+             => Use: smriti.api.*
+    Line  459: Forbidden: frappe.client
+             => Use: smriti.api.*
+  smriti_retail_os/www/delivery_challan.html  (2 violation(s))
+    Line  291: Forbidden: frappe.client
+             => Use: smriti.api.*
+    Line  356: Forbidden: frappe.client
+             => Use: smriti.api.*
+  smriti_retail_os/www/eway_bill.html  (2 violation(s))
+    Line  398: Forbidden: frappe.client
+             => Use: smriti.api.*
+    Line  483: Forbidden: frappe.client
+             => Use: smriti.api.*
+  smriti_retail_os/www/inventory.html  (1 violation(s))
+    Line  467: Forbidden: frappe.client
+             => Use: smriti.api.*
+  smriti_retail_os/www/item_master.html  (14 violation(s))
+    Line 1120: Forbidden: frappe.show_alert()
+             => Use: smriti.notify.*
+    Line 1150: Forbidden: frappe.show_alert()
+             => Use: smriti.notify.*
+    Line 1159: Forbidden: frappe.show_alert()
+             => Use: smriti.notify.*
+    Line 1163: Forbidden: frappe.show_alert()
+             => Use: smriti.notify.*
+    Line 1167: Forbidden: frappe.call()
+             => Use: smriti.api.call()
+    ... and 9 more
+  smriti_retail_os/www/platform_center.html  (3 violation(s))
+    Line 1566: Forbidden: frappe.client
+             => Use: smriti.api.*
+    Line 1580: Forbidden: frappe.client
+             => Use: smriti.api.*
+    Line 1594: Forbidden: frappe.client
+             => Use: smriti.api.*
+  smriti_retail_os/www/print_templates.html  (2 violation(s))
+    Line  340: Forbidden: frappe.client
+             => Use: smriti.api.*
+    Line  435: Forbidden: frappe.client
+             => Use: smriti.api.*
+  smriti_retail_os/www/products.html  (1 violation(s))
+    Line  199: Forbidden: frappe.call()
+             => Use: smriti.api.call()
+  smriti_retail_os/www/psa.html  (7 violation(s))
+    Line  359: Forbidden: frappe.client
+             => Use: smriti.api.*
+    Line  371: Forbidden: frappe.client
+             => Use: smriti.api.*
+    Line  387: Forbidden: frappe.client
+             => Use: smriti.api.*
+    Line  403: Forbidden: frappe.client
+             => Use: smriti.api.*
+    Line  509: Forbidden: frappe.client
+             => Use: smriti.api.*
+    ... and 2 more
+  smriti_retail_os/www/psv-dashboard.html  (2 violation(s))
+    Line  541: Forbidden: frappe.client
+             => Use: smriti.api.*
+    Line  557: Forbidden: frappe.client
+             => Use: smriti.api.*
+  smriti_retail_os/www/psv-opening-balance.html  (1 violation(s))
+    Line  282: Forbidden: frappe.client
+             => Use: smriti.api.*
+  smriti_retail_os/www/psv_exception_analysis.html  (1 violation(s))
+    Line  208: Forbidden: frappe.client
+             => Use: smriti.api.*
+  smriti_retail_os/www/psv_reconciliation.html  (1 violation(s))
+    Line  211: Forbidden: frappe.client
+             => Use: smriti.api.*
+  smriti_retail_os/www/purchase_invoice.html  (2 violation(s))
+    Line  296: Forbidden: frappe.client
+             => Use: smriti.api.*
+    Line  357: Forbidden: frappe.client
+             => Use: smriti.api.*
+  smriti_retail_os/www/purchase_receipt.html  (2 violation(s))
+    Line  291: Forbidden: frappe.client
+             => Use: smriti.api.*
+    Line  355: Forbidden: frappe.client
+             => Use: smriti.api.*
+  smriti_retail_os/www/release_notes.html  (1 violation(s))
+    Line  151: Forbidden: frappe.client
+             => Use: smriti.api.*
+  smriti_retail_os/www/sales-upload.html  (2 violation(s))
+    Line  287: Forbidden: frappe.client
+             => Use: smriti.api.*
+    Line  440: Forbidden: frappe.client
+             => Use: smriti.api.*
+  ... and 26 more file(s) not shown.
+
+  Migration Backlog tracked in: ARCHITECTURE_MIGRATION_BACKLOG.md
+  Once all violations are cleared, switch Guard 6 to ERROR MODE.

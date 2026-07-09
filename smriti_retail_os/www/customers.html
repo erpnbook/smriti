@@ -402,7 +402,7 @@ async function init() {
 
 async function loadCustomers() {
     try {
-        const data = await api('frappe.client.get_list', {
+        const data = await api('smriti_retail_os.api.platform_data_api.get_records', {
             doctype: 'Customer',
             fields: ['name', 'customer_name', 'mobile_no', 'customer_group', 'territory'],
             order_by: 'creation desc',
@@ -418,7 +418,7 @@ async function loadCustomers() {
 
 async function loadFilterOptions() {
     try {
-        const groups = await api('frappe.client.get_list', {
+        const groups = await api('smriti_retail_os.api.platform_data_api.get_records', {
             doctype: 'Customer Group',
             fields: ['name'],
             order_by: 'name asc',
@@ -440,7 +440,7 @@ async function loadFilterOptions() {
 
 async function loadDropdownOptions() {
     try {
-        const groups = await api('frappe.client.get_list', {
+        const groups = await api('smriti_retail_os.api.platform_data_api.get_records', {
             doctype: 'Customer Group',
             fields: ['name'],
             order_by: 'name asc',
@@ -456,7 +456,7 @@ async function loadDropdownOptions() {
             grpSel.appendChild(opt);
         });
         
-        const territories = await api('frappe.client.get_list', {
+        const territories = await api('smriti_retail_os.api.platform_data_api.get_records', {
             doctype: 'Territory',
             fields: ['name'],
             order_by: 'name asc',

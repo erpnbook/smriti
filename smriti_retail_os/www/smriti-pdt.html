@@ -621,7 +621,7 @@
 
   // --- Rule ID: DOC-01 Formula & Worked Example Transparency Overlay ---
   function explainWoc(twinName) {
-    API.call('frappe.client.get', {
+    smriti.api.call('smriti_retail_os.api.platform_data_api.get_value', {
       doctype: 'SMRITI SKU Twin',
       name: twinName
     })

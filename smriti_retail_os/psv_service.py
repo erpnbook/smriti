@@ -27,7 +27,7 @@ from smriti_retail_os.balance_engine import get_party_balance, get_bulk_party_ba
 # for the same Party Stock Account both pass the balance check and then
 # both commit, creating a net-negative shadow balance.
 #
-# Implementation: Redis SET NX (set-if-not-exists) via frappe.cache().
+# Implementation: Redis SET NX (set-if-not-exists) via smriti.cache().
 # No new infrastructure required — Frappe already uses Redis for caching.
 # Lock is scoped per party_stock_account, so concurrent uploads for
 # DIFFERENT locations are not blocked.
@@ -46,7 +46,7 @@ def _psv_upload_lock(party_stock_account):
     (meaning another upload for the same PSA is in progress).
     """
     lock_key = f"{_PSV_LOCK_PREFIX}{party_stock_account}"
-    cache = frappe.cache()
+    cache = smriti.cache()
 
     # Redis SET NX EX — atomic set-if-not-exists with expiry
     acquired = cache.set(lock_key, 1, ex=_PSV_LOCK_EXPIRY_SECONDS, nx=True)

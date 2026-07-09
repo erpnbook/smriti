@@ -49,7 +49,7 @@ def enqueue_rebuild_twin_cache(company, party_stock_account, item_code, source_e
     except Exception as e:
         smriti.errors.log_error("SMRITI pdt_service enqueue lock failed", exc=e)
         
-    frappe.enqueue(
+    smriti.tasks.enqueue(
         "smriti_retail_os.services.pdt_service.rebuild_twin_cache",
         queue="long",
         company=company,

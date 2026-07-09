@@ -32,7 +32,7 @@ def create_notification(user, notif_type, title, message, reference_doctype=None
         smriti.db.commit()
 
         # Push real-time to user
-        frappe.publish_realtime(
+        smriti.realtime.publish(
             event="smriti_notification",
             message={
                 "name": doc.name,

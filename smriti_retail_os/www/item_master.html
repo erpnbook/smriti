@@ -1,4 +1,4 @@
-﻿{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
 <!--
   @file: smriti_retail_os/www/item_master.html
   @description: SMRITI Item Master Import — Standalone UI (Zero system chrome)
@@ -1117,7 +1117,7 @@ class SmritiItemMasterController {
     _handle_paste(text, suffix) {
         const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim().split('\n');
         if (lines.length < 2) {
-            frappe.show_alert({ message: 'Paste at least 2 rows (header + 1 data row)', indicator: 'orange' }, 4);
+            smriti.notify.warning('Paste Error', 'Paste at least 2 rows (header + 1 data row)');
             return;
         }
 
@@ -1147,29 +1147,24 @@ class SmritiItemMasterController {
         this._set_rows(suffix, [...existing, ...newRows]);
         this._render_grid_rows(suffix);
 
-        frappe.show_alert({
-            message: `✅ ${newRows.length} row${newRows.length > 1 ? 's' : ''} pasted — click Validate to check`,
-            indicator: 'green'
-        }, 4);
+        smriti.notify.success('Rows Pasted', `${newRows.length} row${newRows.length > 1 ? 's' : ''} pasted — click Validate to check`);
     }
 
     async _validate_rows(suffix) {
         const rows = this._get_rows(suffix);
         if (!rows.length) {
-            frappe.show_alert({ message: 'No rows to validate', indicator: 'orange' }, 3);
+            smriti.notify.warning('Validation', 'No rows to validate');
             return;
         }
 
-        frappe.show_alert({ message: 'Validating…', indicator: 'blue' }, 2);
+        smriti.notify.info('Validating', 'Checking rows…');
         const rowData = rows.map(r => r.data);
 
         try {
-            const results = await frappe.call({
-                method: 'smriti_retail_os.item_master_api.validate_import_rows',
-                args: { rows_json: JSON.stringify(rowData) }
-            });
-
-            const validations = results.message || [];
+            const validations = await smriti.api.call(
+                'smriti_retail_os.item_master_api.validate_import_rows',
+                { rows_json: JSON.stringify(rowData) }
+            ) || [];
             validations.forEach((v, i) => {
                 if (rows[i]) {
                     rows[i].status   = v.status;
@@ -1189,13 +1184,11 @@ class SmritiItemMasterController {
                 `🚀 Import ${validCount + warnCount} Valid Row${(validCount + warnCount) !== 1 ? 's' : ''}`
             );
 
-            frappe.show_alert({
-                message: `Validation done — ${validCount} valid, ${warnCount} warnings, ${errCount} errors`,
-                indicator: errCount > 0 ? (validCount > 0 ? 'orange' : 'red') : 'green'
-            }, 5);
+            const _notifyFn = errCount > 0 ? (validCount > 0 ? smriti.notify.warning : smriti.notify.error) : smriti.notify.success;
+            _notifyFn('Validation Done', `${validCount} valid, ${warnCount} warnings, ${errCount} errors`);
 
         } catch (err) {
-            frappe.show_alert({ message: 'Validation failed: ' + (err.message || err), indicator: 'red' }, 6);
+            smriti.notify.error('Validation Failed', err.message || String(err));
         }
     }
 
@@ -1204,7 +1197,7 @@ class SmritiItemMasterController {
         const importable = rows.filter(r => r.status === 'valid' || r.status === 'warning');
 
         if (!importable.length) {
-            frappe.show_alert({ message: 'No valid rows to import. Run Validate first.', indicator: 'orange' }, 4);
+            smriti.notify.warning('Import', 'No valid rows to import. Run Validate first.');
             return;
         }
 
@@ -1225,14 +1218,12 @@ class SmritiItemMasterController {
         $(`[data-suffix="${suffix}"].sim-btn-import`).prop('disabled', true);
 
         try {
-            const result = await frappe.call({
-                method: 'smriti_retail_os.item_master_api.import_item_master',
-                args: { rows_json: JSON.stringify(importable.map(r => r.data)) }
-            });
+            const r = await smriti.api.call(
+                'smriti_retail_os.item_master_api.import_item_master',
+                { rows_json: JSON.stringify(importable.map(r => r.data)) }
+            ) || {};
 
             $bar.css('width', '100%');
-
-            const r = result.message || {};
             const created   = r.created          || 0;
             const dups      = r.duplicate_errors || [];
             const failed    = r.failed           || [];
@@ -1268,14 +1259,14 @@ class SmritiItemMasterController {
             if (dups.length || failed.length) $errDet.addClass('active');
 
             if (created > 0) {
-                frappe.show_alert({ message: `✅ ${created} items created!`, indicator: 'green' }, 6);
+                smriti.notify.success('Import Complete', `${created} items created!`);
             }
 
         } catch (err) {
             $bar.css('width', '100%').css('background', 'var(--sim-red)');
             $label.text('Import failed');
             $res.append(`<div class="sim-result-line error">❌ ${err.message || 'Unexpected error during import'}</div>`);
-            frappe.show_alert({ message: 'Import error: ' + (err.message || err), indicator: 'red' }, 8);
+            smriti.notify.error('Import Error', err.message || String(err));
         }
 
         this.importing = false;
@@ -1291,10 +1282,7 @@ class SmritiItemMasterController {
             reader.onload = (e) => this._handle_paste(e.target.result, suffix);
             reader.readAsText(file, 'utf-8');
         } else {
-            frappe.show_alert({
-                message: 'For .xlsx files, please save as CSV in Excel first (File → Save As → CSV UTF-8), then upload.',
-                indicator: 'orange'
-            }, 8);
+            smriti.notify.warning('Unsupported Format', 'For .xlsx files, please save as CSV in Excel first (File → Save As → CSV UTF-8), then upload.');
         }
     }
 
@@ -1355,10 +1343,9 @@ function _esc(str) {
 
 $(document).ready(async function() {
     try {
-        const defs = await frappe.call({
-            method: 'smriti_retail_os.item_master_api.get_import_column_defs'
-        });
-        SIM_COLS = defs.message || [];
+        SIM_COLS = await smriti.api.call(
+            'smriti_retail_os.item_master_api.get_import_column_defs'
+        ) || [];
         
         REQUIRED_KEYS.length = 0;
         REQUIRED_KEYS.push(...SIM_COLS.filter(c => c.required).map(c => c.key));
@@ -1371,10 +1358,9 @@ $(document).ready(async function() {
         Object.assign(HEADER_ALIASES, EXTRA_ALIASES);
         
         // Fetch attribute order and sort SIM_COLS
-        const attrRes = await frappe.call({
-            method: 'smriti_retail_os.company_api.get_item_attributes'
-        });
-        const sortedAttrs = attrRes.message || [];
+        const sortedAttrs = await smriti.api.call(
+            'smriti_retail_os.company_api.get_item_attributes'
+        ) || [];
         const attrIndexMap = {};
         const weightedKeys = new Set();
         

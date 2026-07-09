@@ -116,7 +116,7 @@ def resolve_barcode(barcode):
     Priority: Item Barcode table → Direct Item name match
     Also falls back to template settings for variants if fields are empty/unset.
     """
-    frappe.has_permission("Item", "read", throw=True)
+    smriti.permissions.has_permission("Item", "read", throw=True)
     
     if not barcode:
         return {"error": "Empty barcode", "barcode": ""}

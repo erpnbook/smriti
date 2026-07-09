@@ -1001,9 +1001,7 @@
 
     function loadMetaAndCounts() {
         // Fetch Version Info
-        frappe.call({
-            method: "smriti_retail_os.api.knowledge_studio_api.get_ske_meta",
-            callback: function(r) {
+        smriti.api.call("smriti_retail_os.api.knowledge_studio_api.get_ske_meta").then(data => {
                 if (r.message) {
                     $("#ske-v").text(r.message.ske_version);
                     $("#ir-v").text(r.message.ir_version);
@@ -1014,9 +1012,7 @@
         });
 
         // Fetch Count Statistics
-        frappe.call({
-            method: "smriti_retail_os.api.knowledge_studio_api.get_knowledge_studio_counts",
-            callback: function(r) {
+        smriti.api.call("smriti_retail_os.api.knowledge_studio_api.get_knowledge_studio_counts").then(data => {
                 if (r.message) {
                     $("#cnt-glossary").text(r.message.glossary);
                     $("#cnt-apis").text(r.message.apis);
@@ -1042,10 +1038,7 @@
         }
 
         const startTime = Date.now();
-        frappe.call({
-            method: "smriti_retail_os.api.knowledge_studio_api.query_ske",
-            args: { query: query },
-            callback: function(r) {
+        smriti.api.call("smriti_retail_os.api.knowledge_studio_api.query_ske", { query: query }).then(r => {
                 const results = r.message || [];
                 renderResults(results);
 
@@ -1053,16 +1046,13 @@
                 const uniqueProviders = results.map(o => o.type).filter((v, i, self) => self.indexOf(v) === i).join(', ');
                 const hasResult = results.length > 0 ? 1 : 0;
 
-                frappe.call({
-                    method: "smriti_retail_os.api.knowledge_studio_api.log_telemetry_event",
-                    args: {
-                        event_type: "SEARCH",
-                        query: query,
-                        has_result: hasResult,
-                        resolution_time_ms: duration,
-                        provider_hit: uniqueProviders || "none",
-                        confidence_source: hasResult ? "Merged" : "None"
-                    }
+                smriti.api.call("smriti_retail_os.api.knowledge_studio_api.log_telemetry_event", {
+                    event_type: "SEARCH",
+                    query: query,
+                    has_result: hasResult,
+                    resolution_time_ms: duration,
+                    provider_hit: uniqueProviders || "none",
+                    confidence_source: hasResult ? "Merged" : "None"
                 });
             }
         });
@@ -1269,17 +1259,14 @@
         $("#panel-business").addClass("active");
 
         // Log Telemetry Event
-        frappe.call({
-            method: "smriti_retail_os.api.knowledge_studio_api.log_telemetry_event",
-            args: {
-                event_type: "VIEW",
-                query: null,
-                target_asset: obj.id,
-                has_result: 1,
-                resolution_time_ms: 0,
-                provider_hit: obj.type,
-                confidence_source: obj.validation_status || "Verified"
-            }
+        smriti.api.call("smriti_retail_os.api.knowledge_studio_api.log_telemetry_event", {
+            event_type: "VIEW",
+            query: null,
+            target_asset: obj.id,
+            has_result: 1,
+            resolution_time_ms: 0,
+            provider_hit: obj.type,
+            confidence_source: obj.validation_status || "Verified"
         });
     }
 
@@ -1349,10 +1336,7 @@
         $history.scrollTop($history[0].scrollHeight);
 
         const chatStartTime = Date.now();
-        frappe.call({
-            method: "smriti_retail_os.api.ai_integration_api.ask_smriti_ai",
-            args: { query: query },
-            callback: function(r) {
+        smriti.api.call("smriti_retail_os.api.ai_integration_api.ask_smriti_ai", { query: query }).then(r => {
                 $("#ai-loading-bubble").remove();
                 if (r.message) {
                     const data = r.message;
@@ -1406,16 +1390,13 @@
 
                     // Log Telemetry
                     const duration = Date.now() - chatStartTime;
-                    frappe.call({
-                        method: "smriti_retail_os.api.knowledge_studio_api.log_telemetry_event",
-                        args: {
-                            event_type: "AI_CHAT",
-                            query: query,
-                            has_result: 1,
-                            resolution_time_ms: duration,
-                            provider_hit: "AI",
-                            confidence_source: "AI_CHAT"
-                        }
+                    smriti.api.call("smriti_retail_os.api.knowledge_studio_api.log_telemetry_event", {
+                        event_type: "AI_CHAT",
+                        query: query,
+                        has_result: 1,
+                        resolution_time_ms: duration,
+                        provider_hit: "AI",
+                        confidence_source: "AI_CHAT"
                     });
                 }
             },
@@ -1432,23 +1413,18 @@
     }
 
     function openAssetDetailById(assetId) {
-        frappe.call({
-            method: "smriti_retail_os.api.knowledge_studio_api.query_ske",
-            args: { query: assetId },
-            callback: function(r) {
+        smriti.api.call("smriti_retail_os.api.knowledge_studio_api.query_ske", { query: assetId }).then(r => {
                 if (r.message && r.message.length > 0) {
                     openDrawer(r.message[0]);
                 } else {
-                    frappe.msgprint("Asset not found: " + assetId);
+                    smriti.dialog.alert('Notice', "Asset not found: " + assetId);
                 }
             }
         });
     }
 
     function loadExplainableHealth() {
-        frappe.call({
-            method: "smriti_retail_os.api.knowledge_studio_api.get_explainable_health",
-            callback: function(r) {
+        smriti.api.call("smriti_retail_os.api.knowledge_studio_api.get_explainable_health").then(data => {
                 if (r.message) {
                     const health = r.message;
                     $("#health-index-score").text(Math.round(health.health_score) + "%");
@@ -1485,9 +1461,7 @@
     }
 
     function loadCollectionsGrid() {
-        frappe.call({
-            method: "smriti_retail_os.api.knowledge_studio_api.get_collections",
-            callback: function(r) {
+        smriti.api.call("smriti_retail_os.api.knowledge_studio_api.get_collections").then(data => {
                 if (r.message) {
                     const collections = r.message;
                     const container = $("#collections-grid-container");
