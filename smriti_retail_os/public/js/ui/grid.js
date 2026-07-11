@@ -17,7 +17,10 @@ SMRITI.Grid = class {
         this.dataSource = options.dataSource || null;
         this.actions = options.actions || [];
         this.onRowClick = options.onRowClick || null;
+        this.contextObject = options.contextObject || null;
+        this.contextModule = options.contextModule || null;
         this.data = [];
+        this.raw_data = [];
         this.init();
     }
 
@@ -27,6 +30,7 @@ SMRITI.Grid = class {
                 <table class="smriti-table">
                     <thead>
                         <tr id="grid-header-row"></tr>
+                        <tr id="grid-filter-row"></tr>
                     </thead>
                     <tbody id="grid-tbody">
                         <tr><td colspan="${this.columns.length + (this.actions.length ? 1 : 0)}" style="text-align:center; padding:40px 0;">Loading...</td></tr>
@@ -35,6 +39,7 @@ SMRITI.Grid = class {
             </div>
         `;
         this.renderHeaders();
+        this.renderFilters();
         this.refresh();
     }
 
@@ -52,6 +57,29 @@ SMRITI.Grid = class {
         headerRow.innerHTML = html;
     }
 
+    renderFilters() {
+        const filterRow = this.container.querySelector("#grid-filter-row");
+        if (!filterRow) return;
+
+        let html = this.columns.map((col, index) => {
+            const alignStyle = col.align === 'right' ? 'text-align: right;' : (col.align === 'center' ? 'text-align: center;' : 'text-align: left;');
+            return `
+                <th style="padding: 6px 8px; width: ${col.width || 'auto'}; ${alignStyle}">
+                    <input type="text" class="smriti-grid-filter-input" data-col-index="${index}" data-field="${col.field}" placeholder="Filter..." style="width: 100%; padding: 4px 8px; font-size: 11px; border: 1px solid var(--smriti-card-border); background: var(--smriti-bg-dark, rgba(0,0,0,0.2)); color: var(--smriti-text); border-radius: var(--radius-sm, 4px); outline: none;">
+                </th>
+            `;
+        }).join('');
+
+        if (this.actions.length) {
+            html += `<th></th>`;
+        }
+        filterRow.innerHTML = html;
+
+        filterRow.querySelectorAll(".smriti-grid-filter-input").forEach(input => {
+            input.addEventListener("input", () => this.applyColumnFilters());
+        });
+    }
+
     async refresh() {
         const tbody = this.container.querySelector("#grid-tbody");
         if (!this.dataSource) return;
@@ -59,12 +87,35 @@ SMRITI.Grid = class {
         try {
             tbody.innerHTML = `<tr><td colspan="${this.columns.length + (this.actions.length ? 1 : 0)}" style="text-align:center; padding:40px 0;"><div class="loading-spinner"></div> Loading records...</td></tr>`;
             
-            this.data = await this.dataSource();
-            this.renderRows();
+            const fetched = await this.dataSource();
+            this.raw_data = fetched || [];
+            this.applyColumnFilters();
         } catch (e) {
             tbody.innerHTML = `<tr><td colspan="${this.columns.length + (this.actions.length ? 1 : 0)}" style="text-align:center; padding:40px 0; color:var(--smriti-color-brand-light);">Error: ${e.message}</td></tr>`;
             SMRITI.toast.error("Failed to load grid: " + e.message);
         }
+    }
+
+    applyColumnFilters() {
+        const inputs = this.container.querySelectorAll(".smriti-grid-filter-input");
+        let filtered = [...this.raw_data];
+
+        inputs.forEach(input => {
+            const field = input.getAttribute("data-field");
+            const query = input.value.toLowerCase().trim();
+            if (query) {
+                filtered = filtered.filter(row => {
+                    let val = row[field];
+                    if (val === undefined || val === null) return false;
+                    
+                    const strVal = String(val).toLowerCase();
+                    return strVal.includes(query);
+                });
+            }
+        });
+
+        this.data = filtered;
+        this.renderRows();
     }
 
     renderRows() {
@@ -75,11 +126,28 @@ SMRITI.Grid = class {
         }
 
         tbody.innerHTML = this.data.map((row, rowIndex) => {
-            let rowHtml = `<tr class="grid-row" data-index="${rowIndex}">`;
+            const contextObj = this.contextObject || "";
+            const contextId = row.name || row.id || row.item_code || row.customer_name || row.supplier_name || "";
+            const contextState = row.status || row.workflow_state || "";
+            const contextModule = this.contextModule || "";
+            
+            let rowHtml = `<tr class="grid-row" data-index="${rowIndex}"`;
+            if (contextObj) {
+                rowHtml += ` data-smriti-context-object="${contextObj}"`;
+                rowHtml += ` data-smriti-context-id="${contextId}"`;
+                if (contextState) rowHtml += ` data-smriti-context-state="${contextState}"`;
+                if (contextModule) rowHtml += ` data-smriti-context-module="${contextModule}"`;
+                if (row.stock_qty !== undefined) rowHtml += ` data-smriti-context-val-stock_qty="${row.stock_qty}"`;
+                if (row.reorder_level !== undefined) rowHtml += ` data-smriti-context-val-reorder_level="${row.reorder_level}"`;
+                if (row.outstanding_amount !== undefined) rowHtml += ` data-smriti-context-val-outstanding_amount="${row.outstanding_amount}"`;
+            }
+            rowHtml += `>`;
             
             this.columns.forEach(col => {
                 let val = row[col.field] === undefined || row[col.field] === null ? "" : row[col.field];
-                if (col.formatter === "currency") {
+                if (typeof col.formatter === "function") {
+                    val = col.formatter(val, row);
+                } else if (col.formatter === "currency") {
                     val = `Rs. ${parseFloat(val || 0).toFixed(2)}`;
                 } else if (col.formatter === "percent") {
                     val = `${val}%`;
@@ -130,7 +198,7 @@ SMRITI.Grid = class {
     }
 
     setData(newData) {
-        this.data = newData;
-        this.renderRows();
+        this.raw_data = newData || [];
+        this.applyColumnFilters();
     }
 };

@@ -108,6 +108,18 @@
             border-color: var(--smriti-primary);
             color: var(--smriti-primary-light);
         }
+
+        /* Ensure table doesn't get squeezed when viewing all columns */
+        #products-grid .smriti-grid-wrapper {
+            overflow-x: auto;
+            width: 100%;
+        }
+        #products-grid .smriti-table {
+            transition: min-width 0.2s ease;
+        }
+        .fav-star-btn:hover {
+            color: #f59e0b !important;
+        }
     </style>
 </head>
 <body>
@@ -133,6 +145,9 @@
                 </button>
                 <button class="topbtn" onclick="history.forward()" title="Go Forward">
                     <span class="material-symbols-outlined">arrow_forward</span>
+                </button>
+                <button class="topbtn" id="btn-toggle-fields" onclick="toggleAllFields()" title="Toggle View of Extended Fields">
+                    <span class="material-symbols-outlined">visibility</span> View All Fields
                 </button>
                 <button class="topbtn" onclick="openAddProductModal()" style="border-color:var(--smriti-color-brand-primary);color:var(--smriti-color-brand-light);">
                     <span class="material-symbols-outlined">add</span> Add Product
@@ -185,6 +200,90 @@ SMRITI.registerStudio({
     }
 });
 
+const basicColumns = [
+    { 
+        field: "item_name", 
+        label: "Description", 
+        bold: true, 
+        width: "250px",
+        formatter: (val, row) => {
+            const favs = JSON.parse(localStorage.getItem("smriti-product-favorites") || "[]");
+            const isFav = favs.includes(row.name);
+            const star = isFav ? "★" : "☆";
+            const color = isFav ? "#f59e0b" : "var(--text-muted)";
+            return `<span class="fav-star-btn" data-code="${row.name}" style="cursor:pointer; margin-right:8px; color:${color}; font-size:16px; transition:color 0.2s;" title="Toggle Favorite">${star}</span> ${val}`;
+        }
+    },
+    { field: "barcode", label: "Barcode", width: "130px" },
+    { field: "custom_style_code", label: "Style Code", width: "110px" },
+    { field: "brand", label: "Brand", width: "110px" },
+    { field: "item_group", label: "Category", width: "110px" },
+    { field: "custom_mrp", label: "MRP Price", formatter: "currency", align: "right", width: "110px" },
+    { field: "valuation_rate", label: "Cost Price", formatter: "currency", align: "right", width: "110px" },
+    { field: "custom_gst_percentage", label: "GST%", formatter: "percent", align: "center", width: "90px" }
+];
+
+const allColumns = [
+    { 
+        field: "item_name", 
+        label: "Description", 
+        bold: true, 
+        width: "250px",
+        formatter: (val, row) => {
+            const favs = JSON.parse(localStorage.getItem("smriti-product-favorites") || "[]");
+            const isFav = favs.includes(row.name);
+            const star = isFav ? "★" : "☆";
+            const color = isFav ? "#f59e0b" : "var(--text-muted)";
+            return `<span class="fav-star-btn" data-code="${row.name}" style="cursor:pointer; margin-right:8px; color:${color}; font-size:16px; transition:color 0.2s;" title="Toggle Favorite">${star}</span> ${val}`;
+        }
+    },
+    { field: "barcode", label: "Barcode", width: "130px" },
+    { field: "custom_style_code", label: "Style Code", width: "120px" },
+    { field: "brand", label: "Brand", width: "110px" },
+    { field: "item_group", label: "Category", width: "110px" },
+    { field: "custom_sub_category", label: "Sub Category", width: "110px" },
+    { field: "custom_gender", label: "Gender", width: "90px" },
+    { field: "custom_vendor_code", label: "Vendor Code", width: "110px" },
+    { field: "custom_purchase_class", label: "Purchase Class", width: "120px" },
+    { field: "custom_department", label: "Department", width: "110px" },
+    { field: "custom_heels", label: "Heels", width: "90px" },
+    { field: "custom_upper_material", label: "Upper Material", width: "120px" },
+    { field: "custom_outsole", label: "Outsole", width: "110px" },
+    { field: "custom_mrp", label: "MRP Price", formatter: "currency", align: "right", width: "110px" },
+    { field: "valuation_rate", label: "Cost Price", formatter: "currency", align: "right", width: "110px" },
+    { field: "custom_gst_percentage", label: "GST%", formatter: "percent", align: "center", width: "90px" },
+    { field: "gst_hsn_code", label: "HSN Code", width: "100px" }
+];
+
+let showAllFields = false;
+
+function toggleAllFields() {
+    showAllFields = !showAllFields;
+    const btn = document.getElementById("btn-toggle-fields");
+    if (showAllFields) {
+        btn.innerHTML = `<span class="material-symbols-outlined">visibility_off</span> View Basic Fields`;
+        btn.style.borderColor = "var(--smriti-color-brand-primary)";
+        btn.style.color = "var(--smriti-color-brand-light)";
+        catalogGrid.columns = allColumns;
+    } else {
+        btn.innerHTML = `<span class="material-symbols-outlined">visibility</span> View All Fields`;
+        btn.style.borderColor = "";
+        btn.style.color = "";
+        catalogGrid.columns = basicColumns;
+    }
+    
+    catalogGrid.renderHeaders();
+    catalogGrid.renderFilters();
+    
+    const tableEl = document.querySelector("#products-grid .smriti-table");
+    if (tableEl) {
+        tableEl.style.minWidth = showAllFields ? "1900px" : "100%";
+        tableEl.style.tableLayout = showAllFields ? "fixed" : "auto";
+    }
+    
+    catalogGrid.applyColumnFilters();
+}
+
 async function initProductStudio() {
     // Render sidebar
     if (window.SMRITI && typeof SMRITI.renderFlexibleSidebar === "function") {
@@ -195,14 +294,7 @@ async function initProductStudio() {
     let brands = [];
     let categories = [];
     try {
-        const metadata = await new Promise((resolve, reject) => {
-            smriti.api.call("smriti_retail_os.item_studio.api.product_api.get_catalog_metadata").then(data => {
-                    if (r.exc) reject(new Error(r.exc));
-                    else resolve(r.message);
-                },
-                error: reject
-            });
-        });
+        const metadata = await smriti.api.call("smriti_retail_os.item_studio.api.product_api.get_catalog_metadata") || {};
         brands = (metadata.brands || []).map(b => ({ value: b, label: b }));
         categories = (metadata.categories || []).map(c => ({ value: c, label: c }));
     } catch (e) {
@@ -214,7 +306,8 @@ async function initProductStudio() {
         searchPlaceholder: "Search description, style, or code...",
         filters: [
             { id: "brand", label: "Brands", options: brands },
-            { id: "category", label: "Categories", options: categories }
+            { id: "category", label: "Categories", options: categories },
+            { id: "favorites_only", label: "Show Favorites Only", type: "checkbox" }
         ],
         onChange: function(filters) {
             applyClientFilters(filters);
@@ -222,16 +315,10 @@ async function initProductStudio() {
     });
 
     // 2. Initialize Grid
-    catalogGrid = new SMRITI.Grid("products-grid", {
-        columns: [
-            { field: "item_name", label: "Description", bold: true, width: "30%" },
-            { field: "custom_style_code", label: "Style Code", width: "15%" },
-            { field: "brand", label: "Brand", width: "15%" },
-            { field: "item_group", label: "Category", width: "15%" },
-            { field: "custom_mrp", label: "MRP Price", formatter: "currency", align: "right", width: "15%" },
-            { field: "valuation_rate", label: "Cost Price", formatter: "currency", align: "right", width: "15%" },
-            { field: "custom_gst_percentage", label: "GST%", formatter: "percent", align: "center", width: "10%" }
-        ],
+    window.catalogGrid = new SMRITI.Grid("products-grid", {
+        columns: basicColumns,
+        contextObject: "Item",
+        contextModule: "item_studio",
         dataSource: async function() {
             const list = await SMRITI.Service.ProductService.getProducts();
             masterItemsList = list || [];
@@ -243,6 +330,23 @@ async function initProductStudio() {
         ],
         onRowClick: function(row) {
             openDetailDrawer(row);
+        }
+    });
+
+    // Bind click event to favorites star
+    document.getElementById("products-grid").addEventListener("click", function(e) {
+        const starBtn = e.target.closest(".fav-star-btn");
+        if (starBtn) {
+            e.stopPropagation();
+            const code = starBtn.getAttribute("data-code");
+            let favs = JSON.parse(localStorage.getItem("smriti-product-favorites") || "[]");
+            if (favs.includes(code)) {
+                favs = favs.filter(c => c !== code);
+            } else {
+                favs.push(code);
+            }
+            localStorage.setItem("smriti-product-favorites", JSON.stringify(favs));
+            applyClientFilters(catalogToolbar.getValues());
         }
     });
 }
@@ -261,6 +365,10 @@ function applyClientFilters(filters) {
     }
     if (filters.category) {
         list = list.filter(item => item.item_group === filters.category);
+    }
+    if (filters.favorites_only) {
+        const favs = JSON.parse(localStorage.getItem("smriti-product-favorites") || "[]");
+        list = list.filter(item => favs.includes(item.name));
     }
     catalogGrid.setData(list);
 }

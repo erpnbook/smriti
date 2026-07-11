@@ -28,6 +28,20 @@ import json
 import time
 
 
+def find_table_alias_in_sql(sql, table_name):
+    import re
+    norm_sql = sql.replace("`", "").replace('"', "")
+    clean_table = table_name.replace("tab", "") if table_name.lower().startswith("tab") else table_name
+    pattern = rf"\b(?:tab)?{re.escape(clean_table)}\s+(?:AS\s+)?([a-zA-Z0-9_]+)\b"
+    matches = re.finditer(pattern, norm_sql, re.IGNORECASE)
+    for match in matches:
+        alias = match.group(1).strip()
+        if alias.lower() not in {"as", "join", "on", "where", "set", "inner", "left", "right", "outer", "and", "or", "group", "order", "limit", "select", "from", "having", "union", "all"}:
+            return alias
+    return None
+
+
+
 # ─────────────────────────────────────────────
 # SALES REPORT
 # ─────────────────────────────────────────────
@@ -926,7 +940,17 @@ REPORT_QUERIES = {
                 items.brand,
                 SUM(items.qty) as qty_sold,
                 SUM(items.net_amount) as taxable_amount,
-                SUM(items.amount) as gross_amount
+                SUM(items.amount) as gross_amount,
+                MAX(item.custom_style_code) as custom_style_code,
+                MAX(item.custom_sub_category) as custom_sub_category,
+                MAX(item.custom_gender) as custom_gender,
+                MAX(item.custom_vendor_code) as custom_vendor_code,
+                MAX(item.custom_purchase_class) as custom_purchase_class,
+                MAX(item.custom_department) as custom_department,
+                MAX(item.custom_heels) as custom_heels,
+                MAX(item.custom_upper_material) as custom_upper_material,
+                MAX(item.custom_outsole) as custom_outsole,
+                MAX(item.gst_hsn_code) as gst_hsn_code
             FROM `tabPOS Invoice Item` items
             INNER JOIN `tabPOS Invoice` parent ON items.parent = parent.name
             LEFT JOIN `tabItem` item ON items.item_code = item.name
@@ -985,7 +1009,19 @@ REPORT_QUERIES = {
                     WHEN b.actual_qty <= 0 THEN 'Out of Stock'
                     WHEN b.actual_qty <= 5 THEN 'Low Stock'
                     ELSE 'In Stock'
-                END as status
+                END as status,
+                i.custom_style_code,
+                i.brand,
+                i.item_group,
+                i.custom_sub_category,
+                i.custom_gender,
+                i.custom_vendor_code,
+                i.custom_purchase_class,
+                i.custom_department,
+                i.custom_heels,
+                i.custom_upper_material,
+                i.custom_outsole,
+                i.gst_hsn_code
             FROM `tabBin` b
             JOIN `tabItem` i ON b.item_code = i.name
             WHERE 1=1
@@ -999,7 +1035,18 @@ REPORT_QUERIES = {
                 COALESCE(i.custom_style_code, i.variant_of, i.name) as style_code,
                 COALESCE(parent_item.item_name, i.item_name) as style_name,
                 SUM(b.actual_qty) as actual_qty,
-                SUM(b.stock_value) as stock_value
+                SUM(b.stock_value) as stock_value,
+                MAX(i.brand) as brand,
+                MAX(i.item_group) as item_group,
+                MAX(i.custom_sub_category) as custom_sub_category,
+                MAX(i.custom_gender) as custom_gender,
+                MAX(i.custom_vendor_code) as custom_vendor_code,
+                MAX(i.custom_purchase_class) as custom_purchase_class,
+                MAX(i.custom_department) as custom_department,
+                MAX(i.custom_heels) as custom_heels,
+                MAX(i.custom_upper_material) as custom_upper_material,
+                MAX(i.custom_outsole) as custom_outsole,
+                MAX(i.gst_hsn_code) as gst_hsn_code
             FROM `tabBin` b
             JOIN `tabItem` i ON b.item_code = i.name
             LEFT JOIN `tabItem` parent_item ON i.variant_of = parent_item.name
@@ -1016,7 +1063,18 @@ REPORT_QUERIES = {
                 c_attr.attribute_value as color,
                 s_attr.attribute_value as size,
                 SUM(b.actual_qty) as actual_qty,
-                b.warehouse
+                b.warehouse,
+                MAX(i.brand) as brand,
+                MAX(i.item_group) as item_group,
+                MAX(i.custom_sub_category) as custom_sub_category,
+                MAX(i.custom_gender) as custom_gender,
+                MAX(i.custom_vendor_code) as custom_vendor_code,
+                MAX(i.custom_purchase_class) as custom_purchase_class,
+                MAX(i.custom_department) as custom_department,
+                MAX(i.custom_heels) as custom_heels,
+                MAX(i.custom_upper_material) as custom_upper_material,
+                MAX(i.custom_outsole) as custom_outsole,
+                MAX(i.gst_hsn_code) as gst_hsn_code
             FROM `tabBin` b
             JOIN `tabItem` i ON b.item_code = i.name
             LEFT JOIN `tabItem` parent_item ON i.variant_of = parent_item.name
@@ -1145,7 +1203,7 @@ REPORT_QUERIES = {
         "base_sql": """
             SELECT
                 po.name AS po_number,
-                po.posting_date,
+                po.transaction_date AS posting_date,
                 po.supplier,
                 po.supplier_name,
                 po.status,
@@ -1161,14 +1219,14 @@ REPORT_QUERIES = {
             WHERE po.docstatus = 1
         """,
         "group_by": "po.name",
-        "order_by": "po.posting_date DESC"
+        "order_by": "po.transaction_date DESC"
     },
     "grn_register": {
         "base_sql": """
             SELECT
                 pr.name AS grn_number,
                 pr.posting_date,
-                pr.purchase_order AS po_reference,
+                pri.purchase_order AS po_reference,
                 pr.supplier,
                 pr.supplier_name,
                 pr.set_warehouse AS warehouse,
@@ -1180,7 +1238,7 @@ REPORT_QUERIES = {
             JOIN `tabPurchase Receipt Item` pri ON pri.parent = pr.name
             WHERE pr.docstatus = 1 AND pr.is_return = 0
         """,
-        "group_by": "pr.name",
+        "group_by": "pr.name, pri.purchase_order",
         "order_by": "pr.posting_date DESC"
     },
     "purchase_invoice_register": {
@@ -1233,7 +1291,17 @@ REPORT_QUERIES = {
                 SUM(pri.amount) / NULLIF(SUM(pri.qty), 0) AS avg_rate,
                 MIN(pri.rate) AS min_rate,
                 MAX(pri.rate) AS max_rate,
-                SUM(pri.amount) AS total_value
+                SUM(pri.amount) AS total_value,
+                MAX(i.custom_style_code) as custom_style_code,
+                MAX(i.custom_sub_category) as custom_sub_category,
+                MAX(i.custom_gender) as custom_gender,
+                MAX(i.custom_vendor_code) as custom_vendor_code,
+                MAX(i.custom_purchase_class) as custom_purchase_class,
+                MAX(i.custom_department) as custom_department,
+                MAX(i.custom_heels) as custom_heels,
+                MAX(i.custom_upper_material) as custom_upper_material,
+                MAX(i.custom_outsole) as custom_outsole,
+                MAX(i.gst_hsn_code) as gst_hsn_code
             FROM `tabPurchase Receipt Item` pri
             JOIN `tabPurchase Receipt` pr ON pr.name = pri.parent
             LEFT JOIN `tabItem` i ON i.name = pri.item_code
@@ -1888,7 +1956,10 @@ class SMRITIReportEngine:
         columns = []
         bypassed_reports = [
             "payment_register", "receipt_register", "cash_book", "day_book",
-            "customer_outstanding", "supplier_outstanding", "security_audit_log", "address_change_log"
+            "customer_outstanding", "supplier_outstanding", "security_audit_log", "address_change_log",
+            "purchase_invoice_register", "purchase_order_summary", "grn_register",
+            "supplier_purchase_summary", "purchase_return_register",
+            "open_purchase_orders", "pending_deliveries", "purchase_analytics"
         ]
         if self.template.columns_json and self.report_key not in bypassed_reports:
             try:
@@ -1925,7 +1996,10 @@ class SMRITIReportEngine:
                 if "." in proj:
                     parts = proj.split(".", 1)
                     tbl, col_name = parts[0], parts[1]
-                    if tbl in alias_map:
+                    alias = find_table_alias_in_sql(base_sql, tbl)
+                    if alias:
+                        resolved_proj = f"{alias}.{col_name}"
+                    elif tbl in alias_map:
                         resolved_proj = f"{alias_map[tbl]}.{col_name}"
                     else:
                         resolved_proj = f"`tab{tbl}`.{col_name}"
@@ -1991,7 +2065,11 @@ class SMRITIReportEngine:
                     dynamic_projections.append(f"{resolved_proj} as {fieldname}")
                     dimensions.append(resolved_proj)
             else:
-                dynamic_projections.append(fieldname)
+                recovered = base_alias_map.get(fieldname)
+                if recovered and not expression_contains_subquery(recovered):
+                    dynamic_projections.append(f"{recovered} as {fieldname}")
+                else:
+                    dynamic_projections.append(fieldname)
 
         if dynamic_projections and "FROM" in base_sql.upper():
             select_part = "SELECT " + ", ".join(dynamic_projections)
@@ -2467,7 +2545,7 @@ def validate_query_safety(sql_query):
 
 
 @frappe.whitelist()
-def export_smriti_report(report_key, filters=None, format_type="csv"):
+def export_smriti_report(report_key, filters=None, format_type="csv", columns=None):
     """
     Exports report to CSV/Excel on the server. Checks permissions,
     generates CSV content, logs REPORT_EXPORTED, and returns downloadable file.
@@ -2482,15 +2560,25 @@ def export_smriti_report(report_key, filters=None, format_type="csv"):
     results = engine.run()
     
     # Generate CSV content
-    columns = []
-    if engine.template.columns_json:
+    col_list = []
+    if columns:
         try:
-            columns = json.loads(engine.template.columns_json)
+            if isinstance(columns, str):
+                col_list = json.loads(columns)
+            else:
+                col_list = columns
         except Exception:
-            columns = []
+            col_list = []
             
-    fieldnames = [col.get("fieldname") for col in columns if col.get("fieldname")]
-    labels = [col.get("label") or col.get("fieldname") for col in columns if col.get("fieldname")]
+    if not col_list:
+        if engine.template.columns_json:
+            try:
+                col_list = json.loads(engine.template.columns_json)
+            except Exception:
+                col_list = []
+            
+    fieldnames = [col.get("fieldname") for col in col_list if col.get("fieldname")]
+    labels = [col.get("label") or col.get("fieldname") for col in col_list if col.get("fieldname")]
     
     if not fieldnames and results:
         fieldnames = list(results[0].keys())

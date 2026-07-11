@@ -1,0 +1,276 @@
+/**
+ * @file:    public/css/ui/context_actions.css
+ * @desc:    Adaptive Context Action System (ACAS) stylesheet.
+ *           Implements responsive, accessible layouts: bottom sheets,
+ *           popover menus, and center dialogs for TV/Kiosk modes.
+ * @author:  SMRITI Platform
+ */
+
+/* ── Context Backdrop / Screen Overlay ── */
+.smriti-context-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 10000;
+    opacity: 0;
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: auto;
+}
+
+.smriti-context-backdrop.show {
+    opacity: 1;
+}
+
+/* ── Desktop Floating Popover / Tablet Card Menu ── */
+.smriti-context-popover {
+    position: fixed;
+    min-width: 240px;
+    max-width: 320px;
+    background: var(--smriti-color-bg-card, #16213e);
+    border: 1px solid var(--smriti-color-border-strong, #2a3a5c);
+    border-radius: var(--smriti-border-radius-md, 8px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+    z-index: 10001;
+    overflow: hidden;
+    opacity: 0;
+    transform: scale(0.95);
+    transform-origin: top left;
+    transition: opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: auto;
+    font-size: var(--smriti-font-size-base, 14px);
+}
+
+.smriti-context-popover.show {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* ── Mobile Bottom Sheet ── */
+.smriti-context-bottom-sheet {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--smriti-color-bg-card, #16213e);
+    border-top: 1px solid var(--smriti-color-border-strong, #2a3a5c);
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.35);
+    z-index: 10001;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(100%);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: auto;
+}
+
+.smriti-context-bottom-sheet.show {
+    transform: translateY(0);
+}
+
+/* Drag Handle for Bottom Sheet */
+.smriti-context-sheet-handle {
+    width: 36px;
+    height: 4px;
+    background: var(--smriti-color-border-strong, #2a3a5c);
+    border-radius: 2px;
+    margin: 12px auto 8px auto;
+    flex-shrink: 0;
+}
+
+/* ── TV / Kiosk Center Dialog ── */
+.smriti-context-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    width: 90%;
+    max-width: 420px;
+    background: var(--smriti-color-bg-card, #16213e);
+    border: 2px solid var(--smriti-color-brand-primary, #2563eb);
+    border-radius: 12px;
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
+    z-index: 10001;
+    opacity: 0;
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: auto;
+}
+
+.smriti-context-dialog.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+/* ── Common Menu Content Structure ── */
+.smriti-context-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--smriti-color-border-strong, #2a3a5c);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.smriti-context-title {
+    font-family: var(--smriti-font-family-primary, 'Inter', sans-serif);
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--smriti-color-text-primary, #e2e8f0);
+}
+
+.smriti-context-subtitle {
+    font-size: 12px;
+    color: var(--smriti-color-text-muted, #8892a4);
+    margin-top: 2px;
+}
+
+.smriti-context-search-wrapper {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--smriti-color-border-strong, #2a3a5c);
+}
+
+.smriti-context-search-input {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 13px;
+    border: 1px solid var(--smriti-color-border-strong, #2a3a5c);
+    background: rgba(0, 0, 0, 0.2);
+    color: var(--smriti-color-text-primary, #e2e8f0);
+    border-radius: 6px;
+    outline: none;
+}
+
+.smriti-context-search-input:focus {
+    border-color: var(--smriti-color-brand-primary, #2563eb);
+}
+
+.smriti-context-list {
+    overflow-y: auto;
+    padding: 6px 0;
+    max-height: 350px;
+}
+
+/* ── Menu Action Items ── */
+.smriti-context-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 10px 16px;
+    border: none;
+    background: transparent;
+    color: var(--smriti-color-text-primary, #e2e8f0);
+    font-family: inherit;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    gap: 12px;
+    outline: none;
+}
+
+/* Accessibility Focus Ring and Hover Targets */
+.smriti-context-item:hover,
+.smriti-context-item:focus {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.smriti-context-item:focus-visible {
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: inset 3px 0 0 var(--smriti-color-brand-primary, #2563eb);
+}
+
+/* Recommended/AI-promoted item highlights */
+.smriti-context-item.recommended {
+    font-weight: 600;
+    color: #4ade80; /* Success green / recommended highlight */
+}
+
+.smriti-context-item.recommended .material-symbols-outlined {
+    color: #4ade80;
+}
+
+.smriti-context-item.danger {
+    color: var(--smriti-color-status-danger, #ef4444);
+}
+
+.smriti-context-item.danger .material-symbols-outlined {
+    color: var(--smriti-color-status-danger, #ef4444);
+}
+
+.smriti-context-icon {
+    font-size: 18px;
+    width: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--smriti-color-text-muted, #8892a4);
+}
+
+.smriti-context-item:hover .smriti-context-icon,
+.smriti-context-item:focus .smriti-context-icon {
+    color: var(--smriti-color-text-primary, #e2e8f0);
+}
+
+.smriti-context-label {
+    flex: 1;
+}
+
+.smriti-context-shortcut {
+    font-size: 11px;
+    color: var(--smriti-color-text-muted, #8892a4);
+    background: rgba(255, 255, 255, 0.04);
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.smriti-context-divider {
+    height: 1px;
+    background: var(--smriti-color-border-strong, #2a3a5c);
+    margin: 6px 0;
+}
+
+/* Large touch targets minimum sizes (minimum 48x48dp spacing for Touch devices) */
+@media (max-width: 1024px) {
+    .smriti-context-item {
+        padding: 14px 18px;
+        font-size: 14px;
+    }
+    .smriti-context-icon {
+        font-size: 20px;
+        width: 20px;
+    }
+}
+
+/* Compact Density Option */
+.smriti-context-popover.compact .smriti-context-item {
+    padding: 8px 12px;
+    font-size: 12px;
+}
+
+/* High Contrast Accessibility Override */
+@media (prefers-contrast: high) {
+    .smriti-context-popover,
+    .smriti-context-bottom-sheet,
+    .smriti-context-dialog {
+        border: 2px solid #ffffff !important;
+    }
+    .smriti-context-item:focus {
+        outline: 2px solid #ffff00 !important;
+    }
+}
+
+/* RTL support */
+[dir="rtl"] .smriti-context-item {
+    text-align: right;
+}
+[dir="rtl"] .smriti-context-popover {
+    transform-origin: top right;
+}
