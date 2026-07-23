@@ -39,12 +39,13 @@ def get_active_company():
     """
     Centralised company resolver — use this everywhere instead of duplicating:
         frappe.defaults.get_user_default("company") or
+        frappe.defaults.get_global_default("company") or
         smriti.db.get_list("Company", limit=1)[0].name
 
     Returns:
         str: Name of the active company, or None if no company exists.
     """
-    company = frappe.defaults.get_user_default("company")
+    company = frappe.defaults.get_user_default("company") or frappe.defaults.get_global_default("company")
     if not company:
         companies = smriti.db.get_list("Company", limit=1, pluck="name")
         company = companies[0] if companies else None

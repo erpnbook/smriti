@@ -192,6 +192,12 @@ def run_setup_wizard(setup_data):
                 log(f"Created standard Warehouse Type: {w_type}")
 
         log(f"Configuring Company: {company_name} ({company_abbr})...")
+        # Rename initial bootstrap default '_Test Company' if present
+        if not company_exists and smriti.db.exists("Company", "_Test Company"):
+            log("Renaming initial default '_Test Company' to owner configured company...")
+            frappe.rename_doc("Company", "_Test Company", company_name, force=True)
+            company_exists = True
+
         if not company_exists:
             co = smriti.documents.new("Company")
             co.company_name = company_name
@@ -208,6 +214,7 @@ def run_setup_wizard(setup_data):
             log(f"Company '{company_name}' created.")
         else:
             co = smriti.documents.get("Company", company_name)
+            co.company_name = company_name
             co.custom_smriti_store_type = store_type
             co.custom_smriti_gstin_state = state_code
             if gstin:
@@ -221,9 +228,11 @@ def run_setup_wizard(setup_data):
         company_name = co.name
         currency = co.default_currency
 
-        # Set default company globally
+        # Set default company globally and for current session user
         frappe.defaults.set_global_default("company", company_name)
-        frappe.defaults.set_user_default("company", company_name, "Administrator")
+        frappe.defaults.set_user_default("company", company_name)
+        if frappe.session.user:
+            frappe.defaults.set_user_default("company", company_name, frappe.session.user)
         smriti.db.commit()
 
         # Create/Update Registered Office Address
