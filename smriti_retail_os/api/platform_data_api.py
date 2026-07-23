@@ -182,11 +182,48 @@ def get_all(doctype: str, fields: list = None, filters: dict = None,
     Returns:
         list[dict]: Matching records.
     """
-    return frappe.get_all(
-        doctype,
-        fields=fields or ["name"],
-        filters=filters or {},
-        order_by=order_by,
-        limit_page_length=min(int(limit or 20), 500),
-    )
+@frappe.whitelist()
+def create_terms_and_conditions(title: str, terms: str) -> dict:
+    """
+    Creates a new Terms and Conditions master record on the fly.
+    """
+    if not title or not terms:
+        frappe.throw("Both title and terms details are required.")
+    
+    if frappe.db.exists("Terms and Conditions", title):
+        doc = frappe.get_doc("Terms and Conditions", title)
+        doc.terms = terms
+        doc.save(ignore_permissions=True)
+    else:
+        doc = frappe.new_doc("Terms and Conditions")
+        doc.title = title
+        doc.terms = terms
+        doc.insert(ignore_permissions=True)
+    
+    frappe.db.commit()
+    return {"name": doc.name, "title": doc.title, "terms": doc.terms}
+
+
+@frappe.whitelist()
+def create_quick_item_master(item_code: str, item_name: str = None, item_group: str = "All Item Groups", rate: float = 0.0) -> dict:
+    """
+    Creates a new Item master record on the fly.
+    """
+    if not item_code:
+        frappe.throw("Item Code / Article is required.")
+
+    item_code = item_code.strip()
+    if frappe.db.exists("Item", item_code):
+        doc = frappe.get_doc("Item", item_code)
+    else:
+        doc = frappe.new_doc("Item")
+        doc.item_code = item_code
+        doc.item_name = item_name or item_code
+        doc.item_group = item_group
+        doc.stock_uom = "Nos"
+        doc.valuation_rate = float(rate or 0)
+        doc.insert(ignore_permissions=True)
+        frappe.db.commit()
+
+    return {"item_code": doc.item_code, "item_name": doc.item_name, "rate": doc.valuation_rate}
 
