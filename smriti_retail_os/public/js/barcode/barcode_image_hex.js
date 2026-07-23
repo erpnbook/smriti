@@ -295,6 +295,26 @@ window.SMRITI.ImageHexConverter = (function () {
         currentImageData = converted;
     }
 
+    function openModal() {
+        let modal = document.getElementById('image-hex-modal');
+        if (!modal) {
+            injectModalHTML();
+            modal = document.getElementById('image-hex-modal');
+        }
+        if (modal) {
+            modal.classList.add('open');
+            modal.style.display = 'flex';
+        }
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('image-hex-modal');
+        if (modal) {
+            modal.classList.remove('open');
+            modal.style.display = 'none';
+        }
+    }
+
     function copyToClipboard() {
         const text = document.getElementById('hex-output-text').value;
         if (!text) return;
@@ -311,18 +331,40 @@ window.SMRITI.ImageHexConverter = (function () {
         const prnCmd = document.getElementById('hex-output-text').value;
         if (!prnCmd) return;
 
-        // Check if visual designer or PRN raw editor is present
+        let applied = false;
+        // Check if raw PRN text editor is active
         const prnEditor = document.getElementById('prn-raw-editor') || document.getElementById('design-raw-prn');
         if (prnEditor) {
             prnEditor.value += '\n' + prnCmd;
+            applied = true;
             if (window.toast) window.toast('Inserted Hex code into PRN Editor!', 'success');
-        } else {
+        }
+
+        // Check if a canvas element is selected in Visual Designer
+        if (window.BarcodeStudioState && window.BarcodeStudioState.selectedElement) {
+            const selected = window.BarcodeStudioState.selectedElement;
+            if (selected.type === 'image' && currentImageData) {
+                selected.image_hex = currentImageData.hexString;
+                selected.image_bytes = currentImageData.totalBytes;
+                selected.image_row_bytes = currentImageData.bytesPerRow;
+                if (window.updateSelectedElementProperty) {
+                    window.updateSelectedElementProperty('image_hex', currentImageData.hexString);
+                }
+                if (window.renderVisualCanvas) {
+                    window.renderVisualCanvas();
+                }
+                applied = true;
+                if (window.toast) window.toast('Applied Hex Code to selected image element!', 'success');
+            }
+        }
+
+        if (!applied) {
             copyToClipboard();
         }
         closeModal();
     }
 
-    return {
+    const API = {
         openModal: openModal,
         closeModal: closeModal,
         handleFileSelect: handleFileSelect,
@@ -330,4 +372,7 @@ window.SMRITI.ImageHexConverter = (function () {
         copyToClipboard: copyToClipboard,
         insertIntoPRNEditor: insertIntoPRNEditor
     };
+
+    window.openImageHexConverterModal = openModal;
+    return API;
 })();

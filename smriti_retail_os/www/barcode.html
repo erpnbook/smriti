@@ -61,7 +61,7 @@
                     <span class="material-symbols-outlined">arrow_forward</span>
                 </button>
                 <button class="topbtn" onclick="openAnalyticsModal()"><span class="material-symbols-outlined">analytics</span> Analytics</button>
-                <button class="topbtn" onclick="window.SMRITI.ImageHexConverter.openModal()" title="Convert PNG/JPG images to PRN Hex Code for thermal barcode labels"><span class="material-symbols-outlined">image</span> Image to Hex (PRN)</button>
+                <button class="topbtn" onclick="openImageHexConverterModal()" title="Convert PNG/JPG images to PRN Hex Code for thermal barcode labels"><span class="material-symbols-outlined">image</span> Image to Hex (PRN)</button>
                 <button class="topbtn" onclick="openTokenHelp()"><span class="material-symbols-outlined">help</span> Mapping Reference</button>
             </div>
         </div>
@@ -746,6 +746,9 @@
                                 <input type="text" class="form-input" id="prop-image-ref" placeholder="e.g. file_id or asset_key" oninput="updateSelectedElementProperty('image_ref', this.value)">
                                 <button class="btn-icon-input" onclick="openImageAssetSelector()" title="Select Image Asset">
                                     <span class="material-symbols-outlined">image</span>
+                                </button>
+                                <button class="btn-icon-input" onclick="openImageHexConverterModal()" title="Convert Image to PRN Hex Code">
+                                    <span class="material-symbols-outlined">auto_fix_high</span>
                                 </button>
                             </div>
                         </div>
