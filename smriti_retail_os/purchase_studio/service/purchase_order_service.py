@@ -52,10 +52,28 @@ class PurchaseOrderService:
 
     @staticmethod
     def create_purchase_order(supplier, items_list, schedule_date=None, remarks=None, warehouse=None, company=None, tc_name=None, terms=None):
+        # Resolve supplier to a valid SMRITI Supplier name
+        smriti_sup_name = None
+        if supplier:
+            if frappe.db.exists("SMRITI Supplier", supplier):
+                smriti_sup_name = supplier
+            else:
+                existing = frappe.db.get_value("SMRITI Supplier", {"supplier_name": supplier}, "name")
+                if existing:
+                    smriti_sup_name = existing
+                else:
+                    try:
+                        sdoc = frappe.new_doc("SMRITI Supplier")
+                        sdoc.supplier_name = supplier
+                        sdoc.insert(ignore_permissions=True)
+                        smriti_sup_name = sdoc.name
+                    except Exception:
+                        smriti_sup_name = frappe.db.get_value("SMRITI Supplier", {"supplier_name": supplier}, "name") or supplier
+
         po = PurchaseRepository.new_doc("SMRITI Purchase Order")
-        po.supplier = supplier
+        po.supplier = smriti_sup_name
         po.supplier_name = (
-            smriti.db.get("SMRITI Supplier", supplier, "supplier_name") or
+            smriti.db.get("SMRITI Supplier", smriti_sup_name, "supplier_name") or
             smriti.db.get("Supplier", supplier, "supplier_name") or
             supplier
         )
@@ -70,23 +88,34 @@ class PurchaseOrderService:
         po.status = "Draft"
         po.naming_series = "SMRITI-PO-.YYYY.-"
 
+        default_hsn = frappe.db.get_value("GST HSN Code", {}, "name")
+        if not default_hsn:
+            try:
+                hdoc = frappe.new_doc("GST HSN Code")
+                hdoc.hsn_code = "6403"
+                hdoc.insert(ignore_permissions=True)
+                default_hsn = hdoc.name
+            except Exception:
+                default_hsn = "6403"
+
         for it in items_list:
             icode = it.get("item_code")
             iname = it.get("item_name") or icode
             
             # Ensure Item master record exists before appending to PO
-            if icode and not smriti.db.exists("Item", icode):
+            if icode and not frappe.db.exists("Item", icode):
                 try:
-                    item_doc = smriti.documents.new("Item")
+                    item_doc = frappe.new_doc("Item")
                     item_doc.item_code = icode
                     item_doc.item_name = iname
                     item_doc.item_group = "All Item Groups"
                     item_doc.stock_uom = it.get("uom") or "Nos"
                     item_doc.valuation_rate = flt(it.get("rate"))
+                    item_doc.gst_hsn_code = default_hsn
                     # reviewed-ignore-permissions: system matrix order creation
                     item_doc.insert(ignore_permissions=True)
-                except Exception:
-                    pass
+                except Exception as e:
+                    frappe.logger().error(f"Failed to auto-create item {icode}: {e}")
 
             po.append("items", {
                 "item_code": icode,

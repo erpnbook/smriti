@@ -86,7 +86,8 @@ def get_purchase_order_detail(po_name):
 
 def create_purchase_order(supplier, items_list, schedule_date=None,
                            remarks=None, image_base64=None,
-                           image_filename=None, warehouse=None):
+                           image_filename=None, warehouse=None,
+                           tc_name=None, terms=None):
     check_manager_role()
     from smriti_retail_os.purchase_studio.service.purchase_validation_service import SmritiValidationError
     try:
@@ -95,7 +96,9 @@ def create_purchase_order(supplier, items_list, schedule_date=None,
             items_list=items_list,
             schedule_date=schedule_date,
             remarks=remarks,
-            warehouse=warehouse
+            warehouse=warehouse,
+            tc_name=tc_name,
+            terms=terms
         )
     except SmritiValidationError as e:
         frappe.throw(str(e))

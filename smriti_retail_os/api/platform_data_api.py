@@ -216,12 +216,14 @@ def create_quick_item_master(item_code: str, item_name: str = None, item_group: 
     if frappe.db.exists("Item", item_code):
         doc = frappe.get_doc("Item", item_code)
     else:
+        default_hsn = frappe.db.get_value("GST HSN Code", {}, "name") or "6403"
         doc = frappe.new_doc("Item")
         doc.item_code = item_code
         doc.item_name = item_name or item_code
         doc.item_group = item_group
         doc.stock_uom = "Nos"
         doc.valuation_rate = float(rate or 0)
+        doc.gst_hsn_code = default_hsn
         doc.insert(ignore_permissions=True)
         frappe.db.commit()
 
