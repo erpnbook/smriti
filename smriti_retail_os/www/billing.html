@@ -22,16 +22,10 @@
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
-    /* ── SMRITI Token Bridge (Phase 1B) ──────────────────────────────── */
-    /* Billing private tokens now point to SMRITI engine tokens.         */
-    /* The 189 var() references below inherit automatically.              */
-    /* pos-dark resolver profile (Level 2) overrides --smriti-color-*    */
-    /* values at runtime when pathname === "/billing".                   */
-    /* Do NOT hardcode values here. Edit smriti_tokens.css instead.      */
-
     /* Surfaces */
     --bg:          var(--smriti-color-bg-page);
     --bg2:         var(--smriti-color-bg-primary);
+    --bg3:         var(--smriti-color-bg-elevated);
     --card:        var(--smriti-color-bg-secondary);
     --card2:       var(--smriti-color-bg-elevated);
 
@@ -53,14 +47,30 @@
     --text:        var(--smriti-color-text-primary);
     --text-muted:  var(--smriti-color-text-muted);
     --text-subtle: var(--smriti-color-text-subtle);
+    --muted:       var(--smriti-color-text-muted);
 
     /* Radius */
     --radius:      var(--smriti-radius-lg);
     --radius-sm:   var(--smriti-radius-md);
     --radius-lg:   var(--smriti-radius-xl);
 
-    /* Transition */
+    /* Transition & Shadows */
     --t:           var(--smriti-t-base) ease;
+    --shadow-lg:   var(--smriti-shadow-lg, 0 12px 28px rgba(15,23,42,.10));
+
+    /* Overlays & Glows */
+    --ov-black-xl:   rgba(0, 0, 0, 0.65);
+    --ov-black-2xl:  var(--smriti-color-bg-secondary);
+    --ov-black-3xl:  var(--smriti-color-bg-page);
+
+    --ov-white-sm:   rgba(255, 255, 255, 0.05);
+    --ov-white-lg:   var(--smriti-color-border-default);
+
+    --glow-brand-sm:  rgba(37, 99, 235, 0.2);
+    --glow-brand-lg:  rgba(37, 99, 235, 0.4);
+    --glow-danger-xs: rgba(239, 68, 68, 0.15);
+    --glow-danger-sm: rgba(239, 68, 68, 0.25);
+    --glow-danger-md: rgba(239, 68, 68, 0.4);
 }
 
 
