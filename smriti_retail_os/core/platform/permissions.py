@@ -22,7 +22,7 @@
 from smriti_retail_os.core.platform.registry import resolve
 
 
-def has_permission(model_name: str, ptype: str = "read", doc=None) -> bool:
+def has_permission(model_name: str, ptype: str = "read", doc=None, throw: bool = False) -> bool:
     """
     Check whether the current user has the specified permission on a model.
 
@@ -30,7 +30,8 @@ def has_permission(model_name: str, ptype: str = "read", doc=None) -> bool:
         model_name (str): SMRITI model name
         ptype (str): Permission type — "read", "write", "create", "delete",
                      "submit", "cancel", "amend", "print", "email"
-        doc: Optional document object for document-level permission check
+        doc: Optional document object or document name for document-level permission check
+        throw (bool): If True, raises PermissionError when permission check fails
 
     Returns:
         bool: True if permitted
@@ -40,7 +41,10 @@ def has_permission(model_name: str, ptype: str = "read", doc=None) -> bool:
             po = documents.new("Purchase")
     """
     import frappe
-    return frappe.has_permission(resolve(model_name), ptype=ptype, doc=doc)
+    permitted = frappe.has_permission(resolve(model_name), ptype=ptype, doc=doc)
+    if not permitted and throw:
+        require(model_name, ptype=ptype, doc=doc)
+    return permitted
 
 
 def can_read(model_name: str, doc=None) -> bool:

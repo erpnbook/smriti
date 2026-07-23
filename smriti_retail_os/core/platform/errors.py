@@ -186,3 +186,31 @@ def log_error(title: str, exc: Exception = None, context: dict = None, message: 
     if exc:
         err_msg += f"\n\nTraceback:\n{traceback.format_exc()}"
     frappe.log_error(title=title, message=err_msg)
+
+
+import frappe
+try:
+    DoesNotExistErrorBase = frappe.DoesNotExistError
+except AttributeError:
+    DoesNotExistErrorBase = Exception
+
+
+class NotFoundError(DoesNotExistErrorBase):
+    """Raised when a requested resource or document is not found."""
+    pass
+
+
+def throw(msg: str, exc=None, title: str = None, code: int = None, **kwargs):
+    """
+    Throw an exception (wrapper around frappe.throw).
+
+    Args:
+        msg (str): Error message string
+        exc: Exception class to raise (default: frappe.ValidationError)
+        title (str): Optional modal/dialog title
+        code (int): Optional HTTP status code / error code
+    """
+    import frappe
+    target_exc = exc or frappe.ValidationError
+    frappe.throw(msg, exc=target_exc, title=title, **kwargs)
+
