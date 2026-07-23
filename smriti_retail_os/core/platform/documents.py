@@ -266,3 +266,42 @@ def get_value(model_name: str, name: str, fieldname: str):
     """
     import frappe
     return frappe.db.get_value(resolve(model_name), name, fieldname)
+
+
+def get_single(model_name: str):
+    """
+    Fetch a singleton document (DocType with is_single=1).
+
+    Args:
+        model_name (str): SMRITI model name of the singleton, e.g. "CGESettings"
+
+    Returns:
+        frappe.Document: The singleton document object
+
+    Example:
+        settings = documents.get_single("CGESettings")
+        settings.some_setting
+    """
+    import frappe
+    return frappe.get_single(resolve(model_name))
+
+
+def get_raw(model_name: str, name: str) -> dict:
+    """
+    Fetch a document as a raw Python dictionary (no document object overhead).
+
+    Args:
+        model_name (str): SMRITI model name
+        name (str): Document name / ID
+
+    Returns:
+        dict: Document fields as a plain dictionary
+
+    Example:
+        raw = documents.get_raw("Item", "ITEM-001")
+        print(raw.get("item_name"))
+    """
+    import frappe
+    doc = frappe.get_doc(resolve(model_name), name)
+    return doc.as_dict()
+

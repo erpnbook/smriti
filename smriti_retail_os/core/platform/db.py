@@ -217,3 +217,25 @@ def rollback():
     """Roll back the current database transaction."""
     import frappe
     frappe.db.rollback()
+
+
+def sql_list(query: str, values=None) -> list:
+    """
+    Execute a raw SQL query and return a flat list of values from the first column.
+    Equivalent to frappe.db.sql_list().
+
+    Args:
+        query (str): SQL query string (should SELECT a single column)
+        values (dict|tuple): Bind parameters
+
+    Returns:
+        list: Flat list of values from the first column of results
+
+    Example:
+        names = db.sql_list(
+            "SELECT name FROM `tabCustomer` WHERE territory = %(territory)s",
+            values={"territory": "North"},
+        )
+    """
+    import frappe
+    return frappe.db.sql_list(query, values or {})
