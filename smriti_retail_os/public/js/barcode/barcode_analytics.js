@@ -91,6 +91,7 @@ function populateTokenReferenceUI(ref) {
 
 function openTokenHelp() {
     openModal('token-modal');
+    loadTokenReference();
 }
 
 async function loadVersionHistory(templateName) {

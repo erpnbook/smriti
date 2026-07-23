@@ -516,6 +516,88 @@
     </div>
 </div>
 
+<!-- Modal: Analytics Dashboard Modal -->
+<div class="modal-backdrop" id="analytics-modal" onclick="closeModal('analytics-modal')">
+    <div class="modal" onclick="event.stopPropagation()" style="max-width: 800px; width: 95%;">
+        <div class="modal-header">
+            <div class="modal-title"><span class="material-symbols-outlined">analytics</span> Label Studio Print Analytics & Audit Log</div>
+            <button class="modal-close" onclick="closeModal('analytics-modal')">&times;</button>
+        </div>
+        <div class="modal-body" style="gap: 16px; display: flex; flex-direction: column;">
+            <!-- KPI Summary Cards -->
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+                <div style="background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">TOTAL LABELS</div>
+                    <div id="an-total-labels" style="font-size: 1.5rem; font-weight: 800; color: var(--primary-lt); margin-top: 2px;">0</div>
+                </div>
+                <div style="background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">SUCCESS JOBS</div>
+                    <div id="an-success-jobs" style="font-size: 1.5rem; font-weight: 800; color: var(--success); margin-top: 2px;">0</div>
+                </div>
+                <div style="background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">FAILED JOBS</div>
+                    <div id="an-failed-jobs" style="font-size: 1.5rem; font-weight: 800; color: var(--danger); margin-top: 2px;">0</div>
+                </div>
+                <div style="background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">AVG LABELS / RUN</div>
+                    <div id="an-avg-labels" style="font-size: 1.5rem; font-weight: 800; color: var(--text); margin-top: 2px;">0</div>
+                </div>
+            </div>
+
+            <!-- Meta Stats Row -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: rgba(0,0,0,0.02); padding: 10px 14px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.85rem;">
+                <div>Top Template: <strong id="an-most-used-temp" style="color: var(--primary-lt);">None</strong></div>
+                <div>Top Printer: <strong id="an-most-used-printer" style="color: var(--primary-lt);">None</strong></div>
+            </div>
+
+            <!-- Print Log History Table -->
+            <div style="max-height: 280px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px;">
+                <table class="smriti-table" style="font-size: 0.82rem; width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Date / Time</th>
+                            <th>Template</th>
+                            <th>Printer / Port</th>
+                            <th style="text-align: center;">Labels</th>
+                            <th style="text-align: center;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="an-history-tbody">
+                        <tr><td colspan="5" style="text-align: center; color: var(--text-sub);">Loading print analytics...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Token / Field Mapping Reference Modal -->
+<div class="modal-backdrop" id="token-modal" onclick="closeModal('token-modal')">
+    <div class="modal" onclick="event.stopPropagation()" style="max-width: 750px; width: 95%;">
+        <div class="modal-header">
+            <div class="modal-title"><span class="material-symbols-outlined">help</span> Dynamic Field Tokens Reference</div>
+            <button class="modal-close" onclick="closeModal('token-modal')">&times;</button>
+        </div>
+        <div class="modal-body" style="gap: 12px; display: flex; flex-direction: column;">
+            <p style="color: var(--text-muted); font-size: 0.82rem;">Use these placeholder tokens in your PRN templates or visual elements to automatically populate Item data at print time:</p>
+            <div style="max-height: 340px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px;">
+                <table class="smriti-table" style="font-size: 0.82rem; width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Placeholder Token</th>
+                            <th>Item Master Field</th>
+                            <th>Example Output</th>
+                        </tr>
+                    </thead>
+                    <tbody id="token-tbody">
+                        <tr><td colspan="3" style="text-align: center; color: var(--text-sub);">Loading tokens...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal: Transaction ID Search Autocomplete -->
 <div class="modal-backdrop" id="tx-search-modal" onclick="closeModal('tx-search-modal')">
     <div class="modal" onclick="event.stopPropagation()">
