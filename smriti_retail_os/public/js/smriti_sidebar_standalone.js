@@ -225,7 +225,7 @@ window.SMRITI = window.SMRITI || {};
             html.push('</div>');
 
             // ── THEME MANAGER PILL BAR ──
-            var currentTheme = localStorage.getItem("smriti-theme-style") || "sleek-compact";
+            var currentTheme = (window.SMRITI && window.SMRITI.getCurrentTheme ? window.SMRITI.getCurrentTheme() : localStorage.getItem("smriti-theme-style")) || "sleek-compact";
             html.push('<div class="smriti-standalone-theme-bar">');
             html.push('  <div class="smriti-standalone-theme-pill' + (currentTheme === "sleek-compact" ? " active" : "") + '" data-theme="sleek-compact" title="Sleek Compact Flat">');
             html.push('    <span>⚡</span><span class="theme-label">Sleek</span>');

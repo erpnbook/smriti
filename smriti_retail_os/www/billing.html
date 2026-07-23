@@ -9,6 +9,14 @@
 -->
 <html lang="en">
 <head>
+<script>
+    window.frappe = window.frappe || {};
+    window.frappe.boot = window.frappe.boot || {};
+    window.frappe.boot.smriti_license = {% if smriti_license is defined and smriti_license %}{{ smriti_license | tojson }}{% else %}{}{% endif %};
+    window.frappe.boot.smriti_site_config = {% if smriti_site_config is defined and smriti_site_config %}{{ smriti_site_config | tojson }}{% else %}{}{% endif %};
+    window.SMRITI_LICENSE = window.frappe.boot.smriti_license;
+    window.SMRITI_SITE_CONFIG = window.frappe.boot.smriti_site_config;
+</script>
 {%- include "smriti_retail_os/templates/includes/smriti_token_loader.html" -%}
 <!-- SMRITI TOKEN LOADER EXTENSION: page-level overrides -->
 <meta charset="UTF-8">
@@ -2709,27 +2717,6 @@ checkAuth();
             user: window._smriti_current_user || ''
         });
     }
-</script>
-
-<!-- Injects licensing and site config details from server context for UI Engine resolution -->
-<script>
-    window.frappe = window.frappe || {};
-    window.frappe.boot = window.frappe.boot || {};
-    window.frappe.boot.smriti_license = {% if smriti_license is defined and smriti_license %}{{ smriti_license | tojson }}{% else %}{}{% endif %};
-    window.frappe.boot.smriti_site_config = {% if smriti_site_config is defined and smriti_site_config %}{{ smriti_site_config | tojson }}{% else %}{}{% endif %};
-</script>
-
-<!-- SMRITI UI Configuration Engine — loaded last to merge safely into SMRITI global -->
-<script src="/assets/smriti_retail_os/js/smriti_ui_resolver.js?v=2.0.5"></script>
-<script src="/assets/smriti_retail_os/js/smriti_theme_manager.js?v=2.0.5"></script>
-<script>
-    /* Activate pos-dark profile for Billing Terminal.
-       Called after all sidebar scripts run so SMRITI global is stable. */
-    document.addEventListener('DOMContentLoaded', function() {
-        if (window.SMRITI && typeof SMRITI.initUIEngine === 'function') {
-            SMRITI.initUIEngine();
-        }
-    });
 </script>
 </body>
 
