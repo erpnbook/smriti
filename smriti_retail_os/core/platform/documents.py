@@ -109,6 +109,23 @@ def new(model_name: str):
     return frappe.new_doc(resolve(model_name))
 
 
+def create(model_name: str, **kwargs):
+    """
+    Create and insert a new document from keyword arguments.
+
+    Args:
+        model_name (str): SMRITI model name
+        **kwargs: Document fields
+
+    Returns:
+        frappe.Document: The inserted document
+    """
+    doc_dict = {"doctype": model_name}
+    doc_dict.update(kwargs)
+    doc = new_from_dict(doc_dict)
+    return insert(doc)
+
+
 def new_from_dict(doc_dict: dict, **kwargs):
     """
     Create a new, unsaved document from a dictionary of fields.
