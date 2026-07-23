@@ -51,7 +51,7 @@ class PurchaseOrderService:
         return PurchaseRepository.list_suppliers(filters=filters, limit=limit)
 
     @staticmethod
-    def create_purchase_order(supplier, items_list, schedule_date=None, remarks=None, warehouse=None, company=None):
+    def create_purchase_order(supplier, items_list, schedule_date=None, remarks=None, warehouse=None, company=None, tc_name=None, terms=None):
         po = PurchaseRepository.new_doc("SMRITI Purchase Order")
         po.supplier = supplier
         po.supplier_name = (
@@ -63,6 +63,10 @@ class PurchaseOrderService:
         po.schedule_date = schedule_date or nowdate()
         po.company = company or frappe.defaults.get_user_default("Company") or smriti.db.get("Company", {}, "name")
         po.remarks = remarks
+        if hasattr(po, "tc_name"):
+            po.tc_name = tc_name
+        if hasattr(po, "terms"):
+            po.terms = terms
         po.status = "Draft"
         po.naming_series = "SMRITI-PO-.YYYY.-"
 

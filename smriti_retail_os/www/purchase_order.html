@@ -402,6 +402,19 @@
                         <input type="text" class="form-input" id="po-remarks" placeholder="Enter special delivery terms or remarks...">
                     </div>
                 </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 2fr; gap:16px; margin-top:14px;">
+                    <div class="form-group">
+                        <label class="form-label">Terms & Conditions Template</label>
+                        <select class="form-input" id="po-tc-template" onchange="onTermsTemplateChange(this.value)">
+                            <option value="">-- Select Terms Template --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Terms & Conditions Details (Editable)</label>
+                        <textarea class="form-input" id="po-terms" style="height:65px; font-size:0.82rem; resize:vertical;" placeholder="1. Goods must match approved quality specifications.&#10;2. Delivery must be completed by expected schedule date.&#10;3. Defective or damaged items subject to immediate return."></textarea>
+                    </div>
+                </div>
             </div>
 
             <!-- Barcode & Style Size-Pivot Matrix Section -->
@@ -535,6 +548,8 @@
         let currentProfileKey = 'footwear_mens';
         let currentSizes = SIZE_PROFILES.footwear_mens;
 
+        let termsTemplatesCache = [];
+
         window.onload = function() {
             // Set default schedule date to 7 days in future
             const today = new Date();
@@ -543,6 +558,7 @@
 
             loadSuppliers();
             loadWarehouses();
+            loadTermsTemplates();
             renderMatrixHeader();
             addMatrixRow('ART-101', 'Black');
             addMatrixRow('ART-101', 'Brown');
@@ -558,6 +574,27 @@
             });
             scanInput.focus();
         };
+
+        async function loadTermsTemplates() {
+            try {
+                const list = await api('smriti_retail_os.api.platform_data_api.get_records', {
+                    doctype: 'Terms and Conditions',
+                    fields: ['name', 'title', 'terms'],
+                    limit: 100
+                });
+                termsTemplatesCache = list || [];
+                const sel = document.getElementById('po-tc-template');
+                sel.innerHTML = '<option value="">-- Select Terms Template --</option>' + 
+                    termsTemplatesCache.map(t => `<option value="${t.name}">${t.title || t.name}</option>`).join('');
+            } catch(e) {}
+        }
+
+        function onTermsTemplateChange(templateId) {
+            const found = termsTemplatesCache.find(t => t.name === templateId);
+            if (found && found.terms) {
+                document.getElementById('po-terms').value = found.terms.replace(/<[^>]*>?/gm, '');
+            }
+        }
 
         async function api(method, args = {}) {
             const resp = await fetch('/api/method/' + method, {
@@ -861,7 +898,9 @@
                     supplier: supplier,
                     items: items,
                     schedule_date: document.getElementById('po-schedule-date').value,
-                    remarks: document.getElementById('po-remarks').value
+                    remarks: document.getElementById('po-remarks').value,
+                    tc_name: document.getElementById('po-tc-template').value,
+                    terms: document.getElementById('po-terms').value
                 });
 
                 if (submitFlag === 1) {
@@ -884,6 +923,8 @@
             document.getElementById('po-supplier').value = '';
             document.getElementById('po-supplier-gstin').value = '';
             document.getElementById('po-remarks').value = '';
+            document.getElementById('po-tc-template').value = '';
+            document.getElementById('po-terms').value = '';
             document.getElementById('matrix-tbody').innerHTML = '';
             document.getElementById('po-status-badge').textContent = 'DRAFT';
             addMatrixRow('ART-101', 'Black');

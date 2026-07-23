@@ -57,7 +57,8 @@ def get_purchase_order_detail(po_name):
 
 @frappe.whitelist()
 def create_purchase_order(supplier, items, schedule_date=None, remarks=None,
-                          image_base64=None, image_filename=None, warehouse=None):
+                          image_base64=None, image_filename=None, warehouse=None,
+                          tc_name=None, terms=None):
     items_list = frappe.parse_json(items) if isinstance(items, str) else items
     return svc.create_purchase_order(
         supplier=supplier,
@@ -66,7 +67,9 @@ def create_purchase_order(supplier, items, schedule_date=None, remarks=None,
         remarks=remarks,
         image_base64=image_base64,
         image_filename=image_filename,
-        warehouse=warehouse
+        warehouse=warehouse,
+        tc_name=tc_name,
+        terms=terms
     )
 
 
