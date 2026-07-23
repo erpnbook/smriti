@@ -983,17 +983,24 @@
             }
 
             try {
-                toast('Saving Purchase Order...', 'info');
+                toast(submitFlag === 1 ? 'Submitting Purchase Order...' : 'Saving Purchase Order...', 'info');
+                const currentPoName = document.getElementById('po-name').value;
                 const res = await api('smriti_retail_os.purchase_studio.api.purchase_api.create_purchase_order', {
                     supplier: supplier,
                     items: items,
                     schedule_date: document.getElementById('po-schedule-date').value,
                     remarks: document.getElementById('po-remarks').value,
                     tc_name: document.getElementById('po-tc-template').value,
-                    terms: document.getElementById('po-terms').value
+                    terms: document.getElementById('po-terms').value,
+                    po_name: currentPoName,
+                    submit: submitFlag
                 });
 
-                if (submitFlag === 1) {
+                if (res && res.name) {
+                    document.getElementById('po-name').value = res.name;
+                }
+
+                if (submitFlag === 1 || res.status === 'submitted') {
                     document.getElementById('po-status-badge').textContent = 'SUBMITTED';
                     document.getElementById('po-status-badge').style.background = 'rgba(16,185,129,0.15)';
                     document.getElementById('po-status-badge').style.color = 'var(--success)';
@@ -1001,7 +1008,7 @@
                     toast(`Purchase Order ${res.name || 'Order'} submitted successfully!`, 'success');
                 } else {
                     document.getElementById('po-status-badge').textContent = 'DRAFT';
-                    toast(`Purchase Order ${res.name || 'Draft'} saved successfully!`, 'success');
+                    toast(`Purchase Order ${res.name || 'Draft'} saved as draft!`, 'success');
                 }
             } catch(e) {
                 toast(e.message || 'Failed to save Purchase Order', 'error');

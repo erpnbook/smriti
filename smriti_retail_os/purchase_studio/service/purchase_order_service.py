@@ -51,7 +51,7 @@ class PurchaseOrderService:
         return PurchaseRepository.list_suppliers(filters=filters, limit=limit)
 
     @staticmethod
-    def create_purchase_order(supplier, items_list, schedule_date=None, remarks=None, warehouse=None, company=None, tc_name=None, terms=None):
+    def create_purchase_order(supplier, items_list, schedule_date=None, remarks=None, warehouse=None, company=None, tc_name=None, terms=None, po_name=None, submit=0):
         # Resolve supplier to a valid SMRITI Supplier name
         smriti_sup_name = None
         if supplier:
@@ -70,7 +70,16 @@ class PurchaseOrderService:
                     except Exception:
                         smriti_sup_name = frappe.db.get_value("SMRITI Supplier", {"supplier_name": supplier}, "name") or supplier
 
-        po = PurchaseRepository.new_doc("SMRITI Purchase Order")
+        is_existing = False
+        if po_name and po_name != "PO-DRAFT-NEW" and frappe.db.exists("SMRITI Purchase Order", po_name):
+            po = frappe.get_doc("SMRITI Purchase Order", po_name)
+            po.items = []
+            is_existing = True
+        else:
+            po = PurchaseRepository.new_doc("SMRITI Purchase Order")
+            po.status = "Draft"
+            po.naming_series = "SMRITI-PO-.YYYY.-"
+
         po.supplier = smriti_sup_name
         po.supplier_name = (
             smriti.db.get("SMRITI Supplier", smriti_sup_name, "supplier_name") or
@@ -85,8 +94,6 @@ class PurchaseOrderService:
             po.tc_name = tc_name
         if hasattr(po, "terms"):
             po.terms = terms
-        po.status = "Draft"
-        po.naming_series = "SMRITI-PO-.YYYY.-"
 
         default_hsn = frappe.db.get_value("GST HSN Code", {}, "name")
         if not default_hsn:
@@ -133,19 +140,21 @@ class PurchaseOrderService:
         PurchaseCalculationService.calculate_totals(po)
         PurchaseValidationService.validate_po(po)
 
-        # Check approval requirement and save/workflow transition
-        PurchaseRepository.insert_po(po)
+        if is_existing:
+            po.save(ignore_permissions=True)
+        else:
+            PurchaseRepository.insert_po(po)
         
-        # Trigger workflow transition from Draft -> Submitted/Approved
-        PurchaseWorkflowService.submit(po.name)
-        
-        # Retrieve the updated status
-        po.reload()
+        # Only submit if submit flag is 1 or '1'
+        if int(submit or 0) == 1:
+            PurchaseWorkflowService.submit(po.name)
+            po.reload()
+
         return {
-            "status": "submitted" if po.status == "Approved" else "pending_approval",
+            "status": "submitted" if po.status in ("Approved", "Submitted") else "draft",
             "name": po.name,
             "grand_total": po.grand_total,
-            "message": _("SMRITI Purchase Order {0} created.").format(po.name)
+            "message": _("SMRITI Purchase Order {0} updated.").format(po.name) if is_existing else _("SMRITI Purchase Order {0} created.").format(po.name)
         }
 
     @staticmethod
