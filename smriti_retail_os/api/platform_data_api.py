@@ -51,7 +51,7 @@ def get_records(doctype: str, fields: list = None, filters: dict = None,
 @frappe.whitelist()
 def get_value(doctype: str, filters: dict = None, fieldname=None, name: str = None) -> dict:
     """
-    Fetch a single value or set of values from a DocType.
+    Fetch a single value or set of values from a DocType or Single DocType.
 
     Guard 6-compliant replacement for ``frappe.client.get_value``.
 
@@ -64,14 +64,30 @@ def get_value(doctype: str, filters: dict = None, fieldname=None, name: str = No
     Returns:
         dict: The requested field values.
     """
+    is_single = False
+    try:
+        is_single = frappe.get_meta(doctype).issingle
+    except Exception:
+        pass
+
+    if is_single:
+        doc = frappe.get_single(doctype)
+        if isinstance(fieldname, list):
+            return {fn: doc.get(fn) for fn in fieldname}
+        elif fieldname:
+            return {fieldname: doc.get(fieldname)}
+        else:
+            return doc.as_dict()
+
     if name:
         filters = {"name": name}
-    return frappe.db.get_value(
+    val = frappe.db.get_value(
         doctype,
         filters=filters or {},
         fieldname=fieldname or "name",
         as_dict=True,
     )
+    return val or {}
 
 
 @frappe.whitelist()
