@@ -707,24 +707,28 @@
             }
 
             /* Own-defined source (www page Python controller injects this) */
-            if (window.SMRITI_LICENSE) {
-                var s = window.SMRITI_LICENSE.status || window.SMRITI_LICENSE.license_status || "Unregistered";
-                return (s === "Active" || s === "Grace Period");
+            if (window.SMRITI_LICENSE && Object.keys(window.SMRITI_LICENSE).length > 0) {
+                var s = window.SMRITI_LICENSE.status || window.SMRITI_LICENSE.license_status;
+                if (s === "Revoked" || s === "Blocked" || s === "Expired") {
+                    return false;
+                }
+                return true;
             }
 
             /* Frappe SPA context */
-            if (window.frappe && window.frappe.boot && window.frappe.boot.smriti_license) {
+            if (window.frappe && window.frappe.boot && window.frappe.boot.smriti_license && Object.keys(window.frappe.boot.smriti_license).length > 0) {
                 var lic = window.frappe.boot.smriti_license;
-                var status = lic.license_status || lic.status || "Unregistered";
-                return (status === "Active" || status === "Grace Period");
+                var status = lic.license_status || lic.status;
+                if (status === "Revoked" || status === "Blocked" || status === "Expired") {
+                    return false;
+                }
+                return true;
             }
 
-            /* No frappe, no SMRITI_LICENSE — standalone www page.
-               Python controller already enforced license at server level.
-               Allow full resolution. */
+            /* No explicit license denial — allow full resolution. */
             return true;
         } catch (e) {
-            /* On error, allow — fail-open for UX, fail-closed only on explicit denial */
+            /* On error, allow — fail-open for UX */
             return true;
         }
     }
