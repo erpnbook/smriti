@@ -16,9 +16,9 @@
 
 // ── Context injected by smriti-purchase.py ──────────────────
 const USER         = "{{ cashier }}";
-const USER_ROLES   = {{ user_roles | tojson }};
+const USER_ROLES   = {% if user_roles is defined and user_roles %}{{ user_roles | tojson }}{% else %}[]{% endif %};
 const CSRF_TOKEN   = "{{ csrf_token }}";
-const PX_SETTINGS  = {{ purchase_settings | tojson }};
+const PX_SETTINGS  = {% if purchase_settings is defined and purchase_settings %}{{ purchase_settings | tojson }}{% else %}{}{% endif %};
 const API          = "smriti_retail_os.purchase_studio.api.purchase_api";
 
 const IS_MGR  = USER_ROLES.includes("SMRITI Store Manager") || USER_ROLES.includes("System Manager");

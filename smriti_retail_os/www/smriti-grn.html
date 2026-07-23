@@ -275,9 +275,9 @@ input,select,textarea{font-family:inherit;outline:none;}
    API: smriti_retail_os.purchase_studio.api.purchase_api
 ════════════════════════════════════════════════════════ */
 const USER      = "{{ cashier }}";
-const USER_ROLES= {{ user_roles | tojson }};
+const USER_ROLES= {% if user_roles is defined and user_roles %}{{ user_roles | tojson }}{% else %}[]{% endif %};
 const CSRF_TOKEN= "{{ csrf_token }}";
-const PX_SET    = {{ purchase_settings | tojson }};
+const PX_SET    = {% if purchase_settings is defined and purchase_settings %}{{ purchase_settings | tojson }}{% else %}{}{% endif %};
 const API       = "smriti_retail_os.purchase_studio.api.purchase_api";
 
 function apiCall(method, args={}) {

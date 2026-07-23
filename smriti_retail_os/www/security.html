@@ -1,4 +1,4 @@
-﻿{#
+{#
  * @file: smriti_retail_os/www/security.html
  * @description: Template for SMRITI Security and Access Logs Page..
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
@@ -2009,8 +2009,8 @@ function cint(v) {
 <script>
     window.frappe = window.frappe || {};
     window.frappe.boot = window.frappe.boot || {};
-    window.frappe.boot.smriti_license = {{ smriti_license | tojson }};
-    window.frappe.boot.smriti_site_config = {{ smriti_site_config | tojson }};
+    window.frappe.boot.smriti_license = {% if smriti_license is defined and smriti_license %}{{ smriti_license | tojson }}{% else %}{}{% endif %};
+    window.frappe.boot.smriti_site_config = {% if smriti_site_config is defined and smriti_site_config %}{{ smriti_site_config | tojson }}{% else %}{}{% endif %};
 </script>
 
 <!-- SMRITI UI Configuration Engine — loaded last to merge safely into SMRITI global -->
