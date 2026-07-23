@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 #
-# @file:    smriti_retail_os/www/smriti-purchase-order.py
-# @desc:    Page controller for SMRITI Purchase Order dedicated form page.
+# @file:    smriti_retail_os/www/smriti_purchase_order.py
+# @desc:    Page controller for SMRITI Dedicated Purchase Order page.
 #           - Enforces login (redirects Guests to /login)
-#           - Role guard: SMRITI Store Manager | System Manager
-#           - Strips all Frappe chrome
+#           - Strips ALL Frappe chrome, sidebars, and topbars
 #           - Injects: user, csrf_token, user_roles, purchase_settings
 # @author:  Jawahar R. Mallah <jawahar.mallah@gmail.com>
-# @std:     AES-002 SSDL v1.0.0 — Layer 7 (www Page Controller)
 # @license: GPL-3.0-only
 # SPDX-License-Identifier: GPL-3.0-only
 # * Copyright (c) 2026 AITDL NETWORK. All rights reserved.
@@ -16,19 +14,19 @@
 import frappe
 
 no_cache = 1
-title    = "SMRITI — New Purchase Order"
+title    = "SMRITI — Dedicated Purchase Order"
 
 
 def get_context(context):
     """
-    Page controller for the dedicated Purchase Order creation form.
-    Redirects immediately to the unified hybrid view inside SMRITI Purchase Studio.
+    Page controller for the dedicated Purchase Order page.
+    Renders standalone without any sidebar, topbar, or framework chrome.
     """
-    # ── Redirect to hybrid Purchase Studio view ───────────────────────────────
-    frappe.local.flags.redirect_location = "/smriti-purchase#orders-create"
-    raise frappe.Redirect
+    if frappe.session.user == "Guest":
+        frappe.local.flags.redirect_location = "/login"
+        raise frappe.Redirect
 
-    # ── Strip ALL Frappe web includes ─────────────────────────────────────────
+    # ── Strip ALL Frappe web includes, sidebars, and topbars ─────────────────
     context.web_include_js  = []
     context.web_include_css = []
     context.no_header       = True
