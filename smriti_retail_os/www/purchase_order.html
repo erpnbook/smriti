@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SMRITI — Dedicated Purchase Order Studio</title>
-    <meta name="description" content="Dedicated SMRITI Purchase Order Management & Creation Terminal">
+    <meta name="description" content="Dedicated SMRITI Purchase Order Management & Creation Terminal with Barcode & Size Matrix Pivot">
     <meta name="robots" content="noindex,nofollow">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -127,14 +127,14 @@
         .btn-act-success { background: var(--success); color: #fff; }
         .btn-act-success:hover { background: #059669; }
 
-        /* ── Main Container ── */
+        /* ── Main Workspace Layout ── */
         .po-main-layout {
             display: grid;
             grid-template-columns: 1fr 340px;
             gap: 20px;
             padding: 20px 24px;
             flex: 1;
-            max-width: 1600px;
+            max-width: 1700px;
             margin: 0 auto;
             width: 100%;
         }
@@ -159,12 +159,52 @@
             padding-bottom: 10px;
         }
 
+        /* ── Barcode & Style Scanner Ribbon ── */
+        .scanner-ribbon {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--primary);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+        }
+
+        .scanner-input-box {
+            position: relative;
+            flex: 1;
+            display: flex;
+            align-items: center;
+        }
+
+        .scanner-input-box span {
+            position: absolute;
+            left: 12px;
+            color: var(--primary-lt);
+            font-size: 20px;
+        }
+
+        .scanner-input {
+            width: 100%;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid var(--primary);
+            border-radius: var(--radius-sm);
+            padding: 10px 12px 10px 40px;
+            color: #fff;
+            font-family: var(--font-mono);
+            font-size: 0.95rem;
+            outline: none;
+        }
+        .scanner-input:focus { border-color: #60a5fa; box-shadow: 0 0 0 2px rgba(96,165,250,0.2); }
+
         /* ── Meta Form Grid ── */
         .meta-form-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 16px;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
         .form-group { display: flex; flex-direction: column; gap: 6px; }
@@ -183,42 +223,65 @@
         }
         .form-input:focus { border-color: var(--primary); }
 
-        /* ── Items Table ── */
-        .po-table-container {
+        /* ── Size Pivot Matrix Table ── */
+        .matrix-table-container {
             overflow-x: auto;
             border: 1px solid var(--border);
             border-radius: var(--radius-sm);
-            margin-top: 12px;
+            background: rgba(0,0,0,0.15);
         }
 
-        .po-table {
+        .matrix-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.84rem;
+            font-size: 0.82rem;
+            text-align: center;
         }
-        .po-table th {
-            background: rgba(0,0,0,0.3);
+        .matrix-table th {
+            background: rgba(0,0,0,0.4);
             color: var(--text-sub);
-            padding: 10px 12px;
-            text-align: left;
-            font-weight: 600;
+            padding: 10px 8px;
+            font-weight: 700;
             border-bottom: 1px solid var(--border);
+            border-right: 1px solid rgba(255,255,255,0.05);
         }
-        .po-table td {
-            padding: 8px 12px;
+        .matrix-table td {
+            padding: 6px 6px;
             border-bottom: 1px solid rgba(255,255,255,0.05);
+            border-right: 1px solid rgba(255,255,255,0.05);
             vertical-align: middle;
         }
-        .po-table tr:hover { background: rgba(255,255,255,0.02); }
+        .matrix-table tr:hover { background: rgba(255,255,255,0.02); }
 
-        .cell-input {
+        .cell-qty-input {
+            width: 100%;
+            min-width: 48px;
             background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 6px 4px;
+            color: var(--text);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            text-align: center;
+            outline: none;
+        }
+        .cell-qty-input:focus { border-color: var(--primary-lt); background: rgba(37,99,235,0.15); }
+        .cell-qty-input.highlight-scan { animation: pulseScan 0.6s ease-in-out; border-color: var(--success); }
+
+        @keyframes pulseScan {
+            0% { background: rgba(16,185,129,0.3); transform: scale(1.05); }
+            100% { background: rgba(0,0,0,0.3); transform: scale(1); }
+        }
+
+        .cell-meta-input {
+            background: rgba(0,0,0,0.25);
             border: 1px solid var(--border);
             border-radius: 4px;
             padding: 6px 8px;
             color: var(--text);
             font-family: inherit;
-            font-size: 0.84rem;
+            font-size: 0.82rem;
             width: 100%;
         }
 
@@ -249,20 +312,21 @@
             padding-top: 14px;
         }
 
-        .matrix-badge {
+        .matrix-pill {
             background: rgba(16, 185, 129, 0.15);
             color: var(--success);
             border: 1px solid var(--success);
             padding: 2px 8px;
             border-radius: 4px;
-            font-size: 0.72rem;
+            font-size: 0.7rem;
             font-weight: 700;
+            text-transform: uppercase;
         }
     </style>
 </head>
 <body>
 
-    <!-- ── Top Header Navigation Bar (Standalone View - No Frame Chrome) ── -->
+    <!-- ── Fullscreen Navigation Bar (No sidebar / No framework topbar) ── -->
     <header class="po-header">
         <div class="po-title-block">
             <a href="/smriti-home" class="btn-back" title="Return to SMRITI Home">
@@ -291,10 +355,11 @@
         </div>
     </header>
 
-    <!-- ── Main Workspace Layout ── -->
+    <!-- ── Main Workspace ── -->
     <main class="po-main-layout">
         <div style="display:flex; flex-direction:column; gap:20px;">
-            <!-- Document Meta Details Card -->
+            
+            <!-- Order Meta Information -->
             <div class="po-card">
                 <div class="card-title">
                     <span class="material-symbols-outlined">business</span> Order Header Information
@@ -302,12 +367,12 @@
 
                 <div class="meta-form-grid">
                     <div class="form-group">
-                        <label class="form-label">PO Series / Reference ID</label>
+                        <label class="form-label">PO Reference / Document ID</label>
                         <input type="text" class="form-input" id="po-name" value="PO-DRAFT-NEW" readonly style="color:var(--text-sub); font-family:var(--font-mono);">
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Supplier / Brand Vendor *</label>
+                        <label class="form-label">Supplier / Vendor *</label>
                         <select class="form-input" id="po-supplier" onchange="onSupplierChange(this.value)">
                             <option value="">-- Select Supplier --</option>
                         </select>
@@ -328,49 +393,61 @@
 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
                     <div class="form-group">
-                        <label class="form-label">Supplier GSTIN & Tax Category</label>
+                        <label class="form-label">Supplier GSTIN & Tax Details</label>
                         <input type="text" class="form-input" id="po-supplier-gstin" placeholder="Select supplier to auto-fill" readonly style="color:var(--text-sub);">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Order Remarks / Terms</label>
+                        <label class="form-label">Order Remarks / Notes</label>
                         <input type="text" class="form-input" id="po-remarks" placeholder="Enter special delivery terms or remarks...">
                     </div>
                 </div>
             </div>
 
-            <!-- Items & Size Matrix Grid Card -->
+            <!-- Barcode & Style Size-Pivot Matrix Section -->
             <div class="po-card">
-                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:10px; margin-bottom:16px;">
+                <!-- Barcode & Article Scanner Ribbon -->
+                <div class="scanner-ribbon">
+                    <div class="scanner-input-box">
+                        <span class="material-symbols-outlined">qr_code_scanner</span>
+                        <input type="text" id="scanner-input" class="scanner-input" placeholder="Scan Barcode or type Article/Style No. (e.g. ART-101, 890123456789) & press Enter..." autocomplete="off">
+                    </div>
+
+                    <div class="form-group" style="width: 170px;">
+                        <select class="form-input" id="size-profile-select" onchange="switchSizeProfile(this.value)">
+                            <option value="footwear_mens" selected>Footwear Mens (6-11)</option>
+                            <option value="footwear_womens">Footwear Womens (4-9)</option>
+                            <option value="apparel_standard">Apparel (S-XXL)</option>
+                            <option value="kids_sizes">Kids (1-5)</option>
+                        </select>
+                    </div>
+
+                    <button class="btn-act btn-act-pri" style="padding: 9px 14px;" onclick="handleBarcodeScan(document.getElementById('scanner-input').value)">
+                        <span class="material-symbols-outlined" style="font-size:18px;">barcode_reader</span> Scan / Add
+                    </button>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:10px; margin-bottom:14px;">
                     <div class="card-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;">
-                        <span class="material-symbols-outlined">inventory_2</span> Order Line Items & Size Breakdowns
+                        <span class="material-symbols-outlined">grid_on</span> Article & Color Size-Pivoted Matrix
                     </div>
 
                     <div style="display:flex; gap:8px;">
-                        <button class="btn-act btn-act-sec" style="padding:4px 12px; font-size:0.78rem;" onclick="addMatrixRow()">
-                            <span class="material-symbols-outlined" style="font-size:16px;">grid_on</span> Add Size Matrix Row
+                        <button class="btn-act btn-act-sec" style="padding:4px 12px; font-size:0.78rem;" onclick="openPasteExcelModal()">
+                            <span class="material-symbols-outlined" style="font-size:16px;">content_paste</span> 📋 Paste Excel Grid
                         </button>
-                        <button class="btn-act btn-act-sec" style="padding:4px 12px; font-size:0.78rem;" onclick="addItemRow()">
-                            <span class="material-symbols-outlined" style="font-size:16px;">add</span> Add Standard Item
+                        <button class="btn-act btn-act-sec" style="padding:4px 12px; font-size:0.78rem;" onclick="addMatrixRow()">
+                            <span class="material-symbols-outlined" style="font-size:16px;">add</span> Add Color Row
                         </button>
                     </div>
                 </div>
 
-                <!-- Items Table -->
-                <div class="po-table-container">
-                    <table class="po-table">
-                        <thead>
-                            <tr>
-                                <th style="width:30px;">#</th>
-                                <th style="width:180px;">Article / Item Code</th>
-                                <th>Item Description</th>
-                                <th style="width:90px; text-align:center;">Size / Color</th>
-                                <th style="width:90px; text-align:center;">Qty</th>
-                                <th style="width:110px; text-align:right;">Purchase Rate (₹)</th>
-                                <th style="width:110px; text-align:right;">Amount (₹)</th>
-                                <th style="width:40px;"></th>
-                            </tr>
+                <!-- Size Matrix Table -->
+                <div class="matrix-table-container">
+                    <table class="matrix-table" id="matrix-table">
+                        <thead id="matrix-thead">
+                            <!-- Populated dynamically based on Size Profile -->
                         </thead>
-                        <tbody id="po-items-tbody">
+                        <tbody id="matrix-tbody">
                             <!-- Populated dynamically -->
                         </tbody>
                     </table>
@@ -386,11 +463,11 @@
                 </div>
 
                 <div class="summary-row">
-                    <span style="color:var(--text-sub);">Total Items Count:</span>
-                    <strong id="sum-items-cnt">0</strong>
+                    <span style="color:var(--text-sub);">Article / Style Lines:</span>
+                    <strong id="sum-article-cnt">0</strong>
                 </div>
                 <div class="summary-row">
-                    <span style="color:var(--text-sub);">Total Quantity:</span>
+                    <span style="color:var(--text-sub);">Total Quantity (Pairs/Pcs):</span>
                     <strong id="sum-total-qty">0 Pcs</strong>
                 </div>
                 <div class="summary-row">
@@ -398,7 +475,7 @@
                     <strong id="sum-subtotal">₹0.00</strong>
                 </div>
                 <div class="summary-row">
-                    <span style="color:var(--text-sub);">Estimated GST / Tax:</span>
+                    <span style="color:var(--text-sub);">Estimated GST / Tax (18%):</span>
                     <strong id="sum-tax" style="color:var(--primary-lt);">₹0.00</strong>
                 </div>
                 <div class="summary-row total">
@@ -409,16 +486,36 @@
 
             <div class="po-card">
                 <div class="card-title">
-                    <span class="material-symbols-outlined">info</span> Quick Guidelines
+                    <span class="material-symbols-outlined">info</span> Matrix Entry Tips
                 </div>
                 <div style="font-size:0.8rem; color:var(--text-sub); line-height:1.6;">
-                    • Use <strong>Add Size Matrix Row</strong> for Footwear/Apparel size range entries.<br>
-                    • Draft orders allow editing quantities and prices before final submission.<br>
-                    • Submitted orders generate GRN receiving requirements automatically.
+                    • <strong>Barcode Scanner</strong>: Point & scan any SKU barcode to auto-increment its size quantity cell.<br>
+                    • <strong>Keyboard Navigation</strong>: Use Tab or Arrow keys (← → ↑ ↓) to quickly navigate across size cells.<br>
+                    • <strong>Excel Import</strong>: Click <em>📋 Paste Excel Grid</em> to paste size grids copied directly from supplier order sheets.
                 </div>
             </div>
         </div>
     </main>
+
+    <!-- Modal: Paste Excel Grid -->
+    <div class="modal-backdrop" id="excel-paste-modal" style="display:none;" onclick="closeModal('excel-paste-modal')">
+        <div class="modal" onclick="event.stopPropagation()" style="max-width: 600px; width: 95%;">
+            <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:10px;">
+                <div class="modal-title" style="font-weight:700; font-size:1rem; display:flex; align-items:center; gap:8px;">
+                    <span class="material-symbols-outlined" style="color:var(--primary-lt);">content_paste</span> Paste Excel Matrix Grid
+                </div>
+                <button class="modal-close" onclick="closeModal('excel-paste-modal')" style="background:none; border:none; color:#fff; font-size:20px; cursor:pointer;">&times;</button>
+            </div>
+            <div class="modal-body" style="padding:16px 0; display:flex; flex-direction:column; gap:12px;">
+                <p style="font-size:0.8rem; color:var(--text-sub);">Copy size grid cells from Excel (rows: Color/Style, columns: Sizes) and paste below:</p>
+                <textarea id="excel-paste-input" class="form-input" style="height:140px; font-family:var(--font-mono); font-size:0.8rem; resize:none;" placeholder="Color	6	7	8	9	10	11&#10;Black	2	4	6	6	4	2&#10;Brown	1	2	4	4	2	1"></textarea>
+            </div>
+            <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px; border-top:1px solid var(--border); padding-top:10px;">
+                <button class="btn-act btn-act-sec" onclick="closeModal('excel-paste-modal')">Cancel</button>
+                <button class="btn-act btn-act-pri" onclick="applyExcelPaste()">Apply Excel Data</button>
+            </div>
+        </div>
+    </div>
 
     <div id="toast-container" style="position:fixed; bottom:20px; right:20px; z-index:9999;"></div>
 
@@ -426,7 +523,16 @@
         const CSRF_TOKEN = '{{ csrf_token }}';
         const LOGGED_USER = '{{ cashier }}';
 
-        let poItems = [];
+        // Standard Size Profiles
+        const SIZE_PROFILES = {
+            footwear_mens: ['6', '7', '8', '9', '10', '11'],
+            footwear_womens: ['4', '5', '6', '7', '8', '9'],
+            apparel_standard: ['S', 'M', 'L', 'XL', 'XXL'],
+            kids_sizes: ['1', '2', '3', '4', '5']
+        };
+
+        let currentProfileKey = 'footwear_mens';
+        let currentSizes = SIZE_PROFILES.footwear_mens;
 
         window.onload = function() {
             // Set default schedule date to 7 days in future
@@ -436,7 +542,20 @@
 
             loadSuppliers();
             loadWarehouses();
-            addItemRow();
+            renderMatrixHeader();
+            addMatrixRow('ART-101', 'Black');
+            addMatrixRow('ART-101', 'Brown');
+
+            // Barcode Scanner Listener
+            const scanInput = document.getElementById('scanner-input');
+            scanInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleBarcodeScan(scanInput.value);
+                    scanInput.value = '';
+                }
+            });
+            scanInput.focus();
         };
 
         async function api(method, args = {}) {
@@ -474,9 +593,7 @@
                 const sel = document.getElementById('po-supplier');
                 sel.innerHTML = '<option value="">-- Select Supplier --</option>' + 
                     list.map(s => `<option value="${s.name}" data-gstin="${s.gstin || ''}">${s.supplier_name || s.name}</option>`).join('');
-            } catch(e) {
-                console.error('Failed to load suppliers:', e);
-            }
+            } catch(e) {}
         }
 
         async function loadWarehouses() {
@@ -501,59 +618,161 @@
             document.getElementById('po-supplier-gstin').value = gstin ? `GSTIN: ${gstin}` : 'Unregistered / Standard Supplier';
         }
 
-        function addItemRow() {
-            const tbody = document.getElementById('po-items-tbody');
-            const rowIdx = tbody.children.length + 1;
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td style="color:var(--text-sub); text-align:center;">${rowIdx}</td>
-                <td><input type="text" class="cell-input item-code" placeholder="Search Code / Barcode" onchange="fetchItemDetails(this)"></td>
-                <td><input type="text" class="cell-input item-name" placeholder="Item Name & Description"></td>
-                <td><input type="text" class="cell-input item-size" placeholder="Size/Color" style="text-align:center;"></td>
-                <td><input type="number" class="cell-input item-qty" value="1" min="1" style="text-align:center;" oninput="recalcTotals()"></td>
-                <td><input type="number" class="cell-input item-rate" value="0.00" step="0.01" style="text-align:right;" oninput="recalcTotals()"></td>
-                <td style="text-align:right; font-weight:700; font-family:var(--font-mono);" class="item-amount">₹0.00</td>
-                <td><button class="btn-del" onclick="removeRow(this)"><span class="material-symbols-outlined" style="font-size:18px;">delete</span></button></td>
-            `;
-            tbody.appendChild(tr);
+        function switchSizeProfile(profileKey) {
+            currentProfileKey = profileKey;
+            currentSizes = SIZE_PROFILES[profileKey] || SIZE_PROFILES.footwear_mens;
+            renderMatrixHeader();
+            // Clear existing rows and add fresh default rows
+            document.getElementById('matrix-tbody').innerHTML = '';
+            addMatrixRow('ART-101', 'Black');
             recalcTotals();
         }
 
-        function addMatrixRow() {
-            const tbody = document.getElementById('po-items-tbody');
+        function renderMatrixHeader() {
+            const thead = document.getElementById('matrix-thead');
+            let sizeColsHtml = currentSizes.map(sz => `<th style="width:54px; text-align:center;">Size ${sz}</th>`).join('');
+            thead.innerHTML = `
+                <tr>
+                    <th style="width:30px; text-align:center;">#</th>
+                    <th style="width:160px; text-align:left;">Article / Style No.</th>
+                    <th style="width:120px; text-align:left;">Color</th>
+                    ${sizeColsHtml}
+                    <th style="width:70px; text-align:center;">Total Qty</th>
+                    <th style="width:110px; text-align:right;">Rate (₹)</th>
+                    <th style="width:110px; text-align:right;">Subtotal (₹)</th>
+                    <th style="width:40px; text-align:center;"></th>
+                </tr>
+            `;
+        }
+
+        function addMatrixRow(artCode = '', colorName = '') {
+            const tbody = document.getElementById('matrix-tbody');
             const rowIdx = tbody.children.length + 1;
             const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td style="color:var(--text-sub); text-align:center;">${rowIdx}</td>
+
+            let sizeCellsHtml = currentSizes.map(sz => `
                 <td>
-                    <input type="text" class="cell-input item-code" placeholder="Article No. (e.g. ART-101)">
-                    <span class="matrix-badge">MATRIX ROW</span>
+                    <input type="number" class="cell-qty-input size-val" data-size="${sz}" value="0" min="0" oninput="recalcTotals()" onkeydown="handleKeyNav(event, this)">
                 </td>
-                <td><input type="text" class="cell-input item-name" value="Footwear / Apparel Size Breakup" placeholder="Style / Model Description"></td>
-                <td><input type="text" class="cell-input item-size" value="6:2, 7:3, 8:4, 9:3" placeholder="Breakdown" style="text-align:center;"></td>
-                <td><input type="number" class="cell-input item-qty" value="12" min="1" style="text-align:center;" oninput="recalcTotals()"></td>
-                <td><input type="number" class="cell-input item-rate" value="450.00" step="0.01" style="text-align:right;" oninput="recalcTotals()"></td>
-                <td style="text-align:right; font-weight:700; font-family:var(--font-mono);" class="item-amount">₹5,400.00</td>
+            `).join('');
+
+            tr.innerHTML = `
+                <td style="color:var(--text-sub); text-align:center;">${rowIdx}</td>
+                <td><input type="text" class="cell-meta-input art-code" value="${artCode}" placeholder="Article No." onchange="fetchArticleDetails(this)"></td>
+                <td><input type="text" class="cell-meta-input color-name" value="${colorName}" placeholder="Color"></td>
+                ${sizeCellsHtml}
+                <td style="font-weight:700; font-family:var(--font-mono); text-align:center;" class="row-total-qty">0</td>
+                <td><input type="number" class="cell-meta-input row-rate" value="450.00" step="0.01" style="text-align:right;" oninput="recalcTotals()"></td>
+                <td style="text-align:right; font-weight:700; font-family:var(--font-mono);" class="row-subtotal">₹0.00</td>
                 <td><button class="btn-del" onclick="removeRow(this)"><span class="material-symbols-outlined" style="font-size:18px;">delete</span></button></td>
             `;
             tbody.appendChild(tr);
             recalcTotals();
         }
 
-        async function fetchItemDetails(inputEl) {
-            const code = inputEl.value.trim();
-            if (!code) return;
+        async function handleBarcodeScan(val) {
+            val = (val || '').trim();
+            if (!val) return;
+
+            // Attempt to query Item by barcode or item_code
             try {
                 const list = await api('smriti_retail_os.api.platform_data_api.get_records', {
                     doctype: 'Item',
-                    filters: { item_code: code },
-                    fields: ['item_code', 'item_name', 'standard_rate', 'valuation_rate'],
+                    filters: { barcode: val },
+                    fields: ['item_code', 'item_name', 'custom_size', 'custom_color', 'valuation_rate', 'standard_rate'],
+                    limit: 1
+                });
+
+                if (list && list.length) {
+                    const item = list[0];
+                    const art = item.item_code.split('-')[0] || item.item_code;
+                    const color = item.custom_color || 'Default';
+                    const size = item.custom_size || currentSizes[0];
+
+                    locateAndIncrementMatrixCell(art, color, size, item.valuation_rate || item.standard_rate);
+                    toast(`Scanned ${item.item_code} (Size ${size}) +1`, 'success');
+                } else {
+                    // Treat input as Article Number
+                    locateAndIncrementMatrixCell(val, 'Default', currentSizes[0], 450);
+                    toast(`Added Article ${val} to matrix`, 'info');
+                }
+            } catch(e) {
+                locateAndIncrementMatrixCell(val, 'Default', currentSizes[0], 450);
+            }
+        }
+
+        function locateAndIncrementMatrixCell(artCode, colorName, sizeVal, rateVal = 450) {
+            const rows = document.querySelectorAll('#matrix-tbody tr');
+            let targetInput = null;
+
+            rows.forEach(r => {
+                const art = r.querySelector('.art-code').value.trim();
+                const col = r.querySelector('.color-name').value.trim();
+                if (art.toLowerCase() === artCode.toLowerCase() && (!col || col.toLowerCase() === colorName.toLowerCase())) {
+                    const sizeInput = r.querySelector(`input[data-size="${sizeVal}"]`);
+                    if (sizeInput) targetInput = sizeInput;
+                }
+            });
+
+            if (!targetInput) {
+                // Add new row for this article
+                addMatrixRow(artCode, colorName);
+                const lastRow = document.querySelector('#matrix-tbody tr:last-child');
+                if (rateVal) lastRow.querySelector('.row-rate').value = rateVal;
+                targetInput = lastRow.querySelector(`input[data-size="${sizeVal}"]`) || lastRow.querySelector('.size-val');
+            }
+
+            if (targetInput) {
+                const currentVal = parseInt(targetInput.value) || 0;
+                targetInput.value = currentVal + 1;
+                targetInput.classList.add('highlight-scan');
+                setTimeout(() => targetInput.classList.remove('highlight-scan'), 600);
+                targetInput.focus();
+                recalcTotals();
+            }
+        }
+
+        function handleKeyNav(e, inputEl) {
+            const row = inputEl.closest('tr');
+            const sizeInputs = Array.from(row.querySelectorAll('.size-val'));
+            const idx = sizeInputs.indexOf(inputEl);
+
+            if (e.key === 'ArrowRight' && idx < sizeInputs.length - 1) {
+                e.preventDefault();
+                sizeInputs[idx + 1].focus();
+            } else if (e.key === 'ArrowLeft' && idx > 0) {
+                e.preventDefault();
+                sizeInputs[idx - 1].focus();
+            } else if (e.key === 'ArrowDown') {
+                const nextRow = row.nextElementSibling;
+                if (nextRow) {
+                    e.preventDefault();
+                    const target = nextRow.querySelectorAll('.size-val')[idx];
+                    if (target) target.focus();
+                }
+            } else if (e.key === 'ArrowUp') {
+                const prevRow = row.previousElementSibling;
+                if (prevRow) {
+                    e.preventDefault();
+                    const target = prevRow.querySelectorAll('.size-val')[idx];
+                    if (target) target.focus();
+                }
+            }
+        }
+
+        async function fetchArticleDetails(inputEl) {
+            const artCode = inputEl.value.trim();
+            if (!artCode) return;
+            try {
+                const list = await api('smriti_retail_os.api.platform_data_api.get_records', {
+                    doctype: 'Item',
+                    filters: { item_code: artCode },
+                    fields: ['valuation_rate', 'standard_rate'],
                     limit: 1
                 });
                 if (list && list.length) {
                     const row = inputEl.closest('tr');
-                    row.querySelector('.item-name').value = list[0].item_name || list[0].item_code;
-                    row.querySelector('.item-rate').value = list[0].valuation_rate || list[0].standard_rate || 0;
+                    row.querySelector('.row-rate').value = list[0].valuation_rate || list[0].standard_rate || 450;
                     recalcTotals();
                 }
             } catch(e) {}
@@ -568,25 +787,31 @@
         function recalcTotals() {
             let totalQty = 0;
             let subtotal = 0;
-            let itemsCnt = 0;
+            let articleCnt = 0;
 
-            const rows = document.querySelectorAll('#po-items-tbody tr');
+            const rows = document.querySelectorAll('#matrix-tbody tr');
             rows.forEach((row, idx) => {
                 row.children[0].textContent = idx + 1;
-                const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
-                const rate = parseFloat(row.querySelector('.item-rate').value) || 0;
-                const amt = qty * rate;
-                row.querySelector('.item-amount').textContent = '₹' + amt.toFixed(2);
+                let rowQty = 0;
+                row.querySelectorAll('.size-val').forEach(input => {
+                    rowQty += parseInt(input.value) || 0;
+                });
 
-                totalQty += qty;
-                subtotal += amt;
-                itemsCnt++;
+                const rate = parseFloat(row.querySelector('.row-rate').value) || 0;
+                const rowSubtotal = rowQty * rate;
+
+                row.querySelector('.row-total-qty').textContent = rowQty;
+                row.querySelector('.row-subtotal').textContent = '₹' + rowSubtotal.toFixed(2);
+
+                totalQty += rowQty;
+                subtotal += rowSubtotal;
+                articleCnt++;
             });
 
-            const tax = subtotal * 0.18; // 18% estimated GST
+            const tax = subtotal * 0.18; // 18% GST
             const grandTotal = subtotal + tax;
 
-            document.getElementById('sum-items-cnt').textContent = itemsCnt;
+            document.getElementById('sum-article-cnt').textContent = articleCnt;
             document.getElementById('sum-total-qty').textContent = totalQty + ' Pcs';
             document.getElementById('sum-subtotal').textContent = '₹' + subtotal.toFixed(2);
             document.getElementById('sum-tax').textContent = '₹' + tax.toFixed(2);
@@ -600,26 +825,32 @@
                 return;
             }
 
-            const rows = document.querySelectorAll('#po-items-tbody tr');
+            const rows = document.querySelectorAll('#matrix-tbody tr');
             const items = [];
+
             rows.forEach(r => {
-                const code = r.querySelector('.item-code').value.trim();
-                const name = r.querySelector('.item-name').value.trim();
-                const qty = parseFloat(r.querySelector('.item-qty').value) || 0;
-                const rate = parseFloat(r.querySelector('.item-rate').value) || 0;
-                if (code || name) {
-                    items.push({
-                        item_code: code || name,
-                        item_name: name || code,
-                        qty: qty,
-                        rate: rate,
-                        schedule_date: document.getElementById('po-schedule-date').value
-                    });
-                }
+                const art = r.querySelector('.art-code').value.trim();
+                const color = r.querySelector('.color-name').value.trim();
+                const rate = parseFloat(r.querySelector('.row-rate').value) || 0;
+
+                r.querySelectorAll('.size-val').forEach(input => {
+                    const sz = input.getAttribute('data-size');
+                    const qty = parseInt(input.value) || 0;
+                    if (qty > 0 && art) {
+                        const itemCode = `${art}-${color ? color.toUpperCase() : 'DEF'}-${sz}`;
+                        items.push({
+                            item_code: itemCode,
+                            item_name: `${art} (${color || 'Std'}, Size ${sz})`,
+                            qty: qty,
+                            rate: rate,
+                            schedule_date: document.getElementById('po-schedule-date').value
+                        });
+                    }
+                });
             });
 
             if (!items.length) {
-                toast('Please add at least one item line to the order', 'error');
+                toast('Please enter quantities for at least one size cell in the matrix', 'error');
                 return;
             }
 
@@ -652,13 +883,44 @@
             document.getElementById('po-supplier').value = '';
             document.getElementById('po-supplier-gstin').value = '';
             document.getElementById('po-remarks').value = '';
-            document.getElementById('po-items-tbody').innerHTML = '';
+            document.getElementById('matrix-tbody').innerHTML = '';
             document.getElementById('po-status-badge').textContent = 'DRAFT';
-            addItemRow();
+            addMatrixRow('ART-101', 'Black');
         }
 
         function openRecentPOsModal() {
             window.location.href = '/smriti-purchase#orders';
+        }
+
+        function openPasteExcelModal() {
+            document.getElementById('excel-paste-modal').style.display = 'flex';
+        }
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        function applyExcelPaste() {
+            const raw = document.getElementById('excel-paste-input').value;
+            if (!raw.trim()) return;
+
+            const lines = raw.trim().split('\n').map(l => l.split(/\t|,/).map(c => c.trim()));
+            if (lines.length > 0) {
+                lines.forEach(line => {
+                    if (line.length >= 2) {
+                        const color = line[0];
+                        addMatrixRow('ART-EXCEL', color);
+                        const lastRow = document.querySelector('#matrix-tbody tr:last-child');
+                        const inputs = lastRow.querySelectorAll('.size-val');
+                        for (let i = 1; i < line.length && i - 1 < inputs.length; i++) {
+                            const val = parseInt(line[i]);
+                            if (!isNaN(val)) inputs[i - 1].value = val;
+                        }
+                    }
+                });
+                recalcTotals();
+                toast('Excel grid imported into matrix!', 'success');
+            }
+            closeModal('excel-paste-modal');
         }
     </script>
 </body>
