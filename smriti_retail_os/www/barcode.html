@@ -9,6 +9,14 @@
 -->
 <html lang="en">
 <head>
+<script>
+    window.frappe = window.frappe || {};
+    window.frappe.boot = window.frappe.boot || {};
+    window.frappe.boot.smriti_license = {% if smriti_license is defined and smriti_license %}{{ smriti_license | tojson }}{% else %}{}{% endif %};
+    window.frappe.boot.smriti_site_config = {% if smriti_site_config is defined and smriti_site_config %}{{ smriti_site_config | tojson }}{% else %}{}{% endif %};
+    window.SMRITI_LICENSE = window.frappe.boot.smriti_license;
+    window.SMRITI_SITE_CONFIG = window.frappe.boot.smriti_site_config;
+</script>
 {%- include "smriti_retail_os/templates/includes/smriti_token_loader.html" -%}
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1234,13 +1242,6 @@ let loggedUser = '{{ cashier }}';
 
 <script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js"></script>
 <script>SMRITI.renderFlexibleSidebar("barcode");</script>
-
-<script>
-    window.frappe = window.frappe || {};
-    window.frappe.boot = window.frappe.boot || {};
-    window.frappe.boot.smriti_license = {% if smriti_license is defined and smriti_license %}{{ smriti_license | tojson }}{% else %}{}{% endif %};
-    window.frappe.boot.smriti_site_config = {% if smriti_site_config is defined and smriti_site_config %}{{ smriti_site_config | tojson }}{% else %}{}{% endif %};
-</script>
 
 </body>
 </html>
