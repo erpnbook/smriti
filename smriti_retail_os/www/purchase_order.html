@@ -534,6 +534,8 @@
                 <button class="btn-act btn-act-pri" onclick="applyExcelPaste()">Apply Excel Data</button>
             </div>
         </div>
+    </div>
+
     <!-- Modal: Create Terms & Conditions On Fly -->
     <div class="modal-backdrop" id="create-terms-modal" style="display:none;" onclick="closeModal('create-terms-modal')">
         <div class="modal" onclick="event.stopPropagation()" style="max-width: 540px; width: 95%;">
@@ -556,6 +558,36 @@
             <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px; border-top:1px solid var(--border); padding-top:10px;">
                 <button class="btn-act btn-act-sec" onclick="closeModal('create-terms-modal')">Cancel</button>
                 <button class="btn-act btn-act-pri" onclick="saveNewTermsTemplateOnFly()">Save & Select</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: History & Recent PO Search -->
+    <div class="modal-backdrop" id="recent-pos-modal" style="display:none;" onclick="closeModal('recent-pos-modal')">
+        <div class="modal" onclick="event.stopPropagation()" style="max-width: 780px; width: 95%;">
+            <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:10px;">
+                <div class="modal-title" style="font-weight:700; font-size:1rem; display:flex; align-items:center; gap:8px;">
+                    <span class="material-symbols-outlined" style="color:var(--primary-lt);">receipt_long</span> Purchase Order History & Search
+                </div>
+                <button class="modal-close" onclick="closeModal('recent-pos-modal')" style="background:none; border:none; color:#fff; font-size:20px; cursor:pointer;">&times;</button>
+            </div>
+            <div class="modal-body" style="padding:16px 0; display:flex; flex-direction:column; gap:12px;">
+                <div style="max-height:340px; overflow-y:auto; border:1px solid var(--border); border-radius:6px;">
+                    <table class="matrix-table" style="width:100%; text-align:left;">
+                        <thead>
+                            <tr>
+                                <th style="padding:8px 12px;">PO Reference</th>
+                                <th style="padding:8px 12px;">Supplier</th>
+                                <th style="padding:8px 12px;">Date</th>
+                                <th style="padding:8px 12px; text-align:right;">Grand Total (₹)</th>
+                                <th style="padding:8px 12px; text-align:center;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recent-pos-tbody">
+                            <tr><td colspan="5" style="text-align:center; color:var(--text-sub); padding:16px;">Loading recent Purchase Orders...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -988,8 +1020,33 @@
             addMatrixRow('ART-101', 'Black');
         }
 
-        function openRecentPOsModal() {
-            window.location.href = '/smriti-purchase#orders';
+        async function openRecentPOsModal() {
+            document.getElementById('recent-pos-modal').style.display = 'flex';
+            const tbody = document.getElementById('recent-pos-tbody');
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-sub); padding:16px;">Loading recent Purchase Orders...</td></tr>';
+            try {
+                const list = await api('smriti_retail_os.api.platform_data_api.get_records', {
+                    doctype: 'SMRITI Purchase Order',
+                    fields: ['name', 'supplier_name', 'transaction_date', 'grand_total', 'status'],
+                    limit: 20,
+                    order_by: 'creation desc'
+                });
+                if (list && list.length) {
+                    tbody.innerHTML = list.map(po => `
+                        <tr>
+                            <td style="padding:8px 12px; font-family:var(--font-mono); font-weight:700; color:var(--primary-lt);">${po.name}</td>
+                            <td style="padding:8px 12px;">${po.supplier_name || '—'}</td>
+                            <td style="padding:8px 12px; font-size:0.8rem; color:var(--text-sub);">${po.transaction_date || '—'}</td>
+                            <td style="padding:8px 12px; text-align:right; font-family:var(--font-mono); font-weight:700;">₹${parseFloat(po.grand_total||0).toFixed(2)}</td>
+                            <td style="padding:8px 12px; text-align:center;"><span class="matrix-pill" style="font-size:0.7rem;">${po.status || 'Draft'}</span></td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-sub); padding:16px;">No recent Purchase Orders found</td></tr>';
+                }
+            } catch(e) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--danger); padding:16px;">Failed to load POs: ${e.message}</td></tr>`;
+            }
         }
 
         function openPasteExcelModal() {
