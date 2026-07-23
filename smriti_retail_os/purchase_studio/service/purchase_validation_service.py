@@ -21,12 +21,17 @@ class PurchaseValidationService:
 		if not po_doc.supplier:
 			raise SmritiValidationError(_("Supplier is required."))
 		
-		# Check supplier exists
-		if not smriti.db.exists("SMRITI Supplier", po_doc.supplier):
+		# Check supplier exists in either SMRITI Supplier or standard Supplier DocType
+		if not smriti.db.exists("SMRITI Supplier", po_doc.supplier) and not smriti.db.exists("Supplier", po_doc.supplier):
 			raise SmritiValidationError(_("Supplier '{0}' not found.").format(po_doc.supplier))
 		
 		# Check supplier disabled
-		disabled = smriti.db.get("SMRITI Supplier", po_doc.supplier, "disabled")
+		disabled = 0
+		if smriti.db.exists("SMRITI Supplier", po_doc.supplier):
+			disabled = smriti.db.get("SMRITI Supplier", po_doc.supplier, "disabled")
+		elif smriti.db.exists("Supplier", po_doc.supplier):
+			disabled = smriti.db.get("Supplier", po_doc.supplier, "disabled")
+
 		if disabled:
 			raise SmritiValidationError(_("Supplier '{0}' is disabled.").format(po_doc.supplier))
 			

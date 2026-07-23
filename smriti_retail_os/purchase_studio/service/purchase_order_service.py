@@ -54,7 +54,11 @@ class PurchaseOrderService:
     def create_purchase_order(supplier, items_list, schedule_date=None, remarks=None, warehouse=None, company=None):
         po = PurchaseRepository.new_doc("SMRITI Purchase Order")
         po.supplier = supplier
-        po.supplier_name = smriti.db.get("SMRITI Supplier", supplier, "supplier_name") or supplier
+        po.supplier_name = (
+            smriti.db.get("SMRITI Supplier", supplier, "supplier_name") or
+            smriti.db.get("Supplier", supplier, "supplier_name") or
+            supplier
+        )
         po.transaction_date = nowdate()
         po.schedule_date = schedule_date or nowdate()
         po.company = company or frappe.defaults.get_user_default("Company") or smriti.db.get("Company", {}, "name")
@@ -63,13 +67,30 @@ class PurchaseOrderService:
         po.naming_series = "SMRITI-PO-.YYYY.-"
 
         for it in items_list:
+            icode = it.get("item_code")
+            iname = it.get("item_name") or icode
+            
+            # Ensure Item master record exists before appending to PO
+            if icode and not smriti.db.exists("Item", icode):
+                try:
+                    item_doc = smriti.documents.new("Item")
+                    item_doc.item_code = icode
+                    item_doc.item_name = iname
+                    item_doc.item_group = "All Item Groups"
+                    item_doc.stock_uom = it.get("uom") or "Nos"
+                    item_doc.valuation_rate = flt(it.get("rate"))
+                    # reviewed-ignore-permissions: system matrix order creation
+                    item_doc.insert(ignore_permissions=True)
+                except Exception:
+                    pass
+
             po.append("items", {
-                "item_code": it.get("item_code"),
-                "item_name": it.get("item_name") or smriti.db.get("Item", it.get("item_code"), "item_name"),
+                "item_code": icode,
+                "item_name": iname,
                 "qty": flt(it.get("qty")),
                 "rate": flt(it.get("rate")),
                 "warehouse": it.get("warehouse") or warehouse,
-                "uom": it.get("uom") or smriti.db.get("Item", it.get("item_code"), "stock_uom"),
+                "uom": it.get("uom") or smriti.db.get("Item", icode, "stock_uom") or "Nos",
                 "article": it.get("article"),
                 "attribute_summary": it.get("attribute_summary"),
                 "barcode": it.get("barcode")
