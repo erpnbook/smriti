@@ -1,10 +1,81 @@
 {
+  "snapshot_version": "1.0",
+  "compiler_version": "1.1",
+  "policy_version": "1.2",
+  "generated_at": "2026-07-09T15:06:01Z",
+  "generator": "SDC Discovery Compiler",
   "formulas": {
-    "TEST-002": {
-      "formula_name": "Test Formula 2",
-      "formula_hash": "5dbd10467d3cb1ee49701887449719aa6974653a3c0b270a499c4dfabcbaf7db",
-      "explain_hash": "f68c471eae2ced75bf07c65a380abf9dbb0457163fcac9916fe34eea872c5c30",
-      "last_verified": "2026-01-01T00:00:00Z"
+    "AUD-001": {
+      "formula_name": "Stock Accuracy %",
+      "formula_hash": "a3d7fcc9a0d1f91981dc600a08b68a6ea5aa3a8577ad717d5fb49997291c6fa9",
+      "explain_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "last_verified": "2026-07-09T15:06:01Z"
+    },
+    "FRC-001": {
+      "formula_name": "Forecast Confidence",
+      "formula_hash": "86958593599d13ccc64db4e2d23857440c5fae104751c3bb1a10cf01aef7aa2e",
+      "explain_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "last_verified": "2026-07-09T15:06:01Z"
+    },
+    "INV-001": {
+      "formula_name": "Sales Velocity",
+      "formula_hash": "ab935b7e42d08a5f06c554e76416b50a36bbe3c57f3626cffc51d28c89065e49",
+      "explain_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "last_verified": "2026-07-09T15:06:01Z"
+    },
+    "INV-002": {
+      "formula_name": "Weeks of Cover (WOC)",
+      "formula_hash": "b02a38cd74809f053d2f91bbe93c513910a37233e6dd6d392577b2ffc2dfc556",
+      "explain_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "last_verified": "2026-07-09T15:06:01Z"
+    },
+    "INV-003": {
+      "formula_name": "Dead Stock Score",
+      "formula_hash": "79e314971aeab952791c629cd2b1bb025e00ee21bca56c80f53025398c5cc0ea",
+      "explain_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "last_verified": "2026-07-09T15:06:01Z"
+    },
+    "INV-004": {
+      "formula_name": "Inventory Turnover",
+      "formula_hash": "798a4761279cf61d76e55b492be1e8ea79234e416dc6495eb85fad620d20a0f1",
+      "explain_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "last_verified": "2026-07-09T15:06:01Z"
+    },
+    "KGF-001": {
+      "formula_name": "KGF Coverage %",
+      "formula_hash": "8b5801d6b502a6e4462d03c610ddcd561bbf0ec61d54f31b3e90c427c488cacb",
+      "explain_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "last_verified": "2026-07-09T15:06:01Z"
+    },
+    "OHS-001": {
+      "formula_name": "Outlet Health Score",
+      "formula_hash": "3593903b505e795cca43297f7834bdc1100c999ba23bd3efdc803b63536f82a7",
+      "explain_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "last_verified": "2026-07-09T15:06:01Z"
+    },
+    "SAL-001": {
+      "formula_name": "Sell Through %",
+      "formula_hash": "c6fb6abd187b21a28021d8e82f78f183a17ad5461429ebd1782e4716add2eece",
+      "explain_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "last_verified": "2026-07-09T15:06:01Z"
+    },
+    "TR-HLTH-01": {
+      "formula_name": "Trial Pipeline Health Score",
+      "formula_hash": "dd4a0caae3c09caeb6140520b82476ef7e9f877bd91bffacb0a6e03beaf71403",
+      "explain_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "last_verified": "2026-07-09T15:06:01Z"
+    },
+    "TRF-001": {
+      "formula_name": "Transfer Benefit Score",
+      "formula_hash": "76219155a586b9ad2d1ff430a5c2950075fae2b1b7bca2a58f5403a7050a80e6",
+      "explain_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "last_verified": "2026-07-09T15:06:01Z"
+    },
+    "VAR-001": {
+      "formula_name": "Variant Curve Health",
+      "formula_hash": "bad4521b1b5d3c99fc2e4cde596c3945282c6cd8cd5d26f047ae5ef0bed1949c",
+      "explain_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "last_verified": "2026-07-09T15:06:01Z"
     }
   }
 }

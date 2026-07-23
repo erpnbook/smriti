@@ -10,7 +10,7 @@
 
 function initQZ() {
     if (typeof qz === 'undefined') {
-        updateQZStatus(false, "QZ library not loaded");
+        updateQZStatus(false, "QZ library not loaded (Web Print active)");
         return;
     }
     try {
@@ -20,12 +20,13 @@ function initQZ() {
         console.warn("QZ security configuration failed:", e);
     }
     checkQZConnection();
-    setInterval(checkQZConnection, 5000);
+    // Poll connection every 30 seconds to avoid console connection error spam when QZ Tray is offline
+    setInterval(checkQZConnection, 30000);
 }
 
 async function checkQZConnection() {
     if (typeof qz === 'undefined') {
-        updateQZStatus(false, "QZ library not loaded");
+        updateQZStatus(false, "QZ library not loaded (Web Print active)");
         return;
     }
     if (qz.websocket.isActive()) {
@@ -33,11 +34,12 @@ async function checkQZConnection() {
         return;
     }
     try {
-        await qz.websocket.connect();
+        // Fast single-pass check without repeating retries across ports
+        await qz.websocket.connect({ retries: 0, delay: 0 });
         updateQZStatus(true, "QZ Connected");
         await refreshQZPrinters();
     } catch (e) {
-        updateQZStatus(false, "QZ Tray Not Running");
+        updateQZStatus(false, "QZ Tray Offline (PRN / Web Print active)");
     }
 }
 
@@ -49,8 +51,8 @@ function updateQZStatus(connected, text) {
             dot.style.backgroundColor = 'var(--success)';
             textEl.textContent = `🟢 ${text}`;
         } else {
-            dot.style.backgroundColor = 'var(--danger)';
-            textEl.textContent = `🔴 ${text}`;
+            dot.style.backgroundColor = 'var(--text-sub)';
+            textEl.textContent = `⚪ ${text}`;
         }
     }
     BarcodeEvents.emit(BarcodeEvents.QZ_STATUS_CHANGED, { connected, text });

@@ -1,0 +1,12 @@
+{
+  "id": "hybrid-dark",
+  "name": "Neumorphic Dark",
+  "version": "2.2.0",
+  "author": "SMRITI Engineering",
+  "dark": true,
+  "default": false,
+  "description": "Tactile dark neumorphic surfaces designed for night-shift operators and technical power users.",
+  "accent_color": "#7c3aed",
+  "supported_modules": ["all"],
+  "css": ["variables.css"]
+}

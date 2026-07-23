@@ -39,6 +39,7 @@ const SMRITI_ROUTE_MAP = {
   "stock_entry":            "/inventory",           // www/inventory.html ✅
   "warehouse":              "/inventory",           // www/inventory.html ✅
   "supplier_returns":       "/supplier-returns",    // www/supplier_returns.html ✅
+  "appearance_settings":    "/smriti-appearance",   // www/smriti-appearance.html ✅
   "audit_reports":          "/reports?report=security_audit_log",
   "cge_benefit_instruments":         "/cge-benefit-instruments",
   "cge_membership_tiers":            "/cge-membership-tiers",
@@ -55,7 +56,10 @@ const SMRITI_ROUTE_MAP = {
   "formula_registry":                 "/smriti-formula-registry",
   "business_dictionary":              "/smriti-dictionary",
   "pdt_dashboard":                    "/smriti-pdt",
-  "simulation_sandbox":               "/coming-soon",
+  "simulation_sandbox":               "/smriti-simulation-sandbox",
+  "crm":                              "/smriti-crm",
+  "demand_forecasts":                 "/smriti-demand-forecasts",
+  "cashier_performance":              "/smriti-cashier-performance",
   "knowledge_center":                 "/smriti-help",
   "sizewise_item":                    "/sizewise_item",
   "sizewise_invoice":                 "/sizewise_invoice",
@@ -570,6 +574,11 @@ const SMRITI_NAV = {
           route: "/config-portal",
           standalone_route: "/config-portal",
           status: "active" },
+        { id: "appearance_settings",
+          label: "Appearance & Themes",
+          route: resolveSmritiRoute("appearance_settings"),
+          standalone_route: "/smriti-appearance",
+          status: "active" },
         { id: "security_workflows",
           label: "Security & Workflows",
           route: "/security-workflows",
@@ -656,17 +665,19 @@ const SMRITI_NAV = {
           status: "active" },
         { id: "simulation_sandbox",
           label: "Simulation Sandbox",
-          route: "/coming-soon",
-          standalone_route: "/coming-soon",
-          status: "coming_soon",
-          progress: 60,
-          eta: "Q3 2026" },
+          route: "/smriti-simulation-sandbox",
+          standalone_route: "/smriti-simulation-sandbox",
+          status: "active" },
         { id: "demand_forecasts",
           label: "Demand Forecasts",
-          status: "hidden" },
+          route: "/smriti-demand-forecasts",
+          standalone_route: "/smriti-demand-forecasts",
+          status: "active" },
         { id: "cashier_performance",
           label: "Cashier Performance",
-          status: "hidden" }
+          route: "/smriti-cashier-performance",
+          standalone_route: "/smriti-cashier-performance",
+          status: "active" }
       ]
     },
     {

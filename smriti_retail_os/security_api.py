@@ -132,9 +132,13 @@ def list_users():
     
     user_roles_map = {}
     for r in has_roles:
-        if r.parent not in user_roles_map:
-            user_roles_map[r.parent] = []
-        user_roles_map[r.parent].append(r.role)
+        p_val = r.get("parent") if isinstance(r, dict) else getattr(r, "parent", None)
+        r_val = r.get("role") if isinstance(r, dict) else getattr(r, "role", None)
+        if not p_val or not r_val:
+            continue
+        if p_val not in user_roles_map:
+            user_roles_map[p_val] = []
+        user_roles_map[p_val].append(r_val)
         
     for u in users:
         u["roles"] = user_roles_map.get(u.name, [])
@@ -441,9 +445,13 @@ def list_role_profiles():
     
     profile_roles_map = {}
     for r in has_roles:
-        if r.parent not in profile_roles_map:
-            profile_roles_map[r.parent] = []
-        profile_roles_map[r.parent].append(r.role)
+        p_val = r.get("parent") if isinstance(r, dict) else getattr(r, "parent", None)
+        r_val = r.get("role") if isinstance(r, dict) else getattr(r, "role", None)
+        if not p_val or not r_val:
+            continue
+        if p_val not in profile_roles_map:
+            profile_roles_map[p_val] = []
+        profile_roles_map[p_val].append(r_val)
         
     for p in profiles:
         p["roles"] = profile_roles_map.get(p.name, [])

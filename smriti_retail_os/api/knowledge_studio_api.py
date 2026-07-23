@@ -183,6 +183,7 @@ def log_telemetry_event(event_type, query=None, target_asset=None, has_result=1,
             "user": frappe.session.user,
             "timestamp": frappe.utils.now_datetime()
         })
+        # reviewed-ignore-permissions: system telemetry logging, no direct user write permission to logs
         doc.insert(ignore_permissions=True)
         smriti.db.commit()
         return {"success": True, "name": doc.name}

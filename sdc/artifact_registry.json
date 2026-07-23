@@ -1,5 +1,5 @@
 {
-  "lease_count": 680,
+  "lease_count": 849,
   "artifacts": {
     "doctype:PSV Channel Partner": {
       "id": "ART-DOCTYPE-00001",
@@ -4760,6 +4760,1189 @@
       "type": "doctype",
       "status": "ACTIVE",
       "leased_at": "2026-06-28 04:59:14"
+    },
+    "doctype:SMRITI Matrix Axis": {
+      "id": "ART-DOCTYPE-00681",
+      "name": "SMRITI Matrix Axis",
+      "type": "doctype",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:00"
+    },
+    "doctype:SMRITI Matrix Definition": {
+      "id": "ART-DOCTYPE-00682",
+      "name": "SMRITI Matrix Definition",
+      "type": "doctype",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:00"
+    },
+    "doctype:SMRITI Negative Stock Case": {
+      "id": "ART-DOCTYPE-00683",
+      "name": "SMRITI Negative Stock Case",
+      "type": "doctype",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:00"
+    },
+    "doctype:SMRITI Negative Stock Policy": {
+      "id": "ART-DOCTYPE-00684",
+      "name": "SMRITI Negative Stock Policy",
+      "type": "doctype",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:00"
+    },
+    "doctype:SMRITI Negative Stock Reason": {
+      "id": "ART-DOCTYPE-00685",
+      "name": "SMRITI Negative Stock Reason",
+      "type": "doctype",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:00"
+    },
+    "doctype:SMRITI Negative Stock Recovery": {
+      "id": "ART-DOCTYPE-00686",
+      "name": "SMRITI Negative Stock Recovery",
+      "type": "doctype",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:00"
+    },
+    "doctype:SMRITI Notification Log": {
+      "id": "ART-DOCTYPE-00687",
+      "name": "SMRITI Notification Log",
+      "type": "doctype",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:00"
+    },
+    "doctype:SMRITI Purchase Audit Log": {
+      "id": "ART-DOCTYPE-00688",
+      "name": "SMRITI Purchase Audit Log",
+      "type": "doctype",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:00"
+    },
+    "doctype:SMRITI Purchase Order": {
+      "id": "ART-DOCTYPE-00689",
+      "name": "SMRITI Purchase Order",
+      "type": "doctype",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:00"
+    },
+    "doctype:SMRITI Purchase Order Item": {
+      "id": "ART-DOCTYPE-00690",
+      "name": "SMRITI Purchase Order Item",
+      "type": "doctype",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:00"
+    },
+    "doctype:SMRITI Purchase Settings": {
+      "id": "ART-DOCTYPE-00691",
+      "name": "SMRITI Purchase Settings",
+      "type": "doctype",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:00"
+    },
+    "doctype:SMRITI Supplier": {
+      "id": "ART-DOCTYPE-00692",
+      "name": "SMRITI Supplier",
+      "type": "doctype",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:00"
+    },
+    "field:User:custom_pos_override_pin": {
+      "id": "ART-FIELD-00693",
+      "name": "User:custom_pos_override_pin",
+      "type": "field",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:00"
+    },
+    "api:smriti_retail_os.psv_api.list_physical_audits": {
+      "id": "ART-API-00694",
+      "name": "smriti_retail_os.psv_api.list_physical_audits",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.psv_api.list_party_stock_accounts_for_audit": {
+      "id": "ART-API-00695",
+      "name": "smriti_retail_os.psv_api.list_party_stock_accounts_for_audit",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.psv_api.create_physical_audit": {
+      "id": "ART-API-00696",
+      "name": "smriti_retail_os.psv_api.create_physical_audit",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.psv_api.submit_physical_audit": {
+      "id": "ART-API-00697",
+      "name": "smriti_retail_os.psv_api.submit_physical_audit",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.psv_api.get_physical_audit": {
+      "id": "ART-API-00698",
+      "name": "smriti_retail_os.psv_api.get_physical_audit",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.psv_api.list_sales_uploads": {
+      "id": "ART-API-00699",
+      "name": "smriti_retail_os.psv_api.list_sales_uploads",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.psv_api.create_sales_upload": {
+      "id": "ART-API-00700",
+      "name": "smriti_retail_os.psv_api.create_sales_upload",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.psv_api.submit_sales_upload": {
+      "id": "ART-API-00701",
+      "name": "smriti_retail_os.psv_api.submit_sales_upload",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.security_api.check_page_access": {
+      "id": "ART-API-00702",
+      "name": "smriti_retail_os.security_api.check_page_access",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.analytics_studio.sas_api.sas_get_datasets": {
+      "id": "ART-API-00703",
+      "name": "smriti_retail_os.analytics_studio.sas_api.sas_get_datasets",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.analytics_studio.sas_api.sas_get_categories": {
+      "id": "ART-API-00704",
+      "name": "smriti_retail_os.analytics_studio.sas_api.sas_get_categories",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.analytics_studio.sas_api.sas_get_report_metadata": {
+      "id": "ART-API-00705",
+      "name": "smriti_retail_os.analytics_studio.sas_api.sas_get_report_metadata",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.analytics_studio.sas_api.sas_fetch_data": {
+      "id": "ART-API-00706",
+      "name": "smriti_retail_os.analytics_studio.sas_api.sas_fetch_data",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.analytics_studio.sas_api.sas_get_grand_totals": {
+      "id": "ART-API-00707",
+      "name": "smriti_retail_os.analytics_studio.sas_api.sas_get_grand_totals",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.analytics_studio.sas_api.sas_get_kpi_summary": {
+      "id": "ART-API-00708",
+      "name": "smriti_retail_os.analytics_studio.sas_api.sas_get_kpi_summary",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.analytics_studio.sas_api.sas_save_view": {
+      "id": "ART-API-00709",
+      "name": "smriti_retail_os.analytics_studio.sas_api.sas_save_view",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.analytics_studio.sas_api.sas_get_views": {
+      "id": "ART-API-00710",
+      "name": "smriti_retail_os.analytics_studio.sas_api.sas_get_views",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.analytics_studio.sas_api.sas_delete_view": {
+      "id": "ART-API-00711",
+      "name": "smriti_retail_os.analytics_studio.sas_api.sas_delete_view",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.analytics_studio.sas_api.sas_export_excel": {
+      "id": "ART-API-00712",
+      "name": "smriti_retail_os.analytics_studio.sas_api.sas_export_excel",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.analytics_studio.sas_api.sas_get_formula_explain": {
+      "id": "ART-API-00713",
+      "name": "smriti_retail_os.analytics_studio.sas_api.sas_get_formula_explain",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.api.lookup_api.search": {
+      "id": "ART-API-00714",
+      "name": "smriti_retail_os.api.lookup_api.search",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.api.lookup_api.recent": {
+      "id": "ART-API-00715",
+      "name": "smriti_retail_os.api.lookup_api.recent",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.api.lookup_api.create": {
+      "id": "ART-API-00716",
+      "name": "smriti_retail_os.api.lookup_api.create",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.api.lookup_api.validate": {
+      "id": "ART-API-00717",
+      "name": "smriti_retail_os.api.lookup_api.validate",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.api.masters_api.get_suppliers": {
+      "id": "ART-API-00718",
+      "name": "smriti_retail_os.api.masters_api.get_suppliers",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.api.masters_api.get_supplier_groups": {
+      "id": "ART-API-00719",
+      "name": "smriti_retail_os.api.masters_api.get_supplier_groups",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.api.masters_api.get_supplier_form_options": {
+      "id": "ART-API-00720",
+      "name": "smriti_retail_os.api.masters_api.get_supplier_form_options",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.api.masters_api.get_party_stock_accounts": {
+      "id": "ART-API-00721",
+      "name": "smriti_retail_os.api.masters_api.get_party_stock_accounts",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.api.platform_data_api.get_records": {
+      "id": "ART-API-00722",
+      "name": "smriti_retail_os.api.platform_data_api.get_records",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.api.platform_data_api.get_value": {
+      "id": "ART-API-00723",
+      "name": "smriti_retail_os.api.platform_data_api.get_value",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.api.platform_data_api.get_count": {
+      "id": "ART-API-00724",
+      "name": "smriti_retail_os.api.platform_data_api.get_count",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.api.platform_data_api.set_value": {
+      "id": "ART-API-00725",
+      "name": "smriti_retail_os.api.platform_data_api.set_value",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.api.platform_data_api.delete_record": {
+      "id": "ART-API-00726",
+      "name": "smriti_retail_os.api.platform_data_api.delete_record",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.api.platform_data_api.cancel_record": {
+      "id": "ART-API-00727",
+      "name": "smriti_retail_os.api.platform_data_api.cancel_record",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.api.platform_data_api.get_all": {
+      "id": "ART-API-00728",
+      "name": "smriti_retail_os.api.platform_data_api.get_all",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.barcode.telemetry_service.get_barcode_feature_flags": {
+      "id": "ART-API-00729",
+      "name": "smriti_retail_os.barcode.telemetry_service.get_barcode_feature_flags",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.barcode.telemetry_service.log_barcode_scan_event": {
+      "id": "ART-API-00730",
+      "name": "smriti_retail_os.barcode.telemetry_service.log_barcode_scan_event",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.barcode.telemetry_service.aggregate_scan_telemetry": {
+      "id": "ART-API-00731",
+      "name": "smriti_retail_os.barcode.telemetry_service.aggregate_scan_telemetry",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.cge.api.cge_api.get_dashboard_data": {
+      "id": "ART-API-00732",
+      "name": "smriti_retail_os.cge.api.cge_api.get_dashboard_data",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.core.api.get": {
+      "id": "ART-API-00733",
+      "name": "smriti_retail_os.core.api.get",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.core.api.get_field": {
+      "id": "ART-API-00734",
+      "name": "smriti_retail_os.core.api.get_field",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.core.api.get_list": {
+      "id": "ART-API-00735",
+      "name": "smriti_retail_os.core.api.get_list",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.core.api.exists": {
+      "id": "ART-API-00736",
+      "name": "smriti_retail_os.core.api.exists",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.core.api.save": {
+      "id": "ART-API-00737",
+      "name": "smriti_retail_os.core.api.save",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.core.api.submit": {
+      "id": "ART-API-00738",
+      "name": "smriti_retail_os.core.api.submit",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.core.api.delete": {
+      "id": "ART-API-00739",
+      "name": "smriti_retail_os.core.api.delete",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.core.api.schema": {
+      "id": "ART-API-00740",
+      "name": "smriti_retail_os.core.api.schema",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.core.api.lookup": {
+      "id": "ART-API-00741",
+      "name": "smriti_retail_os.core.api.lookup",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.core.api.on_change": {
+      "id": "ART-API-00742",
+      "name": "smriti_retail_os.core.api.on_change",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.customer_studio.api.customer_api.get_customers": {
+      "id": "ART-API-00743",
+      "name": "smriti_retail_os.customer_studio.api.customer_api.get_customers",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.customer_studio.api.customer_api.get_customer_detail": {
+      "id": "ART-API-00744",
+      "name": "smriti_retail_os.customer_studio.api.customer_api.get_customer_detail",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.customer_studio.api.customer_api.save_customer": {
+      "id": "ART-API-00745",
+      "name": "smriti_retail_os.customer_studio.api.customer_api.save_customer",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.customer_studio.api.customer_api.delete_customer": {
+      "id": "ART-API-00746",
+      "name": "smriti_retail_os.customer_studio.api.customer_api.delete_customer",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.item_studio.api.product_api.get_products": {
+      "id": "ART-API-00747",
+      "name": "smriti_retail_os.item_studio.api.product_api.get_products",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.item_studio.api.product_api.get_product_detail": {
+      "id": "ART-API-00748",
+      "name": "smriti_retail_os.item_studio.api.product_api.get_product_detail",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.item_studio.api.product_api.save_product": {
+      "id": "ART-API-00749",
+      "name": "smriti_retail_os.item_studio.api.product_api.save_product",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.item_studio.api.product_api.delete_product": {
+      "id": "ART-API-00750",
+      "name": "smriti_retail_os.item_studio.api.product_api.delete_product",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.item_studio.api.product_api.get_catalog_metadata": {
+      "id": "ART-API-00751",
+      "name": "smriti_retail_os.item_studio.api.product_api.get_catalog_metadata",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.label_studio.api.label_api.get_label_templates": {
+      "id": "ART-API-00752",
+      "name": "smriti_retail_os.label_studio.api.label_api.get_label_templates",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.label_studio.api.label_api.generate_preview_canvas": {
+      "id": "ART-API-00753",
+      "name": "smriti_retail_os.label_studio.api.label_api.generate_preview_canvas",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.label_studio.api.label_api.print_label": {
+      "id": "ART-API-00754",
+      "name": "smriti_retail_os.label_studio.api.label_api.print_label",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.label_studio.api.label_api.get_item_for_label": {
+      "id": "ART-API-00755",
+      "name": "smriti_retail_os.label_studio.api.label_api.get_item_for_label",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.label_studio.api.label_api.get_printers_list": {
+      "id": "ART-API-00756",
+      "name": "smriti_retail_os.label_studio.api.label_api.get_printers_list",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.layout_engine.layout_service.get_layout_preferences": {
+      "id": "ART-API-00757",
+      "name": "smriti_retail_os.layout_engine.layout_service.get_layout_preferences",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.layout_engine.layout_service.save_layout_preferences": {
+      "id": "ART-API-00758",
+      "name": "smriti_retail_os.layout_engine.layout_service.save_layout_preferences",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.matrix_engine.api.matrix_api.get_matrix_session": {
+      "id": "ART-API-00759",
+      "name": "smriti_retail_os.matrix_engine.api.matrix_api.get_matrix_session",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.matrix_engine.api.matrix_api.resolve_or_create_variant": {
+      "id": "ART-API-00760",
+      "name": "smriti_retail_os.matrix_engine.api.matrix_api.resolve_or_create_variant",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.matrix_engine.api.matrix_api.create_article_template": {
+      "id": "ART-API-00761",
+      "name": "smriti_retail_os.matrix_engine.api.matrix_api.create_article_template",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.matrix_engine.api.matrix_api.parse_pasted_grid": {
+      "id": "ART-API-00762",
+      "name": "smriti_retail_os.matrix_engine.api.matrix_api.parse_pasted_grid",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.navigation.navigation_service.get_user_navigation": {
+      "id": "ART-API-00763",
+      "name": "smriti_retail_os.navigation.navigation_service.get_user_navigation",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.navigation.navigation_service.run_navigation_health_check": {
+      "id": "ART-API-00764",
+      "name": "smriti_retail_os.navigation.navigation_service.run_navigation_health_check",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.navigation.navigation_service.get_navigation_health_history": {
+      "id": "ART-API-00765",
+      "name": "smriti_retail_os.navigation.navigation_service.get_navigation_health_history",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.negative_stock.api.negative_stock_api.validate_negative_stock": {
+      "id": "ART-API-00766",
+      "name": "smriti_retail_os.negative_stock.api.negative_stock_api.validate_negative_stock",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.negative_stock.api.negative_stock_api.approve_case": {
+      "id": "ART-API-00767",
+      "name": "smriti_retail_os.negative_stock.api.negative_stock_api.approve_case",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.negative_stock.api.negative_stock_api.reject_case": {
+      "id": "ART-API-00768",
+      "name": "smriti_retail_os.negative_stock.api.negative_stock_api.reject_case",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.negative_stock.api.negative_stock_api.get_dashboard_metrics": {
+      "id": "ART-API-00769",
+      "name": "smriti_retail_os.negative_stock.api.negative_stock_api.get_dashboard_metrics",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.notification_studio.api.notifications.get_notifications": {
+      "id": "ART-API-00770",
+      "name": "smriti_retail_os.notification_studio.api.notifications.get_notifications",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.notification_studio.api.notifications.get_unread_count": {
+      "id": "ART-API-00771",
+      "name": "smriti_retail_os.notification_studio.api.notifications.get_unread_count",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.notification_studio.api.notifications.get_my_notifications": {
+      "id": "ART-API-00772",
+      "name": "smriti_retail_os.notification_studio.api.notifications.get_my_notifications",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.notification_studio.api.notifications.get_unread_badge": {
+      "id": "ART-API-00773",
+      "name": "smriti_retail_os.notification_studio.api.notifications.get_unread_badge",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.notification_studio.api.notifications.mark_notification_read": {
+      "id": "ART-API-00774",
+      "name": "smriti_retail_os.notification_studio.api.notifications.mark_notification_read",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.notification_studio.api.notifications.mark_all_notifications_read": {
+      "id": "ART-API-00775",
+      "name": "smriti_retail_os.notification_studio.api.notifications.mark_all_notifications_read",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.notification_studio.api.notifications.get_notification_summary": {
+      "id": "ART-API-00776",
+      "name": "smriti_retail_os.notification_studio.api.notifications.get_notification_summary",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.notification_studio.api.notifications.delete_notification": {
+      "id": "ART-API-00777",
+      "name": "smriti_retail_os.notification_studio.api.notifications.delete_notification",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.notification_studio.api.notifications.mark_as_read": {
+      "id": "ART-API-00778",
+      "name": "smriti_retail_os.notification_studio.api.notifications.mark_as_read",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.notification_studio.api.notifications.mark_all_read": {
+      "id": "ART-API-00779",
+      "name": "smriti_retail_os.notification_studio.api.notifications.mark_all_read",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:01"
+    },
+    "api:smriti_retail_os.print_framework.api.print_api.get_registered_printers": {
+      "id": "ART-API-00780",
+      "name": "smriti_retail_os.print_framework.api.print_api.get_registered_printers",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.print_framework.api.print_api.dispatch_print_job": {
+      "id": "ART-API-00781",
+      "name": "smriti_retail_os.print_framework.api.print_api.dispatch_print_job",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.purchase_studio.api.purchase_api.get_purchase_dashboard": {
+      "id": "ART-API-00782",
+      "name": "smriti_retail_os.purchase_studio.api.purchase_api.get_purchase_dashboard",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.purchase_studio.api.purchase_api.get_purchase_orders": {
+      "id": "ART-API-00783",
+      "name": "smriti_retail_os.purchase_studio.api.purchase_api.get_purchase_orders",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.purchase_studio.api.purchase_api.get_purchase_order_detail": {
+      "id": "ART-API-00784",
+      "name": "smriti_retail_os.purchase_studio.api.purchase_api.get_purchase_order_detail",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.purchase_studio.api.purchase_api.create_purchase_order": {
+      "id": "ART-API-00785",
+      "name": "smriti_retail_os.purchase_studio.api.purchase_api.create_purchase_order",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.purchase_studio.api.purchase_api.resolve_po_approval": {
+      "id": "ART-API-00786",
+      "name": "smriti_retail_os.purchase_studio.api.purchase_api.resolve_po_approval",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.purchase_studio.api.purchase_api.get_grns": {
+      "id": "ART-API-00787",
+      "name": "smriti_retail_os.purchase_studio.api.purchase_api.get_grns",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.purchase_studio.api.purchase_api.get_grn_detail": {
+      "id": "ART-API-00788",
+      "name": "smriti_retail_os.purchase_studio.api.purchase_api.get_grn_detail",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.purchase_studio.api.purchase_api.create_grn": {
+      "id": "ART-API-00789",
+      "name": "smriti_retail_os.purchase_studio.api.purchase_api.create_grn",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.purchase_studio.api.purchase_api.create_invoice": {
+      "id": "ART-API-00790",
+      "name": "smriti_retail_os.purchase_studio.api.purchase_api.create_invoice",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.purchase_studio.api.purchase_api.get_invoices": {
+      "id": "ART-API-00791",
+      "name": "smriti_retail_os.purchase_studio.api.purchase_api.get_invoices",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.purchase_studio.api.purchase_api.get_invoice_detail": {
+      "id": "ART-API-00792",
+      "name": "smriti_retail_os.purchase_studio.api.purchase_api.get_invoice_detail",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.purchase_studio.api.purchase_api.get_returns": {
+      "id": "ART-API-00793",
+      "name": "smriti_retail_os.purchase_studio.api.purchase_api.get_returns",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.purchase_studio.api.purchase_api.create_purchase_return": {
+      "id": "ART-API-00794",
+      "name": "smriti_retail_os.purchase_studio.api.purchase_api.create_purchase_return",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.purchase_studio.api.purchase_api.get_supplier_ledger": {
+      "id": "ART-API-00795",
+      "name": "smriti_retail_os.purchase_studio.api.purchase_api.get_supplier_ledger",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.purchase_studio.api.purchase_api.get_purchase_settings": {
+      "id": "ART-API-00796",
+      "name": "smriti_retail_os.purchase_studio.api.purchase_api.get_purchase_settings",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.purchase_studio.api.purchase_api.save_purchase_settings": {
+      "id": "ART-API-00797",
+      "name": "smriti_retail_os.purchase_studio.api.purchase_api.save_purchase_settings",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.purchase_studio.api.purchase_api.search_suppliers": {
+      "id": "ART-API-00798",
+      "name": "smriti_retail_os.purchase_studio.api.purchase_api.search_suppliers",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.purchase_studio.api.purchase_api.search_items": {
+      "id": "ART-API-00799",
+      "name": "smriti_retail_os.purchase_studio.api.purchase_api.search_items",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.purchase_studio.api.purchase_api.get_matrix_session": {
+      "id": "ART-API-00800",
+      "name": "smriti_retail_os.purchase_studio.api.purchase_api.get_matrix_session",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.purchase_studio.api.purchase_api.resolve_or_create_variant": {
+      "id": "ART-API-00801",
+      "name": "smriti_retail_os.purchase_studio.api.purchase_api.resolve_or_create_variant",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.purchase_studio.api.purchase_api.create_article_template": {
+      "id": "ART-API-00802",
+      "name": "smriti_retail_os.purchase_studio.api.purchase_api.create_article_template",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.purchase_studio.api.purchase_api.get_open_purchase_orders": {
+      "id": "ART-API-00803",
+      "name": "smriti_retail_os.purchase_studio.api.purchase_api.get_open_purchase_orders",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.purchase_studio.api.purchase_api.get_po_details": {
+      "id": "ART-API-00804",
+      "name": "smriti_retail_os.purchase_studio.api.purchase_api.get_po_details",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.purchase_studio.api.purchase_api.get_warehouses": {
+      "id": "ART-API-00805",
+      "name": "smriti_retail_os.purchase_studio.api.purchase_api.get_warehouses",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.purchase_studio.api.purchase_api.get_purchase_analytics": {
+      "id": "ART-API-00806",
+      "name": "smriti_retail_os.purchase_studio.api.purchase_api.get_purchase_analytics",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.purchase_studio.api.purchase_api.get_supplier_performance": {
+      "id": "ART-API-00807",
+      "name": "smriti_retail_os.purchase_studio.api.purchase_api.get_supplier_performance",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.purchase_studio.api.purchase_api.get_items_for_grn": {
+      "id": "ART-API-00808",
+      "name": "smriti_retail_os.purchase_studio.api.purchase_api.get_items_for_grn",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.purchase_studio.api.purchase_api.get_landed_cost_vouchers": {
+      "id": "ART-API-00809",
+      "name": "smriti_retail_os.purchase_studio.api.purchase_api.get_landed_cost_vouchers",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.purchase_studio.api.purchase_api.create_landed_cost_voucher": {
+      "id": "ART-API-00810",
+      "name": "smriti_retail_os.purchase_studio.api.purchase_api.create_landed_cost_voucher",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.purchase_studio.api.purchase_api.get_return_detail": {
+      "id": "ART-API-00811",
+      "name": "smriti_retail_os.purchase_studio.api.purchase_api.get_return_detail",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.purchase_studio.api.purchase_api.get_suppliers": {
+      "id": "ART-API-00812",
+      "name": "smriti_retail_os.purchase_studio.api.purchase_api.get_suppliers",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.purchase_studio.api.purchase_api.get_po_matrix_print_data": {
+      "id": "ART-API-00813",
+      "name": "smriti_retail_os.purchase_studio.api.purchase_api.get_po_matrix_print_data",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.purchase_studio.api.purchase_api.get_size_presets": {
+      "id": "ART-API-00814",
+      "name": "smriti_retail_os.purchase_studio.api.purchase_api.get_size_presets",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.purchase_studio.api.purchase_api.resolve_variant_item": {
+      "id": "ART-API-00815",
+      "name": "smriti_retail_os.purchase_studio.api.purchase_api.resolve_variant_item",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.sales_studio.api.sales_api.get_open_quotations": {
+      "id": "ART-API-00816",
+      "name": "smriti_retail_os.sales_studio.api.sales_api.get_open_quotations",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.sales_studio.api.sales_api.get_open_sales_orders": {
+      "id": "ART-API-00817",
+      "name": "smriti_retail_os.sales_studio.api.sales_api.get_open_sales_orders",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.sales_studio.api.sales_api.get_quotation_details": {
+      "id": "ART-API-00818",
+      "name": "smriti_retail_os.sales_studio.api.sales_api.get_quotation_details",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.sales_studio.api.sales_api.get_sales_order_details": {
+      "id": "ART-API-00819",
+      "name": "smriti_retail_os.sales_studio.api.sales_api.get_sales_order_details",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.sales_studio.api.sales_api.create_quotation": {
+      "id": "ART-API-00820",
+      "name": "smriti_retail_os.sales_studio.api.sales_api.create_quotation",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.sales_studio.api.sales_api.create_sales_order": {
+      "id": "ART-API-00821",
+      "name": "smriti_retail_os.sales_studio.api.sales_api.create_sales_order",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.sales_studio.api.sales_api.convert_quotation_to_sales_order": {
+      "id": "ART-API-00822",
+      "name": "smriti_retail_os.sales_studio.api.sales_api.convert_quotation_to_sales_order",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.sales_studio.api.sales_api.get_matrix_session": {
+      "id": "ART-API-00823",
+      "name": "smriti_retail_os.sales_studio.api.sales_api.get_matrix_session",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.sales_studio.api.sales_api.resolve_or_create_variant": {
+      "id": "ART-API-00824",
+      "name": "smriti_retail_os.sales_studio.api.sales_api.resolve_or_create_variant",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.sales_studio.api.sales_api.resolve_variant_item": {
+      "id": "ART-API-00825",
+      "name": "smriti_retail_os.sales_studio.api.sales_api.resolve_variant_item",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.sales_studio.api.sales_api.get_size_presets": {
+      "id": "ART-API-00826",
+      "name": "smriti_retail_os.sales_studio.api.sales_api.get_size_presets",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.search_studio.api.smriti_search_api.global_search": {
+      "id": "ART-API-00827",
+      "name": "smriti_retail_os.search_studio.api.smriti_search_api.global_search",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.search_studio.api.smriti_search_api.get_recent_docs": {
+      "id": "ART-API-00828",
+      "name": "smriti_retail_os.search_studio.api.smriti_search_api.get_recent_docs",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.sfm.api.sfc_api.save_commission_settlement": {
+      "id": "ART-API-00829",
+      "name": "smriti_retail_os.sfm.api.sfc_api.save_commission_settlement",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.sfm.api.sfc_api.save_commission_rule": {
+      "id": "ART-API-00830",
+      "name": "smriti_retail_os.sfm.api.sfc_api.save_commission_rule",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.sfm.api.sfm_api.save_sales_target": {
+      "id": "ART-API-00831",
+      "name": "smriti_retail_os.sfm.api.sfm_api.save_sales_target",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.sfm.api.sfm_api.save_customer_ownership": {
+      "id": "ART-API-00832",
+      "name": "smriti_retail_os.sfm.api.sfm_api.save_customer_ownership",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.sfm.api.sfm_api.get_sfm_settings": {
+      "id": "ART-API-00833",
+      "name": "smriti_retail_os.sfm.api.sfm_api.get_sfm_settings",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.sfm.api.sfm_api.save_sfm_settings": {
+      "id": "ART-API-00834",
+      "name": "smriti_retail_os.sfm.api.sfm_api.save_sfm_settings",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.sfm.api.sfm_api.get_attribution_ledger": {
+      "id": "ART-API-00835",
+      "name": "smriti_retail_os.sfm.api.sfm_api.get_attribution_ledger",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.user_studio.api.smriti_user_api.get_my_profile": {
+      "id": "ART-API-00836",
+      "name": "smriti_retail_os.user_studio.api.smriti_user_api.get_my_profile",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.user_studio.api.smriti_user_api.update_my_profile": {
+      "id": "ART-API-00837",
+      "name": "smriti_retail_os.user_studio.api.smriti_user_api.update_my_profile",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.user_studio.api.smriti_user_api.change_password": {
+      "id": "ART-API-00838",
+      "name": "smriti_retail_os.user_studio.api.smriti_user_api.change_password",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.user_studio.api.smriti_user_api.get_my_activity": {
+      "id": "ART-API-00839",
+      "name": "smriti_retail_os.user_studio.api.smriti_user_api.get_my_activity",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.user_studio.api.smriti_user_api.logout": {
+      "id": "ART-API-00840",
+      "name": "smriti_retail_os.user_studio.api.smriti_user_api.logout",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.user_studio.api.smriti_user_api.get_smriti_preferences": {
+      "id": "ART-API-00841",
+      "name": "smriti_retail_os.user_studio.api.smriti_user_api.get_smriti_preferences",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.user_studio.api.smriti_user_api.save_smriti_preferences": {
+      "id": "ART-API-00842",
+      "name": "smriti_retail_os.user_studio.api.smriti_user_api.save_smriti_preferences",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.www.connect.get_recent_queue": {
+      "id": "ART-API-00843",
+      "name": "smriti_retail_os.www.connect.get_recent_queue",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.www.connect.trigger_manual_retry": {
+      "id": "ART-API-00844",
+      "name": "smriti_retail_os.www.connect.trigger_manual_retry",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "api:smriti_retail_os.www.connect.run_health_checks": {
+      "id": "ART-API-00845",
+      "name": "smriti_retail_os.www.connect.run_health_checks",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "doctype:Currency": {
+      "id": "ART-DOCTYPE-00846",
+      "name": "Currency",
+      "type": "doctype",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "doctype:Language": {
+      "id": "ART-DOCTYPE-00847",
+      "name": "Language",
+      "type": "doctype",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "doctype:Payment Terms Template": {
+      "id": "ART-DOCTYPE-00848",
+      "name": "Payment Terms Template",
+      "type": "doctype",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
+    },
+    "doctype:Price List": {
+      "id": "ART-DOCTYPE-00849",
+      "name": "Price List",
+      "type": "doctype",
+      "status": "ACTIVE",
+      "leased_at": "2026-07-09 20:33:02"
     }
   }
 }

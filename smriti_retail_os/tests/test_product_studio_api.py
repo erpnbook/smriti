@@ -79,3 +79,38 @@ class TestProductStudioAPI(unittest.TestCase):
         # Soft Delete (Disable)
         ProductService.delete_product(self.test_barcode)
         self.assertEqual(smriti.db.get("Item", self.test_barcode, "disabled"), 1)
+
+    def test_hsn_code_validation(self):
+        # 1. Test invalid HSN code (<4 digits or >8 digits)
+        invalid_hsn_data = {
+            "item_code": self.test_barcode,
+            "item_name": "Test HSN Product",
+            "mrp": 500.0,
+            "cost_price": 200.0,
+            "hsn_code": "12"  # Too short (2 digits)
+        }
+        with self.assertRaises(frappe.ValidationError):
+            ProductService.save_product(invalid_hsn_data)
+
+        # 2. Test valid 4-digit HSN code
+        valid_hsn_4 = {
+            "item_code": self.test_barcode,
+            "item_name": "Test HSN 4 Digit",
+            "mrp": 500.0,
+            "cost_price": 200.0,
+            "hsn_code": "6402"
+        }
+        code = ProductService.save_product(valid_hsn_4)
+        detail = ProductService.get_product_detail(code)
+        self.assertEqual(detail["hsn_code"], "6402")
+        self.assertTrue(smriti.db.exists("GST HSN Code", "6402"))
+
+        # 3. Test valid 8-digit HSN code update
+        update_hsn_8 = {
+            "hsn_code": "64029990"
+        }
+        ProductService.save_product(update_hsn_8, self.test_barcode)
+        detail_updated = ProductService.get_product_detail(self.test_barcode)
+        self.assertEqual(detail_updated["hsn_code"], "64029990")
+        self.assertTrue(smriti.db.exists("GST HSN Code", "64029990"))
+

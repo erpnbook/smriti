@@ -1192,7 +1192,7 @@
             $("#det-manuals").html(references.map(ref => `
                 <div style="display:flex; justify-content:space-between; align-items:center; padding: 10px 0; border-bottom: 1px solid var(--border-color);">
                     <span>${ref}</span>
-                    <button class="topbtn" onclick="window.open('/coming-soon?feature=' + encodeURIComponent('Manual: ' + '${ref}'), '_blank')">Read</button>
+                    <button class="topbtn" onclick="window.open('/smriti-help?topic=' + encodeURIComponent('${ref}'), '_blank')">Read</button>
                 </div>
             `).join(''));
         } else {

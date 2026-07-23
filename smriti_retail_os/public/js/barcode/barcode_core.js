@@ -143,12 +143,18 @@ function toast(msg, type = 'success') {
 // ── Modal State Control ──
 function openModal(id) {
     const modal = document.getElementById(id);
-    if (modal) modal.classList.add('open');
+    if (modal) {
+        modal.classList.add('open');
+        modal.style.display = 'flex';
+    }
 }
 
 function closeModal(id) {
     const modal = document.getElementById(id);
-    if (modal) modal.classList.remove('open');
+    if (modal) {
+        modal.classList.remove('open');
+        modal.style.display = 'none';
+    }
 }
 
 // ── Debouncer ──

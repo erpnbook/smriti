@@ -782,8 +782,12 @@ const frappe = {
     call: async (options) => {
         try {
             const res = await api(options.method, options.args);
-            return { message: res };
+            const responseObj = { message: res };
+            if (options.callback) options.callback(responseObj);
+            return responseObj;
         } catch (e) {
+            const errObj = { responseJSON: { exc_type: e.name, _error_message: e.message } };
+            if (options.error) options.error(errObj);
             throw e;
         }
     },

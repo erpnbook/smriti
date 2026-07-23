@@ -17,6 +17,8 @@ from smriti_retail_os.barcode.item_service import (
     expand_item_variants as _expand_item_variants,
     get_transaction_items_checklist as _get_transaction_items_checklist,
     get_items_by_range as _get_items_by_range,
+    get_items_by_barcode_range as _get_items_by_barcode_range,
+    load_items_from_csv_or_text as _load_items_from_csv_or_text,
     get_items_for_printing as _get_items_for_printing,
     get_item_print_details as _get_item_print_details
 )
@@ -25,6 +27,7 @@ from smriti_retail_os.barcode.prn_generator import (
 )
 from smriti_retail_os.barcode.printer_service import (
     send_to_network_printer as _send_to_network_printer,
+    send_raw_prn_to_network_printer as _send_raw_prn_to_network_printer,
     get_field_mapping_reference as _get_field_mapping_reference,
     get_recent_transactions as _get_recent_transactions,
     test_printer_connection as _test_printer_connection,
@@ -102,6 +105,16 @@ def get_items_by_range(from_article, to_article):
 
 
 @frappe.whitelist()
+def get_items_by_barcode_range(from_barcode, to_barcode):
+    return _get_items_by_barcode_range(from_barcode, to_barcode)
+
+
+@frappe.whitelist()
+def load_items_from_csv_or_text(csv_text, delimiter="auto", barcode_col=0, qty_col=1, price_col=None):
+    return _load_items_from_csv_or_text(csv_text, delimiter, barcode_col, qty_col, price_col)
+
+
+@frappe.whitelist()
 def get_items_for_printing(filters=None, source_doctype=None, source_name=None):
     return _get_items_for_printing(filters, source_doctype, source_name)
 
@@ -118,6 +131,11 @@ def generate_prn(items, template_name=None):
 @frappe.whitelist()
 def send_to_network_printer(items, template_name=None, printer_ip=None, printer_port=9100):
     return _send_to_network_printer(items, template_name, printer_ip, printer_port)
+
+
+@frappe.whitelist()
+def send_raw_prn_to_network_printer(raw_prn_text, printer_ip=None, printer_port=9100, repeat_count=1):
+    return _send_raw_prn_to_network_printer(raw_prn_text, printer_ip, printer_port, repeat_count)
 
 
 @frappe.whitelist()

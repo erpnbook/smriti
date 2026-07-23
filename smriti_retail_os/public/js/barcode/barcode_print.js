@@ -333,3 +333,103 @@ function downloadPreviewPDF() {
     `);
     popup.document.close();
 }
+
+function openRawPRNModal() {
+    openModal('raw-prn-modal');
+}
+
+function toggleRawPRNSourceType(type) {
+    const fileZone = document.getElementById('raw-prn-file-zone');
+    const textZone = document.getElementById('raw-prn-text-zone');
+    if (type === 'file') {
+        if (fileZone) fileZone.style.display = 'block';
+        if (textZone) textZone.style.display = 'none';
+    } else {
+        if (fileZone) fileZone.style.display = 'none';
+        if (textZone) textZone.style.display = 'block';
+    }
+}
+
+async function processRawPRNPrint() {
+    const sourceType = document.querySelector('input[name="raw-prn-source-type"]:checked')?.value || 'text';
+    const targetMode = document.getElementById('raw-prn-target')?.value || 'LAN';
+    const repeatCount = parseInt(document.getElementById('raw-prn-repeat')?.value || '1');
+
+    let prnContent = "";
+
+    if (sourceType === 'file') {
+        const fileInput = document.getElementById('raw-prn-file-input');
+        if (!fileInput || !fileInput.files || !fileInput.files.length) {
+            toast('Please select a PRN, ZPL, or TSPL file to upload', 'info');
+            return;
+        }
+        const file = fileInput.files[0];
+        prnContent = await file.text();
+    } else {
+        const rawText = document.getElementById('raw-prn-text-input');
+        prnContent = rawText ? rawText.value.trim() : "";
+    }
+
+    if (!prnContent) {
+        toast('No PRN content found. Please paste raw PRN commands or upload a PRN file.', 'info');
+        return;
+    }
+
+    let fullPayload = (prnContent.trim() + "\n").repeat(repeatCount);
+
+    try {
+        if (targetMode === 'FILE') {
+            const blob = new Blob([fullPayload], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `raw_third_party_${new Date().getTime()}.prn`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            toast(`Downloaded raw PRN file (x${repeatCount} copies)`, 'success');
+            closeModal('raw-prn-modal');
+            return;
+        }
+
+        if (targetMode === 'USB') {
+            if (typeof qz === 'undefined' || !qz.websocket.isActive()) {
+                toast('QZ Tray is not connected on this machine. Please start QZ Tray software.', 'error');
+                return;
+            }
+            const printerName = document.getElementById('cfg-usb-printer')?.value;
+            if (!printerName) {
+                toast('Please select a local USB printer from the sidebar printer settings.', 'info');
+                return;
+            }
+            const config = qz.configs.create(printerName);
+            await qz.print(config, [{ type: 'raw', format: 'command', data: fullPayload }]);
+            toast(`Successfully sent raw PRN commands to USB printer [${printerName}]`, 'success');
+            closeModal('raw-prn-modal');
+            return;
+        }
+
+        if (targetMode === 'LAN') {
+            const ip = document.getElementById('cfg-lan-ip')?.value?.trim();
+            const port = document.getElementById('cfg-lan-port')?.value?.trim() || 9100;
+            if (!ip) {
+                toast('Please enter LAN Printer IP address in the sidebar printer settings.', 'info');
+                return;
+            }
+            toast(`Sending raw PRN payload to printer at ${ip}:${port}...`, 'info');
+            const res = await api('smriti_retail_os.barcode_api.send_raw_prn_to_network_printer', {
+                raw_prn_text: prnContent,
+                printer_ip: ip,
+                printer_port: port,
+                repeat_count: repeatCount
+            });
+            toast(res.message || 'Raw PRN sent to network printer successfully', 'success');
+            closeModal('raw-prn-modal');
+            return;
+        }
+    } catch (e) {
+        console.error("Raw PRN print failed:", e);
+        toast('Failed to print raw PRN: ' + e.message, 'error');
+    }
+}

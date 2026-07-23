@@ -209,3 +209,36 @@ def print_test_label(printer_ip, printer_port=9100, printer_language="ZPL"):
         return {"success": True, "message": "Test label sent successfully."}
     except Exception as e:
         return {"success": False, "message": str(e)}
+
+
+def send_raw_prn_to_network_printer(raw_prn_text, printer_ip=None, printer_port=9100, repeat_count=1):
+    """
+    Directly streams third-party or custom raw PRN/ZPL/TSPL command text to a network printer over TCP/IP socket.
+    """
+    if not raw_prn_text or not raw_prn_text.strip():
+        frappe.throw(_("No PRN content provided for printing."))
+
+    if not printer_ip:
+        frappe.throw(_("Printer IP address is required for network socket printing."))
+
+    port = cint(printer_port) or 9100
+    count = max(1, cint(repeat_count) or 1)
+
+    full_payload = (raw_prn_text.strip() + "\n") * count
+
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(10)
+            s.connect((printer_ip.strip(), port))
+            s.sendall(full_payload.encode("utf-8", errors="replace"))
+
+        return {
+            "success": True,
+            "message": _("Successfully sent raw PRN payload to printer at {0}:{1} (x{2} copies).").format(printer_ip, port, count)
+        }
+    except socket.timeout:
+        frappe.throw(_("Connection timed out. Verify printer IP {0} and port {1} are reachable.").format(printer_ip, port))
+    except ConnectionRefusedError:
+        frappe.throw(_("Printer at {0}:{1} refused the connection.").format(printer_ip, port))
+    except Exception as e:
+        frappe.throw(_("Printer socket error: {0}").format(str(e)))

@@ -64,16 +64,29 @@ def get_barcode_filters():
 
     suppliers = [s.name for s in smriti.db.get_list("Supplier", fields=["name"], order_by="name asc")]
 
+    purchase_classes = ["SIS", "FW", "MFW", "LFW", "BFW", "GFW", "KFW", "ASSTED", "SPORTS", "ACC", "BAG", "FORMAL", "CASUAL"]
+    merchandise_categories = ["Footwear", "Apparel", "Accessories", "Luggage", "Sports"]
+    sub_categories = ["Running Shoes", "Sneakers", "Sandals", "Formal", "Boots", "Slippers", "Belts", "Wallets"]
+    upper_materials = ["Leather", "Mesh", "Canvas", "Synthetic", "PU", "Suede", "Knit", "Textile"]
+    outsoles = ["TPR", "EVA", "Rubber", "Phylon", "PU", "Air Cushion", "PVC", "Leather"]
+    heel_types = ["Flat", "Low Heel", "Medium Heel", "Wedge", "Block", "Platform"]
+
     return {
-        "brands":          brands,
-        "categories":      categories,
-        "sizes":           sizes,
-        "print_templates": templates,
-        "departments":     departments,
-        "genders":         genders,
-        "seasons":         seasons,
-        "collections":     collections,
-        "suppliers":       suppliers
+        "brands":                 brands,
+        "categories":             categories,
+        "sizes":                  sizes,
+        "print_templates":        templates,
+        "departments":            departments,
+        "genders":                genders,
+        "seasons":                seasons,
+        "collections":            collections,
+        "suppliers":              suppliers,
+        "purchase_classes":       purchase_classes,
+        "merchandise_categories": merchandise_categories,
+        "sub_categories":         sub_categories,
+        "upper_materials":        upper_materials,
+        "outsoles":               outsoles,
+        "heel_types":             heel_types
     }
 
 

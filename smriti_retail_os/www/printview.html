@@ -1,0 +1,288 @@
+{% if error %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Print Error — SMRITI Retail OS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0f1e;
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .smriti-print-error {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            max-width: 520px;
+            width: 90%;
+            padding: 48px 40px;
+            background: linear-gradient(135deg, #111827 0%, #0f172a 100%);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            border-radius: 16px;
+            box-shadow:
+                0 0 0 1px rgba(239,68,68,0.1),
+                0 24px 64px rgba(0,0,0,0.5),
+                0 0 80px rgba(239,68,68,0.05);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .smriti-error-icon-wrap {
+            width: 72px; height: 72px;
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        .smriti-error-icon-wrap .material-symbols-outlined {
+            font-size: 36px;
+            color: #ef4444;
+        }
+
+        .smriti-error-brand {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+            text-transform: uppercase; color: #64748b;
+            margin-bottom: 16px;
+        }
+
+        .smriti-error-brand-dot {
+            width: 6px; height: 6px;
+            background: #2563eb; border-radius: 50%;
+        }
+
+        .smriti-error-heading {
+            font-size: 22px; font-weight: 700; color: #f1f5f9;
+            margin-bottom: 8px; line-height: 1.3;
+        }
+
+        .smriti-error-sub {
+            font-size: 14px; color: #ef4444; font-weight: 500;
+            margin-bottom: 16px;
+        }
+
+        .smriti-error-divider {
+            width: 100%; height: 1px;
+            background: rgba(255,255,255,0.06);
+            margin: 16px 0;
+        }
+
+        .smriti-error-detail {
+            font-size: 13px; color: #94a3b8; line-height: 1.6;
+            margin-bottom: 32px;
+        }
+
+        .smriti-error-detail strong {
+            color: #cbd5e1; font-weight: 600;
+        }
+
+        .smriti-error-actions {
+            display: flex; gap: 12px; width: 100%;
+        }
+
+        .smriti-btn {
+            flex: 1;
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 11px 20px;
+            border-radius: 8px;
+            font-size: 13px; font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.15s ease;
+            font-family: inherit;
+        }
+
+        .smriti-btn-primary {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+        }
+
+        .smriti-btn-primary:hover {
+            background: linear-gradient(135deg, #1d4ed8, #1e40af);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(37,99,235,0.4);
+        }
+
+        .smriti-btn-ghost {
+            background: rgba(255,255,255,0.06);
+            color: #94a3b8;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .smriti-btn-ghost:hover {
+            background: rgba(255,255,255,0.1);
+            color: #e2e8f0;
+        }
+
+        .smriti-offline-banner {
+            display: none;
+            flex-direction: column; align-items: center; gap: 12px;
+            background: rgba(234, 179, 8, 0.1);
+            border: 1px solid rgba(234, 179, 8, 0.3);
+            border-radius: 10px; padding: 16px 20px;
+            margin-bottom: 24px; width: 100%;
+            font-size: 13px; color: #fbbf24;
+            text-align: center;
+        }
+
+        .smriti-offline-banner.visible { display: flex; }
+
+        .smriti-offline-actions { display: flex; gap: 8px; width: 100%; }
+
+        .smriti-error-log-badge {
+            margin-top: 24px;
+            display: flex; align-items: center; gap: 6px;
+            font-size: 11px; color: #475569;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            padding: 6px 12px; border-radius: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="smriti-print-error" role="alert">
+    <div class="smriti-error-icon-wrap">
+        <span class="material-symbols-outlined">print_disabled</span>
+    </div>
+
+    <div class="smriti-error-brand">
+        <div class="smriti-error-brand-dot"></div>
+        SMRITI Retail OS — Print Preview
+        <div class="smriti-error-brand-dot"></div>
+    </div>
+
+    <h1 class="smriti-error-heading">Unable to open document</h1>
+    <p class="smriti-error-sub">{{ error_reason }}</p>
+
+    <div class="smriti-error-divider"></div>
+
+    <div class="smriti-offline-banner" id="smriti-offline-banner">
+        ⚠️ You appear to be <strong>offline</strong>. The voucher may exist locally but cannot be verified.
+        <div class="smriti-offline-actions">
+            <button class="smriti-btn smriti-btn-primary" id="btn-sync-print" onclick="syncAndPrint()">
+                <span class="material-symbols-outlined" style="font-size:16px">sync</span>
+                Sync &amp; Print
+            </button>
+            <button class="smriti-btn smriti-btn-ghost" id="btn-local-pdf" onclick="generateLocalPdf()">
+                <span class="material-symbols-outlined" style="font-size:16px">download</span>
+                Generate Local PDF
+            </button>
+        </div>
+    </div>
+
+    <p class="smriti-error-detail">
+        <strong>Reason:</strong><br>{{ error_detail }}
+    </p>
+
+    <div class="smriti-error-actions">
+        <button class="smriti-btn smriti-btn-primary" onclick="goBack()">
+            <span class="material-symbols-outlined" style="font-size:16px">save</span>
+            Save Voucher
+        </button>
+        <button class="smriti-btn smriti-btn-ghost" onclick="window.close()">
+            <span class="material-symbols-outlined" style="font-size:16px">close</span>
+            Close
+        </button>
+    </div>
+
+    <div class="smriti-error-log-badge">
+        🔒 This attempt has been logged for diagnostics
+    </div>
+</div>
+
+<script>
+    if (!navigator.onLine) {
+        document.getElementById('smriti-offline-banner').classList.add('visible');
+    }
+    window.addEventListener('offline', () => document.getElementById('smriti-offline-banner').classList.add('visible'));
+    window.addEventListener('online',  () => document.getElementById('smriti-offline-banner').classList.remove('visible'));
+
+    function goBack() {
+        if (document.referrer) {
+            window.location.href = document.referrer;
+        } else {
+            window.history.back();
+        }
+    }
+
+    function syncAndPrint() {
+        alert('Please ensure your device is connected to the network, then retry printing from the voucher screen.');
+        goBack();
+    }
+
+    function generateLocalPdf() {
+        alert('Local PDF generation requires opening the voucher in SMRITI first. Please navigate back and use the offline export option.');
+        goBack();
+    }
+</script>
+
+</body>
+</html>
+
+{% else %}
+
+<!DOCTYPE html>
+<html lang="{{ lang }}" dir="{{ layout_direction }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <meta name="generator" content="frappe">
+    {{ include_style('print.bundle.css') }}
+    {% if print_style %}
+    <style>
+    {{ print_style }}
+    </style>
+    {% endif %}
+</head>
+<body>
+    <div class="action-banner print-hide">
+        <a class="p-2" onclick="window.print();">Print</a>
+        <a class="p-2" href="/api/method/frappe.utils.print_format.download_pdf?doctype={{ doctype|e }}&name={{ name|e }}&format={{ print_format|e }}&letterhead={{ letterhead|e }}&no_letterhead={{ no_letterhead|e }}&_lang={{ lang|e }}&key={{ key|e }}&pdf_generator={{ pdf_generator|e }}">Get PDF</a>
+    </div>
+    <div class="print-format-gutter">
+        <div style="background:#dc2626; color:white; padding:15px; font-family:monospace; font-size:12px; margin-bottom:20px;">
+            Context Keys: {% for key in _context_dict.keys() %}{{ key }} {% endfor %}
+        </div>
+        <div class="print-format">
+            {{ body | safe }}
+        </div>
+    </div>
+    {% if trigger_print %}
+    <script>
+        var elements = document.getElementsByTagName("tr");
+        var i = elements.length;
+        while (i--) {
+            if (elements[i].clientHeight > 300) {
+                elements[i].setAttribute("style", "page-break-inside: auto;");
+            }
+        }
+        window.print();
+        setTimeout(function() { window.close(); }, 5000);
+    </script>
+    {% endif %}
+</body>
+</html>
+
+{% endif %}

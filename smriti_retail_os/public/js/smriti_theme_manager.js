@@ -39,7 +39,8 @@
 (function (global) {
     "use strict";
 
-    global.SMRITI = global.SMRITI || {};
+    global.SMRITI = global.SMRITI || global.smriti || {};
+    global.smriti = global.SMRITI;
 
     /* ═══════════════════════════════════════════════════════════════════
        DEPENDENCY GUARD
@@ -109,7 +110,7 @@
         }
 
         var tokens = config.tokens;
-        var cssLines = [":root {"];
+        var cssLines = [":root, body {"];
 
         /* Write each token as a CSS Custom Property */
         Object.keys(tokens).forEach(function (key) {
@@ -117,6 +118,20 @@
                 cssLines.push("  " + key + ": " + tokens[key] + ";");
             }
         });
+
+        /* Bridge common shorthand variables for instant theme reactivity across standalone modules */
+        cssLines.push("  --bg: var(--smriti-color-bg-page);");
+        cssLines.push("  --bg2: var(--smriti-color-bg-primary);");
+        cssLines.push("  --card: var(--smriti-color-bg-secondary);");
+        cssLines.push("  --card2: var(--smriti-color-bg-elevated, var(--smriti-color-bg-secondary));");
+        cssLines.push("  --border: var(--smriti-color-border-default);");
+        cssLines.push("  --border2: var(--smriti-color-border-strong);");
+        cssLines.push("  --primary: var(--smriti-color-brand-primary);");
+        cssLines.push("  --primary-lt: var(--smriti-color-brand-light);");
+        cssLines.push("  --accent: var(--smriti-color-brand-accent, var(--smriti-color-brand-light));");
+        cssLines.push("  --text: var(--smriti-color-text-primary);");
+        cssLines.push("  --text-muted: var(--smriti-color-text-muted);");
+        cssLines.push("  --text-sub: var(--smriti-color-text-subtle);");
 
         cssLines.push("}");
 
@@ -331,6 +346,74 @@
             return raw;
         } catch (e) {
             return (SMRITI.getDefaultTheme && SMRITI.getDefaultTheme()) || "sleek-compact";
+        }
+    };
+
+    /* ═══════════════════════════════════════════════════════════════════
+       ENTERPRISE THEME REGISTRY & APPEARANCE API
+    ═══════════════════════════════════════════════════════════════════ */
+    SMRITI.getInstalledThemes = function (callback) {
+        var builtInThemes = [
+            { id: "sleek-compact", name: "SMRITI Midnight Edition", dark: true, default: true, description: "High-density flat navy modern theme." },
+            { id: "hybrid-light", name: "Neumorphic Clay Light", dark: false, description: "Soft neumorphic clay surfaces with purple brand accents." },
+            { id: "hybrid-dark", name: "Neumorphic Dark", dark: true, description: "Tactile dark neumorphic surfaces for night-shift operators." },
+            { id: "minimalist", name: "Enterprise Pure White", dark: false, description: "Ultra-clean high-contrast white layout." }
+        ];
+
+        if (typeof frappe !== "undefined" && frappe.call) {
+            frappe.call({
+                method: "smriti_retail_os.api.theme_api.get_installed_themes",
+                callback: function (r) {
+                    if (r && r.message && Array.isArray(r.message) && r.message.length > 0) {
+                        if (callback) callback(r.message);
+                    } else {
+                        if (callback) callback(builtInThemes);
+                    }
+                },
+                error: function () {
+                    if (callback) callback(builtInThemes);
+                }
+            });
+        } else {
+            if (callback) callback(builtInThemes);
+        }
+    };
+
+    SMRITI.applyAppearanceSettings = function (opts) {
+        if (!opts) return;
+        if (opts.theme) {
+            SMRITI.switchTheme(opts.theme);
+        }
+        if (opts.density) {
+            localStorage.setItem("smriti-ui-density", opts.density);
+            document.body.classList.remove("density-compact", "density-comfortable", "density-spacious");
+            document.body.classList.add("density-" + opts.density);
+            document.body.setAttribute("data-density", opts.density);
+        }
+        if (opts.accentColor) {
+            localStorage.setItem("smriti-accent-color", opts.accentColor);
+            document.documentElement.style.setProperty("--smriti-color-brand-primary", opts.accentColor);
+        }
+        if (typeof opts.highContrast !== "undefined") {
+            localStorage.setItem("smriti-a11y-high-contrast", opts.highContrast ? "true" : "false");
+        }
+        if (typeof opts.reducedMotion !== "undefined") {
+            localStorage.setItem("smriti-a11y-reduced-motion", opts.reducedMotion ? "true" : "false");
+        }
+
+        SMRITI.applyUIConfig(SMRITI.getResolvedUIConfig());
+
+        if (typeof frappe !== "undefined" && frappe.call && frappe.session && frappe.session.user !== "Guest") {
+            frappe.call({
+                method: "smriti_retail_os.api.theme_api.save_user_appearance",
+                args: {
+                    theme_id: opts.theme,
+                    density: opts.density,
+                    accent_color: opts.accentColor,
+                    high_contrast: opts.highContrast,
+                    reduced_motion: opts.reducedMotion
+                }
+            });
         }
     };
 

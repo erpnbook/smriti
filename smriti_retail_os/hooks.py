@@ -132,11 +132,15 @@ update_website_context = ["smriti_retail_os.website_context.get_context"]
 
 # include js, css files in header of web template
 web_include_css = [
+    "/assets/smriti_retail_os/css/smriti_tokens.css",
     "/assets/smriti_retail_os/css/smriti_branding.css",
     "/assets/smriti_retail_os/css/smriti_web.css",
     "/assets/smriti_retail_os/css/smriti_smart_lookup.css",
 ]
 web_include_js = [
+    "/assets/smriti_retail_os/js/smriti_core.js",
+    "/assets/smriti_retail_os/js/smriti_ui_resolver.js",
+    "/assets/smriti_retail_os/js/smriti_theme_manager.js",
     "/assets/smriti_retail_os/js/main.js",
     "/assets/smriti_retail_os/js/smriti_smart_lookup.js",
     "/assets/smriti_retail_os/js/smriti_payload_bridge.js",
@@ -608,6 +612,12 @@ website_route_rules = [
     {"from_route": "/cge-benefit-resolution-policies", "to_route": "cge_generic"},
     {"from_route": "/cge-liability-snapshots", "to_route": "cge_generic"},
     {"from_route": "/cge-benefit-audit-logs", "to_route": "cge_generic"},
+    {"from_route": "/psv-channel-partner", "to_route": "smriti-analytics-studio"},
+    {"from_route": "/psv-aging", "to_route": "smriti-analytics-studio"},
+    {"from_route": "/opening-stock", "to_route": "inventory"},
+    {"from_route": "/inventory-ops", "to_route": "inventory"},
+    {"from_route": "/receipts", "to_route": "payments"},
+    {"from_route": "/advances", "to_route": "payments"},
     {"from_route": "/security-workflows", "to_route": "security"},
     {"from_route": "/brand-master", "to_route": "brand_master"},
     {"from_route": "/category-master", "to_route": "category_master"},
@@ -897,6 +907,16 @@ website_route_rules = [
         # License & Registration — served from www/smriti-license.html + www/smriti-license.py
         "from_route": "/smriti-license",
         "to_route": "smriti-license"
+    },
+    {
+        # SMRITI Barcode Label Studio — served from www/barcode.html + www/barcode.py
+        "from_route": "/barcode",
+        "to_route": "barcode"
+    },
+    {
+        # SMRITI Appearance & Theme Control Center — served from www/smriti-appearance.html + www/smriti_appearance.py
+        "from_route": "/smriti-appearance",
+        "to_route": "smriti-appearance"
     },
     {
         # SMRITI Universal Field Explorer — metadata discovery for fields, barcode, PRN, reports.

@@ -4,8 +4,8 @@
   "generated_by": "SDC 1.1.2-GA",
   "schema_version": "1.2",
   "artifact_type": "dependency_graph",
-  "generated_at": "2026-06-27T23:29:13Z",
-  "repository_commit": "43ea253a377f502e17d3006e1b2f6b179a785fa4",
+  "generated_at": "2026-07-09T19:56:39Z",
+  "repository_commit": "eb664a781445f8d59c2fc5ace72c700e75bfbbeb",
   "provenance": {
     "artifact_id": "ART-GRAPH-00001",
     "produced_by": "Phase0_Discovery",
@@ -312,6 +312,16 @@
         "label": "SMRITI Loyalty Tier"
       },
       {
+        "id": "ART-DOCTYPE-00681",
+        "type": "DOCTYPE",
+        "label": "SMRITI Matrix Axis"
+      },
+      {
+        "id": "ART-DOCTYPE-00682",
+        "type": "DOCTYPE",
+        "label": "SMRITI Matrix Definition"
+      },
+      {
         "id": "ART-DOCTYPE-00056",
         "type": "DOCTYPE",
         "label": "SMRITI Membership Tier"
@@ -350,6 +360,31 @@
         "id": "ART-DOCTYPE-00680",
         "type": "DOCTYPE",
         "label": "SMRITI Navigation Profile Order"
+      },
+      {
+        "id": "ART-DOCTYPE-00683",
+        "type": "DOCTYPE",
+        "label": "SMRITI Negative Stock Case"
+      },
+      {
+        "id": "ART-DOCTYPE-00684",
+        "type": "DOCTYPE",
+        "label": "SMRITI Negative Stock Policy"
+      },
+      {
+        "id": "ART-DOCTYPE-00685",
+        "type": "DOCTYPE",
+        "label": "SMRITI Negative Stock Reason"
+      },
+      {
+        "id": "ART-DOCTYPE-00686",
+        "type": "DOCTYPE",
+        "label": "SMRITI Negative Stock Recovery"
+      },
+      {
+        "id": "ART-DOCTYPE-00687",
+        "type": "DOCTYPE",
+        "label": "SMRITI Notification Log"
       },
       {
         "id": "ART-DOCTYPE-00058",
@@ -447,9 +482,29 @@
         "label": "SMRITI PSV Transaction Item"
       },
       {
+        "id": "ART-DOCTYPE-00688",
+        "type": "DOCTYPE",
+        "label": "SMRITI Purchase Audit Log"
+      },
+      {
         "id": "ART-DOCTYPE-00077",
         "type": "DOCTYPE",
         "label": "SMRITI Purchase Class"
+      },
+      {
+        "id": "ART-DOCTYPE-00689",
+        "type": "DOCTYPE",
+        "label": "SMRITI Purchase Order"
+      },
+      {
+        "id": "ART-DOCTYPE-00690",
+        "type": "DOCTYPE",
+        "label": "SMRITI Purchase Order Item"
+      },
+      {
+        "id": "ART-DOCTYPE-00691",
+        "type": "DOCTYPE",
+        "label": "SMRITI Purchase Settings"
       },
       {
         "id": "ART-DOCTYPE-00078",
@@ -510,6 +565,11 @@
         "id": "ART-DOCTYPE-00089",
         "type": "DOCTYPE",
         "label": "SMRITI Sub Category"
+      },
+      {
+        "id": "ART-DOCTYPE-00692",
+        "type": "DOCTYPE",
+        "label": "SMRITI Supplier"
       },
       {
         "id": "ART-DOCTYPE-00660",
@@ -670,6 +730,11 @@
         "id": "ART-FIELD-00141",
         "type": "FIELD",
         "label": "User.custom_smriti_pin"
+      },
+      {
+        "id": "ART-FIELD-00693",
+        "type": "FIELD",
+        "label": "User.custom_pos_override_pin"
       },
       {
         "id": "ART-FIELD-00142",
@@ -1167,6 +1232,16 @@
         "label": "search_barcode_items"
       },
       {
+        "id": "ART-API-00127",
+        "type": "API",
+        "label": "get_print_template_versions"
+      },
+      {
+        "id": "ART-API-00128",
+        "type": "API",
+        "label": "restore_print_template_version"
+      },
+      {
         "id": "ART-API-00122",
         "type": "API",
         "label": "enqueue_print_job"
@@ -1192,24 +1267,9 @@
         "label": "get_recent_print_jobs"
       },
       {
-        "id": "ART-API-00127",
-        "type": "API",
-        "label": "get_print_template_versions"
-      },
-      {
-        "id": "ART-API-00128",
-        "type": "API",
-        "label": "restore_print_template_version"
-      },
-      {
         "id": "ART-API-00129",
         "type": "API",
         "label": "validate_layout_diagnostics"
-      },
-      {
-        "id": "ART-API-00130",
-        "type": "API",
-        "label": "cleanup_old_print_jobs"
       },
       {
         "id": "ART-API-00131",
@@ -1717,6 +1777,46 @@
         "label": "get_psv_health"
       },
       {
+        "id": "ART-API-00694",
+        "type": "API",
+        "label": "list_physical_audits"
+      },
+      {
+        "id": "ART-API-00695",
+        "type": "API",
+        "label": "list_party_stock_accounts_for_audit"
+      },
+      {
+        "id": "ART-API-00696",
+        "type": "API",
+        "label": "create_physical_audit"
+      },
+      {
+        "id": "ART-API-00697",
+        "type": "API",
+        "label": "submit_physical_audit"
+      },
+      {
+        "id": "ART-API-00698",
+        "type": "API",
+        "label": "get_physical_audit"
+      },
+      {
+        "id": "ART-API-00699",
+        "type": "API",
+        "label": "list_sales_uploads"
+      },
+      {
+        "id": "ART-API-00700",
+        "type": "API",
+        "label": "create_sales_upload"
+      },
+      {
+        "id": "ART-API-00701",
+        "type": "API",
+        "label": "submit_sales_upload"
+      },
+      {
         "id": "ART-API-00306",
         "type": "API",
         "label": "create_reversal_entry"
@@ -1740,31 +1840,6 @@
         "id": "ART-API-00310",
         "type": "API",
         "label": "generate_snapshots"
-      },
-      {
-        "id": "ART-API-00311",
-        "type": "API",
-        "label": "get_open_purchase_orders"
-      },
-      {
-        "id": "ART-API-00312",
-        "type": "API",
-        "label": "get_po_details"
-      },
-      {
-        "id": "ART-API-00313",
-        "type": "API",
-        "label": "create_purchase_order"
-      },
-      {
-        "id": "ART-API-00314",
-        "type": "API",
-        "label": "create_purchase_receipt"
-      },
-      {
-        "id": "ART-API-00315",
-        "type": "API",
-        "label": "create_purchase_return"
       },
       {
         "id": "ART-API-00316",
@@ -2017,6 +2092,11 @@
         "label": "get_managers_list"
       },
       {
+        "id": "ART-API-00702",
+        "type": "API",
+        "label": "check_page_access"
+      },
+      {
         "id": "ART-API-00366",
         "type": "API",
         "label": "get_setup_wizard_initial_data"
@@ -2155,6 +2235,61 @@
         "id": "ART-API-00393",
         "type": "API",
         "label": "get_doctype_schema"
+      },
+      {
+        "id": "ART-API-00703",
+        "type": "API",
+        "label": "sas_get_datasets"
+      },
+      {
+        "id": "ART-API-00704",
+        "type": "API",
+        "label": "sas_get_categories"
+      },
+      {
+        "id": "ART-API-00705",
+        "type": "API",
+        "label": "sas_get_report_metadata"
+      },
+      {
+        "id": "ART-API-00706",
+        "type": "API",
+        "label": "sas_fetch_data"
+      },
+      {
+        "id": "ART-API-00707",
+        "type": "API",
+        "label": "sas_get_grand_totals"
+      },
+      {
+        "id": "ART-API-00708",
+        "type": "API",
+        "label": "sas_get_kpi_summary"
+      },
+      {
+        "id": "ART-API-00709",
+        "type": "API",
+        "label": "sas_save_view"
+      },
+      {
+        "id": "ART-API-00710",
+        "type": "API",
+        "label": "sas_get_views"
+      },
+      {
+        "id": "ART-API-00711",
+        "type": "API",
+        "label": "sas_delete_view"
+      },
+      {
+        "id": "ART-API-00712",
+        "type": "API",
+        "label": "sas_export_excel"
+      },
+      {
+        "id": "ART-API-00713",
+        "type": "API",
+        "label": "sas_get_formula_explain"
       },
       {
         "id": "ART-API-00611",
@@ -2487,6 +2622,46 @@
         "label": "generate_test_key"
       },
       {
+        "id": "ART-API-00714",
+        "type": "API",
+        "label": "search"
+      },
+      {
+        "id": "ART-API-00715",
+        "type": "API",
+        "label": "recent"
+      },
+      {
+        "id": "ART-API-00716",
+        "type": "API",
+        "label": "create"
+      },
+      {
+        "id": "ART-API-00717",
+        "type": "API",
+        "label": "validate"
+      },
+      {
+        "id": "ART-API-00718",
+        "type": "API",
+        "label": "get_suppliers"
+      },
+      {
+        "id": "ART-API-00719",
+        "type": "API",
+        "label": "get_supplier_groups"
+      },
+      {
+        "id": "ART-API-00720",
+        "type": "API",
+        "label": "get_supplier_form_options"
+      },
+      {
+        "id": "ART-API-00721",
+        "type": "API",
+        "label": "get_party_stock_accounts"
+      },
+      {
         "id": "ART-API-00442",
         "type": "API",
         "label": "get_payments"
@@ -2535,6 +2710,41 @@
         "id": "ART-API-00451",
         "type": "API",
         "label": "get_pdt_dashboard_list"
+      },
+      {
+        "id": "ART-API-00722",
+        "type": "API",
+        "label": "get_records"
+      },
+      {
+        "id": "ART-API-00723",
+        "type": "API",
+        "label": "get_value"
+      },
+      {
+        "id": "ART-API-00724",
+        "type": "API",
+        "label": "get_count"
+      },
+      {
+        "id": "ART-API-00725",
+        "type": "API",
+        "label": "set_value"
+      },
+      {
+        "id": "ART-API-00726",
+        "type": "API",
+        "label": "delete_record"
+      },
+      {
+        "id": "ART-API-00727",
+        "type": "API",
+        "label": "cancel_record"
+      },
+      {
+        "id": "ART-API-00728",
+        "type": "API",
+        "label": "get_all"
       },
       {
         "id": "ART-API-00452",
@@ -2727,6 +2937,21 @@
         "label": "get_item_stock"
       },
       {
+        "id": "ART-API-00729",
+        "type": "API",
+        "label": "get_barcode_feature_flags"
+      },
+      {
+        "id": "ART-API-00730",
+        "type": "API",
+        "label": "log_barcode_scan_event"
+      },
+      {
+        "id": "ART-API-00731",
+        "type": "API",
+        "label": "aggregate_scan_telemetry"
+      },
+      {
         "id": "ART-API-00483",
         "type": "API",
         "label": "validate_checkout_rules"
@@ -2755,6 +2980,11 @@
         "id": "ART-API-00488",
         "type": "API",
         "label": "get_cge_liability_metrics"
+      },
+      {
+        "id": "ART-API-00732",
+        "type": "API",
+        "label": "get_dashboard_data"
       },
       {
         "id": "ART-API-00489",
@@ -2842,6 +3072,486 @@
         "label": "log_explain_audit"
       },
       {
+        "id": "ART-API-00733",
+        "type": "API",
+        "label": "get"
+      },
+      {
+        "id": "ART-API-00734",
+        "type": "API",
+        "label": "get_field"
+      },
+      {
+        "id": "ART-API-00735",
+        "type": "API",
+        "label": "get_list"
+      },
+      {
+        "id": "ART-API-00736",
+        "type": "API",
+        "label": "exists"
+      },
+      {
+        "id": "ART-API-00737",
+        "type": "API",
+        "label": "save"
+      },
+      {
+        "id": "ART-API-00738",
+        "type": "API",
+        "label": "submit"
+      },
+      {
+        "id": "ART-API-00739",
+        "type": "API",
+        "label": "delete"
+      },
+      {
+        "id": "ART-API-00740",
+        "type": "API",
+        "label": "schema"
+      },
+      {
+        "id": "ART-API-00741",
+        "type": "API",
+        "label": "lookup"
+      },
+      {
+        "id": "ART-API-00742",
+        "type": "API",
+        "label": "on_change"
+      },
+      {
+        "id": "ART-API-00743",
+        "type": "API",
+        "label": "get_customers"
+      },
+      {
+        "id": "ART-API-00744",
+        "type": "API",
+        "label": "get_customer_detail"
+      },
+      {
+        "id": "ART-API-00745",
+        "type": "API",
+        "label": "save_customer"
+      },
+      {
+        "id": "ART-API-00746",
+        "type": "API",
+        "label": "delete_customer"
+      },
+      {
+        "id": "ART-API-00747",
+        "type": "API",
+        "label": "get_products"
+      },
+      {
+        "id": "ART-API-00748",
+        "type": "API",
+        "label": "get_product_detail"
+      },
+      {
+        "id": "ART-API-00749",
+        "type": "API",
+        "label": "save_product"
+      },
+      {
+        "id": "ART-API-00750",
+        "type": "API",
+        "label": "delete_product"
+      },
+      {
+        "id": "ART-API-00751",
+        "type": "API",
+        "label": "get_catalog_metadata"
+      },
+      {
+        "id": "ART-API-00752",
+        "type": "API",
+        "label": "get_label_templates"
+      },
+      {
+        "id": "ART-API-00753",
+        "type": "API",
+        "label": "generate_preview_canvas"
+      },
+      {
+        "id": "ART-API-00754",
+        "type": "API",
+        "label": "print_label"
+      },
+      {
+        "id": "ART-API-00755",
+        "type": "API",
+        "label": "get_item_for_label"
+      },
+      {
+        "id": "ART-API-00756",
+        "type": "API",
+        "label": "get_printers_list"
+      },
+      {
+        "id": "ART-API-00757",
+        "type": "API",
+        "label": "get_layout_preferences"
+      },
+      {
+        "id": "ART-API-00758",
+        "type": "API",
+        "label": "save_layout_preferences"
+      },
+      {
+        "id": "ART-API-00759",
+        "type": "API",
+        "label": "get_matrix_session"
+      },
+      {
+        "id": "ART-API-00760",
+        "type": "API",
+        "label": "resolve_or_create_variant"
+      },
+      {
+        "id": "ART-API-00761",
+        "type": "API",
+        "label": "create_article_template"
+      },
+      {
+        "id": "ART-API-00762",
+        "type": "API",
+        "label": "parse_pasted_grid"
+      },
+      {
+        "id": "ART-API-00763",
+        "type": "API",
+        "label": "get_user_navigation"
+      },
+      {
+        "id": "ART-API-00764",
+        "type": "API",
+        "label": "run_navigation_health_check"
+      },
+      {
+        "id": "ART-API-00765",
+        "type": "API",
+        "label": "get_navigation_health_history"
+      },
+      {
+        "id": "ART-API-00766",
+        "type": "API",
+        "label": "validate_negative_stock"
+      },
+      {
+        "id": "ART-API-00767",
+        "type": "API",
+        "label": "approve_case"
+      },
+      {
+        "id": "ART-API-00768",
+        "type": "API",
+        "label": "reject_case"
+      },
+      {
+        "id": "ART-API-00769",
+        "type": "API",
+        "label": "get_dashboard_metrics"
+      },
+      {
+        "id": "ART-API-00770",
+        "type": "API",
+        "label": "get_notifications"
+      },
+      {
+        "id": "ART-API-00771",
+        "type": "API",
+        "label": "get_unread_count"
+      },
+      {
+        "id": "ART-API-00772",
+        "type": "API",
+        "label": "get_my_notifications"
+      },
+      {
+        "id": "ART-API-00773",
+        "type": "API",
+        "label": "get_unread_badge"
+      },
+      {
+        "id": "ART-API-00774",
+        "type": "API",
+        "label": "mark_notification_read"
+      },
+      {
+        "id": "ART-API-00775",
+        "type": "API",
+        "label": "mark_all_notifications_read"
+      },
+      {
+        "id": "ART-API-00776",
+        "type": "API",
+        "label": "get_notification_summary"
+      },
+      {
+        "id": "ART-API-00777",
+        "type": "API",
+        "label": "delete_notification"
+      },
+      {
+        "id": "ART-API-00778",
+        "type": "API",
+        "label": "mark_as_read"
+      },
+      {
+        "id": "ART-API-00779",
+        "type": "API",
+        "label": "mark_all_read"
+      },
+      {
+        "id": "ART-API-00780",
+        "type": "API",
+        "label": "get_registered_printers"
+      },
+      {
+        "id": "ART-API-00781",
+        "type": "API",
+        "label": "dispatch_print_job"
+      },
+      {
+        "id": "ART-API-00782",
+        "type": "API",
+        "label": "get_purchase_dashboard"
+      },
+      {
+        "id": "ART-API-00783",
+        "type": "API",
+        "label": "get_purchase_orders"
+      },
+      {
+        "id": "ART-API-00784",
+        "type": "API",
+        "label": "get_purchase_order_detail"
+      },
+      {
+        "id": "ART-API-00785",
+        "type": "API",
+        "label": "create_purchase_order"
+      },
+      {
+        "id": "ART-API-00786",
+        "type": "API",
+        "label": "resolve_po_approval"
+      },
+      {
+        "id": "ART-API-00787",
+        "type": "API",
+        "label": "get_grns"
+      },
+      {
+        "id": "ART-API-00788",
+        "type": "API",
+        "label": "get_grn_detail"
+      },
+      {
+        "id": "ART-API-00789",
+        "type": "API",
+        "label": "create_grn"
+      },
+      {
+        "id": "ART-API-00790",
+        "type": "API",
+        "label": "create_invoice"
+      },
+      {
+        "id": "ART-API-00791",
+        "type": "API",
+        "label": "get_invoices"
+      },
+      {
+        "id": "ART-API-00792",
+        "type": "API",
+        "label": "get_invoice_detail"
+      },
+      {
+        "id": "ART-API-00793",
+        "type": "API",
+        "label": "get_returns"
+      },
+      {
+        "id": "ART-API-00794",
+        "type": "API",
+        "label": "create_purchase_return"
+      },
+      {
+        "id": "ART-API-00795",
+        "type": "API",
+        "label": "get_supplier_ledger"
+      },
+      {
+        "id": "ART-API-00796",
+        "type": "API",
+        "label": "get_purchase_settings"
+      },
+      {
+        "id": "ART-API-00797",
+        "type": "API",
+        "label": "save_purchase_settings"
+      },
+      {
+        "id": "ART-API-00798",
+        "type": "API",
+        "label": "search_suppliers"
+      },
+      {
+        "id": "ART-API-00799",
+        "type": "API",
+        "label": "search_items"
+      },
+      {
+        "id": "ART-API-00800",
+        "type": "API",
+        "label": "get_matrix_session"
+      },
+      {
+        "id": "ART-API-00801",
+        "type": "API",
+        "label": "resolve_or_create_variant"
+      },
+      {
+        "id": "ART-API-00802",
+        "type": "API",
+        "label": "create_article_template"
+      },
+      {
+        "id": "ART-API-00803",
+        "type": "API",
+        "label": "get_open_purchase_orders"
+      },
+      {
+        "id": "ART-API-00804",
+        "type": "API",
+        "label": "get_po_details"
+      },
+      {
+        "id": "ART-API-00805",
+        "type": "API",
+        "label": "get_warehouses"
+      },
+      {
+        "id": "ART-API-00806",
+        "type": "API",
+        "label": "get_purchase_analytics"
+      },
+      {
+        "id": "ART-API-00807",
+        "type": "API",
+        "label": "get_supplier_performance"
+      },
+      {
+        "id": "ART-API-00808",
+        "type": "API",
+        "label": "get_items_for_grn"
+      },
+      {
+        "id": "ART-API-00809",
+        "type": "API",
+        "label": "get_landed_cost_vouchers"
+      },
+      {
+        "id": "ART-API-00810",
+        "type": "API",
+        "label": "create_landed_cost_voucher"
+      },
+      {
+        "id": "ART-API-00811",
+        "type": "API",
+        "label": "get_return_detail"
+      },
+      {
+        "id": "ART-API-00812",
+        "type": "API",
+        "label": "get_suppliers"
+      },
+      {
+        "id": "ART-API-00813",
+        "type": "API",
+        "label": "get_po_matrix_print_data"
+      },
+      {
+        "id": "ART-API-00814",
+        "type": "API",
+        "label": "get_size_presets"
+      },
+      {
+        "id": "ART-API-00815",
+        "type": "API",
+        "label": "resolve_variant_item"
+      },
+      {
+        "id": "ART-API-00816",
+        "type": "API",
+        "label": "get_open_quotations"
+      },
+      {
+        "id": "ART-API-00817",
+        "type": "API",
+        "label": "get_open_sales_orders"
+      },
+      {
+        "id": "ART-API-00818",
+        "type": "API",
+        "label": "get_quotation_details"
+      },
+      {
+        "id": "ART-API-00819",
+        "type": "API",
+        "label": "get_sales_order_details"
+      },
+      {
+        "id": "ART-API-00820",
+        "type": "API",
+        "label": "create_quotation"
+      },
+      {
+        "id": "ART-API-00821",
+        "type": "API",
+        "label": "create_sales_order"
+      },
+      {
+        "id": "ART-API-00822",
+        "type": "API",
+        "label": "convert_quotation_to_sales_order"
+      },
+      {
+        "id": "ART-API-00823",
+        "type": "API",
+        "label": "get_matrix_session"
+      },
+      {
+        "id": "ART-API-00824",
+        "type": "API",
+        "label": "resolve_or_create_variant"
+      },
+      {
+        "id": "ART-API-00825",
+        "type": "API",
+        "label": "resolve_variant_item"
+      },
+      {
+        "id": "ART-API-00826",
+        "type": "API",
+        "label": "get_size_presets"
+      },
+      {
+        "id": "ART-API-00827",
+        "type": "API",
+        "label": "global_search"
+      },
+      {
+        "id": "ART-API-00828",
+        "type": "API",
+        "label": "get_recent_docs"
+      },
+      {
         "id": "ART-API-00650",
         "type": "API",
         "label": "validate_approval_override"
@@ -2902,6 +3612,16 @@
         "label": "get_monthly_commissions"
       },
       {
+        "id": "ART-API-00829",
+        "type": "API",
+        "label": "save_commission_settlement"
+      },
+      {
+        "id": "ART-API-00830",
+        "type": "API",
+        "label": "save_commission_rule"
+      },
+      {
         "id": "ART-API-00513",
         "type": "API",
         "label": "get_sfm_leaderboard"
@@ -2915,6 +3635,31 @@
         "id": "ART-API-00515",
         "type": "API",
         "label": "get_store_performance_center"
+      },
+      {
+        "id": "ART-API-00831",
+        "type": "API",
+        "label": "save_sales_target"
+      },
+      {
+        "id": "ART-API-00832",
+        "type": "API",
+        "label": "save_customer_ownership"
+      },
+      {
+        "id": "ART-API-00833",
+        "type": "API",
+        "label": "get_sfm_settings"
+      },
+      {
+        "id": "ART-API-00834",
+        "type": "API",
+        "label": "save_sfm_settings"
+      },
+      {
+        "id": "ART-API-00835",
+        "type": "API",
+        "label": "get_attribution_ledger"
       },
       {
         "id": "ART-API-00662",
@@ -2952,9 +3697,59 @@
         "label": "compare_sync_status"
       },
       {
+        "id": "ART-API-00836",
+        "type": "API",
+        "label": "get_my_profile"
+      },
+      {
+        "id": "ART-API-00837",
+        "type": "API",
+        "label": "update_my_profile"
+      },
+      {
+        "id": "ART-API-00838",
+        "type": "API",
+        "label": "change_password"
+      },
+      {
+        "id": "ART-API-00839",
+        "type": "API",
+        "label": "get_my_activity"
+      },
+      {
+        "id": "ART-API-00840",
+        "type": "API",
+        "label": "logout"
+      },
+      {
+        "id": "ART-API-00841",
+        "type": "API",
+        "label": "get_smriti_preferences"
+      },
+      {
+        "id": "ART-API-00842",
+        "type": "API",
+        "label": "save_smriti_preferences"
+      },
+      {
         "id": "ART-API-00516",
         "type": "API",
         "label": "parse_opening_excel"
+      },
+      {
+        "id": "ART-API-00843",
+        "type": "API",
+        "label": "get_recent_queue"
+      },
+      {
+        "id": "ART-API-00844",
+        "type": "API",
+        "label": "trigger_manual_retry"
+      },
+      {
+        "id": "ART-API-00845",
+        "type": "API",
+        "label": "run_health_checks"
       },
       {
         "id": "ART-TERM-00517",
@@ -3147,259 +3942,9 @@
         "label": "Item Barcode"
       },
       {
-        "id": "ART-DOCTYPE-00549",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Brand"
-      },
-      {
-        "id": "ART-DOCTYPE-00550",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Department"
-      },
-      {
-        "id": "ART-DOCTYPE-00551",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "DocType"
-      },
-      {
-        "id": "ART-DOCTYPE-00552",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Item Group"
-      },
-      {
-        "id": "ART-DOCTYPE-00573",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Item Variant Attribute"
-      },
-      {
-        "id": "ART-DOCTYPE-00554",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Purchase Receipt"
-      },
-      {
-        "id": "ART-DOCTYPE-00555",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Activity Log"
-      },
-      {
-        "id": "ART-DOCTYPE-00557",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "SMRITI Barcode Scan Event"
-      },
-      {
-        "id": "ART-DOCTYPE-00558",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Warehouse"
-      },
-      {
-        "id": "ART-DOCTYPE-00559",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "SMRITI Barcode Telemetry Snapshot"
-      },
-      {
-        "id": "ART-DOCTYPE-00560",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Item Price"
-      },
-      {
-        "id": "ART-DOCTYPE-00561",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Address"
-      },
-      {
-        "id": "ART-DOCTYPE-00562",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Cost Center"
-      },
-      {
-        "id": "ART-DOCTYPE-00563",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Mode of Payment Account"
-      },
-      {
-        "id": "ART-DOCTYPE-00564",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "POS Opening Entry"
-      },
-      {
-        "id": "ART-DOCTYPE-00565",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Sales Taxes and Charges Template"
-      },
-      {
-        "id": "ART-DOCTYPE-00566",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Dynamic Link"
-      },
-      {
-        "id": "ART-DOCTYPE-00567",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "SMRITI Attribute Layout"
-      },
-      {
-        "id": "ART-DOCTYPE-00568",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "SMRITI Audit Event"
-      },
-      {
-        "id": "ART-DOCTYPE-00569",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Global Defaults"
-      },
-      {
-        "id": "ART-DOCTYPE-00570",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Account"
-      },
-      {
-        "id": "ART-DOCTYPE-00571",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Stock Reconciliation"
-      },
-      {
-        "id": "ART-DOCTYPE-00572",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Item Supplier"
-      },
-      {
-        "id": "ART-DOCTYPE-00553",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Item Attribute"
-      },
-      {
-        "id": "ART-DOCTYPE-00574",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Loyalty Program"
-      },
-      {
-        "id": "ART-DOCTYPE-00575",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Loyalty Program Collection"
-      },
-      {
-        "id": "ART-DOCTYPE-00576",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "GST HSN Code"
-      },
-      {
-        "id": "ART-DOCTYPE-00577",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Item Tax Template"
-      },
-      {
-        "id": "ART-DOCTYPE-00578",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Customer Group"
-      },
-      {
-        "id": "ART-DOCTYPE-00579",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Territory"
-      },
-      {
         "id": "ART-DOCTYPE-00580",
         "type": "DOCTYPE_VIRTUAL",
         "label": "Supplier Group"
-      },
-      {
-        "id": "ART-DOCTYPE-00581",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Contact"
-      },
-      {
-        "id": "ART-DOCTYPE-00582",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Item Tax Template Detail"
-      },
-      {
-        "id": "ART-DOCTYPE-00583",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "PSV Sell-Through Upload"
-      },
-      {
-        "id": "ART-DOCTYPE-00584",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Fiscal Year"
-      },
-      {
-        "id": "ART-DOCTYPE-00585",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Purchase Order"
-      },
-      {
-        "id": "ART-DOCTYPE-00586",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Bin"
-      },
-      {
-        "id": "ART-DOCTYPE-00587",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Sales Person"
-      },
-      {
-        "id": "ART-DOCTYPE-00588",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Sales Order"
-      },
-      {
-        "id": "ART-DOCTYPE-00589",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Item Reorder"
-      },
-      {
-        "id": "ART-DOCTYPE-00590",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Has Role"
-      },
-      {
-        "id": "ART-DOCTYPE-00591",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Role"
-      },
-      {
-        "id": "ART-DOCTYPE-00592",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Role Profile"
-      },
-      {
-        "id": "ART-DOCTYPE-00593",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "User Permission"
-      },
-      {
-        "id": "ART-DOCTYPE-00594",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Workflow"
-      },
-      {
-        "id": "ART-DOCTYPE-00595",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Workflow State"
-      },
-      {
-        "id": "ART-DOCTYPE-00596",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Mode of Payment"
-      },
-      {
-        "id": "ART-DOCTYPE-00597",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "POS Profile"
-      },
-      {
-        "id": "ART-DOCTYPE-00598",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Warehouse Type"
-      },
-      {
-        "id": "ART-DOCTYPE-00599",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "POS Closing Entry"
-      },
-      {
-        "id": "ART-DOCTYPE-00600",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "POS Settings"
       },
       {
         "id": "ART-DOCTYPE-00601",
@@ -3407,44 +3952,34 @@
         "label": "Bank Account"
       },
       {
-        "id": "ART-DOCTYPE-00602",
+        "id": "ART-DOCTYPE-00846",
         "type": "DOCTYPE_VIRTUAL",
-        "label": "Payment Entry"
+        "label": "Currency"
       },
       {
-        "id": "ART-DOCTYPE-00603",
+        "id": "ART-DOCTYPE-00847",
         "type": "DOCTYPE_VIRTUAL",
-        "label": "Pricing Rule"
+        "label": "Language"
       },
       {
-        "id": "ART-DOCTYPE-00604",
+        "id": "ART-DOCTYPE-00848",
         "type": "DOCTYPE_VIRTUAL",
-        "label": "SMRITI Trial Health Snapshot"
+        "label": "Payment Terms Template"
       },
       {
-        "id": "ART-DOCTYPE-00657",
+        "id": "ART-DOCTYPE-00849",
         "type": "DOCTYPE_VIRTUAL",
-        "label": "SMRITI Numbering Rule"
+        "label": "Price List"
       },
       {
-        "id": "ART-DOCTYPE-00658",
+        "id": "ART-DOCTYPE-00549",
         "type": "DOCTYPE_VIRTUAL",
-        "label": "SMRITI Numbering Reserved Range"
+        "label": "Brand"
       },
       {
-        "id": "ART-DOCTYPE-00605",
+        "id": "ART-DOCTYPE-00552",
         "type": "DOCTYPE_VIRTUAL",
-        "label": "Employee"
-      },
-      {
-        "id": "ART-DOCTYPE-00668",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "Purchase Invoice"
-      },
-      {
-        "id": "ART-DOCTYPE-00606",
-        "type": "DOCTYPE_VIRTUAL",
-        "label": "File"
+        "label": "Item Group"
       }
     ],
     "edges": [
@@ -3520,6 +4055,11 @@
       },
       {
         "source": "ART-FIELD-00141",
+        "target": "ART-DOCTYPE-00537",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00693",
         "target": "ART-DOCTYPE-00537",
         "relation": "EXTENDS"
       },
@@ -3844,988 +4384,8 @@
         "relation": "EXTENDS"
       },
       {
-        "source": "ART-API-00101",
-        "target": "ART-DOCTYPE-00549",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00101",
-        "target": "ART-DOCTYPE-00550",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00101",
-        "target": "ART-DOCTYPE-00551",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00101",
-        "target": "ART-DOCTYPE-00552",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00101",
-        "target": "ART-DOCTYPE-00043",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00101",
-        "target": "ART-DOCTYPE-00066",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00101",
-        "target": "ART-DOCTYPE-00543",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00102",
-        "target": "ART-DOCTYPE-00551",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00102",
-        "target": "ART-DOCTYPE-00066",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00103",
-        "target": "ART-DOCTYPE-00540",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00104",
-        "target": "ART-DOCTYPE-00540",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00104",
-        "target": "ART-DOCTYPE-00548",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00106",
-        "target": "ART-DOCTYPE-00573",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00106",
-        "target": "ART-DOCTYPE-00554",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00106",
-        "target": "ART-DOCTYPE-00545",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00107",
-        "target": "ART-DOCTYPE-00551",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00107",
-        "target": "ART-DOCTYPE-00540",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00107",
-        "target": "ART-DOCTYPE-00066",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00113",
-        "target": "ART-DOCTYPE-00555",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00113",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00116",
-        "target": "ART-DOCTYPE-00030",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00117",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00117",
-        "target": "ART-DOCTYPE-00030",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00118",
-        "target": "ART-DOCTYPE-00030",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00119",
-        "target": "ART-DOCTYPE-00551",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00119",
-        "target": "ART-DOCTYPE-00066",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00120",
-        "target": "ART-DOCTYPE-00551",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00120",
-        "target": "ART-DOCTYPE-00066",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00122",
-        "target": "ART-DOCTYPE-00065",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00123",
-        "target": "ART-DOCTYPE-00065",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00124",
-        "target": "ART-DOCTYPE-00065",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00125",
-        "target": "ART-DOCTYPE-00065",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00126",
-        "target": "ART-DOCTYPE-00065",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00127",
-        "target": "ART-DOCTYPE-00066",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00127",
-        "target": "ART-DOCTYPE-00067",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00128",
-        "target": "ART-DOCTYPE-00066",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00128",
-        "target": "ART-DOCTYPE-00067",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00130",
-        "target": "ART-DOCTYPE-00065",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00131",
-        "target": "ART-DOCTYPE-00551",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00131",
-        "target": "ART-DOCTYPE-00556",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00132",
-        "target": "ART-DOCTYPE-00557",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00132",
-        "target": "ART-DOCTYPE-00558",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00133",
-        "target": "ART-DOCTYPE-00559",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00208",
-        "target": "ART-DOCTYPE-00540",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00208",
-        "target": "ART-DOCTYPE-00548",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00208",
-        "target": "ART-DOCTYPE-00560",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00210",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00210",
-        "target": "ART-DOCTYPE-00539",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00212",
-        "target": "ART-DOCTYPE-00561",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00212",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00212",
-        "target": "ART-DOCTYPE-00562",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00212",
-        "target": "ART-DOCTYPE-00541",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00212",
-        "target": "ART-DOCTYPE-00563",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00212",
-        "target": "ART-DOCTYPE-00539",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00212",
-        "target": "ART-DOCTYPE-00564",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00212",
-        "target": "ART-DOCTYPE-00546",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00212",
-        "target": "ART-DOCTYPE-00565",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00212",
-        "target": "ART-DOCTYPE-00558",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00214",
-        "target": "ART-DOCTYPE-00560",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00214",
-        "target": "ART-DOCTYPE-00539",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00215",
-        "target": "ART-DOCTYPE-00537",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00216",
-        "target": "ART-DOCTYPE-00546",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00217",
-        "target": "ART-DOCTYPE-00539",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00217",
-        "target": "ART-DOCTYPE-00546",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00218",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00218",
-        "target": "ART-DOCTYPE-00562",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00218",
-        "target": "ART-DOCTYPE-00546",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00218",
-        "target": "ART-DOCTYPE-00565",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00218",
-        "target": "ART-DOCTYPE-00558",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00219",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00219",
-        "target": "ART-DOCTYPE-00562",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00219",
-        "target": "ART-DOCTYPE-00546",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00219",
-        "target": "ART-DOCTYPE-00558",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00220",
-        "target": "ART-DOCTYPE-00546",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00221",
-        "target": "ART-DOCTYPE-00537",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00224",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00224",
-        "target": "ART-DOCTYPE-00030",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00225",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00226",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00227",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00228",
-        "target": "ART-DOCTYPE-00561",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00228",
-        "target": "ART-DOCTYPE-00566",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00229",
-        "target": "ART-DOCTYPE-00561",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00229",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00229",
-        "target": "ART-DOCTYPE-00566",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00230",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00231",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00232",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00233",
-        "target": "ART-DOCTYPE-00551",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00233",
-        "target": "ART-DOCTYPE-00567",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00233",
-        "target": "ART-DOCTYPE-00039",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00234",
-        "target": "ART-DOCTYPE-00567",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00234",
-        "target": "ART-DOCTYPE-00568",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00235",
-        "target": "ART-DOCTYPE-00567",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00235",
-        "target": "ART-DOCTYPE-00568",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00236",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00236",
-        "target": "ART-DOCTYPE-00569",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00236",
-        "target": "ART-DOCTYPE-00540",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00236",
-        "target": "ART-DOCTYPE-00548",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00237",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00237",
-        "target": "ART-DOCTYPE-00569",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00237",
-        "target": "ART-DOCTYPE-00540",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00237",
-        "target": "ART-DOCTYPE-00554",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00238",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00238",
-        "target": "ART-DOCTYPE-00540",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00238",
-        "target": "ART-DOCTYPE-00545",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00239",
-        "target": "ART-DOCTYPE-00570",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00239",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00239",
-        "target": "ART-DOCTYPE-00540",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00239",
-        "target": "ART-DOCTYPE-00545",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00240",
-        "target": "ART-DOCTYPE-00570",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00240",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00240",
-        "target": "ART-DOCTYPE-00540",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00240",
-        "target": "ART-DOCTYPE-00571",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00241",
-        "target": "ART-DOCTYPE-00540",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00246",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00247",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00247",
-        "target": "ART-DOCTYPE-00540",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00247",
-        "target": "ART-DOCTYPE-00548",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00247",
-        "target": "ART-DOCTYPE-00552",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00248",
-        "target": "ART-DOCTYPE-00540",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00248",
-        "target": "ART-DOCTYPE-00548",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00249",
-        "target": "ART-DOCTYPE-00540",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00249",
-        "target": "ART-DOCTYPE-00548",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00249",
-        "target": "ART-DOCTYPE-00572",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00249",
-        "target": "ART-DOCTYPE-00573",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00250",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00250",
-        "target": "ART-DOCTYPE-00540",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00250",
-        "target": "ART-DOCTYPE-00548",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00251",
-        "target": "ART-DOCTYPE-00540",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00252",
-        "target": "ART-DOCTYPE-00540",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00253",
-        "target": "ART-DOCTYPE-00551",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00253",
-        "target": "ART-DOCTYPE-00553",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00254",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00254",
-        "target": "ART-DOCTYPE-00540",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00254",
-        "target": "ART-DOCTYPE-00548",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00254",
-        "target": "ART-DOCTYPE-00552",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00258",
-        "target": "ART-DOCTYPE-00541",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00259",
-        "target": "ART-DOCTYPE-00574",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00259",
-        "target": "ART-DOCTYPE-00575",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00260",
-        "target": "ART-DOCTYPE-00570",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00260",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00260",
-        "target": "ART-DOCTYPE-00562",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00260",
-        "target": "ART-DOCTYPE-00574",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00261",
-        "target": "ART-DOCTYPE-00541",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00261",
-        "target": "ART-DOCTYPE-00574",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00262",
-        "target": "ART-DOCTYPE-00576",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00262",
-        "target": "ART-DOCTYPE-00540",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00262",
-        "target": "ART-DOCTYPE-00577",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00263",
-        "target": "ART-DOCTYPE-00541",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00263",
-        "target": "ART-DOCTYPE-00578",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00263",
-        "target": "ART-DOCTYPE-00579",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00264",
-        "target": "ART-DOCTYPE-00543",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00264",
-        "target": "ART-DOCTYPE-00580",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00265",
-        "target": "ART-DOCTYPE-00543",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00265",
-        "target": "ART-DOCTYPE-00580",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00266",
-        "target": "ART-DOCTYPE-00541",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00267",
-        "target": "ART-DOCTYPE-00581",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00267",
-        "target": "ART-DOCTYPE-00566",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00267",
-        "target": "ART-DOCTYPE-00543",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00268",
-        "target": "ART-DOCTYPE-00581",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00268",
-        "target": "ART-DOCTYPE-00566",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00268",
-        "target": "ART-DOCTYPE-00543",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00268",
-        "target": "ART-DOCTYPE-00580",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00269",
-        "target": "ART-DOCTYPE-00541",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00269",
-        "target": "ART-DOCTYPE-00578",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00269",
-        "target": "ART-DOCTYPE-00579",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00274",
-        "target": "ART-DOCTYPE-00577",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00274",
-        "target": "ART-DOCTYPE-00582",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00275",
-        "target": "ART-DOCTYPE-00570",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00275",
-        "target": "ART-DOCTYPE-00577",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00276",
-        "target": "ART-DOCTYPE-00549",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00277",
-        "target": "ART-DOCTYPE-00549",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00278",
-        "target": "ART-DOCTYPE-00549",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00279",
-        "target": "ART-DOCTYPE-00570",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00285",
-        "target": "ART-DOCTYPE-00570",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00285",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00289",
-        "target": "ART-DOCTYPE-00001",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00289",
-        "target": "ART-DOCTYPE-00063",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00290",
-        "target": "ART-DOCTYPE-00006",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00292",
-        "target": "ART-DOCTYPE-00001",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00292",
-        "target": "ART-DOCTYPE-00003",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00292",
-        "target": "ART-DOCTYPE-00063",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00294",
-        "target": "ART-DOCTYPE-00003",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00294",
-        "target": "ART-DOCTYPE-00006",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00296",
-        "target": "ART-DOCTYPE-00003",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00297",
-        "target": "ART-DOCTYPE-00003",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00298",
-        "target": "ART-DOCTYPE-00001",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00298",
-        "target": "ART-DOCTYPE-00003",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00298",
-        "target": "ART-DOCTYPE-00063",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00299",
-        "target": "ART-DOCTYPE-00063",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00300",
-        "target": "ART-DOCTYPE-00063",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00301",
-        "target": "ART-DOCTYPE-00063",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00302",
-        "target": "ART-DOCTYPE-00063",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00303",
-        "target": "ART-DOCTYPE-00583",
-        "relation": "USES"
-      },
-      {
         "source": "ART-API-00305",
         "target": "ART-DOCTYPE-00544",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00305",
-        "target": "ART-DOCTYPE-00551",
         "relation": "USES"
       },
       {
@@ -4839,797 +4399,67 @@
         "relation": "USES"
       },
       {
-        "source": "ART-API-00306",
-        "target": "ART-DOCTYPE-00003",
+        "source": "ART-API-00694",
+        "target": "ART-DOCTYPE-00060",
         "relation": "USES"
       },
       {
-        "source": "ART-API-00307",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00307",
-        "target": "ART-DOCTYPE-00541",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00307",
-        "target": "ART-DOCTYPE-00584",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00307",
-        "target": "ART-DOCTYPE-00001",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00307",
-        "target": "ART-DOCTYPE-00003",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00307",
+        "source": "ART-API-00695",
         "target": "ART-DOCTYPE-00063",
         "relation": "USES"
       },
       {
-        "source": "ART-API-00307",
-        "target": "ART-DOCTYPE-00064",
+        "source": "ART-API-00699",
+        "target": "ART-DOCTYPE-00062",
         "relation": "USES"
       },
       {
-        "source": "ART-API-00307",
-        "target": "ART-DOCTYPE-00579",
+        "source": "ART-API-00718",
+        "target": "ART-DOCTYPE-00543",
         "relation": "USES"
       },
       {
-        "source": "ART-API-00310",
-        "target": "ART-DOCTYPE-00540",
+        "source": "ART-API-00719",
+        "target": "ART-DOCTYPE-00580",
         "relation": "USES"
       },
       {
-        "source": "ART-API-00310",
-        "target": "ART-DOCTYPE-00001",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00310",
-        "target": "ART-DOCTYPE-00063",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00311",
-        "target": "ART-DOCTYPE-00585",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00312",
-        "target": "ART-DOCTYPE-00540",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00312",
-        "target": "ART-DOCTYPE-00585",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00313",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00313",
-        "target": "ART-DOCTYPE-00576",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00313",
-        "target": "ART-DOCTYPE-00569",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00313",
-        "target": "ART-DOCTYPE-00540",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00313",
-        "target": "ART-DOCTYPE-00552",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00313",
-        "target": "ART-DOCTYPE-00560",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00313",
-        "target": "ART-DOCTYPE-00577",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00313",
-        "target": "ART-DOCTYPE-00585",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00314",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00314",
-        "target": "ART-DOCTYPE-00569",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00314",
-        "target": "ART-DOCTYPE-00585",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00314",
-        "target": "ART-DOCTYPE-00554",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00315",
-        "target": "ART-DOCTYPE-00554",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00317",
-        "target": "ART-DOCTYPE-00586",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00317",
-        "target": "ART-DOCTYPE-00540",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00319",
-        "target": "ART-DOCTYPE-00546",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00326",
-        "target": "ART-DOCTYPE-00085",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00327",
-        "target": "ART-DOCTYPE-00085",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00328",
-        "target": "ART-DOCTYPE-00085",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00329",
-        "target": "ART-DOCTYPE-00081",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00330",
-        "target": "ART-DOCTYPE-00558",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00331",
-        "target": "ART-DOCTYPE-00552",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00332",
-        "target": "ART-DOCTYPE-00549",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00333",
-        "target": "ART-DOCTYPE-00587",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00336",
-        "target": "ART-DOCTYPE-00019",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00336",
-        "target": "ART-DOCTYPE-00042",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00336",
-        "target": "ART-DOCTYPE-00081",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00337",
-        "target": "ART-DOCTYPE-00588",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00338",
-        "target": "ART-DOCTYPE-00588",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00339",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00339",
-        "target": "ART-DOCTYPE-00569",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00339",
-        "target": "ART-DOCTYPE-00540",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00339",
-        "target": "ART-DOCTYPE-00589",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00339",
-        "target": "ART-DOCTYPE-00588",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00339",
-        "target": "ART-DOCTYPE-00558",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00340",
-        "target": "ART-DOCTYPE-00590",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00340",
-        "target": "ART-DOCTYPE-00537",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00341",
-        "target": "ART-DOCTYPE-00537",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00342",
-        "target": "ART-DOCTYPE-00537",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00343",
-        "target": "ART-DOCTYPE-00591",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00343",
-        "target": "ART-DOCTYPE-00537",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00344",
-        "target": "ART-DOCTYPE-00537",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00345",
-        "target": "ART-DOCTYPE-00537",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00346",
-        "target": "ART-DOCTYPE-00590",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00346",
-        "target": "ART-DOCTYPE-00537",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00347",
-        "target": "ART-DOCTYPE-00591",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00348",
-        "target": "ART-DOCTYPE-00591",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00349",
-        "target": "ART-DOCTYPE-00591",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00350",
-        "target": "ART-DOCTYPE-00590",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00350",
-        "target": "ART-DOCTYPE-00592",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00351",
-        "target": "ART-DOCTYPE-00592",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00352",
-        "target": "ART-DOCTYPE-00592",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00353",
-        "target": "ART-DOCTYPE-00537",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00353",
-        "target": "ART-DOCTYPE-00593",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00354",
-        "target": "ART-DOCTYPE-00537",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00355",
-        "target": "ART-DOCTYPE-00537",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00356",
-        "target": "ART-DOCTYPE-00594",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00357",
-        "target": "ART-DOCTYPE-00594",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00358",
-        "target": "ART-DOCTYPE-00594",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00359",
-        "target": "ART-DOCTYPE-00594",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00360",
-        "target": "ART-DOCTYPE-00595",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00361",
-        "target": "ART-DOCTYPE-00595",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00362",
-        "target": "ART-DOCTYPE-00594",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00365",
-        "target": "ART-DOCTYPE-00537",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00366",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00366",
-        "target": "ART-DOCTYPE-00537",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00367",
-        "target": "ART-DOCTYPE-00570",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00367",
-        "target": "ART-DOCTYPE-00561",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00367",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00367",
-        "target": "ART-DOCTYPE-00562",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00367",
-        "target": "ART-DOCTYPE-00541",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00367",
-        "target": "ART-DOCTYPE-00578",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00367",
-        "target": "ART-DOCTYPE-00596",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00367",
-        "target": "ART-DOCTYPE-00597",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00367",
-        "target": "ART-DOCTYPE-00030",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00367",
-        "target": "ART-DOCTYPE-00565",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00367",
-        "target": "ART-DOCTYPE-00579",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00367",
-        "target": "ART-DOCTYPE-00537",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00367",
-        "target": "ART-DOCTYPE-00558",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00367",
-        "target": "ART-DOCTYPE-00598",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00368",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00368",
-        "target": "ART-DOCTYPE-00564",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00368",
-        "target": "ART-DOCTYPE-00597",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00370",
-        "target": "ART-DOCTYPE-00564",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00371",
-        "target": "ART-DOCTYPE-00599",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00371",
-        "target": "ART-DOCTYPE-00564",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00371",
-        "target": "ART-DOCTYPE-00600",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00372",
-        "target": "ART-DOCTYPE-00597",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00375",
-        "target": "ART-DOCTYPE-00561",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00375",
+        "source": "ART-API-00720",
         "target": "ART-DOCTYPE-00601",
         "relation": "USES"
       },
       {
-        "source": "ART-API-00375",
+        "source": "ART-API-00720",
         "target": "ART-DOCTYPE-00547",
         "relation": "USES"
       },
       {
-        "source": "ART-API-00375",
-        "target": "ART-DOCTYPE-00566",
+        "source": "ART-API-00720",
+        "target": "ART-DOCTYPE-00846",
         "relation": "USES"
       },
       {
-        "source": "ART-API-00375",
-        "target": "ART-DOCTYPE-00569",
+        "source": "ART-API-00720",
+        "target": "ART-DOCTYPE-00847",
         "relation": "USES"
       },
       {
-        "source": "ART-API-00376",
-        "target": "ART-DOCTYPE-00561",
+        "source": "ART-API-00720",
+        "target": "ART-DOCTYPE-00848",
         "relation": "USES"
       },
       {
-        "source": "ART-API-00376",
-        "target": "ART-DOCTYPE-00541",
+        "source": "ART-API-00720",
+        "target": "ART-DOCTYPE-00849",
         "relation": "USES"
       },
       {
-        "source": "ART-API-00376",
-        "target": "ART-DOCTYPE-00566",
+        "source": "ART-API-00720",
+        "target": "ART-DOCTYPE-00580",
         "relation": "USES"
       },
       {
-        "source": "ART-API-00377",
-        "target": "ART-DOCTYPE-00541",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00378",
-        "target": "ART-DOCTYPE-00540",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00380",
-        "target": "ART-DOCTYPE-00540",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00382",
-        "target": "ART-DOCTYPE-00561",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00382",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00382",
-        "target": "ART-DOCTYPE-00063",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00382",
-        "target": "ART-DOCTYPE-00546",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00383",
-        "target": "ART-DOCTYPE-00546",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00384",
-        "target": "ART-DOCTYPE-00546",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00385",
-        "target": "ART-DOCTYPE-00546",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00386",
-        "target": "ART-DOCTYPE-00546",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00391",
-        "target": "ART-DOCTYPE-00540",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00400",
-        "target": "ART-DOCTYPE-00555",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00401",
-        "target": "ART-DOCTYPE-00555",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00403",
-        "target": "ART-DOCTYPE-00549",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00404",
-        "target": "ART-DOCTYPE-00549",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00405",
-        "target": "ART-DOCTYPE-00549",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00406",
-        "target": "ART-DOCTYPE-00549",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00406",
-        "target": "ART-DOCTYPE-00540",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00407",
-        "target": "ART-DOCTYPE-00552",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00408",
-        "target": "ART-DOCTYPE-00552",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00409",
-        "target": "ART-DOCTYPE-00552",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00410",
-        "target": "ART-DOCTYPE-00540",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00410",
-        "target": "ART-DOCTYPE-00552",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00426",
-        "target": "ART-DOCTYPE-00019",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00426",
-        "target": "ART-DOCTYPE-00042",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00426",
-        "target": "ART-DOCTYPE-00078",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00426",
-        "target": "ART-DOCTYPE-00079",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00427",
-        "target": "ART-DOCTYPE-00021",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00427",
-        "target": "ART-DOCTYPE-00071",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00428",
-        "target": "ART-DOCTYPE-00021",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00428",
-        "target": "ART-DOCTYPE-00071",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00429",
-        "target": "ART-DOCTYPE-00021",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00429",
-        "target": "ART-DOCTYPE-00071",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00430",
-        "target": "ART-DOCTYPE-00021",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00430",
-        "target": "ART-DOCTYPE-00071",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00430",
-        "target": "ART-DOCTYPE-00537",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00431",
-        "target": "ART-DOCTYPE-00021",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00431",
-        "target": "ART-DOCTYPE-00071",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00431",
-        "target": "ART-DOCTYPE-00537",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00432",
-        "target": "ART-DOCTYPE-00021",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00432",
-        "target": "ART-DOCTYPE-00071",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00432",
-        "target": "ART-DOCTYPE-00537",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00615",
-        "target": "ART-DOCTYPE-00613",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00436",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00443",
-        "target": "ART-DOCTYPE-00602",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00444",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00448",
+        "source": "ART-API-00721",
         "target": "ART-DOCTYPE-00063",
         "relation": "USES"
       },
@@ -5639,398 +4469,18 @@
         "relation": "USES"
       },
       {
-        "source": "ART-API-00449",
-        "target": "ART-DOCTYPE-00063",
+        "source": "ART-API-00751",
+        "target": "ART-DOCTYPE-00549",
         "relation": "USES"
       },
       {
-        "source": "ART-API-00451",
-        "target": "ART-DOCTYPE-00063",
+        "source": "ART-API-00751",
+        "target": "ART-DOCTYPE-00552",
         "relation": "USES"
       },
       {
-        "source": "ART-API-00451",
-        "target": "ART-DOCTYPE-00087",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00454",
-        "target": "ART-DOCTYPE-00597",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00459",
-        "target": "ART-DOCTYPE-00603",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00460",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00460",
-        "target": "ART-DOCTYPE-00540",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00461",
-        "target": "ART-DOCTYPE-00540",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00461",
-        "target": "ART-DOCTYPE-00603",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00462",
-        "target": "ART-DOCTYPE-00603",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00464",
-        "target": "ART-DOCTYPE-00554",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00465",
-        "target": "ART-DOCTYPE-00554",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00466",
-        "target": "ART-DOCTYPE-00090",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00466",
-        "target": "ART-DOCTYPE-00092",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00467",
-        "target": "ART-DOCTYPE-00090",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00467",
-        "target": "ART-DOCTYPE-00092",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00468",
-        "target": "ART-DOCTYPE-00090",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00469",
-        "target": "ART-DOCTYPE-00090",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00470",
-        "target": "ART-DOCTYPE-00090",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00471",
-        "target": "ART-DOCTYPE-00090",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00472",
-        "target": "ART-DOCTYPE-00090",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00473",
-        "target": "ART-DOCTYPE-00090",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00474",
-        "target": "ART-DOCTYPE-00069",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00476",
-        "target": "ART-DOCTYPE-00604",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00478",
-        "target": "ART-DOCTYPE-00092",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00479",
-        "target": "ART-DOCTYPE-00092",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00480",
-        "target": "ART-DOCTYPE-00092",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00644",
-        "target": "ART-DOCTYPE-00657",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00645",
-        "target": "ART-DOCTYPE-00657",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00646",
-        "target": "ART-DOCTYPE-00658",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00482",
-        "target": "ART-DOCTYPE-00586",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00485",
-        "target": "ART-DOCTYPE-00097",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00487",
-        "target": "ART-DOCTYPE-00097",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00489",
-        "target": "ART-DOCTYPE-00031",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00490",
-        "target": "ART-DOCTYPE-00031",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00491",
-        "target": "ART-DOCTYPE-00054",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00492",
-        "target": "ART-DOCTYPE-00055",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00498",
-        "target": "ART-DOCTYPE-00547",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00498",
-        "target": "ART-DOCTYPE-00541",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00498",
-        "target": "ART-DOCTYPE-00540",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00498",
-        "target": "ART-DOCTYPE-00575",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00498",
-        "target": "ART-DOCTYPE-00603",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00498",
-        "target": "ART-DOCTYPE-00022",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00498",
-        "target": "ART-DOCTYPE-00031",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00498",
-        "target": "ART-DOCTYPE-00546",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00499",
-        "target": "ART-DOCTYPE-00022",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00499",
-        "target": "ART-DOCTYPE-00031",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00499",
-        "target": "ART-DOCTYPE-00054",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00499",
-        "target": "ART-DOCTYPE-00055",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00500",
-        "target": "ART-DOCTYPE-00541",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00500",
-        "target": "ART-DOCTYPE-00035",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00500",
-        "target": "ART-DOCTYPE-00038",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00500",
-        "target": "ART-DOCTYPE-00042",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00501",
-        "target": "ART-DOCTYPE-00036",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00504",
-        "target": "ART-DOCTYPE-00095",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00505",
-        "target": "ART-DOCTYPE-00041",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00505",
-        "target": "ART-DOCTYPE-00042",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00653",
-        "target": "ART-DOCTYPE-00569",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00653",
-        "target": "ART-DOCTYPE-00030",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00506",
-        "target": "ART-DOCTYPE-00042",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00507",
-        "target": "ART-DOCTYPE-00042",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00508",
-        "target": "ART-DOCTYPE-00046",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00510",
-        "target": "ART-DOCTYPE-00046",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00654",
-        "target": "ART-DOCTYPE-00587",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00512",
-        "target": "ART-DOCTYPE-00605",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00512",
-        "target": "ART-DOCTYPE-00029",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00513",
-        "target": "ART-DOCTYPE-00605",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00513",
-        "target": "ART-DOCTYPE-00083",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00514",
-        "target": "ART-DOCTYPE-00605",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00514",
-        "target": "ART-DOCTYPE-00083",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00515",
-        "target": "ART-DOCTYPE-00083",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00515",
-        "target": "ART-DOCTYPE-00084",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00662",
-        "target": "ART-DOCTYPE-00551",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00666",
-        "target": "ART-DOCTYPE-00602",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00666",
-        "target": "ART-DOCTYPE-00668",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00666",
-        "target": "ART-DOCTYPE-00661",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00666",
-        "target": "ART-DOCTYPE-00546",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00516",
-        "target": "ART-DOCTYPE-00606",
-        "relation": "USES"
-      },
-      {
-        "source": "ART-API-00516",
-        "target": "ART-DOCTYPE-00540",
+        "source": "ART-API-00835",
+        "target": "ART-DOCTYPE-00009",
         "relation": "USES"
       },
       {

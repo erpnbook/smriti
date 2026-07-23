@@ -21,7 +21,7 @@ services:
     volumes:
       - sites:/home/frappe/frappe-bench/sites
       - logs:/home/frappe/frappe-bench/logs
-      - ./apps/smriti_retail_os:/home/frappe/frappe-bench/apps/smriti_retail_os
+      - .:/home/frappe/frappe-bench/apps/smriti_retail_os
       - ./apps/india_compliance:/home/frappe/frappe-bench/apps/india_compliance
       - ./backups:/home/frappe/frappe-bench/backups
       - pip-cache:/home/frappe/.cache/pip
@@ -88,7 +88,7 @@ services:
     volumes:
       - sites:/home/frappe/frappe-bench/sites
       - logs:/home/frappe/frappe-bench/logs
-      - ./apps/smriti_retail_os:/home/frappe/frappe-bench/apps/smriti_retail_os
+      - .:/home/frappe/frappe-bench/apps/smriti_retail_os
       - ./apps/india_compliance:/home/frappe/frappe-bench/apps/india_compliance
       - pip-cache:/home/frappe/.cache/pip
 
@@ -108,7 +108,7 @@ services:
     volumes:
       - sites:/home/frappe/frappe-bench/sites
       - logs:/home/frappe/frappe-bench/logs
-      - ./apps/smriti_retail_os:/home/frappe/frappe-bench/apps/smriti_retail_os
+      - .:/home/frappe/frappe-bench/apps/smriti_retail_os
       - ./apps/india_compliance:/home/frappe/frappe-bench/apps/india_compliance
       - pip-cache:/home/frappe/.cache/pip
       - ./company:/home/frappe/frappe-bench/company
@@ -191,9 +191,8 @@ services:
     volumes:
       - sites:/home/frappe/frappe-bench/sites
       - logs:/home/frappe/frappe-bench/logs
-      - ./apps/smriti_retail_os:/home/frappe/frappe-bench/apps/smriti_retail_os
+      - .:/home/frappe/frappe-bench/apps/smriti_retail_os
       - ./apps/india_compliance:/home/frappe/frappe-bench/apps/india_compliance
-      - ./frappe.conf.template:/templates/nginx/frappe.conf.template
     ports:
       - "${HTTP_PUBLISH_PORT:-8765}:8080"
 
@@ -220,7 +219,7 @@ services:
     volumes:
       - sites:/home/frappe/frappe-bench/sites
       - logs:/home/frappe/frappe-bench/logs
-      - ./apps/smriti_retail_os:/home/frappe/frappe-bench/apps/smriti_retail_os
+      - .:/home/frappe/frappe-bench/apps/smriti_retail_os
       - ./apps/india_compliance:/home/frappe/frappe-bench/apps/india_compliance
       - ./backups:/home/frappe/frappe-bench/backups
       - pip-cache:/home/frappe/.cache/pip
@@ -249,7 +248,7 @@ services:
     volumes:
       - sites:/home/frappe/frappe-bench/sites
       - logs:/home/frappe/frappe-bench/logs
-      - ./apps/smriti_retail_os:/home/frappe/frappe-bench/apps/smriti_retail_os
+      - .:/home/frappe/frappe-bench/apps/smriti_retail_os
       - ./apps/india_compliance:/home/frappe/frappe-bench/apps/india_compliance
       - ./backups:/home/frappe/frappe-bench/backups
       - pip-cache:/home/frappe/.cache/pip
@@ -296,7 +295,7 @@ services:
     volumes:
       - sites:/home/frappe/frappe-bench/sites
       - logs:/home/frappe/frappe-bench/logs
-      - ./apps/smriti_retail_os:/home/frappe/frappe-bench/apps/smriti_retail_os
+      - .:/home/frappe/frappe-bench/apps/smriti_retail_os
       - ./apps/india_compliance:/home/frappe/frappe-bench/apps/india_compliance
       - ./backups:/home/frappe/frappe-bench/backups
       - pip-cache:/home/frappe/.cache/pip

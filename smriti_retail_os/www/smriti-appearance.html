@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    {% include "smriti_retail_os/templates/includes/smriti_token_loader.html" %}
+    <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css?v=2.2.0">
+    <style>
+        .appearance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: var(--smriti-spacing-lg, 16px);
+            margin-top: 16px;
+        }
+
+        .theme-card {
+            background: var(--smriti-color-bg-primary);
+            border: 2px solid var(--smriti-color-border-default);
+            border-radius: var(--smriti-radius-md, 10px);
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .theme-card:hover {
+            border-color: var(--smriti-color-brand-primary);
+            transform: translateY(-2px);
+            box-shadow: var(--smriti-shadow-md);
+        }
+
+        .theme-card.active {
+            border-color: var(--smriti-color-brand-primary);
+            background: var(--smriti-color-bg-secondary);
+            box-shadow: 0 0 0 2px var(--smriti-color-brand-primary);
+        }
+
+        .theme-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .theme-title {
+            font-family: var(--smriti-font-family-display);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--smriti-color-text-primary);
+        }
+
+        .theme-badge {
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .theme-badge.dark {
+            background: #1e1e2d;
+            color: #a78bfa;
+            border: 1px solid #3b3b54;
+        }
+
+        .theme-badge.light {
+            background: #f1f5f9;
+            color: #0f172a;
+            border: 1px solid #cbd5e1;
+        }
+
+        .theme-desc {
+            font-size: 0.85rem;
+            color: var(--smriti-color-text-muted);
+            line-height: 1.4;
+            margin-bottom: 16px;
+        }
+
+        .swatch-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .color-swatch {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.15s ease;
+        }
+
+        .color-swatch:hover {
+            transform: scale(1.15);
+        }
+
+        .color-swatch.active {
+            border-color: #ffffff;
+            box-shadow: 0 0 0 2px var(--smriti-color-brand-primary);
+        }
+
+        .setting-section {
+            background: var(--smriti-color-bg-primary);
+            border: 1px solid var(--smriti-color-border-default);
+            border-radius: var(--smriti-radius-md, 10px);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .section-heading {
+            font-family: var(--smriti-font-family-display);
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--smriti-color-text-primary);
+            margin-bottom: 6px;
+        }
+
+        .section-subtext {
+            font-size: 0.88rem;
+            color: var(--smriti-color-text-muted);
+            margin-bottom: 20px;
+        }
+
+        .density-pills {
+            display: flex;
+            gap: 12px;
+        }
+
+        .density-pill {
+            flex: 1;
+            padding: 14px 18px;
+            border: 1px solid var(--smriti-color-border-default);
+            border-radius: var(--smriti-radius-md, 8px);
+            background: var(--smriti-color-bg-secondary);
+            color: var(--smriti-color-text-primary);
+            cursor: pointer;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .density-pill:hover {
+            border-color: var(--smriti-color-brand-primary);
+        }
+
+        .density-pill.active {
+            background: var(--smriti-color-brand-primary);
+            color: #ffffff;
+            border-color: var(--smriti-color-brand-primary);
+        }
+
+        .preview-box {
+            background: var(--smriti-color-bg-page);
+            border: 1px dashed var(--smriti-color-border-strong);
+            border-radius: var(--smriti-radius-md, 8px);
+            padding: 20px;
+            margin-top: 16px;
+        }
+
+        .smriti-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: var(--smriti-spacing-padding-y) var(--smriti-spacing-padding-x);
+            font-size: var(--smriti-font-size-base);
+            font-weight: 600;
+            border-radius: var(--smriti-radius-sm, 6px);
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+
+        .smriti-btn-primary {
+            background: var(--smriti-color-brand-primary);
+            color: #ffffff;
+        }
+        .smriti-btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        .smriti-btn-secondary {
+            background: var(--smriti-color-bg-secondary);
+            color: var(--smriti-color-text-primary);
+            border: 1px solid var(--smriti-color-border-default);
+        }
+
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--smriti-color-border-default);
+        }
+        .toggle-switch:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="smriti-shell">
+        <aside id="smriti-sidebar-container"></aside>
+        
+        <main class="smriti-main">
+            <div class="smriti-content">
+                
+                <!-- Page Header -->
+                <div style="margin-bottom: 28px;">
+                    <h1 style="font-family: var(--smriti-font-family-display); font-size: 1.8rem; font-weight: 800; color: var(--smriti-color-text-primary);">
+                        🎨 Appearance & Theme Management
+                    </h1>
+                    <p style="font-size: 0.95rem; color: var(--smriti-color-text-muted); margin-top: 4px;">
+                        Customize global themes, layout density, brand accents, and accessibility standards for SMRITI Retail OS.
+                    </p>
+                </div>
+
+                <!-- Theme Packages Registry -->
+                <div class="setting-section">
+                    <div class="section-heading">Installed Theme Packages</div>
+                    <div class="section-subtext">Select an enterprise theme package to update `:root` custom properties instantly.</div>
+                    
+                    <div class="appearance-grid" id="theme-packages-grid">
+                        {% for t in installed_themes %}
+                        <div class="theme-card {% if t.default %}active{% endif %}" data-theme-id="{{ t.id }}" onclick="selectTheme('{{ t.id }}')">
+                            <div>
+                                <div class="theme-header">
+                                    <div class="theme-title">{{ t.name }}</div>
+                                    <span class="theme-badge {% if t.dark %}dark{% else %}light{% endif %}">
+                                        {% if t.dark %}Dark Mode{% else %}Light Mode{% endif %}
+                                    </span>
+                                </div>
+                                <div class="theme-desc">{{ t.description }}</div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--smriti-color-text-subtle);">
+                                <span>v{{ t.version }}</span>
+                                <span style="font-weight: 600; color: var(--smriti-color-brand-primary);">
+                                    {% if t.default %}Default{% else %}Installed{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Layout Density Selection -->
+                <div class="setting-section">
+                    <div class="section-heading">Layout Density & Touch Metrics</div>
+                    <div class="section-subtext">Choose row padding and table spacing for POS cashiers vs inventory managers.</div>
+                    
+                    <div class="density-pills">
+                        <div class="density-pill" data-density="compact" onclick="selectDensity('compact')">
+                            ⚡ Compact (High Density)
+                        </div>
+                        <div class="density-pill active" data-density="comfortable" onclick="selectDensity('comfortable')">
+                            ⚖️ Comfortable (Balanced)
+                        </div>
+                        <div class="density-pill" data-density="spacious" onclick="selectDensity('spacious')">
+                            🖥️ Spacious (Executive)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Brand Accent Customization -->
+                <div class="setting-section">
+                    <div class="section-heading">Brand Primary Accent</div>
+                    <div class="section-subtext">Customize primary action buttons, highlight rings, and focus borders.</div>
+                    
+                    <div class="swatch-group" id="accent-swatches">
+                        <div class="color-swatch active" style="background: #2563EB;" data-color="#2563EB" onclick="selectAccent('#2563EB')"></div>
+                        <div class="color-swatch" style="background: #6941c6;" data-color="#6941c6" onclick="selectAccent('#6941c6')"></div>
+                        <div class="color-swatch" style="background: #7c3aed;" data-color="#7c3aed" onclick="selectAccent('#7c3aed')"></div>
+                        <div class="color-swatch" style="background: #10b981;" data-color="#10b981" onclick="selectAccent('#10b981')"></div>
+                        <div class="color-swatch" style="background: #14B8A6;" data-color="#14B8A6" onclick="selectAccent('#14B8A6')"></div>
+                        <div class="color-swatch" style="background: #18181b;" data-color="#18181b" onclick="selectAccent('#18181b')"></div>
+                    </div>
+                </div>
+
+                <!-- Live Component Preview -->
+                <div class="setting-section">
+                    <div class="section-heading">Live Real-time Preview</div>
+                    <div class="section-subtext">Verify active theme tokens, button highlights, and status badges in real time.</div>
+                    
+                    <div class="preview-box">
+                        <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                            <button class="smriti-btn smriti-btn-primary">Primary Action</button>
+                            <button class="smriti-btn smriti-btn-secondary">Secondary Action</button>
+                            <span style="background: var(--smriti-color-status-success-bg, rgba(16,185,129,0.12)); color: var(--smriti-color-status-success, #10b981); padding: 6px 12px; border-radius: 999px; font-size: 0.8rem; font-weight: 600;">
+                                Healthy System
+                            </span>
+                        </div>
+                        
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid var(--smriti-color-border-strong); text-align: left; color: var(--smriti-color-text-muted);">
+                                    <th style="padding: 8px;">Theme Token</th>
+                                    <th style="padding: 8px;">Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="border-bottom: 1px solid var(--smriti-color-border-default);">
+                                    <td style="padding: 8px; color: var(--smriti-color-text-primary);"><code>--smriti-color-bg-page</code></td>
+                                    <td style="padding: 8px; color: var(--smriti-color-text-muted);" id="prev-bg-page">-</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--smriti-color-border-default);">
+                                    <td style="padding: 8px; color: var(--smriti-color-text-primary);"><code>--smriti-color-brand-primary</code></td>
+                                    <td style="padding: 8px; color: var(--smriti-color-brand-primary);" id="prev-brand-primary">-</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Save Action Footer -->
+                <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
+                    <button class="smriti-btn smriti-btn-primary" style="padding: 12px 28px; font-size: 1rem;" onclick="saveSettings()">
+                        💾 Save Appearance Preferences
+                    </button>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="/assets/smriti_retail_os/js/smriti_nav_config.js?v=2.2.0"></script>
+    <script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js?v=2.2.0"></script>
+
+    <script>
+        let currentSettings = {
+            theme: SMRITI.getCurrentTheme(),
+            density: localStorage.getItem("smriti-ui-density") || "comfortable",
+            accentColor: localStorage.getItem("smriti-accent-color") || "#2563EB"
+        };
+
+        document.addEventListener("DOMContentLoaded", function() {
+            if (window.SMRITI_SIDEBAR_STANDALONE) {
+                SMRITI_SIDEBAR_STANDALONE.init({
+                    containerId: "smriti-sidebar-container",
+                    activeItem: "appearance_settings"
+                });
+            }
+            syncUIState();
+        });
+
+        function selectTheme(themeId) {
+            currentSettings.theme = themeId;
+            document.querySelectorAll(".theme-card").forEach(c => {
+                c.classList.toggle("active", c.getAttribute("data-theme-id") === themeId);
+            });
+            SMRITI.applyAppearanceSettings(currentSettings);
+            updatePreviewTable();
+        }
+
+        function selectDensity(density) {
+            currentSettings.density = density;
+            document.querySelectorAll(".density-pill").forEach(p => {
+                p.classList.toggle("active", p.getAttribute("data-density") === density);
+            });
+            SMRITI.applyAppearanceSettings(currentSettings);
+            updatePreviewTable();
+        }
+
+        function selectAccent(color) {
+            currentSettings.accentColor = color;
+            document.querySelectorAll(".color-swatch").forEach(s => {
+                s.classList.toggle("active", s.getAttribute("data-color") === color);
+            });
+            SMRITI.applyAppearanceSettings(currentSettings);
+            updatePreviewTable();
+        }
+
+        function syncUIState() {
+            selectTheme(currentSettings.theme);
+            selectDensity(currentSettings.density);
+            selectAccent(currentSettings.accentColor);
+        }
+
+        function updatePreviewTable() {
+            const computed = getComputedStyle(document.documentElement);
+            document.getElementById("prev-bg-page").innerText = computed.getPropertyValue("--smriti-color-bg-page").trim();
+            document.getElementById("prev-brand-primary").innerText = computed.getPropertyValue("--smriti-color-brand-primary").trim();
+        }
+
+        function saveSettings() {
+            SMRITI.applyAppearanceSettings(currentSettings);
+            if (window.smriti && window.smriti.notify) {
+                smriti.notify.success("Appearance settings saved successfully!");
+            } else {
+                alert("Appearance settings saved successfully!");
+            }
+        }
+    </script>
+</body>
+</html>

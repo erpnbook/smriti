@@ -221,6 +221,8 @@ class Phase0Compiler(object):
         """Discovers and parses custom doctype json schemas in the workspace."""
         app_dir = os.path.join(self.repo_path, "apps", "smriti_retail_os")
         if not os.path.exists(app_dir):
+            app_dir = os.path.join(self.repo_path, "smriti_retail_os")
+        if not os.path.exists(app_dir):
             return
 
         for root, dirs, files in os.walk(app_dir):
@@ -279,6 +281,8 @@ class Phase0Compiler(object):
     def parse_custom_fields(self):
         """Scans setup.py for custom field injections on standard DocTypes using AST."""
         setup_py = os.path.join(self.repo_path, "apps", "smriti_retail_os", "smriti_retail_os", "setup.py")
+        if not os.path.exists(setup_py):
+            setup_py = os.path.join(self.repo_path, "smriti_retail_os", "setup.py")
         if not os.path.exists(setup_py):
             return
 
@@ -386,7 +390,10 @@ class Phase0Compiler(object):
             SDCLogger.error(f"Failed to parse custom fields AST in setup.py: {str(e)}")
 
     def get_api_method_name(self, filepath, func_name):
-        rel_to_app = os.path.relpath(filepath, os.path.join(self.repo_path, "apps", "smriti_retail_os"))
+        app_base = os.path.join(self.repo_path, "apps", "smriti_retail_os")
+        if not os.path.exists(app_base):
+            app_base = self.repo_path
+        rel_to_app = os.path.relpath(filepath, app_base)
         rel_to_app = rel_to_app.replace(os.sep, "/")
         module_path = rel_to_app[:-3].replace("/", ".")
         return f"{module_path}.{func_name}"
@@ -394,6 +401,8 @@ class Phase0Compiler(object):
     def parse_apis(self):
         """Recursively parses python controllers using AST to find all whitelisted APIs & DB dependencies."""
         app_dir = os.path.join(self.repo_path, "apps", "smriti_retail_os")
+        if not os.path.exists(app_dir):
+            app_dir = os.path.join(self.repo_path, "smriti_retail_os")
         if not os.path.exists(app_dir):
             return
 
@@ -403,6 +412,8 @@ class Phase0Compiler(object):
                 dirs.remove("node_modules")
             if ".git" in dirs:
                 dirs.remove(".git")
+            if "sdc" in dirs:
+                dirs.remove("sdc")
             if "tests" in dirs:
                 dirs.remove("tests")
 
@@ -508,6 +519,8 @@ class Phase0Compiler(object):
         seed_py = os.path.join(
             self.repo_path, "apps", "smriti_retail_os", "smriti_retail_os", "patches", "seed_default_terms.py"
         )
+        if not os.path.exists(seed_py):
+            seed_py = os.path.join(self.repo_path, "smriti_retail_os", "patches", "seed_default_terms.py")
         if not os.path.exists(seed_py):
             return
 
@@ -1035,7 +1048,7 @@ class Phase0Compiler(object):
                 "related_assets": term.get("related_terms", []),
                 "evidence": {
                     "type": "seeder",
-                    "path": "apps/smriti_retail_os/smriti_retail_os/patches/seed_default_terms.py",
+                    "path": "apps/smriti_retail_os/smriti_retail_os/patches/seed_default_terms.py" if os.path.exists(os.path.join(self.repo_path, "apps", "smriti_retail_os")) else "smriti_retail_os/patches/seed_default_terms.py",
                     "checksum": term.get("checksum", "")
                 },
                 "owner": term.get("owner", "AITDL")
@@ -1155,6 +1168,8 @@ class Phase0Compiler(object):
         seed_py = os.path.join(
             self.repo_path, "apps", "smriti_retail_os", "smriti_retail_os", "patches", "seed_default_formulas.py"
         )
+        if not os.path.exists(seed_py):
+            seed_py = os.path.join(self.repo_path, "smriti_retail_os", "patches", "seed_default_formulas.py")
         if not os.path.exists(seed_py):
             return []
 
@@ -1433,12 +1448,13 @@ class Phase0Compiler(object):
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)
 
+        app_prefix = "apps/smriti_retail_os" if os.path.exists(os.path.join(self.repo_path, "apps", "smriti_retail_os")) else "smriti_retail_os"
         inventories = {
-            "file_inventory": (self.file_list, "ART-FILE-INV-00001", ["apps/smriti_retail_os"]),
-            "doctype_inventory": (self.doctype_list, "ART-DOCTYPE-INV-00001", ["apps/smriti_retail_os/"]),
-            "field_inventory": (self.field_list, "ART-FIELD-INV-00001", ["apps/smriti_retail_os/smriti_retail_os/setup.py"]),
-            "api_inventory": (self.api_list, "ART-API-INV-00001", ["apps/smriti_retail_os/"]),
-            "business_dictionary": (self.business_dictionary_list, "ART-GLOSSARY-INV-00001", ["apps/smriti_retail_os/smriti_retail_os/patches/seed_default_terms.py"]),
+            "file_inventory": (self.file_list, "ART-FILE-INV-00001", [app_prefix]),
+            "doctype_inventory": (self.doctype_list, "ART-DOCTYPE-INV-00001", [f"{app_prefix}/"]),
+            "field_inventory": (self.field_list, "ART-FIELD-INV-00001", [f"{app_prefix}/smriti_retail_os/setup.py"]),
+            "api_inventory": (self.api_list, "ART-API-INV-00001", [f"{app_prefix}/"]),
+            "business_dictionary": (self.business_dictionary_list, "ART-GLOSSARY-INV-00001", [f"{app_prefix}/smriti_retail_os/patches/seed_default_terms.py"]),
             "screen_inventory": (self.screen_list, "ART-SCREEN-INV-00001", ["sdc/rules/screen_narratives.json"]),
             "collections_inventory": (self.collections_list, "ART-COLLECTIONS-INV-00001", ["sdc/rules/screen_narratives.json"]),
             "search_index": (self.search_index_map, "ART-SEARCH-INDEX-00001", [])
@@ -1507,7 +1523,7 @@ class Phase0Compiler(object):
             "repository_commit": self.commit,
             "provenance": self.get_provenance_meta("ART-MANIFEST-00001", [], ["compiler_core"]),
             "data": {
-                "scan_scope": self.config.get("scan_scope", ["apps/smriti_retail_os"]),
+                "scan_scope": self.config.get("scan_scope", ["apps/smriti_retail_os"] if os.path.exists(os.path.join(self.repo_path, "apps", "smriti_retail_os")) else ["smriti_retail_os"]),
                 "excluded": self.config.get("excluded", ["node_modules", ".git", "__pycache__"]),
                 "generated_artifacts": [f"docs/discovery/{k}.json" for k in list(inventories.keys()) + ["dependency_graph"]]
             }

@@ -154,7 +154,7 @@ def raise_not_found(model_name: str, identifier: str):
     )
 
 
-def log_error(title: str, exc: Exception = None, context: dict = None):
+def log_error(title: str, exc: Exception = None, context: dict = None, message: str = None):
     """
     Log an error to Frappe's error log without raising (for non-fatal errors).
 
@@ -162,6 +162,7 @@ def log_error(title: str, exc: Exception = None, context: dict = None):
         title (str): Error title
         exc (Exception): Optional exception to log
         context (dict): Optional additional context
+        message (str): Optional custom error message
 
     Example:
         try:
@@ -172,9 +173,16 @@ def log_error(title: str, exc: Exception = None, context: dict = None):
     """
     import frappe
     import traceback
-    message = str(exc) if exc else title
-    if context:
-        message += f"\n\nContext: {context}"
+    err_msg = message or ""
     if exc:
-        message += f"\n\nTraceback:\n{traceback.format_exc()}"
-    smriti.errors.log_error(message, title=title)
+        if err_msg:
+            err_msg += f"\n\nException: {exc}"
+        else:
+            err_msg = str(exc)
+    if not err_msg:
+        err_msg = title
+    if context:
+        err_msg += f"\n\nContext: {context}"
+    if exc:
+        err_msg += f"\n\nTraceback:\n{traceback.format_exc()}"
+    frappe.log_error(title=title, message=err_msg)

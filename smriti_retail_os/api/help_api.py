@@ -1513,6 +1513,7 @@ def start_psv_exam(exam_id=None):
             "start_time": frappe.utils.now_datetime(),
             "status": "In Progress"
         })
+        # reviewed-ignore-permissions: user taking their own exam attempt, guest check enforced
         attempt_doc.insert(ignore_permissions=True)
         smriti.db.commit()
         

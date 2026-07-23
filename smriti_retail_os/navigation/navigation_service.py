@@ -38,21 +38,21 @@ CANONICAL_NAV = {
             "items": [
                 { "id": "cge_dashboard",                    "label": "Dashboard",                "route": "/smriti-cge",  "standalone_route": "/smriti-cge",  "status": "active" },
                 { "id": "cge_setup_hdr",                    "label": "Setup",                    "type": "header" },
-                { "id": "cge_benefit_instruments",          "label": "Benefit Instruments",      "route": "/smriti-cge#benefit-instruments",      "standalone_route": "/smriti-cge#benefit-instruments",      "status": "coming_soon", "badge": "SOON" },
-                { "id": "cge_membership_tiers",             "label": "Membership Tiers",         "route": "/smriti-cge#membership-tiers",         "standalone_route": "/smriti-cge#membership-tiers",         "status": "coming_soon", "badge": "SOON" },
-                { "id": "cge_loyalty_programs",             "label": "Loyalty Programs",         "route": "/smriti-cge#loyalty-programs",         "standalone_route": "/smriti-cge#loyalty-programs",         "status": "coming_soon", "badge": "SOON" },
+                { "id": "cge_benefit_instruments",          "label": "Benefit Instruments",      "route": "/cge-benefit-instruments",          "standalone_route": "/cge-benefit-instruments",          "status": "active" },
+                { "id": "cge_membership_tiers",             "label": "Membership Tiers",         "route": "/cge-membership-tiers",             "standalone_route": "/cge-membership-tiers",             "status": "active" },
+                { "id": "cge_loyalty_programs",             "label": "Loyalty Programs",         "route": "/cge-loyalty-programs",             "standalone_route": "/cge-loyalty-programs",             "status": "active" },
                 { "id": "cge_marketing_hdr",                "label": "Marketing",                "type": "header" },
-                { "id": "cge_campaigns",                    "label": "Campaigns",                "route": "/smriti-cge#campaigns",                "standalone_route": "/smriti-cge#campaigns",                "status": "coming_soon", "badge": "SOON" },
-                { "id": "cge_promotion_rules",              "label": "Promotion Rules",          "route": "/smriti-cge#promotion-rules",          "standalone_route": "/smriti-cge#promotion-rules",          "status": "coming_soon", "badge": "SOON" },
-                { "id": "cge_coupon_rules",                 "label": "Coupon Rules",             "route": "/smriti-cge#coupon-rules",             "standalone_route": "/smriti-cge#coupon-rules",             "status": "coming_soon", "badge": "SOON" },
-                { "id": "cge_loyalty_rules",                "label": "Loyalty Rules",            "route": "/smriti-cge#loyalty-rules",            "standalone_route": "/smriti-cge#loyalty-rules",            "status": "coming_soon", "badge": "SOON" },
+                { "id": "cge_campaigns",                    "label": "Campaigns",                "route": "/cge-campaigns",                    "standalone_route": "/cge-campaigns",                    "status": "active" },
+                { "id": "cge_promotion_rules",              "label": "Promotion Rules",          "route": "/cge-promotion-rules",              "standalone_route": "/cge-promotion-rules",              "status": "active" },
+                { "id": "cge_coupon_rules",                 "label": "Coupon Rules",             "route": "/cge-coupon-rules",                 "standalone_route": "/cge-coupon-rules",                 "status": "active" },
+                { "id": "cge_loyalty_rules",                "label": "Loyalty Rules",            "route": "/cge-loyalty-rules",                "standalone_route": "/cge-loyalty-rules",                "status": "active" },
                 { "id": "cge_operations_hdr",               "label": "Operations",               "type": "header" },
-                { "id": "cge_benefit_wallets",              "label": "Benefit Wallets",          "route": "/smriti-cge#benefit-wallets",          "standalone_route": "/smriti-cge#benefit-wallets",          "status": "coming_soon", "badge": "SOON" },
-                { "id": "cge_customer_benefit_profiles",    "label": "Customer Benefit Profiles","route": "/smriti-cge#customer-benefit-profiles","standalone_route": "/smriti-cge#customer-benefit-profiles","status": "coming_soon", "badge": "SOON" },
+                { "id": "cge_benefit_wallets",              "label": "Benefit Wallets",          "route": "/cge-benefit-wallets",              "standalone_route": "/cge-benefit-wallets",              "status": "active" },
+                { "id": "cge_customer_benefit_profiles",    "label": "Customer Benefit Profiles","route": "/cge-customer-benefit-profiles",    "standalone_route": "/cge-customer-benefit-profiles",    "status": "active" },
                 { "id": "cge_governance_hdr",               "label": "Governance",               "type": "header" },
-                { "id": "cge_benefit_resolution_policies",  "label": "Resolution Policies",      "route": "/smriti-cge#resolution-policies",      "standalone_route": "/smriti-cge#resolution-policies",      "status": "coming_soon", "badge": "SOON" },
-                { "id": "cge_liability_snapshots",          "label": "Liability Snapshots",      "route": "/smriti-cge#liability-snapshots",      "standalone_route": "/smriti-cge#liability-snapshots",      "status": "coming_soon", "badge": "SOON" },
-                { "id": "cge_benefit_audit_logs",           "label": "Audit Logs",               "route": "/smriti-cge#audit-logs",               "standalone_route": "/smriti-cge#audit-logs",               "status": "coming_soon", "badge": "SOON" }
+                { "id": "cge_benefit_resolution_policies",  "label": "Resolution Policies",      "route": "/cge-benefit-resolution-policies",  "standalone_route": "/cge-benefit-resolution-policies",  "status": "active" },
+                { "id": "cge_liability_snapshots",          "label": "Liability Snapshots",      "route": "/cge-liability-snapshots",          "standalone_route": "/cge-liability-snapshots",          "status": "active" },
+                { "id": "cge_benefit_audit_logs",           "label": "Audit Logs",               "route": "/cge-benefit-audit-logs",           "standalone_route": "/cge-benefit-audit-logs",           "status": "active" }
             ]
         },
         # ── 3. PSV ────────────────────────────────────────────────────────────
@@ -67,8 +67,8 @@ CANONICAL_NAV = {
                 { "id": "reconciliation",       "label": "Reconciliation",       "route": "/psv_reconciliation",     "standalone_route": "/psv_reconciliation",     "status": "active" },
                 { "id": "exception_analysis",   "label": "Exception Analysis",   "route": "/psv_exception_analysis", "standalone_route": "/psv_exception_analysis", "status": "active" },
                 { "id": "psv_opening_balance",  "label": "PSV Opening Balance",  "route": "/psv-opening-balance",    "standalone_route": "/psv-opening-balance",    "status": "active" },
-                { "id": "distributor_accounts", "label": "Channel Partners",     "route": "/smriti-coming-soon",     "standalone_route": "/smriti-coming-soon",     "status": "coming_soon", "badge": "SOON" },
-                { "id": "stock_aging",          "label": "Stock Aging",          "route": "/smriti-coming-soon",     "standalone_route": "/smriti-coming-soon",     "status": "coming_soon", "badge": "SOON" }
+                { "id": "distributor_accounts", "label": "Channel Partners",     "route": "/psv-channel-partner",     "standalone_route": "/psv-channel-partner",     "status": "active" },
+                { "id": "stock_aging",          "label": "Stock Aging",          "route": "/psv-aging",               "standalone_route": "/psv-aging",               "status": "active" }
             ]
         },
         # ── 4. SALES ──────────────────────────────────────────────────────────
@@ -115,8 +115,8 @@ CANONICAL_NAV = {
                 { "id": "stock_transfer",    "label": "Stock Transfer",    "route": "/inventory?tab=transfer",     "standalone_route": "/inventory?tab=transfer",     "status": "active" },
                 { "id": "stock_adjustments", "label": "Stock Adjustments", "route": "/inventory?tab=adjustments",  "standalone_route": "/inventory?tab=adjustments",  "status": "active" },
                 { "id": "stock_audit",       "label": "Stock Audit",       "route": "/stock-audit",                "standalone_route": "/stock-audit",                "status": "active" },
-                { "id": "opening_stock",     "label": "Opening Stock",     "route": "/smriti-coming-soon",         "standalone_route": "/smriti-coming-soon",         "status": "coming_soon", "badge": "SOON" },
-                { "id": "stock_operations",  "label": "Stock Operations",  "route": "/smriti-coming-soon",         "standalone_route": "/smriti-coming-soon",         "status": "coming_soon", "badge": "SOON" }
+                { "id": "opening_stock",     "label": "Opening Stock",     "route": "/opening-stock",         "standalone_route": "/opening-stock",         "status": "active" },
+                { "id": "stock_operations",  "label": "Stock Operations",  "route": "/inventory-ops",         "standalone_route": "/inventory-ops",         "status": "active" }
             ]
         },
         # ── 7. BARCODE STUDIO ─────────────────────────────────────────────────
@@ -140,8 +140,8 @@ CANONICAL_NAV = {
                 { "id": "tally",          "label": "Tally Integration",     "route": "/smriti-tally",     "standalone_route": "/smriti-tally",     "status": "active" },
                 { "id": "safe_cash",      "label": "Safe / Cash",           "route": "/smriti-safe",      "standalone_route": "/smriti-safe",      "status": "active" },
                 { "id": "uie_integration","label": "Integration Center",    "route": "/smriti-uie",       "standalone_route": "/smriti-uie",       "status": "active" },
-                { "id": "receipts",       "label": "Receipts",              "route": "/smriti-coming-soon","standalone_route": "/smriti-coming-soon","status": "coming_soon", "badge": "SOON" },
-                { "id": "advances",       "label": "Advances",              "route": "/smriti-coming-soon","standalone_route": "/smriti-coming-soon","status": "coming_soon", "badge": "SOON" }
+                { "id": "receipts",       "label": "Receipts",              "route": "/receipts",         "standalone_route": "/receipts",         "status": "active" },
+                { "id": "advances",       "label": "Advances",              "route": "/advances",         "standalone_route": "/advances",         "status": "active" }
             ]
         },
         # ── 9. REPORTS ────────────────────────────────────────────────────────
@@ -183,6 +183,7 @@ CANONICAL_NAV = {
                 { "id": "security_workflows","label": "Security & Workflows",     "route": "/security",                "standalone_route": "/security",                "status": "active" },
                 { "id": "audit_logs",        "label": "Audit Logs",               "route": "/smriti-security-log",     "standalone_route": "/smriti-security-log",     "status": "active" },
                 { "id": "config_portal",     "label": "Config Portal",            "route": "/configure",               "standalone_route": "/configure",               "status": "active" },
+                { "id": "appearance_settings","label": "Appearance & Themes",     "route": "/smriti-appearance",        "standalone_route": "/smriti-appearance",        "status": "active" },
                 { "id": "platform_center",   "label": "Platform Center",          "route": "/platform_center",         "standalone_route": "/platform_center",         "status": "active" },
                 { "id": "platform_admin",    "label": "Platform Admin",           "route": "/smriti-platform-admin",   "standalone_route": "/smriti-platform-admin",   "status": "active" },
                 { "id": "nav_health",        "label": "Nav Health Monitor",       "route": "/smriti-nav-health",       "standalone_route": "/smriti-nav-health",       "status": "active" },
@@ -214,9 +215,9 @@ CANONICAL_NAV = {
             "status": "active",
             "items": [
                 { "id": "pdt_dashboard",      "label": "PDT Dashboard",       "route": "/smriti-pdt",         "standalone_route": "/smriti-pdt",         "status": "active" },
-                { "id": "simulation_sandbox", "label": "Simulation Sandbox",  "route": "/smriti-coming-soon", "standalone_route": "/smriti-coming-soon", "status": "coming_soon", "progress": 60, "eta": "Q3 2026", "badge": "SOON" },
-                { "id": "demand_forecasts",   "label": "Demand Forecasts",    "status": "hidden" },
-                { "id": "cashier_performance","label": "Cashier Performance", "status": "hidden" }
+                { "id": "simulation_sandbox", "label": "Simulation Sandbox",  "route": "/smriti-simulation-sandbox", "standalone_route": "/smriti-simulation-sandbox", "status": "active" },
+                { "id": "demand_forecasts",   "label": "Demand Forecasts",    "route": "/smriti-demand-forecasts",   "standalone_route": "/smriti-demand-forecasts",   "status": "active" },
+                { "id": "cashier_performance","label": "Cashier Performance", "route": "/smriti-cashier-performance", "standalone_route": "/smriti-cashier-performance", "status": "active" }
             ]
         },
         # ── 13. COMMERCIAL ────────────────────────────────────────────────────

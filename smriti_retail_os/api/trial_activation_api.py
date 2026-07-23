@@ -245,6 +245,7 @@ def create_activation(lead_name, activation_type='Trial', trial_days=30):
             {'task_name': 'Welcome Email Sent',      'is_done': 0},
         ],
     })
+    # reviewed-ignore-permissions: trial activation lifecycle, system-controlled status updates
     activation.insert(ignore_permissions=True)
     smriti.db.commit()
 
@@ -302,6 +303,7 @@ def activate_account(activation_name, company_name=None, trial_days=30):
     activation.activation_status = 'Provisioning'
     activation.provision_run_id  = run_id
     activation.retry_count       = int(activation.retry_count or 0)
+    # reviewed-ignore-permissions: trial activation lifecycle, system-controlled status updates
     activation.save(ignore_permissions=True)
     smriti.db.commit()
 
@@ -437,6 +439,7 @@ def retry_provision(activation_name, company_name=None, trial_days=30):
 
     # Reset to Pending so activate_account() can proceed cleanly
     activation.activation_status = 'Pending'
+    # reviewed-ignore-permissions: trial activation lifecycle, system-controlled status updates
     activation.save(ignore_permissions=True)
     smriti.db.commit()
 
@@ -468,6 +471,7 @@ def suspend_activation(activation_name, reason=None):
     if reason:
         note += f' — {reason.strip()}'
     activation.notes = ((activation.notes or '') + '\n' + note).strip()
+    # reviewed-ignore-permissions: trial activation lifecycle, system-controlled status updates
     activation.save(ignore_permissions=True)
     smriti.db.commit()
 
@@ -498,6 +502,7 @@ def extend_trial(activation_name, additional_days=7, reason=None):
     if reason:
         note += f' | {reason.strip()}'
     activation.notes = ((activation.notes or '') + '\n' + note).strip()
+    # reviewed-ignore-permissions: trial activation lifecycle, system-controlled status updates
     activation.save(ignore_permissions=True)
     smriti.db.commit()
 

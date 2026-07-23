@@ -62,25 +62,56 @@
 (function (global) {
     "use strict";
 
-    global.SMRITI = global.SMRITI || {};
+    global.SMRITI = global.SMRITI || global.smriti || {};
+    global.smriti = global.SMRITI;
 
     // Standalone SMRITI execution: Mock frappe.call using native fetch
     global.frappe = global.frappe || {};
     if (typeof global.frappe.call !== 'function') {
         global.frappe.call = function(opts) {
+            opts = opts || {};
             return new Promise((resolve, reject) => {
-                var csrfCookie = (document.cookie.match(/(?:^|;\s*)csrf_token=([^;]+)/) || [])[1] ||
-                                 (document.cookie.match(/(?:^|;\s*)system_csrf_token=([^;]+)/) || [])[1];
-                var csrfToken = (opts.headers && opts.headers['X-Frappe-CSRF-Token']) || global.frappe.csrf_token || global.csrf_token || global.CSRF_TOKEN || (typeof CSRF_TOKEN !== "undefined" ? CSRF_TOKEN : "") || (csrfCookie ? decodeURIComponent(csrfCookie) : "") || "";
-                fetch("/api/method/" + opts.method, {
-                    method: 'POST',
+                var reqType = (opts.type || opts.method_type || "").toUpperCase();
+                if (!reqType) {
+                    if (typeof opts.method === "string" && (opts.method.includes(".get_") || opts.method.includes(".list_") || opts.method.startsWith("get_"))) {
+                        reqType = "GET";
+                    } else {
+                        reqType = "POST";
+                    }
+                }
+
+                var url = "/api/method/" + opts.method;
+                var headers = Object.assign({}, opts.headers || {});
+                var fetchOpts = {
                     credentials: 'include',
-                    headers: Object.assign({
-                        'Content-Type': 'application/json',
-                        'X-Frappe-CSRF-Token': csrfToken
-                    }, opts.headers || {}),
-                    body: JSON.stringify(opts.args || {})
-                })
+                    headers: headers
+                };
+
+                if (reqType === "GET") {
+                    fetchOpts.method = "GET";
+                    if (opts.args && typeof opts.args === "object" && Object.keys(opts.args).length > 0) {
+                        var params = new URLSearchParams();
+                        for (var k in opts.args) {
+                            if (opts.args[k] !== undefined && opts.args[k] !== null) {
+                                var val = typeof opts.args[k] === 'object' ? JSON.stringify(opts.args[k]) : opts.args[k];
+                                params.append(k, val);
+                            }
+                        }
+                        url += "?" + params.toString();
+                    }
+                } else {
+                    fetchOpts.method = "POST";
+                    headers['Content-Type'] = 'application/json';
+                    var csrfCookie = (document.cookie.match(/(?:^|;\s*)csrf_token=([^;]+)/) || [])[1] ||
+                                     (document.cookie.match(/(?:^|;\s*)system_csrf_token=([^;]+)/) || [])[1];
+                    var csrfToken = (opts.headers && opts.headers['X-Frappe-CSRF-Token']) || global.frappe.csrf_token || global.csrf_token || global.CSRF_TOKEN || (typeof CSRF_TOKEN !== "undefined" ? CSRF_TOKEN : "") || (csrfCookie ? decodeURIComponent(csrfCookie) : "") || "";
+                    if (csrfToken) {
+                        headers['X-Frappe-CSRF-Token'] = csrfToken;
+                    }
+                    fetchOpts.body = JSON.stringify(opts.args || {});
+                }
+
+                fetch(url, fetchOpts)
                 .then(function(res) {
                     return res.json().then(function(data) {
                         return { ok: res.ok, status: res.status, data: data };
@@ -106,16 +137,22 @@
                         if (!errObj.message) {
                             errObj.message = data.message || "Request failed with status " + result.status;
                         }
-                        if (opts.error) opts.error(errObj);
+                        if (typeof opts.error === "function") {
+                            try { opts.error(errObj); } catch(e) {}
+                        }
                         reject(errObj);
                     } else {
                         var responseObj = { message: data.message };
-                        if (opts.callback) opts.callback(responseObj);
+                        if (typeof opts.callback === "function") {
+                            try { opts.callback(responseObj); } catch(e) {}
+                        }
                         resolve(responseObj);
                     }
                 })
                 .catch(function(err) {
-                    if (opts.error) opts.error(err);
+                    if (typeof opts.error === "function") {
+                        try { opts.error(err); } catch(e) {}
+                    }
                     reject(err);
                 });
             });
@@ -544,14 +581,33 @@
              * SYSTEM_DEFAULT_TOKENS is NOT modified by this change.
              */
             var raw = localStorage.getItem("smriti-theme-style") || DEFAULT_THEME_PROFILE;
-            /* Normalise legacy alias */
             var key = raw === "hybrid" ? "hybrid-light" : raw;
             var profile = _THEME_PROFILES[key];
             if (!profile || key === "smriti-default") {
-                /* smriti-default is null — fall through to DEFAULT_THEME_PROFILE */
                 profile = _THEME_PROFILES[DEFAULT_THEME_PROFILE] || _THEME_PROFILES["hybrid-light"];
             }
-            return Object.assign({}, profile || {});
+
+            var result = Object.assign({}, profile || {});
+            
+            /* Custom Accent Color Override */
+            var customAccent = localStorage.getItem("smriti-accent-color");
+            if (customAccent && customAccent.charAt(0) === "#") {
+                result["--smriti-color-brand-primary"] = customAccent;
+            }
+
+            /* Custom Density Override */
+            var customDensity = localStorage.getItem("smriti-ui-density");
+            if (customDensity === "compact") {
+                result["--smriti-spacing-padding-y"] = "4px";
+                result["--smriti-spacing-padding-x"] = "8px";
+                result["--smriti-table-row-height"]  = "30px";
+            } else if (customDensity === "spacious") {
+                result["--smriti-spacing-padding-y"] = "12px";
+                result["--smriti-spacing-padding-x"] = "16px";
+                result["--smriti-table-row-height"]  = "48px";
+            }
+
+            return result;
         } catch (e) {
             return {};
         }

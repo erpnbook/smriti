@@ -4,8 +4,8 @@
   "generated_by": "SDC 1.1.2-GA",
   "schema_version": "1.2",
   "artifact_type": "discovery_manifest",
-  "generated_at": "2026-06-27T23:29:13Z",
-  "repository_commit": "43ea253a377f502e17d3006e1b2f6b179a785fa4",
+  "generated_at": "2026-07-09T19:56:39Z",
+  "repository_commit": "eb664a781445f8d59c2fc5ace72c700e75bfbbeb",
   "provenance": {
     "artifact_id": "ART-MANIFEST-00001",
     "produced_by": "Phase0_Discovery",
@@ -16,7 +16,7 @@
   },
   "data": {
     "scan_scope": [
-      "apps/smriti_retail_os"
+      "smriti_retail_os"
     ],
     "excluded": [
       "node_modules",

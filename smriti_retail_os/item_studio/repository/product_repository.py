@@ -29,15 +29,58 @@ class ProductRepository:
         if fields is None:
             fields = ["name", "item_name", "brand", "item_group", "custom_mrp",
                       "valuation_rate", "custom_gst_percentage", "stock_uom",
-                      "custom_style_code", "variant_of"]
+                      "custom_style_code", "variant_of", "custom_sub_category",
+                      "custom_gender", "custom_vendor_code", "custom_purchase_class",
+                      "custom_department", "custom_heels", "custom_upper_material",
+                      "custom_outsole", "gst_hsn_code"]
 
-        return frappe.get_list(
+        items = smriti.db.get_list(
             "Item",
             filters=filters,
             fields=fields,
             order_by=order_by,
-            limit_page_length=int(limit)
+            limit=int(limit)
         )
+
+        if items:
+            item_names = [i["name"] for i in items]
+            barcodes = smriti.db.get_list(
+                "Item Barcode",
+                filters={"parent": ["in", item_names]},
+                fields=["parent", "barcode", "custom_is_primary"]
+            )
+            # Group barcodes by parent
+            barcode_map = {}
+            for b in barcodes:
+                parent = b["parent"] if (isinstance(b, dict) and "parent" in b) else getattr(b, "parent", None)
+                if not parent:
+                    continue
+                if parent not in barcode_map:
+                    barcode_map[parent] = []
+                barcode_map[parent].append(b)
+
+            # Assign primary (or first available) barcode to each item
+            for i in items:
+                item_name = i["name"] if (isinstance(i, dict) and "name" in i) else getattr(i, "name", None)
+                if not item_name:
+                    continue
+                item_barcodes = barcode_map.get(item_name) or []
+                primary = [
+                    (b["barcode"] if (isinstance(b, dict) and "barcode" in b) else getattr(b, "barcode", None))
+                    for b in item_barcodes
+                    if (isinstance(b, dict) and b.get("custom_is_primary")) or getattr(b, "custom_is_primary", False)
+                ]
+                primary = [p for p in primary if p]
+                if primary:
+                    i["barcode"] = primary[0]
+                elif item_barcodes:
+                    first_b = item_barcodes[0]
+                    first_bc = first_b["barcode"] if (isinstance(first_b, dict) and "barcode" in first_b) else getattr(first_b, "barcode", None)
+                    i["barcode"] = first_bc or ""
+                else:
+                    i["barcode"] = ""
+
+        return items
 
     @staticmethod
     def get_detail(item_code):
@@ -70,7 +113,8 @@ class ProductRepository:
             "gst_percentage": int(doc.get("custom_gst_percentage") or 18),
             "style_code": doc.get("custom_style_code") or doc.name,
             "stock_uom": doc.stock_uom or "Nos",
-            "variant_of": doc.variant_of or ""
+            "variant_of": doc.variant_of or "",
+            "hsn_code": doc.get("gst_hsn_code") or ""
         }
 
     @staticmethod
@@ -135,6 +179,16 @@ class ProductRepository:
             if (hasattr(doc, field) or frappe.db.has_column("Item", field)) and key in item_data:
                 doc.set(field, item_data[key])
 
+        if "hsn_code" in item_data and item_data["hsn_code"]:
+            hsn = str(item_data["hsn_code"]).strip()
+            if not smriti.db.exists("GST HSN Code", hsn):
+                hsn_doc = smriti.documents.new("GST HSN Code")
+                hsn_doc.name = hsn
+                hsn_doc.hsn_code = hsn
+                hsn_doc.description = "Auto-created HSN"
+                hsn_doc.insert(ignore_permissions=True)
+            doc.gst_hsn_code = hsn
+
         doc.save(ignore_permissions=True)
 
         if "mrp" in item_data:
@@ -154,8 +208,30 @@ class ProductRepository:
         return True
 
     @staticmethod
+    def bulk_delete(item_codes):
+        """Disables/Soft-deletes multiple items in batch."""
+        if not item_codes:
+            return 0
+        valid_codes = [c for c in item_codes if c and smriti.db.exists("Item", c)]
+        if not valid_codes:
+            return 0
+        for code in valid_codes:
+            smriti.db.set_value("Item", code, "disabled", 1)
+        smriti.db.commit()
+        return len(valid_codes)
+
+    @staticmethod
     def set_price(item_code, price_list, rate):
         """Helper to create/update Item Price records."""
+        if not smriti.db.exists("Price List", price_list):
+            pl = smriti.documents.new("Price List")
+            pl.price_list_name = price_list
+            pl.selling = 1 if "Selling" in price_list else 0
+            pl.buying = 1 if "Buying" in price_list else 0
+            pl.currency = "INR"
+            pl.insert(ignore_permissions=True)
+            smriti.db.commit()
+
         price_name = smriti.db.exists("Item Price", {"item_code": item_code, "price_list": price_list})
         if price_name:
             smriti.db.set_value("Item Price", price_name, "price_list_rate", float(rate))

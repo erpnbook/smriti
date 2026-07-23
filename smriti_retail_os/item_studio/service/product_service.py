@@ -36,7 +36,7 @@ class ProductService:
         - Enforces alphanumeric barcode/item_code format
         """
         # 1. Validation Checks
-        if not item_data.get("item_name"):
+        if not item_code and not item_data.get("item_name"):
             frappe.throw(_("Product Name is required."))
 
         mrp = float(item_data.get("mrp") or 0)
@@ -64,7 +64,14 @@ class ProductService:
         if not item_data.get("gst_percentage"):
             item_data["gst_percentage"] = "18"
 
-        if not item_data.get("hsn_code"):
+        raw_hsn = item_data.get("hsn_code")
+        if raw_hsn:
+            import re
+            hsn_digits = "".join(re.findall(r"\d+", str(raw_hsn)))
+            if not hsn_digits or len(hsn_digits) < 4 or len(hsn_digits) > 8:
+                frappe.throw(_("HSN Code '{0}' is invalid. HSN Code must contain between 4 and 8 numeric digits (e.g. 6402, 640299, 64029990).").format(raw_hsn))
+            item_data["hsn_code"] = hsn_digits
+        else:
             item_data["hsn_code"] = smriti.db.get_single("SMRITI Settings", "default_hsn_code") or "64029990"
 
         # 2. Invoke persistence layer
@@ -77,3 +84,8 @@ class ProductService:
     def delete_product(item_code):
         """Soft deletes product by disabling it in catalog."""
         return ProductRepository.delete(item_code)
+
+    @staticmethod
+    def bulk_delete_products(item_codes):
+        """Batch disables selected or filtered items in catalog."""
+        return ProductRepository.bulk_delete(item_codes)

@@ -165,8 +165,14 @@ async function loadManualItems() {
     const season = document.getElementById('flt-season').value;
     const collection = document.getElementById('flt-collection').value;
     const supplier = document.getElementById('flt-supplier').value;
+    const purchase_class = document.getElementById('flt-purchase-class') ? document.getElementById('flt-purchase-class').value : '';
+    const merchandise_cat = document.getElementById('flt-merchandise-cat') ? document.getElementById('flt-merchandise-cat').value : '';
+    const sub_cat = document.getElementById('flt-sub-cat') ? document.getElementById('flt-sub-cat').value : '';
+    const upper_mat = document.getElementById('flt-upper-material') ? document.getElementById('flt-upper-material').value : '';
+    const outsole = document.getElementById('flt-outsole') ? document.getElementById('flt-outsole').value : '';
+    const heel_type = document.getElementById('flt-heel-type') ? document.getElementById('flt-heel-type').value : '';
 
-    if (!brand && !category && !size && !search_text && !dept && !gender && !season && !collection && !supplier) {
+    if (!brand && !category && !size && !search_text && !dept && !gender && !season && !collection && !supplier && !purchase_class && !merchandise_cat && !sub_cat && !upper_mat && !outsole && !heel_type) {
         toast('Please specify at least one search filter or search keyword', 'info');
         return;
     }
@@ -181,7 +187,13 @@ async function loadManualItems() {
             gender: gender || null,
             season: season || null,
             collection: collection || null,
-            supplier: supplier || null
+            supplier: supplier || null,
+            purchase_class: purchase_class || null,
+            merchandise_category: merchandise_cat || null,
+            sub_category: sub_cat || null,
+            upper_material: upper_mat || null,
+            outsole: outsole || null,
+            heel_type: heel_type || null
         };
         const items = await api('smriti_retail_os.barcode_api.get_items_for_printing', {
             filters: JSON.stringify(filters)
@@ -224,6 +236,34 @@ async function loadRangeItems() {
         toast(`Loaded ${items.length} items from range ${from_article} to ${to_article}`, 'success');
     } catch(e) {
         toast('Range load failed: ' + e.message, 'error');
+    }
+}
+
+// Barcode Number Range Loader
+async function loadBarcodeRangeItems() {
+    const from_barcode = document.getElementById('flt-from-barcode').value.trim();
+    const to_barcode = document.getElementById('flt-to-barcode').value.trim();
+
+    if (!from_barcode || !to_barcode) {
+        toast('Please specify both From and To Barcode Numbers', 'info');
+        return;
+    }
+
+    try {
+        const items = await api('smriti_retail_os.barcode_api.get_items_by_barcode_range', {
+            from_barcode,
+            to_barcode
+        });
+
+        if (!items || !items.length) {
+            toast('No items found in this barcode range', 'info');
+            return;
+        }
+
+        addItemsToQueue(items);
+        toast(`Loaded ${items.length} items from barcode range ${from_barcode} to ${to_barcode}`, 'success');
+    } catch(e) {
+        toast('Barcode range load failed: ' + e.message, 'error');
     }
 }
 
@@ -348,5 +388,70 @@ async function submitTxChecklist() {
         toast(`Successfully loaded ${allItems.length} variant items from ${doctype} ${name}`, 'success');
     } catch(e) {
         toast('Failed to load transaction items details: ' + e.message, 'error');
+    }
+}
+
+function openCSVImportModal() {
+    openModal('csv-import-modal');
+}
+
+function toggleCSVSourceType(type) {
+    const fileZone = document.getElementById('csv-file-zone');
+    const textZone = document.getElementById('csv-text-zone');
+    if (type === 'file') {
+        if (fileZone) fileZone.style.display = 'block';
+        if (textZone) textZone.style.display = 'none';
+    } else {
+        if (fileZone) fileZone.style.display = 'none';
+        if (textZone) textZone.style.display = 'block';
+    }
+}
+
+async function processCSVImport() {
+    const sourceType = document.querySelector('input[name="csv-source-type"]:checked')?.value || 'file';
+    const delimiter = document.getElementById('csv-delimiter')?.value || 'auto';
+    const barcodeCol = parseInt(document.getElementById('csv-barcode-col')?.value || '0');
+    const qtyCol = parseInt(document.getElementById('csv-qty-col')?.value || '1');
+
+    let csvContent = "";
+
+    if (sourceType === 'file') {
+        const fileInput = document.getElementById('csv-file-input');
+        if (!fileInput || !fileInput.files || !fileInput.files.length) {
+            toast('Please select a CSV or TXT file to upload', 'info');
+            return;
+        }
+        const file = fileInput.files[0];
+        csvContent = await file.text();
+    } else {
+        const rawText = document.getElementById('csv-raw-text');
+        csvContent = rawText ? rawText.value.trim() : "";
+    }
+
+    if (!csvContent) {
+        toast('No content found to import. Please select a file or paste text.', 'info');
+        return;
+    }
+
+    try {
+        toast('Processing CSV / Text data and matching barcodes...', 'info');
+        const items = await api('smriti_retail_os.barcode_api.load_items_from_csv_or_text', {
+            csv_text: csvContent,
+            delimiter: delimiter,
+            barcode_col: barcodeCol,
+            qty_col: qtyCol
+        });
+
+        if (!items || !items.length) {
+            toast('No valid barcode items were recognized in the provided input.', 'warning');
+            return;
+        }
+
+        addItemsToQueue(items);
+        closeModal('csv-import-modal');
+        toast(`Successfully imported ${items.length} item records into print worksheet!`, 'success');
+    } catch (e) {
+        console.error("CSV import failed:", e);
+        toast('Failed to process CSV import: ' + e.message, 'error');
     }
 }

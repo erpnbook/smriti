@@ -22,6 +22,14 @@ SMRITI.Toolbar = class {
 
     init() {
         let filtersHtml = this.filters.map(f => {
+            if (f.type === "checkbox") {
+                return `
+                    <label class="filter-checkbox-label" style="display:flex; align-items:center; gap:6px; color:var(--text); font-size:14px; cursor:pointer; user-select:none; margin:0 8px;">
+                        <input type="checkbox" class="filter-checkbox" id="toolbar-filter-${f.id}">
+                        ${f.label}
+                    </label>
+                `;
+            }
             let optionsHtml = `<option value="">All ${f.label}</option>`;
             if (f.options) {
                 optionsHtml += f.options.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
@@ -84,7 +92,7 @@ SMRITI.Toolbar = class {
         this.filters.forEach(f => {
             const select = this.container.querySelector(`#toolbar-filter-${f.id}`);
             if (select) {
-                values[f.id] = select.value;
+                values[f.id] = (f.type === "checkbox") ? select.checked : select.value;
             }
         });
         return values;

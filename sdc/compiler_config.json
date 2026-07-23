@@ -4,7 +4,7 @@
   "ir_version": "1.0",
   "active_plugins": [],
   "scan_scope": [
-    "apps/smriti_retail_os"
+    "smriti_retail_os"
   ],
   "excluded": [
     "node_modules",

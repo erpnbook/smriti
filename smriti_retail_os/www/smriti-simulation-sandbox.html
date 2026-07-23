@@ -1,0 +1,353 @@
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+<html lang="en">
+<head>
+  {%- include "smriti_retail_os/templates/includes/smriti_token_loader.html" -%}
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Simulation Sandbox — SMRITI Retail OS</title>
+  <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@31.0.1/styles/ag-grid.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@31.0.1/styles/ag-theme-alpine.css"/>
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --accent-purple: #8b5cf6;
+      --accent-blue: #3b82f6;
+      --accent-green: #10b981;
+      --accent-pink: #ec4899;
+    }
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg-gradient);
+      color: #f8fafc;
+      min-height: 100vh;
+    }
+    .sandbox-container {
+      padding: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .sandbox-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 1.5rem;
+    }
+    .sandbox-title h1 {
+      margin: 0;
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, #a78bfa, #60a5fa, #34d399);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .sandbox-title p {
+      margin: 0.5rem 0 0 0;
+      color: #94a3b8;
+      font-size: 0.95rem;
+    }
+    .grid-layout {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 1.5rem;
+    }
+    .control-panel {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.5rem;
+    }
+    .panel-section-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #e2e8f0;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .control-group {
+      margin-bottom: 1.25rem;
+    }
+    .control-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.875rem;
+      color: #cbd5e1;
+      margin-bottom: 0.5rem;
+    }
+    .control-slider {
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: #334155;
+      outline: none;
+      accent-color: var(--accent-purple);
+    }
+    .preset-btn {
+      width: 100%;
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      color: #f8fafc;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .preset-btn:hover {
+      background: rgba(139, 92, 246, 0.2);
+      border-color: var(--accent-purple);
+    }
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-top: 0.25rem;
+    }
+    .stat-label {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .ag-theme-alpine-dark {
+      --ag-background-color: rgba(15, 23, 42, 0.8);
+      --ag-header-background-color: rgba(30, 41, 59, 0.9);
+      --ag-odd-row-background-color: rgba(30, 41, 59, 0.4);
+      --ag-header-foreground-color: #94a3b8;
+      --ag-foreground-color: #f8fafc;
+      --ag-border-color: rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .btn-primary {
+      background: linear-gradient(90deg, var(--accent-purple), var(--accent-blue));
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 1rem;
+      transition: transform 0.15s ease;
+    }
+    .btn-primary:active {
+      transform: scale(0.98);
+    }
+  </style>
+</head>
+<body>
+  <div id="smriti-sidebar-container"></div>
+  <div class="sandbox-container">
+    <div class="sandbox-header">
+      <div class="sandbox-title">
+        <h1>🔮 Product Twin Simulation Sandbox</h1>
+        <p>Model hypothetical demand shocks, festive surges, and lead-time bottlenecks across outlet SKU Twins.</p>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total SKUs Simulated</div>
+        <div class="stat-value" id="stat-total" style="color: #60a5fa;">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Stockout Risk</div>
+        <div class="stat-value" id="stat-stockouts" style="color: #f87171;">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Critical Replenish</div>
+        <div class="stat-value" id="stat-critical" style="color: #fbbf24;">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Healthy Coverage</div>
+        <div class="stat-value" id="stat-healthy" style="color: #34d399;">0</div>
+      </div>
+    </div>
+
+    <div class="grid-layout">
+      <div class="control-panel">
+        <div class="panel-section-title">⚡ Scenario Controls</div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>Sales Velocity Multiplier</span>
+            <strong id="val-velocity">1.0x</strong>
+          </div>
+          <input type="range" class="control-slider" id="slider-velocity" min="0.2" max="3.0" step="0.05" value="1.0"/>
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>Seasonality Factor</span>
+            <strong id="val-seasonality">1.0x</strong>
+          </div>
+          <input type="range" class="control-slider" id="slider-seasonality" min="0.5" max="2.0" step="0.05" value="1.0"/>
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>Supplier Lead Days</span>
+            <strong id="val-leaddays">14 Days</strong>
+          </div>
+          <input type="range" class="control-slider" id="slider-leaddays" min="3" max="45" step="1" value="14"/>
+        </div>
+
+        <button class="btn-primary" onclick="runCustomSimulation()">Run Sandbox Model</button>
+
+        <div style="margin-top: 2rem;">
+          <div class="panel-section-title">📑 Scenario Presets</div>
+          <div id="presets-list"></div>
+        </div>
+      </div>
+
+      <div>
+        <div id="simulationGrid" class="ag-theme-alpine-dark" style="height: 600px; width: 100%;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@31.0.1/dist/ag-grid-community.min.js"></script>
+  <script src="/assets/smriti_retail_os/js/smriti_nav_config.js"></script>
+  <script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js"></script>
+  <script>
+    let gridApi = null;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      // Init Standalone Sidebar
+      if (window.SmritiSidebar) {
+        window.SmritiSidebar.init({ active_id: "simulation_sandbox" });
+      }
+
+      initGrid();
+      loadPresets();
+      runCustomSimulation();
+
+      // Attach slider listeners
+      document.getElementById('slider-velocity').addEventListener('input', (e) => {
+        document.getElementById('val-velocity').innerText = e.target.value + 'x';
+      });
+      document.getElementById('slider-seasonality').addEventListener('input', (e) => {
+        document.getElementById('val-seasonality').innerText = e.target.value + 'x';
+      });
+      document.getElementById('slider-leaddays').addEventListener('input', (e) => {
+        document.getElementById('val-leaddays').innerText = e.target.value + ' Days';
+      });
+    });
+
+    function initGrid() {
+      const gridOptions = {
+        columnDefs: [
+          { field: "item_code", headerName: "Item Code", width: 140 },
+          { field: "party_stock_account", headerName: "Account / PSA", width: 160 },
+          { field: "current_stock", headerName: "Current Stock", width: 130, valueFormatter: p => (p.value || 0).toFixed(1) },
+          { field: "weekly_velocity", headerName: "Simulated Velocity", width: 150, valueFormatter: p => (p.value || 0).toFixed(1) + " /wk" },
+          { field: "weeks_of_cover", headerName: "Weeks of Cover", width: 140, valueFormatter: p => (p.value || 0).toFixed(1) + " wks" },
+          {
+            field: "twin_state",
+            headerName: "Simulated State",
+            width: 140,
+            cellRenderer: p => {
+              const colors = {
+                "Stockout": "#ef4444",
+                "Critical": "#f59e0b",
+                "Overstock": "#3b82f6",
+                "Healthy": "#10b981",
+                "Dead Stock": "#6b7280"
+              };
+              const c = colors[p.value] || "#8b5cf6";
+              return `<span style="background:${c}22; color:${c}; border:1px solid ${c}55; padding:2px 8px; border-radius:12px; font-weight:600; font-size:12px;">${p.value}</span>`;
+            }
+          },
+          { field: "reorder_suggestion", headerName: "Reorder Suggestion", width: 160 }
+        ],
+        defaultColDef: { resizable: true, sortable: true, filter: true },
+        rowData: []
+      };
+
+      const gridDiv = document.getElementById('simulationGrid');
+      gridApi = agGrid.createGrid(gridDiv, gridOptions);
+    }
+
+    async function loadPresets() {
+      try {
+        const resp = await fetch('/api/method/smriti_retail_os.api.simulation_api.get_simulation_presets');
+        const data = await resp.json();
+        const presets = data.message || [];
+        const container = document.getElementById('presets-list');
+        container.innerHTML = presets.map(p => `
+          <button class="preset-btn" onclick="applyPreset(${p.velocity_multiplier}, ${p.seasonality_factor}, ${p.supplier_lead_days_override})">
+            <div style="font-weight:600;">${p.title}</div>
+            <div style="font-size:0.75rem; color:#94a3b8;">${p.description}</div>
+          </button>
+        `).join('');
+      } catch (err) {
+        console.error("Failed to load presets:", err);
+      }
+    }
+
+    function applyPreset(v, s, l) {
+      document.getElementById('slider-velocity').value = v;
+      document.getElementById('val-velocity').innerText = v + 'x';
+      document.getElementById('slider-seasonality').value = s;
+      document.getElementById('val-seasonality').innerText = s + 'x';
+      document.getElementById('slider-leaddays').value = l;
+      document.getElementById('val-leaddays').innerText = l + ' Days';
+      runCustomSimulation();
+    }
+
+    async function runCustomSimulation() {
+      const config = {
+        velocity_multiplier: parseFloat(document.getElementById('slider-velocity').value),
+        seasonality_factor: parseFloat(document.getElementById('slider-seasonality').value),
+        supplier_lead_days_override: parseInt(document.getElementById('slider-leaddays').value)
+      };
+
+      try {
+        const resp = await fetch('/api/method/smriti_retail_os.api.simulation_api.run_simulation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ simulation_config: config })
+        });
+        const res = await resp.json();
+        const data = res.message || {};
+        
+        if (data.summary) {
+          document.getElementById('stat-total').innerText = data.summary.total_twins || 0;
+          document.getElementById('stat-stockouts').innerText = data.summary.stockouts || 0;
+          document.getElementById('stat-critical').innerText = data.summary.critical || 0;
+          document.getElementById('stat-healthy').innerText = data.summary.healthy || 0;
+        }
+        
+        if (gridApi && data.twins) {
+          gridApi.setGridOption('rowData', data.twins);
+        }
+      } catch (err) {
+        console.error("Simulation request failed:", err);
+      }
+    }
+  </script>
+</body>
+</html>
+{% endblock %}

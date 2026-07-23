@@ -10,7 +10,7 @@
 
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-:root {
+:root, body {
     /* ── SMRITI Token Bridge (Phase 2C-W4) ───────────────────────────── */
     --bg:         var(--smriti-color-bg-page);
     --bg2:        var(--smriti-color-bg-primary);
@@ -95,7 +95,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 /* Layout Panels */
 .split-layout { flex:1; display:flex; overflow:hidden; min-height:0; }
 .left-controls { width:10%; min-width:180px; flex-shrink:0; border-right:1px solid var(--border); background:var(--bg2); display:flex; flex-direction:column; overflow-y:auto; }
-.right-table { width:70%; flex:1; display:flex; flex-direction:column; overflow:hidden; background:var(--barcode-shadow-md); border-right:1px solid var(--border); }
+.right-table { width:70%; flex:1; display:flex; flex-direction:column; overflow:hidden; background:var(--bg); border-right:1px solid var(--border); }
 .preview-pane { width:20%; min-width:320px; flex-shrink:0; background:var(--bg2); display:flex; flex-direction:column; overflow-y:auto; padding:18px; gap:18px; }
 
 /* Top Search Ribbon (AUD-BAR-09) */
@@ -213,7 +213,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 .preview-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); display:flex; flex-direction:column; overflow:hidden; }
 .preview-header { padding:12px 16px; background:var(--card2); border-bottom:1px solid var(--border); font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--primary-lt); display:flex; align-items:center; gap:6px; }
 .preview-header span { font-size:18px; }
-.preview-body { padding:16px; display:flex; justify-content:center; background:var(--barcode-shadow-md); min-height:180px; align-items:center; position:relative; }
+.preview-body { padding:16px; display:flex; justify-content:center; background:var(--bg2); min-height:180px; align-items:center; position:relative; }
 
 /* ===================================================
    LABEL RENDERING SAFETY ZONE
@@ -222,7 +222,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
    DO NOT DARK-MODE
    =================================================== */
 /* Thermal Printed Label simulated look */
-.sim-label { background:var(--smriti-color-text-primary); color:#0f172a; width:220px; border-radius:4px; box-shadow:0 8px 24px var(--barcode-shadow-lg); padding:10px; display:flex; flex-direction:column; position:relative; font-family:'Inter',sans-serif; overflow:hidden; transition:all 0.3s ease; border: 1px dashed var(--smriti-color-text-subtle); }
+.sim-label { background:#ffffff; color:#0f172a; width:220px; border-radius:4px; box-shadow:0 8px 24px var(--barcode-shadow-lg); padding:10px; display:flex; flex-direction:column; position:relative; font-family:'Inter',sans-serif; overflow:hidden; transition:all 0.3s ease; border: 1px dashed var(--smriti-color-text-subtle); }
 .sim-label.sz-50x25 { aspect-ratio: 2/1; height: 110px; }
 .sim-label.sz-50x30 { aspect-ratio: 5/3; height: 132px; }
 .sim-label.sz-75x50 { width: 240px; aspect-ratio: 3/2; height: 160px; }
@@ -239,7 +239,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
     background: #e2e8f0;
     border: none;
 }
-.sim-sub-col { background:var(--smriti-color-text-primary); border-radius:3px; padding:6px; display:flex; flex-direction:column; overflow:hidden; font-size:8px; line-height:1.2; border:1px dashed #cbd5e1; }
+.sim-sub-col { background:#ffffff; border-radius:3px; padding:6px; display:flex; flex-direction:column; overflow:hidden; font-size:8px; line-height:1.2; border:1px dashed #cbd5e1; }
 .sim-col1 { width: 50%; }
 .sim-col2 { width: 25%; }
 .sim-col3 { width: 25%; }

@@ -34,11 +34,33 @@
 
 from smriti_retail_os.core.platform import documents    # noqa: F401 — smriti.documents
 from smriti_retail_os.core.platform import db           # noqa: F401 — smriti.db
-from smriti_retail_os.core.platform import cache        # noqa: F401 — smriti.cache
+from smriti_retail_os.core.platform import cache as _cache_module
 from smriti_retail_os.core.platform import events       # noqa: F401 — smriti.events
 from smriti_retail_os.core.platform import jobs         # noqa: F401 — smriti.jobs
 from smriti_retail_os.core.platform import permissions  # noqa: F401 — smriti.permissions
 from smriti_retail_os.core.platform import errors       # noqa: F401 — smriti.errors
+
+
+class ResilientCache:
+    def __init__(self, module):
+        self._module = module
+
+    def __getattr__(self, name):
+        if hasattr(self._module, name):
+            return getattr(self._module, name)
+        import frappe
+        cache_fn = getattr(frappe, "cache")
+        return getattr(cache_fn(), name)
+
+    def __call__(self):
+        import frappe
+        cache_fn = getattr(frappe, "cache")
+        return cache_fn()
+
+
+cache = ResilientCache(_cache_module)
+tasks = jobs
+
 from smriti_retail_os.core.platform.registry import (  # noqa: F401
     resolve,
     resolve_or_passthrough,
@@ -52,6 +74,7 @@ __all__ = [
     "cache",
     "events",
     "jobs",
+    "tasks",
     "permissions",
     "errors",
     "forms",

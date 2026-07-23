@@ -1,0 +1,186 @@
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+<html lang="en">
+<head>
+  {%- include "smriti_retail_os/templates/includes/smriti_token_loader.html" -%}
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Demand Forecasts — SMRITI Retail OS</title>
+  <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@31.0.1/styles/ag-grid.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@31.0.1/styles/ag-theme-alpine.css"/>
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --accent-blue: #3b82f6;
+      --accent-green: #10b981;
+      --accent-yellow: #f59e0b;
+      --accent-red: #ef4444;
+    }
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg-gradient);
+      color: #f8fafc;
+      min-height: 100vh;
+    }
+    .demand-container {
+      padding: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .demand-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 1.5rem;
+    }
+    .demand-title h1 {
+      margin: 0;
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, #60a5fa, #34d399, #fbbf24);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .demand-title p {
+      margin: 0.5rem 0 0 0;
+      color: #94a3b8;
+      font-size: 0.95rem;
+    }
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-top: 0.25rem;
+    }
+    .stat-label {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .ag-theme-alpine-dark {
+      --ag-background-color: rgba(15, 23, 42, 0.8);
+      --ag-header-background-color: rgba(30, 41, 59, 0.9);
+      --ag-odd-row-background-color: rgba(30, 41, 59, 0.4);
+      --ag-header-foreground-color: #94a3b8;
+      --ag-foreground-color: #f8fafc;
+      --ag-border-color: rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <div id="smriti-sidebar-container"></div>
+  <div class="demand-container">
+    <div class="demand-header">
+      <div class="demand-title">
+        <h1>📈 Demand Forecasts & Inventory Projections</h1>
+        <p>30/60/90-Day Velocity Forecasts, Weeks of Cover (WoC), and Reorder Alerts.</p>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total SKUs Monitored</div>
+        <div class="stat-value" id="stat-skus" style="color: #60a5fa;">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Reorder Alerts</div>
+        <div class="stat-value" id="stat-alerts" style="color: #f87171;">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">90-Day Projected Demand</div>
+        <div class="stat-value" id="stat-demand" style="color: #34d399;">0 Units</div>
+      </div>
+    </div>
+
+    <div id="demandGrid" class="ag-theme-alpine-dark" style="height: 620px; width: 100%;"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@31.0.1/dist/ag-grid-community.min.js"></script>
+  <script src="/assets/smriti_retail_os/js/smriti_nav_config.js"></script>
+  <script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js"></script>
+  <script>
+    let gridApi = null;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      if (window.SmritiSidebar) {
+        window.SmritiSidebar.init({ active_id: "demand_forecasts" });
+      }
+      initGrid();
+      loadDemandData();
+    });
+
+    function initGrid() {
+      const gridOptions = {
+        columnDefs: [
+          { field: "item_code", headerName: "Item Code", width: 140 },
+          { field: "item_name", headerName: "Item Name", width: 220 },
+          { field: "item_group", headerName: "Group", width: 140 },
+          { field: "current_stock", headerName: "Current Stock", width: 140, valueFormatter: p => (p.value || 0).toFixed(1) },
+          { field: "weekly_velocity", headerName: "Weekly Velocity", width: 140, valueFormatter: p => (p.value || 0).toFixed(1) + " /wk" },
+          { field: "weeks_of_cover", headerName: "WoC", width: 110, valueFormatter: p => (p.value || 0).toFixed(1) + " wks" },
+          { field: "forecast_30d", headerName: "30D Demand", width: 130 },
+          { field: "forecast_60d", headerName: "60D Demand", width: 130 },
+          { field: "forecast_90d", headerName: "90D Demand", width: 130 },
+          {
+            field: "reorder_recommended",
+            headerName: "Reorder Needed",
+            width: 150,
+            cellRenderer: p => {
+              if (p.value) {
+                return `<span style="background:#ef444422; color:#ef4444; border:1px solid #ef444455; padding:2px 8px; border-radius:12px; font-weight:600; font-size:12px;">YES (ROQ: ${p.data.suggested_roq})</span>`;
+              }
+              return `<span style="background:#10b98122; color:#10b981; border:1px solid #10b98155; padding:2px 8px; border-radius:12px; font-weight:600; font-size:12px;">Sufficient</span>`;
+            }
+          }
+        ],
+        defaultColDef: { resizable: true, sortable: true, filter: true },
+        rowData: []
+      };
+
+      const gridDiv = document.getElementById('demandGrid');
+      gridApi = agGrid.createGrid(gridDiv, gridOptions);
+    }
+
+    async function loadDemandData() {
+      try {
+        const resp = await fetch('/api/method/smriti_retail_os.api.demand_api.get_demand_forecasts');
+        const res = await resp.json();
+        const data = res.message || {};
+
+        if (data.summary) {
+          document.getElementById('stat-skus').innerText = data.summary.total_skus || 0;
+          document.getElementById('stat-alerts').innerText = data.summary.reorder_alerts || 0;
+          document.getElementById('stat-demand').innerText = (data.summary.total_projected_demand_90d || 0).toLocaleString('en-IN') + " Units";
+        }
+
+        if (gridApi && data.forecasts) {
+          gridApi.setGridOption('rowData', data.forecasts);
+        }
+      } catch (err) {
+        console.error("Demand data fetch failed:", err);
+      }
+    }
+  </script>
+</body>
+</html>
+{% endblock %}

@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [Unreleased]
+
+### Fixed
+
+#### Architecture Compliance
+- Refactored `style` attributes containing inline hex color codes in `label.html`, `smriti-po-create.html`, `smriti-po-print.html`, and `smriti-quotation.html` to CSS rules and SMRITI design tokens. Resolved 20 compliance linter warnings, allowing the static CI gate to pass successfully.
+
 ## [2.5.0] - 2026-07-08
 
 ### Added

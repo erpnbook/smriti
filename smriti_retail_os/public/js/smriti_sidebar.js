@@ -464,15 +464,33 @@ window.SMRITI = window.SMRITI || {};
                 });
             }
 
-            // 3. Theme switching pills click
-            var themePills = target.querySelectorAll(".smriti-standalone-theme-pill");
+            // 3. Theme switching pills click & active state sync
+            var updateActiveThemePills = function(currentTheme) {
+                var themeKey = currentTheme || (window.SMRITI && window.SMRITI.getCurrentTheme ? window.SMRITI.getCurrentTheme() : "sleek-compact");
+                var pills = target.querySelectorAll(".smriti-standalone-theme-pill, .smriti-theme-pill");
+                pills.forEach(function (p) {
+                    if (p.getAttribute("data-theme") === themeKey) {
+                        p.classList.add("active");
+                    } else {
+                        p.classList.remove("active");
+                    }
+                });
+            };
+
+            var themePills = target.querySelectorAll(".smriti-standalone-theme-pill, .smriti-theme-pill");
             themePills.forEach(function (pill) {
                 pill.addEventListener("click", function () {
                     var themeKey = pill.getAttribute("data-theme");
-                    if (window.SMRITI.switchTheme) {
+                    if (window.SMRITI && window.SMRITI.switchTheme) {
                         window.SMRITI.switchTheme(themeKey);
+                        updateActiveThemePills(themeKey);
                     }
                 });
+            });
+
+            updateActiveThemePills();
+            document.addEventListener("smriti-theme-changed", function(e) {
+                if (e.detail && e.detail.theme) updateActiveThemePills(e.detail.theme);
             });
 
             // 4. Favorites — Star button handler

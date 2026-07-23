@@ -16,28 +16,21 @@ import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger �
 from smriti_retail_os import smriti
 
 # Registry of features under development
-# Add new features here as they are planned
+# All major roadmap features are now LIVE!
 COMING_SOON_REGISTRY = {
-    # Features below are genuinely planned — pages do NOT yet exist
-    "crm": {
-        "title":    "CRM & Customer Insights",
-        "progress": 10,
-        "eta":      "Q4 2026",
-    },
-    "simulation_sandbox": {
-        "title":    "Simulation Sandbox",
-        "progress": 60,
-        "eta":      "Q3 2026",
-    },
-    # ── Features below are LIVE — removed from registry ──────────────────
-    # knowledge_center   → /smriti-help (live since Sprint 4)
-    # pdt_dashboard      → /smriti-pdt (live since Sprint 4)
-    # analytics          → /analytics (live since v1.2.13)
-    # supplier_payments  → /payments (live since v1.2.12)
-    # reconciliation     → /psv_reconciliation  (live since v1.2.10)
-    # exception_analysis → /psv_exception_analysis (live since v1.2.10)
-    # release_notes      → /release_notes        (live since v1.2.10)
-    # support            → /smriti_support        (live since v1.2.10)
+    # ── Features below are LIVE — updated in v2.2.0 ───────────────────────
+    # crm                  → /smriti-crm (live since v2.2.0)
+    # simulation_sandbox   → /smriti-simulation-sandbox (live since v2.2.0)
+    # demand_forecasts     → /smriti-demand-forecasts (live since v2.2.0)
+    # cashier_performance  → /smriti-cashier-performance (live since v2.2.0)
+    # knowledge_center     → /smriti-help (live since Sprint 4)
+    # pdt_dashboard        → /smriti-pdt (live since Sprint 4)
+    # analytics            → /analytics (live since v1.2.13)
+    # supplier_payments    → /payments (live since v1.2.12)
+    # reconciliation       → /psv_reconciliation (live since v1.2.10)
+    # exception_analysis   → /psv_exception_analysis (live since v1.2.10)
+    # release_notes        → /release_notes (live since v1.2.10)
+    # support              → /smriti_support (live since v1.2.10)
 }
 
 

@@ -554,6 +554,10 @@ def import_item_master(rows_json):
             # ── Attach barcode to variant (enforcing single primary, preserving secondary barcodes) ──
             var_doc = smriti.documents.get("Item", variant_code)
             _safe_set(var_doc, "custom_style_code", style_code)
+            if brand:
+                var_doc.brand = brand
+            if cost:
+                var_doc.valuation_rate = cost
 
             if barcode:
                 # Separate existing barcodes: keep secondaries, replace primary
@@ -742,13 +746,17 @@ def _resolve_hsn_code(hsn_code):
             )
             return None
 
-    # Format length according to valid HSN length settings or default to (6, 8)
+    # Format length according to valid HSN length settings or default to (4, 6, 8)
     try:
         from india_compliance.gst_india.utils import get_hsn_settings
         validate_enabled, valid_lengths = get_hsn_settings()
+        if valid_lengths:
+            valid_lengths = tuple(sorted(set(valid_lengths) | {4, 6, 8}))
+        else:
+            valid_lengths = (4, 6, 8)
     except Exception:
         validate_enabled = True
-        valid_lengths = (6, 8)
+        valid_lengths = (4, 6, 8)
 
     if validate_enabled:
         length = len(hsn_digits)
@@ -1382,6 +1390,106 @@ def delete_style_and_variants(style_code):
         "success": True,
         "deleted_variants": deleted_variants,
         "message": _("Style '{0}' and {1} variants deleted successfully").format(style_code, deleted_variants)
+    }
+
+
+@frappe.whitelist()
+def toggle_item_status(item_code, disabled=1):
+    """
+    Safely disables/enables an Item without altering database ledger history.
+    Recommended for production item master maintenance.
+    """
+    check_store_manager_role()
+    if not smriti.db.exists("Item", item_code):
+        frappe.throw(_("Item '{0}' does not exist.").format(item_code))
+
+    disabled_val = 1 if cint(disabled) else 0
+    smriti.db.set_value("Item", item_code, "disabled", disabled_val)
+    smriti.db.commit()
+
+    status_label = "Disabled" if disabled_val else "Enabled"
+    return {
+        "success": True,
+        "item_code": item_code,
+        "disabled": disabled_val,
+        "message": _("Item '{0}' is now {1}.").format(item_code, status_label)
+    }
+
+
+@frappe.whitelist()
+def delete_single_item(item_code, force=False):
+    """
+    Deletes an Item and its associated Item Barcodes and Item Prices.
+    If the item has existing ledger transactions (Sales, Purchases, Stock Entries),
+    hard deletion is blocked and soft disable is recommended instead.
+    """
+    check_store_manager_role()
+    if not smriti.db.exists("Item", item_code):
+        frappe.throw(_("Item '{0}' does not exist.").format(item_code))
+
+    sle_count = smriti.db.count("Stock Ledger Entry", {"item_code": item_code})
+    sinv_count = smriti.db.count("Sales Invoice Item", {"item_code": item_code})
+
+    if (sle_count + sinv_count) > 0 and not force:
+        frappe.throw(
+            _("Cannot delete Item '{0}' because it has active ledger transactions ({1} stock entries, {2} sales). Please disable the item instead.").format(
+                item_code, sle_count, sinv_count
+            )
+        )
+
+    smriti.db.delete("Item Price", {"item_code": item_code})
+    smriti.db.delete("Item Barcode", {"parent": item_code})
+    smriti.documents.delete("Item", item_code, ignore_permissions=True, force=True)
+    smriti.db.commit()
+
+    return {
+        "success": True,
+        "item_code": item_code,
+        "message": _("Item '{0}' deleted successfully.").format(item_code)
+    }
+
+
+@frappe.whitelist()
+def bulk_delete_items(item_codes=None):
+    """
+    Bulk deletes a list of Item codes. Unused items are hard deleted,
+    while items with active transactions are safely disabled.
+    """
+    check_store_manager_role()
+    if isinstance(item_codes, str):
+        item_codes = frappe.parse_json(item_codes)
+    if not item_codes or not isinstance(item_codes, list):
+        frappe.throw(_("No item codes provided for deletion."))
+
+    deleted_items = []
+    disabled_items = []
+
+    for code in item_codes:
+        if not smriti.db.exists("Item", code):
+            continue
+        sle_count = smriti.db.count("Stock Ledger Entry", {"item_code": code})
+        sinv_count = smriti.db.count("Sales Invoice Item", {"item_code": code})
+
+        if (sle_count + sinv_count) > 0:
+            smriti.db.set_value("Item", code, "disabled", 1)
+            disabled_items.append(code)
+        else:
+            smriti.db.delete("Item Price", {"item_code": code})
+            smriti.db.delete("Item Barcode", {"parent": code})
+            smriti.documents.delete("Item", code, ignore_permissions=True, force=True)
+            deleted_items.append(code)
+
+    smriti.db.commit()
+
+    return {
+        "success": True,
+        "deleted_count": len(deleted_items),
+        "disabled_count": len(disabled_items),
+        "deleted_items": deleted_items,
+        "disabled_items": disabled_items,
+        "message": _("Processed {0} items: {1} deleted (unused), {2} disabled (had ledger history).").format(
+            len(item_codes), len(deleted_items), len(disabled_items)
+        )
     }
 
 

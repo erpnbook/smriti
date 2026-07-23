@@ -1,4 +1,4 @@
-﻿<!--
+<!--
  * @file: smriti_retail_os/www/reports.html
  * @description: Reports Center dashboard layout, filters, and rendering controller.
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
@@ -500,6 +500,176 @@
     .btn-preset:hover { background: var(--smriti-color-brand-overlay-xs); color: var(--accent-2); border-color: var(--accent); }
     .btn-preset.active { background: var(--glow-brand-sm); color:var(--smriti-color-text-primary); border-color: var(--accent); }
 
+    /* ── BI Visualization Panel & KPI Widgets ── */
+    .visualization-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: var(--shadow);
+    }
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    }
+    .kpi-widget-card {
+      background: var(--smriti-color-surface-glass-xxs);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi-widget-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: linear-gradient(180deg, var(--accent), var(--accent-2));
+    }
+    .kpi-widget-lbl {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+    .kpi-widget-val {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--text-1);
+    }
+    .kpi-widget-sub {
+      font-size: 0.72rem;
+      color: var(--text-3);
+    }
+    .chart-container-wrapper {
+      background: var(--smriti-color-surface-glass-xxs);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .chart-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+    }
+    .chart-title-lbl {
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text-2);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+    .chart-controls {
+      display: flex;
+      gap: 6px;
+    }
+    .chart-toggle-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-2);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 5px 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all var(--t);
+    }
+    .chart-toggle-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent-2);
+    }
+    .chart-toggle-btn.active {
+      background: var(--glow-brand-sm);
+      border-color: var(--accent);
+      color: var(--accent-2);
+    }
+    .chart-canvas-area {
+      width: 100%;
+      height: 280px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .chart-canvas-area svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    /* ── Drill-down navigation breadcrumbs ── */
+    .drilldown-nav-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--smriti-color-surface-glass-xs);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 8px 16px;
+      margin-bottom: 14px;
+      font-size: 0.8rem;
+    }
+    .drilldown-lbl {
+      font-weight: 700;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+    .drilldown-breadcrumbs {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .breadcrumb-item {
+      color: var(--text-2);
+      font-weight: 600;
+      cursor: pointer;
+      transition: color var(--t);
+    }
+    .breadcrumb-item:hover {
+      color: var(--accent);
+    }
+    .breadcrumb-item.active {
+      color: var(--text-1);
+      cursor: default;
+    }
+    .breadcrumb-sep {
+      color: var(--text-3);
+      font-weight: 400;
+    }
+    .drilldown-link {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .drilldown-link:hover {
+      text-decoration: underline;
+      color: var(--accent-2);
+    }
+
     .btn-run { display: inline-flex; align-items: center; gap: 8px; padding: 9px 20px; border-radius: var(--radius-sm); border: none; font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: all var(--t); background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: white; box-shadow: 0 4px 12px var(--border-glow); }
     .btn-run:hover { transform: translateY(-1px); filter: brightness(1.1); }
     .btn-run:active { transform: translateY(0); }
@@ -930,6 +1100,44 @@
             </div>
           </div>
 
+          <!-- BI Visualization & Charting Panel -->
+          <div class="visualization-panel" id="report-visualization-panel" style="display: none; margin-bottom: 20px;">
+            <div class="kpi-row" id="kpi-widgets-row">
+              <!-- KPI cards rendered dynamically -->
+            </div>
+            
+            <div class="chart-container-wrapper">
+              <div class="chart-header">
+                <span class="chart-title-lbl">Visual Trend Analytics</span>
+                <div class="chart-controls">
+                  <button class="chart-toggle-btn active" id="btn-chart-bar" onclick="setChartType('bar')" title="Bar Chart">
+                    <span class="material-symbols-outlined" style="font-size:16px;">bar_chart</span> Bar
+                  </button>
+                  <button class="chart-toggle-btn" id="btn-chart-line" onclick="setChartType('line')" title="Line Chart">
+                    <span class="material-symbols-outlined" style="font-size:16px;">show_chart</span> Line
+                  </button>
+                  <button class="chart-toggle-btn" id="btn-chart-area" onclick="setChartType('area')" title="Area Chart">
+                    <span class="material-symbols-outlined" style="font-size:16px;">area_chart</span> Area
+                  </button>
+                  <button class="chart-toggle-btn" id="btn-chart-pie" onclick="setChartType('pie')" title="Donut Chart">
+                    <span class="material-symbols-outlined" style="font-size:16px;">pie_chart</span> Donut
+                  </button>
+                </div>
+              </div>
+              <div class="chart-canvas-area" id="chart-canvas-area">
+                <!-- SVG Chart rendered dynamically -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Drill-down breadcrumbs -->
+          <div class="drilldown-nav-bar" id="drilldown-nav-bar" style="display: none;">
+            <span class="drilldown-lbl">Drill Path:</span>
+            <div class="drilldown-breadcrumbs" id="drilldown-breadcrumbs">
+              <!-- Breadcrumbs added dynamically -->
+            </div>
+          </div>
+
           <!-- Grid Workspace -->
           <div class="grid-card">
             <div class="table-scroll-container">
@@ -979,6 +1187,364 @@
 </div>
 
 <script>
+  let activeChartType = 'bar';
+  let drillDownPath = []; // Array of { report_key, filters, label }
+
+  window.setChartType = function(type) {
+    activeChartType = type;
+    document.querySelectorAll('.chart-toggle-btn').forEach(btn => btn.classList.remove('active'));
+    const activeBtn = document.getElementById(`btn-chart-${type}`);
+    if (activeBtn) activeBtn.classList.add('active');
+    renderSvgChart();
+  };
+
+  function renderDrillDownBreadcrumbs() {
+    const bar = document.getElementById('drilldown-nav-bar');
+    const container = document.getElementById('drilldown-breadcrumbs');
+    if (!bar || !container) return;
+
+    if (drillDownPath.length === 0) {
+      bar.style.display = 'none';
+      return;
+    }
+    bar.style.display = 'flex';
+    container.innerHTML = '';
+
+    // Add root path (original report)
+    const rootEl = document.createElement('span');
+    rootEl.className = 'breadcrumb-item';
+    rootEl.textContent = 'Home';
+    rootEl.onclick = () => {
+      drillDownPath = [];
+      loadReportByKey(activeReportTemplate.report_key);
+    };
+    container.appendChild(rootEl);
+
+    drillDownPath.forEach((step, idx) => {
+      const sep = document.createElement('span');
+      sep.className = 'breadcrumb-sep';
+      sep.textContent = ' › ';
+      container.appendChild(sep);
+
+      const stepEl = document.createElement('span');
+      stepEl.className = 'breadcrumb-item';
+      if (idx === drillDownPath.length - 1) {
+        stepEl.classList.add('active');
+      } else {
+        stepEl.onclick = () => {
+          const targetStep = drillDownPath[idx];
+          drillDownPath = drillDownPath.slice(0, idx + 1);
+          loadReportByKey(targetStep.report_key);
+          setTimeout(() => {
+            Object.keys(targetStep.filters).forEach(k => {
+              const input = document.getElementById(`filter-${k}`);
+              if (input) input.value = targetStep.filters[k];
+            });
+            runReport();
+          }, 300);
+        };
+      }
+      stepEl.textContent = step.label;
+      container.appendChild(stepEl);
+    });
+  }
+
+  window.drillDown = function(fieldname, val, rowIndex) {
+    if (!val || val === '—') return;
+    
+    const row = activeReportData[rowIndex] || {};
+    const currentFilters = {};
+    document.querySelectorAll('.filter-input').forEach(input => {
+      currentFilters[input.getAttribute('data-key')] = input.value;
+    });
+
+    if (drillDownPath.length === 0) {
+      drillDownPath.push({
+        report_key: activeReportKey,
+        filters: currentFilters,
+        label: getCleanReportName(activeReportTemplate.report_name)
+      });
+    }
+
+    if (fieldname === 'posting_date') {
+      const dateVal = formatDateLocal(new Date(val));
+      drillDownPath.push({
+        report_key: 'item_wise_sales',
+        filters: { from_date: dateVal, to_date: dateVal },
+        label: `Sales on ${dateVal}`
+      });
+      loadReportByKey('item_wise_sales');
+      setTimeout(() => {
+        if (document.getElementById('filter-from_date')) document.getElementById('filter-from_date').value = dateVal;
+        if (document.getElementById('filter-to_date')) document.getElementById('filter-to_date').value = dateVal;
+        runReport();
+      }, 300);
+    } else if (fieldname === 'item_code' || fieldname === 'item_name') {
+      if (typeof openDetailDrawer === 'function') {
+        openDetailDrawer({ item_code: val, name: val, item_name: row.item_name || val });
+      } else {
+        drillDownPath.push({
+          report_key: 'inventory_productivity',
+          filters: { item_code: val },
+          label: `Productivity: ${val}`
+        });
+        loadReportByKey('inventory_productivity');
+        setTimeout(() => {
+          if (document.getElementById('filter-item_code')) document.getElementById('filter-item_code').value = val;
+          runReport();
+        }, 300);
+      }
+    } else if (fieldname === 'purchase_order' || fieldname === 'po_reference') {
+      window.open(`/smriti-po-print?name=${encodeURIComponent(val)}`, '_blank');
+    } else if (fieldname === 'name' || fieldname === 'invoice' || fieldname === 'pos_invoice') {
+      window.open(`/printview?doctype=POS%20Invoice&name=${encodeURIComponent(val)}`, '_blank');
+    }
+    
+    renderDrillDownBreadcrumbs();
+  };
+
+  function updateVisualizations() {
+    const vizPanel = document.getElementById('report-visualization-panel');
+    if (!vizPanel) return;
+
+    if (!activeReportData || activeReportData.length === 0) {
+      vizPanel.style.display = 'none';
+      return;
+    }
+    vizPanel.style.display = 'block';
+
+    const kpiRow = document.getElementById('kpi-widgets-row');
+    kpiRow.innerHTML = '';
+
+    const numericCols = currentReportColumns.filter(c => 
+      c.fieldtype === 'Currency' || c.fieldtype === 'Float' || c.fieldtype === 'Int' || c.fieldtype === 'Percent'
+    );
+
+    let kpiCount = 0;
+    numericCols.forEach(col => {
+      if (kpiCount >= 4) return;
+      
+      let sum = 0;
+      let count = 0;
+      let min = Infinity;
+      let max = -Infinity;
+      
+      activeReportData.forEach(row => {
+        const v = parseFloat(row[col.fieldname]);
+        if (!isNaN(v)) {
+          sum += v;
+          count++;
+          if (v < min) min = v;
+          if (v > max) max = v;
+        }
+      });
+
+      if (count > 0) {
+        const avg = sum / count;
+        let label = '';
+        let val = 0;
+        const name = col.fieldname.toLowerCase();
+        
+        if (name.includes('rate') || name.includes('price') || name.includes('percent')) {
+          label = `Average ${col.label}`;
+          val = avg;
+        } else {
+          label = `Total ${col.label}`;
+          val = sum;
+        }
+
+        const formatted = formatCell(val, col);
+        
+        kpiRow.innerHTML += `
+          <div class="kpi-widget-card">
+            <span class="kpi-widget-lbl">${label}</span>
+            <span class="kpi-widget-val">${formatted}</span>
+            <div class="kpi-widget-sub">Average: ${formatCell(avg, col)}</div>
+          </div>
+        `;
+        kpiCount++;
+      }
+    });
+
+    renderSvgChart();
+  }
+
+  function renderSvgChart() {
+    const chartArea = document.getElementById('chart-canvas-area');
+    if (!chartArea) return;
+    chartArea.innerHTML = '';
+
+    const cols = currentReportColumns;
+    const labelCol = cols.find(c => c.fieldtype === 'Date' || c.fieldtype === 'Link' || c.fieldtype === 'Data');
+    const valCol = cols.find(c => c.fieldtype === 'Currency' || c.fieldtype === 'Float' || c.fieldtype === 'Int' || c.fieldtype === 'Percent');
+
+    if (!labelCol || !valCol) {
+      chartArea.innerHTML = '<div style="padding: 40px 0; text-align: center; color: var(--text-muted);">No chart available for this report type.</div>';
+      return;
+    }
+
+    const chartData = activeReportData.slice(0, 15);
+    const labels = chartData.map(d => {
+      let l = d[labelCol.fieldname] || '';
+      if (typeof l === 'string' && l.includes('/')) {
+        l = l.split('/').pop();
+      }
+      return String(l);
+    });
+    const values = chartData.map(d => parseFloat(d[valCol.fieldname]) || 0);
+
+    const maxVal = Math.max(...values, 1);
+    const minVal = Math.min(...values, 0);
+
+    const width = chartArea.clientWidth || 800;
+    const height = 280;
+    const paddingLeft = 80;
+    const paddingRight = 40;
+    const paddingTop = 30;
+    const paddingBottom = 40;
+
+    const graphWidth = width - paddingLeft - paddingRight;
+    const graphHeight = height - paddingTop - paddingBottom;
+
+    if (activeChartType === 'pie') {
+      let total = values.reduce((a, b) => a + b, 0);
+      if (total === 0) total = 1;
+      
+      let accumAngle = 0;
+      const cx = width / 2;
+      const cy = height / 2;
+      const r = Math.min(graphWidth, graphHeight) / 2 - 10;
+      
+      let svgHtml = `<svg width="${width}" height="${height}" style="font-family: inherit;">`;
+      const colors = ['#20c997', '#0d6efd', '#fd7e14', '#6f42c1', '#d63384', '#ffc107', '#17a2b8', '#6610f2', '#e83e8c', '#fd5631'];
+
+      chartData.forEach((d, idx) => {
+        const val = values[idx];
+        const percentage = (val / total) * 100;
+        const angle = (val / total) * 360;
+        
+        if (angle <= 0) return;
+
+        const radStart = (accumAngle - 90) * Math.PI / 180;
+        const radEnd = (accumAngle + angle - 90) * Math.PI / 180;
+        
+        const x1 = cx + r * Math.cos(radStart);
+        const y1 = cy + r * Math.sin(radStart);
+        const x2 = cx + r * Math.cos(radEnd);
+        const y2 = cy + r * Math.sin(radEnd);
+        
+        const largeArc = angle > 180 ? 1 : 0;
+        const pathData = `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+        const color = colors[idx % colors.length];
+        
+        svgHtml += `
+          <path d="${pathData}" fill="${color}" stroke="var(--bg)" stroke-width="2" style="cursor:pointer; transition: opacity 0.2s;" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1.0">
+            <title>${labels[idx]}: ${formatCell(val, valCol)} (${percentage.toFixed(1)}%)</title>
+          </path>
+        `;
+        accumAngle += angle;
+      });
+      
+      svgHtml += `<circle cx="${cx}" cy="${cy}" r="${r * 0.5}" fill="var(--bg)"></circle>`;
+      const legendX = cx + r + 30;
+      let legendY = 30;
+      chartData.forEach((d, idx) => {
+        if (idx < 6 && legendX < width - 150) {
+          const color = colors[idx % colors.length];
+          svgHtml += `
+            <rect x="${legendX}" y="${legendY}" width="12" height="12" rx="3" fill="${color}"></rect>
+            <text x="${legendX + 20}" y="${legendY + 10}" fill="var(--text-2)" font-size="11" font-weight="600">${labels[idx].substring(0, 15)}</text>
+          `;
+          legendY += 20;
+        }
+      });
+
+      svgHtml += `</svg>`;
+      chartArea.innerHTML = svgHtml;
+      return;
+    }
+
+    let svgHtml = `<svg width="${width}" height="${height}" style="font-family: inherit;">`;
+    svgHtml += `
+      <defs>
+        <linearGradient id="bar-grad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.95"/>
+          <stop offset="100%" stop-color="var(--accent-glow)" stop-opacity="0.1"/>
+        </linearGradient>
+        <linearGradient id="area-grad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.4"/>
+          <stop offset="100%" stop-color="var(--accent)" stop-opacity="0.0"/>
+        </linearGradient>
+      </defs>
+    `;
+
+    const gridLines = 4;
+    for (let i = 0; i <= gridLines; i++) {
+      const ratio = i / gridLines;
+      const y = paddingTop + ratio * graphHeight;
+      const val = maxVal - ratio * (maxVal - minVal);
+      svgHtml += `
+        <line x1="${paddingLeft}" y1="${y}" x2="${width - paddingRight}" y2="${y}" stroke="var(--border)" stroke-dasharray="3,3" stroke-width="1"></line>
+        <text x="${paddingLeft - 10}" y="${y + 4}" fill="var(--text-3)" font-size="10" text-anchor="end" font-weight="600">${formatCell(val, valCol)}</text>
+      `;
+    }
+
+    const colWidth = graphWidth / chartData.length;
+
+    if (activeChartType === 'bar') {
+      chartData.forEach((d, idx) => {
+        const val = values[idx];
+        const ratio = (val - minVal) / (maxVal - minVal);
+        const barHeight = ratio * graphHeight;
+        const x = paddingLeft + idx * colWidth + colWidth * 0.15;
+        const y = paddingTop + graphHeight - barHeight;
+        const w = colWidth * 0.7;
+
+        svgHtml += `
+          <rect x="${x}" y="${y}" width="${w}" height="${barHeight}" fill="url(#bar-grad)" rx="4" style="cursor:pointer; transition: opacity 0.2s;" onmouseover="this.style.opacity=0.85" onmouseout="this.style.opacity=1.0">
+            <title>${labels[idx]}: ${formatCell(val, valCol)}</title>
+          </rect>
+          <text x="${x + w/2}" y="${paddingTop + graphHeight + 18}" fill="var(--text-2)" font-size="10" font-weight="600" text-anchor="middle">${labels[idx].substring(0, 10)}</text>
+        `;
+      });
+    } else if (activeChartType === 'line' || activeChartType === 'area') {
+      const points = chartData.map((d, idx) => {
+        const val = values[idx];
+        const ratio = (val - minVal) / (maxVal - minVal);
+        return {
+          x: paddingLeft + idx * colWidth + colWidth / 2,
+          y: paddingTop + graphHeight - ratio * graphHeight
+        };
+      });
+
+      if (points.length > 0) {
+        let pathD = `M ${points[0].x} ${points[0].y}`;
+        for (let i = 1; i < points.length; i++) {
+          pathD += ` L ${points[i].x} ${points[i].y}`;
+        }
+
+        if (activeChartType === 'area') {
+          const areaD = `${pathD} L ${points[points.length-1].x} ${paddingTop + graphHeight} L ${points[0].x} ${paddingTop + graphHeight} Z`;
+          svgHtml += `<path d="${areaD}" fill="url(#area-grad)"></path>`;
+        }
+
+        svgHtml += `<path d="${pathD}" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>`;
+
+        points.forEach((p, idx) => {
+          svgHtml += `
+            <circle cx="${p.x}" cy="${p.y}" r="5" fill="var(--bg)" stroke="var(--accent)" stroke-width="2" style="cursor:pointer; transition: r 0.1s;" onmouseover="this.setAttribute('r', '7')" onmouseout="this.setAttribute('r', '5')">
+              <title>${labels[idx]}: ${formatCell(values[idx], valCol)}</title>
+            </circle>
+            <text x="${p.x}" y="${paddingTop + graphHeight + 18}" fill="var(--text-2)" font-size="10" font-weight="600" text-anchor="middle">${labels[idx].substring(0, 10)}</text>
+          `;
+        });
+      }
+    }
+
+    svgHtml += `</svg>`;
+    chartArea.innerHTML = svgHtml;
+  }
+
   const CSRF_TOKEN = '{{ csrf_token }}';
   const loggedUser = '{{ cashier }}';
 
@@ -1210,48 +1776,80 @@
   }
 
   // Build Explorer category tree
+  function getReportStudio(r) {
+    const key = (r.report_key || '').toLowerCase();
+    const cat = (r.report_category || '').toLowerCase();
+    
+    if (key.includes('customer') || key.includes('loyalty')) {
+      return 'customer';
+    }
+    if (key.includes('supplier') || key.includes('vendor')) {
+      return 'supplier';
+    }
+    if (key.includes('purchase_return')) {
+      return 'purchase';
+    }
+    if (key.includes('sales_return')) {
+      return 'sales';
+    }
+    if (cat === 'sales' || cat === 'cash' || key.includes('sales') || key.includes('bill') || key.includes('invoice')) {
+      return 'sales';
+    }
+    if (cat === 'purchase' || key.includes('purchase') || key.includes('grn') || key.includes('received_orders')) {
+      return 'purchase';
+    }
+    if (cat === 'inventory' || cat === 'inventory analytics' || key.includes('stock') || key.includes('inventory') || key.includes('reorder') || key.includes('expiry') || key.includes('movement') || key.includes('valuation') || key.includes('adjust') || key.includes('transfer')) {
+      return 'inventory';
+    }
+    if (cat === 'finance' || cat === 'accounting' || cat === 'audit' || key.includes('ledger') || key.includes('tax') || key.includes('gst') || key.includes('gstr') || key.includes('book') || key.includes('journal')) {
+      return 'finance';
+    }
+    if (cat === 'analytics' || key.includes('trend') || key.includes('seasonal') || key.includes('abc') || key.includes('xyz') || key.includes('turnover') || key.includes('sell_through') || key.includes('productivity')) {
+      return 'analytics';
+    }
+    return 'custom';
+  }
+
   function buildExplorerTree() {
     const tree = document.getElementById('explorer-tree');
     tree.innerHTML = '';
 
-    // Group reports by category
-    const categories = {};
+    // Group reports by Studio
+    const studios = {};
     reportsList.forEach(r => {
-      let cat = r.report_category || 'Custom';
-      if (cat === 'Inventory Analytics') cat = 'Inventory';
-      if (!categories[cat]) categories[cat] = [];
-      categories[cat].push(r);
+      const studioKey = getReportStudio(r);
+      if (!studios[studioKey]) studios[studioKey] = [];
+      studios[studioKey].push(r);
     });
 
-    // Render categories ordered
-    const catOrder = ['Sales', 'Inventory', 'Cash', 'Accounting', 'Purchase', 'Finance', 'Analytics', 'Audit', 'Custom'];
-    const categoryMap = {
-      'Sales': 'SMRITI Sales Analytics',
-      'Inventory': 'SMRITI Inventory Analytics',
-      'Cash': 'SMRITI Cash Analytics',
-      'Accounting': 'SMRITI Accounting Analytics',
-      'Purchase': 'SMRITI Purchase Analytics',
-      'Finance': 'SMRITI Finance Analytics',
-      'Analytics': 'SMRITI General Analytics',
-      'Audit': 'SMRITI Audit Reports',
-      'Custom': 'SMRITI Custom Analytics'
+    const studioOrder = ['sales', 'purchase', 'inventory', 'customer', 'supplier', 'finance', 'analytics', 'custom'];
+    const studioMap = {
+      'sales': { label: 'Sales Report Studio', icon: 'bar_chart' },
+      'purchase': { label: 'Purchase Report Studio', icon: 'shopping_cart' },
+      'inventory': { label: 'Inventory Report Studio', icon: 'inventory_2' },
+      'customer': { label: 'Customer Report Studio', icon: 'group' },
+      'supplier': { label: 'Supplier Report Studio', icon: 'local_shipping' },
+      'finance': { label: 'Finance Report Studio', icon: 'payments' },
+      'analytics': { label: 'Analytics Studio', icon: 'trending_up' },
+      'custom': { label: 'Custom Report Studio', icon: 'settings' }
     };
-    catOrder.forEach(cat => {
-      if (!categories[cat] || categories[cat].length === 0) return;
 
+    studioOrder.forEach(studioKey => {
+      if (!studios[studioKey] || studios[studioKey].length === 0) return;
+
+      const meta = studioMap[studioKey];
       const groupEl = document.createElement('div');
       groupEl.className = 'category-group';
       
       const titleEl = document.createElement('div');
       titleEl.className = 'category-title';
-      const displayTitle = categoryMap[cat] || `SMRITI ${cat} Analytics`;
-      titleEl.innerHTML = `<span>📂 ${displayTitle}</span> <span class="material-symbols-outlined" style="font-size:16px;">expand_more</span>`;
+      titleEl.innerHTML = `<span><span class="material-symbols-outlined" style="font-size:16px; vertical-align:middle; margin-right:4px;">${meta.icon}</span> ${meta.label}</span> <span class="material-symbols-outlined" style="font-size:16px;">expand_more</span>`;
       
       const listEl = document.createElement('div');
       listEl.className = 'category-reports';
-      listEl.id = `cat-reports-${cat}`;
+      listEl.id = `cat-reports-${studioKey}`;
 
-      categories[cat].forEach(r => {
+      studios[studioKey].forEach(r => {
         const item = document.createElement('a');
         item.href = '#';
         item.className = 'report-item-link';
@@ -1266,7 +1864,7 @@
       });
 
       titleEl.onclick = function() {
-        const icon = titleEl.querySelector('.material-symbols-outlined');
+        const icon = titleEl.querySelector('.material-symbols-outlined:last-child');
         if (listEl.style.display === 'none') {
           listEl.style.display = 'flex';
           icon.textContent = 'expand_more';
@@ -1308,6 +1906,43 @@
       }
     });
   };
+
+  function setupReportColumns(template) {
+    try {
+      currentReportColumns = JSON.parse(template.columns_json || '[]');
+      if (typeof sortReportColumns === 'function') {
+        sortReportColumns(currentReportColumns);
+      }
+      
+      const hasItemField = currentReportColumns.some(c => c.fieldname === 'item_code' || c.fieldname === 'style_code');
+      if (hasItemField) {
+        const extraItemColumns = [
+          { fieldname: "custom_style_code", label: "Style Code", fieldtype: "Data", width: 120 },
+          { fieldname: "custom_sub_category", label: "Sub Category", fieldtype: "Data", width: 110 },
+          { fieldname: "custom_gender", label: "Gender", fieldtype: "Data", width: 90 },
+          { fieldname: "custom_vendor_code", label: "Vendor Code", fieldtype: "Data", width: 110 },
+          { fieldname: "custom_purchase_class", label: "Purchase Class", fieldtype: "Data", width: 110 },
+          { fieldname: "custom_department", label: "Department", fieldtype: "Data", width: 110 },
+          { fieldname: "custom_heels", label: "Heels", fieldtype: "Data", width: 90 },
+          { fieldname: "custom_upper_material", label: "Upper Material", fieldtype: "Data", width: 110 },
+          { fieldname: "custom_outsole", label: "Outsole", fieldtype: "Data", width: 110 },
+          { fieldname: "gst_hsn_code", label: "HSN Code", fieldtype: "Data", width: 100 }
+        ];
+        
+        extraItemColumns.forEach(extra => {
+          if (!currentReportColumns.some(c => c.fieldname === extra.fieldname)) {
+            currentReportColumns.push(extra);
+            if (!hiddenColumns.includes(extra.fieldname)) {
+              hiddenColumns.push(extra.fieldname);
+            }
+          }
+        });
+      }
+    } catch(e) {
+      currentReportColumns = [];
+      console.error(e);
+    }
+  }
 
   // Load a report
   window.loadReportByKey = function(key) {
@@ -1366,16 +2001,7 @@
       return;
     }
 
-    // Parse columns
-    try {
-      currentReportColumns = JSON.parse(activeReportTemplate.columns_json || '[]');
-      if (typeof sortReportColumns === 'function') {
-        sortReportColumns(currentReportColumns);
-      }
-    } catch(e) {
-      currentReportColumns = [];
-      console.error(e);
-    }
+    setupReportColumns(activeReportTemplate);
 
     // Update displays
     document.getElementById('welcome-screen').style.display = 'none';
@@ -1588,6 +2214,7 @@
     if (!viewName) {
       // Restore standard template
       hiddenColumns = [];
+      setupReportColumns(activeReportTemplate);
       buildFilters(JSON.parse(activeReportTemplate.filters_json || '[]'));
       document.getElementById('btn-delete-view').style.display = 'none';
       runReport();
@@ -1622,6 +2249,26 @@
       if (typeof sortReportColumns === 'function') {
         sortReportColumns(cols);
       }
+      const hasItemField = cols.some(c => c.fieldname === 'item_code' || c.fieldname === 'style_code');
+      if (hasItemField) {
+        const extraItemColumns = [
+          { fieldname: "custom_style_code", label: "Style Code", fieldtype: "Data", width: 120 },
+          { fieldname: "custom_sub_category", label: "Sub Category", fieldtype: "Data", width: 110 },
+          { fieldname: "custom_gender", label: "Gender", fieldtype: "Data", width: 90 },
+          { fieldname: "custom_vendor_code", label: "Vendor Code", fieldtype: "Data", width: 110 },
+          { fieldname: "custom_purchase_class", label: "Purchase Class", fieldtype: "Data", width: 110 },
+          { fieldname: "custom_department", label: "Department", fieldtype: "Data", width: 110 },
+          { fieldname: "custom_heels", label: "Heels", fieldtype: "Data", width: 90 },
+          { fieldname: "custom_upper_material", label: "Upper Material", fieldtype: "Data", width: 110 },
+          { fieldname: "custom_outsole", label: "Outsole", fieldtype: "Data", width: 110 },
+          { fieldname: "gst_hsn_code", label: "HSN Code", fieldtype: "Data", width: 100 }
+        ];
+        extraItemColumns.forEach(extra => {
+          if (!cols.some(c => c.fieldname === extra.fieldname)) {
+            cols.push(extra);
+          }
+        });
+      }
     } catch(e) {}
 
     if (visibleCols.length > 0) {
@@ -1642,6 +2289,15 @@
     } else {
       currentReportColumns = cols;
       hiddenColumns = [];
+      const hasItemField = cols.some(c => c.fieldname === 'item_code' || c.fieldname === 'style_code');
+      if (hasItemField) {
+        const extraFieldNames = ["custom_style_code", "custom_sub_category", "custom_gender", "custom_vendor_code", "custom_purchase_class", "custom_department", "custom_heels", "custom_upper_material", "custom_outsole", "gst_hsn_code"];
+        extraFieldNames.forEach(fn => {
+          if (cols.some(c => c.fieldname === fn)) {
+            hiddenColumns.push(fn);
+          }
+        });
+      }
     }
 
     runReport();
@@ -1712,6 +2368,7 @@
       .then(res => {
         activeReportData = res || [];
         renderGrid();
+        updateVisualizations();
         showLoading(false);
       })
       .catch(err => {
@@ -1841,12 +2498,18 @@
       return;
     }
 
-    activeReportData.forEach(row => {
+    activeReportData.forEach((row, rowIndex) => {
       const tr = document.createElement('tr');
       visibleCols.forEach(col => {
         const td = document.createElement('td');
         const rawVal = row[col.fieldname];
-        td.innerHTML = formatCell(rawVal, col);
+        
+        const drillFields = ['posting_date', 'item_code', 'item_name', 'purchase_order', 'po_reference', 'name', 'invoice', 'pos_invoice'];
+        if (drillFields.includes(col.fieldname) && rawVal && rawVal !== '—') {
+          td.innerHTML = `<span class="drilldown-link" onclick="drillDown('${col.fieldname}', '${String(rawVal).replace(/'/g, "\\'")}', ${rowIndex})">${formatCell(rawVal, col)}</span>`;
+        } else {
+          td.innerHTML = formatCell(rawVal, col);
+        }
         
         // Text align for numeric columns
         if (col.fieldtype === 'Currency' || col.fieldtype === 'Float' || col.fieldtype === 'Int' || col.fieldname.includes('qty') || col.fieldname.includes('amount') || (col.fieldname.includes('value') && col.fieldname !== 'old_value' && col.fieldname !== 'new_value') || col.fieldname.includes('total')) {
@@ -1959,7 +2622,8 @@
     document.querySelectorAll('.filter-input').forEach(input => {
       filters[input.getAttribute('data-key')] = input.value;
     });
-    const url = '/api/method/smriti_retail_os.reports_api.export_smriti_report?report_key=' + encodeURIComponent(activeReportKey) + '&filters=' + encodeURIComponent(JSON.stringify(filters)) + '&format_type=excel';
+    const visibleCols = currentReportColumns.filter(c => !hiddenColumns.includes(c.fieldname));
+    const url = '/api/method/smriti_retail_os.reports_api.export_smriti_report?report_key=' + encodeURIComponent(activeReportKey) + '&filters=' + encodeURIComponent(JSON.stringify(filters)) + '&format_type=excel&columns=' + encodeURIComponent(JSON.stringify(visibleCols));
     window.location.href = url;
     toast('Excel export initiated.', 'success');
   };
@@ -1973,7 +2637,8 @@
     document.querySelectorAll('.filter-input').forEach(input => {
       filters[input.getAttribute('data-key')] = input.value;
     });
-    const url = '/api/method/smriti_retail_os.reports_api.export_smriti_report?report_key=' + encodeURIComponent(activeReportKey) + '&filters=' + encodeURIComponent(JSON.stringify(filters)) + '&format_type=csv';
+    const visibleCols = currentReportColumns.filter(c => !hiddenColumns.includes(c.fieldname));
+    const url = '/api/method/smriti_retail_os.reports_api.export_smriti_report?report_key=' + encodeURIComponent(activeReportKey) + '&filters=' + encodeURIComponent(JSON.stringify(filters)) + '&format_type=csv&columns=' + encodeURIComponent(JSON.stringify(visibleCols));
     window.location.href = url;
     toast('CSV export initiated.', 'success');
   };

@@ -924,3 +924,34 @@ body.sidebar-position-bottom .main-wrapper {
   margin-top: 0 !important;
 }
 
+/* ── Voucher & Report Sharing Options ── */
+.smriti-voucher-sharing button {
+  transition: opacity 0.2s ease, transform 0.1s ease;
+}
+.smriti-voucher-sharing button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+.smriti-voucher-sharing button:active {
+  transform: translateY(0);
+}
+
+.smriti-report-share button {
+  transition: opacity 0.2s ease, transform 0.1s ease;
+}
+.smriti-report-share button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+.smriti-report-share button:active {
+  transform: translateY(0);
+}
+
+/* ── Global Animated Shortcuts FAB Menu Styling ── */
+#smriti-shortcuts-root button {
+  transition: box-shadow 0.2s ease;
+}
+#smriti-shortcuts-root button:hover {
+  box-shadow: 0 6px 20px rgba(167, 139, 250, 0.5) !important;
+}
+

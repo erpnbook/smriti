@@ -56,6 +56,22 @@ def delete_product(item_code):
 
 
 @frappe.whitelist()
+def bulk_delete_products(item_codes):
+    """Batch disables selected or filtered products."""
+    _check_access()
+    if isinstance(item_codes, str):
+        import json
+        try:
+            item_codes = json.loads(item_codes)
+        except Exception:
+            item_codes = [c.strip() for c in item_codes.split(",") if c.strip()]
+    if not item_codes:
+        frappe.throw(_("No item codes provided for deletion."))
+    count = ProductService.bulk_delete_products(item_codes)
+    return {"success": True, "count": count, "message": _("Successfully deleted {0} products.").format(count)}
+
+
+@frappe.whitelist()
 def get_catalog_metadata():
     """Retrieves list of brands and item groups for filters."""
     _check_access()

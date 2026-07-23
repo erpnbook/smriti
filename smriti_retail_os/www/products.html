@@ -15,8 +15,8 @@
     <title>SMRITI Product Studio</title>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="/assets/smriti_retail_os/js/ui/repository/product_repository.js"></script>
-    <script src="/assets/smriti_retail_os/js/ui/service/product_service.js"></script>
+    <script src="/assets/smriti_retail_os/js/ui/repository/product_repository.js?v=2.2.0"></script>
+    <script src="/assets/smriti_retail_os/js/ui/service/product_service.js?v=2.2.0"></script>
     <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css">
     <script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js"></script>
     <style>
@@ -120,6 +120,76 @@
         .fav-star-btn:hover {
             color: #f59e0b !important;
         }
+
+        /* ── Selected row highlight ── */
+        .grid-row-selected td {
+            background: rgba(var(--smriti-primary-rgb, 94,92,230), 0.10) !important;
+        }
+
+        /* ── Floating selection action bar ── */
+        #selection-action-bar {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            background: var(--smriti-color-brand-primary, #5e5ce6);
+            color: #fff;
+            padding: 10px 24px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 8px;
+            margin: 0 24px 0 24px;
+            box-shadow: 0 4px 16px rgba(94,92,230,0.35);
+            animation: slideDown 0.2s ease;
+            flex-shrink: 0;
+        }
+        #selection-action-bar.visible { display: flex; }
+        @keyframes slideDown {
+            from { opacity:0; transform:translateY(-8px); }
+            to   { opacity:1; transform:translateY(0); }
+        }
+        #selection-action-bar .sel-count {
+            background: rgba(255,255,255,0.2);
+            border-radius: 20px;
+            padding: 3px 12px;
+            font-size: 12px;
+        }
+        #selection-action-bar .sel-btn {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 6px 14px; border-radius: 6px; font-size: 12px;
+            font-weight: 700; cursor: pointer; border: none;
+            transition: all 0.15s ease;
+        }
+        #selection-action-bar .sel-btn-danger {
+            background: #ef4444; color: #fff;
+        }
+        #selection-action-bar .sel-btn-danger:hover { background: #dc2626; }
+        #selection-action-bar .sel-btn-clear {
+            background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3);
+        }
+        #selection-action-bar .sel-btn-clear:hover { background: rgba(255,255,255,0.25); }
+        #selection-action-bar .sel-spacer { flex:1; }
+
+        /* ── Bulk-delete confirmation modal ── */
+        #bulk-delete-modal .modal {
+            max-width: 480px;
+        }
+        #bulk-delete-codes-list {
+            max-height: 180px;
+            overflow-y: auto;
+            background: var(--smriti-bg-dark, rgba(0,0,0,0.2));
+            border: 1px solid var(--smriti-card-border);
+            border-radius: 6px;
+            padding: 10px 14px;
+            margin-top: 10px;
+            font-size: 12px;
+            color: var(--text-muted);
+            font-family: monospace;
+            line-height: 1.8;
+        }
+        .danger-badge {
+            display:inline-block; background:#ef4444;
+            color:#fff; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:700;
+        }
     </style>
 </head>
 <body>
@@ -149,6 +219,11 @@
                 <button class="topbtn" id="btn-toggle-fields" onclick="toggleAllFields()" title="Toggle View of Extended Fields">
                     <span class="material-symbols-outlined">visibility</span> View All Fields
                 </button>
+                <button class="topbtn" id="btn-delete-filtered" onclick="openDeleteFilteredModal()"
+                    title="Delete all currently visible / filtered items"
+                    style="border-color:#ef4444; color:#ef4444;">
+                    <span class="material-symbols-outlined">filter_list_off</span> Delete Filtered
+                </button>
                 <button class="topbtn" onclick="openAddProductModal()" style="border-color:var(--smriti-color-brand-primary);color:var(--smriti-color-brand-light);">
                     <span class="material-symbols-outlined">add</span> Add Product
                 </button>
@@ -158,6 +233,22 @@
         <!-- Filter and Search Toolbar -->
         <div class="studio-card" style="margin: 24px 24px 0 24px; padding: 12px 20px;">
             <div id="products-toolbar"></div>
+        </div>
+
+        <!-- Selection Action Bar -->
+        <div id="selection-action-bar">
+            <span class="sel-count" id="sel-count-badge">0 selected</span>
+            <span style="opacity:0.7;">items selected</span>
+            <span class="sel-spacer"></span>
+            <button class="sel-btn sel-btn-clear" onclick="catalogGrid && catalogGrid.clearSelection()">
+                <span class="material-symbols-outlined" style="font-size:15px;">close</span> Clear
+            </button>
+            <button class="sel-btn sel-btn-clear" onclick="selectAllVisible()">
+                <span class="material-symbols-outlined" style="font-size:15px;">select_all</span> Select All Visible
+            </button>
+            <button class="sel-btn sel-btn-danger" onclick="openBulkDeleteModal()">
+                <span class="material-symbols-outlined" style="font-size:15px;">delete_sweep</span> Delete Selected
+            </button>
         </div>
 
         <!-- Catalog Grid -->
@@ -175,6 +266,31 @@
             <button class="modal-close" onclick="closeProductFormModal()">&times;</button>
         </div>
         <div id="product-form-container"></div>
+    </div>
+</div>
+
+<!-- Bulk Delete Confirmation Modal -->
+<div class="modal-backdrop" id="bulk-delete-modal" onclick="closeBulkDeleteModal()">
+    <div class="modal" onclick="event.stopPropagation()" style="max-width:480px;">
+        <div class="modal-header" style="border-bottom:2px solid #ef4444;">
+            <h3 style="color:#ef4444; display:flex; align-items:center; gap:8px;">
+                <span class="material-symbols-outlined">warning</span> Confirm Bulk Delete
+            </h3>
+            <button class="modal-close" onclick="closeBulkDeleteModal()">&times;</button>
+        </div>
+        <div style="padding:20px 24px; display:flex; flex-direction:column; gap:16px;">
+            <p style="color:var(--text-muted); line-height:1.6; margin:0;" id="bulk-delete-msg">Loading...</p>
+            <div id="bulk-delete-codes-list"></div>
+            <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:8px;">
+                <button class="topbtn" onclick="closeBulkDeleteModal()" style="padding:8px 20px;">Cancel</button>
+                <button id="btn-confirm-bulk-delete" onclick="executeBulkDelete()"
+                    style="padding:8px 20px; background:#ef4444; color:#fff; border:none; border-radius:6px;
+                           font-weight:700; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; gap:6px;">
+                    <span class="material-symbols-outlined" style="font-size:16px;">delete_sweep</span>
+                    <span id="btn-bulk-delete-label">Delete</span>
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -258,8 +374,10 @@ const allColumns = [
 let showAllFields = false;
 
 function toggleAllFields() {
+    if (!catalogGrid) return;
     showAllFields = !showAllFields;
     const btn = document.getElementById("btn-toggle-fields");
+    if (!btn) return;
     if (showAllFields) {
         btn.innerHTML = `<span class="material-symbols-outlined">visibility_off</span> View Basic Fields`;
         btn.style.borderColor = "var(--smriti-color-brand-primary)";
@@ -319,17 +437,21 @@ async function initProductStudio() {
         columns: basicColumns,
         contextObject: "Item",
         contextModule: "item_studio",
+        selectable: true,
         dataSource: async function() {
             const list = await SMRITI.Service.ProductService.getProducts();
             masterItemsList = list || [];
             return masterItemsList;
         },
         actions: [
-            { id: "edit", label: "Edit Product", icon: "edit", callback: (row) => openEditProductModal(row.name) },
+            { id: "edit",   label: "Edit Product",   icon: "edit",   callback: (row) => openEditProductModal(row.name) },
             { id: "delete", label: "Delete Product", icon: "delete", callback: (row) => confirmDeleteProduct(row.name) }
         ],
         onRowClick: function(row) {
             openDetailDrawer(row);
+        },
+        onSelectionChange: function(keys, rows) {
+            updateSelectionBar(keys.length);
         }
     });
 
@@ -352,25 +474,29 @@ async function initProductStudio() {
 }
 
 function applyClientFilters(filters) {
+    if (!masterItemsList) masterItemsList = [];
     let list = masterItemsList;
-    if (filters.search) {
+    if (filters && filters.search) {
+        const query = filters.search.toLowerCase();
         list = list.filter(item => 
-            (item.item_name && item.item_name.toLowerCase().includes(filters.search)) ||
-            (item.name && item.name.toLowerCase().includes(filters.search)) ||
-            (item.custom_style_code && item.custom_style_code.toLowerCase().includes(filters.search))
+            (item.item_name && item.item_name.toLowerCase().includes(query)) ||
+            (item.name && item.name.toLowerCase().includes(query)) ||
+            (item.custom_style_code && item.custom_style_code.toLowerCase().includes(query))
         );
     }
-    if (filters.brand) {
+    if (filters && filters.brand) {
         list = list.filter(item => item.brand === filters.brand);
     }
-    if (filters.category) {
+    if (filters && filters.category) {
         list = list.filter(item => item.item_group === filters.category);
     }
-    if (filters.favorites_only) {
+    if (filters && filters.favorites_only) {
         const favs = JSON.parse(localStorage.getItem("smriti-product-favorites") || "[]");
         list = list.filter(item => favs.includes(item.name));
     }
-    catalogGrid.setData(list);
+    if (window.catalogGrid && typeof window.catalogGrid.setData === "function") {
+        window.catalogGrid.setData(list);
+    }
 }
 
 function openDetailDrawer(row) {
@@ -388,6 +514,7 @@ function openDetailDrawer(row) {
                 <tr style="border-bottom:1px solid var(--smriti-color-border-default);"><td style="padding:10px 0; color:var(--text-muted);">MRP Price</td><td style="padding:10px 0; text-align:right; font-weight:700; color:var(--smriti-color-success);">Rs. ${parseFloat(row.custom_mrp || 0).toFixed(2)}</td></tr>
                 <tr style="border-bottom:1px solid var(--smriti-color-border-default);"><td style="padding:10px 0; color:var(--text-muted);">Purchase Cost</td><td style="padding:10px 0; text-align:right; font-weight:600; color:var(--text-muted);">Rs. ${parseFloat(row.valuation_rate || 0).toFixed(2)}</td></tr>
                 <tr style="border-bottom:1px solid var(--smriti-color-border-default);"><td style="padding:10px 0; color:var(--text-muted);">Tax Rate</td><td style="padding:10px 0; text-align:right; font-weight:600;">${row.custom_gst_percentage || 0}% GST</td></tr>
+                <tr style="border-bottom:1px solid var(--smriti-color-border-default);"><td style="padding:10px 0; color:var(--text-muted);">HSN Code</td><td style="padding:10px 0; text-align:right; font-weight:600;">${row.gst_hsn_code || row.hsn_code || "-"}</td></tr>
             </table>
         </div>
     `;
@@ -425,6 +552,7 @@ function renderForm(initialValues = {}) {
             { id: "style_code", label: "Style / Article No (Optional)", type: "Data", value: initialValues.style_code || "" },
             { id: "cost_price", label: "Cost Price", type: "Currency", required: true, value: initialValues.cost_price || 0 },
             { id: "mrp", label: "MRP Price", type: "Currency", required: true, value: initialValues.mrp || 0 },
+            { id: "hsn_code", label: "HSN Code (4-8 digits)", type: "Data", value: initialValues.hsn_code || "", placeholder: "e.g. 64029990" },
             { id: "gst_percentage", label: "GST Tax Percentage (%)", type: "Select", required: true, value: initialValues.gst_percentage || "18", options: [
                 { value: "0", label: "0% (Nil)" },
                 { value: "5", label: "5% (Footwear/Apparel)" },
@@ -473,6 +601,86 @@ function confirmDeleteProduct(itemCode) {
             }
         }
     });
+}
+
+// ── Selection bar helpers ─────────────────────────────────────────────────────
+function updateSelectionBar(count) {
+    const bar   = document.getElementById("selection-action-bar");
+    const badge = document.getElementById("sel-count-badge");
+    if (!bar) return;
+    if (count > 0) {
+        bar.classList.add("visible");
+        badge.textContent = count + " selected";
+    } else {
+        bar.classList.remove("visible");
+    }
+}
+
+function selectAllVisible() {
+    if (catalogGrid) catalogGrid.selectAll(true);
+}
+
+// ── Bulk-delete: selected items ───────────────────────────────────────────────
+let _bulkDeleteTarget = []; // item codes to delete
+
+function openBulkDeleteModal() {
+    if (!catalogGrid) return;
+    const keys = catalogGrid.getSelectedKeys();
+    if (!keys.length) { SMRITI.toast.error("No items selected."); return; }
+    _bulkDeleteTarget = keys;
+    _showBulkDeleteModal(
+        `You are about to <span class="danger-badge">DISABLE</span> <strong>${keys.length}</strong> selected product(s). This will remove them from the active catalog.`,
+        keys
+    );
+}
+
+// ── Bulk-delete: filtered items ───────────────────────────────────────────────
+function openDeleteFilteredModal() {
+    if (!catalogGrid) return;
+    const rows = catalogGrid.data || [];
+    if (!rows.length) { SMRITI.toast.error("No filtered items to delete."); return; }
+    const keys = rows.map(r => r.name).filter(Boolean);
+    _bulkDeleteTarget = keys;
+    _showBulkDeleteModal(
+        `You are about to <span class="danger-badge">DISABLE</span> <strong>${keys.length}</strong> currently visible / filtered product(s).`,
+        keys
+    );
+}
+
+function _showBulkDeleteModal(msg, codes) {
+    document.getElementById("bulk-delete-msg").innerHTML = msg;
+    document.getElementById("bulk-delete-codes-list").innerHTML =
+        codes.slice(0, 50).map(c => `<div>${c}</div>`).join('') +
+        (codes.length > 50 ? `<div style="opacity:0.6;">… and ${codes.length - 50} more</div>` : '');
+    document.getElementById("btn-bulk-delete-label").textContent = `Delete ${codes.length} Item${codes.length !== 1 ? 's' : ''}`;
+    document.getElementById("bulk-delete-modal").classList.add("open");
+}
+
+function closeBulkDeleteModal() {
+    document.getElementById("bulk-delete-modal").classList.remove("open");
+    _bulkDeleteTarget = [];
+}
+
+async function executeBulkDelete() {
+    if (!_bulkDeleteTarget.length) return;
+    const btn       = document.getElementById("btn-confirm-bulk-delete");
+    const labelSpan = document.getElementById("btn-bulk-delete-label");
+    if (btn) btn.disabled = true;
+    if (labelSpan) labelSpan.textContent = "Deleting...";
+    try {
+        const result = await SMRITI.Service.ProductService.bulkDeleteProducts(_bulkDeleteTarget);
+        const count  = (result && result.count) ? result.count : _bulkDeleteTarget.length;
+        SMRITI.toast.success(`Successfully disabled ${count} product(s)!`);
+        closeBulkDeleteModal();
+        catalogGrid.clearSelection();
+        catalogGrid.refresh();
+    } catch (e) {
+        SMRITI.toast.error("Bulk delete failed: " + (e.message || e));
+    } finally {
+        if (btn) btn.disabled = false;
+        const lbl = document.getElementById("btn-bulk-delete-label");
+        if (lbl) lbl.textContent = "Delete";
+    }
 }
 </script>
 </body>

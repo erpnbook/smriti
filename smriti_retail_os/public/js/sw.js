@@ -19,7 +19,7 @@
    Phase 4: Push notifications
    ============================================================ */
 
-const CACHE_VERSION     = 'smriti-v2.1';
+const CACHE_VERSION     = 'smriti-v2.2';
 const STATIC_CACHE      = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE     = `${CACHE_VERSION}-dynamic`;
 const OFFLINE_URL       = '/offline';
@@ -49,8 +49,8 @@ const STATIC_ASSETS = [
 const CACHE_STRATEGIES = {
     // Cache first — static assets that rarely change
     cacheFirst:           ['/assets/', '/files/', '/favicon'],
-    // Network first — live API data; fall back to cache if offline
-    networkFirst:         ['/api/', '/method/'],
+    // Network first — live API data AND barcode JS modules (updated frequently)
+    networkFirst:         ['/api/', '/method/', '/assets/smriti_retail_os/js/barcode/'],
     // Stale While Revalidate — SMRITI pages: serve cached instantly, update in background
     // POLICY: /desk is NOT a SMRITI route and must NOT be cached by the service worker.
     staleWhileRevalidate: [

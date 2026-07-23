@@ -92,13 +92,17 @@
                 <span class="material-symbols-outlined">tune</span> More Filters <span id="adv-filter-caret">▼</span>
             </button>
             
+            <button class="topbtn" onclick="openCSVImportModal()" style="height: 36px; padding: 0 16px; margin-left: 8px;">
+                <span class="material-symbols-outlined">upload_file</span> Import CSV / Text
+            </button>
+
             <button class="btn-search" onclick="loadManualItems()" style="width: auto; height: 36px; padding: 0 16px; margin-left: auto;">
                 <span class="material-symbols-outlined">search</span> Search & Add
             </button>
         </div>
 
         <!-- Collapsible Advanced Filters Drawer (AUD-BAR-08) -->
-        <div class="advanced-filters-drawer" id="advanced-filters-drawer">
+        <div class="advanced-filters-drawer" id="advanced-filters-drawer" style="grid-template-columns: repeat(4, 1fr); gap: 12px;">
             <!-- Article Range Loader -->
             <div class="drawer-section" style="grid-column: span 2; border-right: 1px solid var(--border); padding-right: 16px;">
                 <div class="panel-section-title"><span class="material-symbols-outlined">dataset</span> Article Range Loader</div>
@@ -107,6 +111,17 @@
                     <span style="color: var(--text-muted);">to</span>
                     <input type="text" class="form-input" id="flt-to-article" placeholder="To Article (e.g. BBM-0100)">
                     <button class="btn-search" onclick="loadRangeItems()" style="width: auto; height: 36px; padding: 0 12px;">Load Range</button>
+                </div>
+            </div>
+
+            <!-- Barcode Number Range Loader -->
+            <div class="drawer-section" style="grid-column: span 2; border-right: 1px solid var(--border); padding-right: 16px;">
+                <div class="panel-section-title"><span class="material-symbols-outlined">barcode</span> Barcode No. Range Loader</div>
+                <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px;">
+                    <input type="text" class="form-input" id="flt-from-barcode" placeholder="From Barcode (e.g. 89010001)">
+                    <span style="color: var(--text-muted);">to</span>
+                    <input type="text" class="form-input" id="flt-to-barcode" placeholder="To Barcode (e.g. 89010100)">
+                    <button class="btn-search" onclick="loadBarcodeRangeItems()" style="width: auto; height: 36px; padding: 0 12px;">Load Barcode Range</button>
                 </div>
             </div>
 
@@ -128,7 +143,13 @@
                 </div>
             </div>
 
-            <!-- Fashion Filters -->
+            <!-- Vendor & Retail Attribute Filters -->
+            <div class="drawer-section">
+                <label class="form-label">Vendor / Supplier</label>
+                <select class="form-input" id="flt-supplier">
+                    <option value="">All Suppliers / Vendors</option>
+                </select>
+            </div>
             <div class="drawer-section">
                 <label class="form-label">Department</label>
                 <select class="form-input" id="flt-department">
@@ -142,6 +163,42 @@
                 </select>
             </div>
             <div class="drawer-section">
+                <label class="form-label">Purchase Class</label>
+                <select class="form-input" id="flt-purchase-class">
+                    <option value="">All Purchase Classes</option>
+                </select>
+            </div>
+            <div class="drawer-section">
+                <label class="form-label">Merchandise Cat.</label>
+                <select class="form-input" id="flt-merchandise-cat">
+                    <option value="">All Merch. Categories</option>
+                </select>
+            </div>
+            <div class="drawer-section">
+                <label class="form-label">Sub Category</label>
+                <select class="form-input" id="flt-sub-cat">
+                    <option value="">All Sub Categories</option>
+                </select>
+            </div>
+            <div class="drawer-section">
+                <label class="form-label">Upper Material</label>
+                <select class="form-input" id="flt-upper-material">
+                    <option value="">All Upper Materials</option>
+                </select>
+            </div>
+            <div class="drawer-section">
+                <label class="form-label">Outsole</label>
+                <select class="form-input" id="flt-outsole">
+                    <option value="">All Outsoles</option>
+                </select>
+            </div>
+            <div class="drawer-section">
+                <label class="form-label">Heel Type</label>
+                <select class="form-input" id="flt-heel-type">
+                    <option value="">All Heel Types</option>
+                </select>
+            </div>
+            <div class="drawer-section">
                 <label class="form-label">Season</label>
                 <select class="form-input" id="flt-season">
                     <option value="">All Seasons</option>
@@ -151,12 +208,6 @@
                 <label class="form-label">Collection</label>
                 <select class="form-input" id="flt-collection">
                     <option value="">All Collections</option>
-                </select>
-            </div>
-            <div class="drawer-section">
-                <label class="form-label">Supplier</label>
-                <select class="form-input" id="flt-supplier">
-                    <option value="">All Suppliers</option>
                 </select>
             </div>
         </div>
@@ -251,6 +302,7 @@
                     <div class="table-header-title">Print Worksheet</div>
                     <div class="table-header-actions" id="action-buttons" style="display: flex;">
                         <button class="topbtn" id="btn-header-add-custom" onclick="openAddCustomRowModal()" style="color:var(--primary-lt); border-color:var(--primary);"><span class="material-symbols-outlined">add_circle</span> Add Custom Item</button>
+                        <button class="topbtn" id="btn-header-raw-prn" onclick="openRawPRNModal()" style="color:var(--primary-lt); border-color:var(--primary);"><span class="material-symbols-outlined">terminal</span> Direct Raw PRN</button>
                         <button class="topbtn" id="btn-header-clear-all" onclick="clearQueue()" style="color:var(--danger); border-color:rgba(239,68,68,0.3);"><span class="material-symbols-outlined">delete_sweep</span> Clear All</button>
                         <button class="topbtn" id="btn-header-download-prn" onclick="downloadPRN()" style="color:var(--primary-lt); border-color:var(--primary);"><span class="material-symbols-outlined">download</span> Download PRN</button>
                     </div>
@@ -1027,22 +1079,158 @@
     </div>
 </div>
 
+<!-- CSV / Raw Text Batch Import Modal -->
+<div class="modal-overlay" id="csv-import-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:var(--z-modal); align-items:center; justify-content:center;">
+    <div class="modal-card" style="width: 580px; max-width:90vw; background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:24px; display:flex; flex-direction:column; gap:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:12px;">
+            <div style="font-weight:700; font-size:1.1rem; display:flex; align-items:center; gap:8px;">
+                <span class="material-symbols-outlined" style="color:var(--primary-lt);">upload_file</span> Import Barcodes from CSV / Raw Text
+            </div>
+            <button class="btn-del-row" onclick="closeModal('csv-import-modal')"><span class="material-symbols-outlined">close</span></button>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:12px;">
+            <div style="font-size:0.85rem; color:var(--text-muted);">
+                Upload a <code>.csv</code> / <code>.txt</code> file or paste raw lines containing <strong>Barcode No / Item Code</strong> and <strong>Print Qty</strong> (e.g. <code>89010001, 5</code>).
+            </div>
+
+            <!-- Import Source Tabs -->
+            <div style="display:flex; gap:16px; align-items:center;">
+                <label class="form-label" style="display:flex; align-items:center; gap:6px; cursor:pointer; font-weight:600;">
+                    <input type="radio" name="csv-source-type" value="file" checked onchange="toggleCSVSourceType('file')"> Upload CSV File
+                </label>
+                <label class="form-label" style="display:flex; align-items:center; gap:6px; cursor:pointer; font-weight:600;">
+                    <input type="radio" name="csv-source-type" value="text" onchange="toggleCSVSourceType('text')"> Paste Raw Text
+                </label>
+            </div>
+
+            <!-- File Upload Zone -->
+            <div id="csv-file-zone" class="form-group">
+                <input type="file" id="csv-file-input" accept=".csv,.txt,.tsv" class="form-input" style="padding:10px; cursor:pointer;">
+            </div>
+
+            <!-- Raw Text Paste Zone -->
+            <div id="csv-text-zone" class="form-group" style="display:none;">
+                <textarea id="csv-raw-text" class="form-input" rows="6" placeholder="89010001, 5&#10;89010002, 10&#10;89010003, 2"></textarea>
+            </div>
+
+            <!-- Configurable Mappings -->
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px; background:var(--bg2); padding:12px; border-radius:var(--radius-sm); border:1px solid var(--border);">
+                <div class="form-group">
+                    <label class="form-label">Delimiter</label>
+                    <select class="form-input" id="csv-delimiter">
+                        <option value="auto">Auto Detect</option>
+                        <option value=",">Comma (,)</option>
+                        <option value="&#9;">Tab (\t)</option>
+                        <option value=";">Semicolon (;)</option>
+                        <option value="|">Pipe (|)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Barcode Col</label>
+                    <select class="form-input" id="csv-barcode-col">
+                        <option value="0">Column 1 (A)</option>
+                        <option value="1">Column 2 (B)</option>
+                        <option value="2">Column 3 (C)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Print Qty Col</label>
+                    <select class="form-input" id="csv-qty-col">
+                        <option value="1">Column 2 (B)</option>
+                        <option value="0">Column 1 (A)</option>
+                        <option value="2">Column 3 (C)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
+            <button class="topbtn" onclick="closeModal('csv-import-modal')">Cancel</button>
+            <button class="btn-search" onclick="processCSVImport()" style="width:auto; padding:0 20px;">
+                <span class="material-symbols-outlined">download</span> Process & Add to Worksheet
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Third-Party Raw PRN / ZPL Direct Print Modal -->
+<div class="modal-overlay" id="raw-prn-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:var(--z-modal); align-items:center; justify-content:center;">
+    <div class="modal-card" style="width: 600px; max-width:90vw; background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:24px; display:flex; flex-direction:column; gap:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:12px;">
+            <div style="font-weight:700; font-size:1.1rem; display:flex; align-items:center; gap:8px;">
+                <span class="material-symbols-outlined" style="color:var(--primary-lt);">terminal</span> Direct Print Third-Party PRN / ZPL Commands
+            </div>
+            <button class="btn-del-row" onclick="closeModal('raw-prn-modal')"><span class="material-symbols-outlined">close</span></button>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:12px;">
+            <div style="font-size:0.85rem; color:var(--text-muted);">
+                Upload a <code>.prn</code>, <code>.zpl</code>, <code>.tspl</code> file or paste pre-generated raw printer commands received from third-party systems / custom software.
+            </div>
+
+            <!-- Source Tabs -->
+            <div style="display:flex; gap:16px; align-items:center;">
+                <label class="form-label" style="display:flex; align-items:center; gap:6px; cursor:pointer; font-weight:600;">
+                    <input type="radio" name="raw-prn-source-type" value="text" checked onchange="toggleRawPRNSourceType('text')"> Paste Raw Command
+                </label>
+                <label class="form-label" style="display:flex; align-items:center; gap:6px; cursor:pointer; font-weight:600;">
+                    <input type="radio" name="raw-prn-source-type" value="file" onchange="toggleRawPRNSourceType('file')"> Upload PRN File
+                </label>
+            </div>
+
+            <!-- File Upload Zone -->
+            <div id="raw-prn-file-zone" class="form-group" style="display:none;">
+                <input type="file" id="raw-prn-file-input" accept=".prn,.zpl,.tspl,.txt" class="form-input" style="padding:10px; cursor:pointer;">
+            </div>
+
+            <!-- Raw PRN Textarea -->
+            <div id="raw-prn-text-zone" class="form-group">
+                <textarea id="raw-prn-text-input" class="form-input" rows="7" placeholder="^XA&#10;^FO50,50^ADN,36,20^FDSMRITI THIRD PARTY TAG^FS&#10;^FO50,100^BY2^BCN,60,Y,N,N^FD89010001^FS&#10;^XZ" style="font-family:monospace; font-size:0.85rem;"></textarea>
+            </div>
+
+            <!-- Print Settings -->
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; background:var(--bg2); padding:12px; border-radius:var(--radius-sm); border:1px solid var(--border);">
+                <div class="form-group">
+                    <label class="form-label">Print Method Target</label>
+                    <select class="form-input" id="raw-prn-target">
+                        <option value="LAN">Network Socket (TCP/IP Printer)</option>
+                        <option value="USB">Local USB Printer (QZ Tray)</option>
+                        <option value="FILE">Download PRN File</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Repeat Copies</label>
+                    <input type="number" class="form-input" id="raw-prn-repeat" value="1" min="1" max="1000">
+                </div>
+            </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
+            <button class="topbtn" onclick="closeModal('raw-prn-modal')">Cancel</button>
+            <button class="btn-search" onclick="processRawPRNPrint()" style="width:auto; padding:0 20px;">
+                <span class="material-symbols-outlined">print</span> Send to Printer Now
+            </button>
+        </div>
+    </div>
+</div>
+
 <div id="toast-container"></div>
 
 <script>
 const CSRF_TOKEN = '{{ csrf_token }}';
 let loggedUser = '{{ cashier }}';
 </script>
-<script src="/assets/smriti_retail_os/js/barcode/barcode_core.js"></script>
-<script src="/assets/smriti_retail_os/js/barcode/barcode_qz.js"></script>
-<script src="/assets/smriti_retail_os/js/barcode/barcode_items.js"></script>
-<script src="/assets/smriti_retail_os/js/barcode/barcode_queue.js"></script>
-<script src="/assets/smriti_retail_os/js/barcode/barcode_preview.js"></script>
-<script src="/assets/smriti_retail_os/js/barcode/barcode_designer.js"></script>
-<script src="/assets/smriti_retail_os/js/barcode/barcode_print.js"></script>
-<script src="/assets/smriti_retail_os/js/barcode/barcode_jobs.js"></script>
-<script src="/assets/smriti_retail_os/js/barcode/barcode_analytics.js"></script>
-<script src="/assets/smriti_retail_os/js/barcode/barcode_init.js"></script>
+<script src="/assets/smriti_retail_os/js/barcode/barcode_core.js?v=2.2.0"></script>
+<script src="/assets/smriti_retail_os/js/barcode/barcode_qz.js?v=2.2.0"></script>
+<script src="/assets/smriti_retail_os/js/barcode/barcode_items.js?v=2.2.0"></script>
+<script src="/assets/smriti_retail_os/js/barcode/barcode_queue.js?v=2.2.0"></script>
+<script src="/assets/smriti_retail_os/js/barcode/barcode_preview.js?v=2.2.0"></script>
+<script src="/assets/smriti_retail_os/js/barcode/barcode_designer.js?v=2.2.0"></script>
+<script src="/assets/smriti_retail_os/js/barcode/barcode_print.js?v=2.2.0"></script>
+<script src="/assets/smriti_retail_os/js/barcode/barcode_jobs.js?v=2.2.0"></script>
+<script src="/assets/smriti_retail_os/js/barcode/barcode_analytics.js?v=2.2.0"></script>
+<script src="/assets/smriti_retail_os/js/barcode/barcode_init.js?v=2.2.0"></script>
 
 <script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js"></script>
 <script>SMRITI.renderFlexibleSidebar("barcode");</script>
@@ -1054,18 +1242,6 @@ let loggedUser = '{{ cashier }}';
     window.frappe.boot.smriti_site_config = {{ smriti_site_config | tojson }};
 </script>
 
-<!-- SMRITI UI Configuration Engine — loaded last to merge safely into SMRITI global -->
-<script src="/assets/smriti_retail_os/js/smriti_ui_resolver.js"></script>
-<script src="/assets/smriti_retail_os/js/smriti_theme_manager.js"></script>
-<script>
-    /* Activate UI Configuration Engine for Barcode Module.
-       Called after all sidebar scripts run so SMRITI global is stable. */
-    document.addEventListener('DOMContentLoaded', function() {
-        if (window.SMRITI && typeof SMRITI.initUIEngine === 'function') {
-            SMRITI.initUIEngine();
-        }
-    });
-</script>
 </body>
 </html>
 {% endblock %}

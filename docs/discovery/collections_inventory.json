@@ -4,8 +4,8 @@
   "generated_by": "SDC 1.1.2-GA",
   "schema_version": "1.2",
   "artifact_type": "collections_inventory",
-  "generated_at": "2026-06-27T23:29:13Z",
-  "repository_commit": "43ea253a377f502e17d3006e1b2f6b179a785fa4",
+  "generated_at": "2026-07-09T19:56:39Z",
+  "repository_commit": "eb664a781445f8d59c2fc5ace72c700e75bfbbeb",
   "provenance": {
     "artifact_id": "ART-COLLECTIONS-INV-00001",
     "produced_by": "Phase0_Discovery",
@@ -184,6 +184,16 @@
           "title": "search_barcode_items"
         },
         {
+          "artifact_id": "ART-API-00127",
+          "asset_type": "api",
+          "title": "get_print_template_versions"
+        },
+        {
+          "artifact_id": "ART-API-00128",
+          "asset_type": "api",
+          "title": "restore_print_template_version"
+        },
+        {
           "artifact_id": "ART-API-00122",
           "asset_type": "api",
           "title": "enqueue_print_job"
@@ -209,24 +219,9 @@
           "title": "get_recent_print_jobs"
         },
         {
-          "artifact_id": "ART-API-00127",
-          "asset_type": "api",
-          "title": "get_print_template_versions"
-        },
-        {
-          "artifact_id": "ART-API-00128",
-          "asset_type": "api",
-          "title": "restore_print_template_version"
-        },
-        {
           "artifact_id": "ART-API-00129",
           "asset_type": "api",
           "title": "validate_layout_diagnostics"
-        },
-        {
-          "artifact_id": "ART-API-00130",
-          "asset_type": "api",
-          "title": "cleanup_old_print_jobs"
         },
         {
           "artifact_id": "ART-API-00131",
@@ -267,6 +262,61 @@
           "artifact_id": "ART-API-00624",
           "asset_type": "api",
           "title": "resolve_label_preview"
+        },
+        {
+          "artifact_id": "ART-API-00729",
+          "asset_type": "api",
+          "title": "get_barcode_feature_flags"
+        },
+        {
+          "artifact_id": "ART-API-00730",
+          "asset_type": "api",
+          "title": "log_barcode_scan_event"
+        },
+        {
+          "artifact_id": "ART-API-00731",
+          "asset_type": "api",
+          "title": "aggregate_scan_telemetry"
+        },
+        {
+          "artifact_id": "ART-API-00752",
+          "asset_type": "api",
+          "title": "get_label_templates"
+        },
+        {
+          "artifact_id": "ART-API-00753",
+          "asset_type": "api",
+          "title": "generate_preview_canvas"
+        },
+        {
+          "artifact_id": "ART-API-00754",
+          "asset_type": "api",
+          "title": "print_label"
+        },
+        {
+          "artifact_id": "ART-API-00755",
+          "asset_type": "api",
+          "title": "get_item_for_label"
+        },
+        {
+          "artifact_id": "ART-API-00756",
+          "asset_type": "api",
+          "title": "get_printers_list"
+        },
+        {
+          "artifact_id": "ART-API-00780",
+          "asset_type": "api",
+          "title": "get_registered_printers"
+        },
+        {
+          "artifact_id": "ART-API-00781",
+          "asset_type": "api",
+          "title": "dispatch_print_job"
+        },
+        {
+          "artifact_id": "ART-API-00813",
+          "asset_type": "api",
+          "title": "get_po_matrix_print_data"
         }
       ],
       "coverage_score": 100.0,
@@ -454,6 +504,46 @@
           "title": "get_psv_health"
         },
         {
+          "artifact_id": "ART-API-00694",
+          "asset_type": "api",
+          "title": "list_physical_audits"
+        },
+        {
+          "artifact_id": "ART-API-00695",
+          "asset_type": "api",
+          "title": "list_party_stock_accounts_for_audit"
+        },
+        {
+          "artifact_id": "ART-API-00696",
+          "asset_type": "api",
+          "title": "create_physical_audit"
+        },
+        {
+          "artifact_id": "ART-API-00697",
+          "asset_type": "api",
+          "title": "submit_physical_audit"
+        },
+        {
+          "artifact_id": "ART-API-00698",
+          "asset_type": "api",
+          "title": "get_physical_audit"
+        },
+        {
+          "artifact_id": "ART-API-00699",
+          "asset_type": "api",
+          "title": "list_sales_uploads"
+        },
+        {
+          "artifact_id": "ART-API-00700",
+          "asset_type": "api",
+          "title": "create_sales_upload"
+        },
+        {
+          "artifact_id": "ART-API-00701",
+          "asset_type": "api",
+          "title": "submit_sales_upload"
+        },
+        {
           "artifact_id": "ART-API-00306",
           "asset_type": "api",
           "title": "create_reversal_entry"
@@ -507,6 +597,16 @@
           "artifact_id": "ART-API-00485",
           "asset_type": "api",
           "title": "get_wallet_ledger"
+        },
+        {
+          "artifact_id": "ART-API-00795",
+          "asset_type": "api",
+          "title": "get_supplier_ledger"
+        },
+        {
+          "artifact_id": "ART-API-00835",
+          "asset_type": "api",
+          "title": "get_attribution_ledger"
         },
         {
           "artifact_id": "ART-TERM-00517",
@@ -904,6 +1004,21 @@
           "title": "save_coupon_campaign"
         },
         {
+          "artifact_id": "ART-API-00790",
+          "asset_type": "api",
+          "title": "create_invoice"
+        },
+        {
+          "artifact_id": "ART-API-00791",
+          "asset_type": "api",
+          "title": "get_invoices"
+        },
+        {
+          "artifact_id": "ART-API-00792",
+          "asset_type": "api",
+          "title": "get_invoice_detail"
+        },
+        {
           "artifact_id": "ART-API-00651",
           "asset_type": "api",
           "title": "calculate_billing_summary"
@@ -947,6 +1062,11 @@
           "artifact_id": "ART-DOCTYPE-00076",
           "asset_type": "doctype",
           "title": "SMRITI PSV Transaction Item"
+        },
+        {
+          "artifact_id": "ART-DOCTYPE-00690",
+          "asset_type": "doctype",
+          "title": "SMRITI Purchase Order Item"
         },
         {
           "artifact_id": "ART-DOCTYPE-00089",
@@ -1292,6 +1412,56 @@
           "artifact_id": "ART-API-00482",
           "asset_type": "api",
           "title": "get_item_stock"
+        },
+        {
+          "artifact_id": "ART-API-00747",
+          "asset_type": "api",
+          "title": "get_products"
+        },
+        {
+          "artifact_id": "ART-API-00748",
+          "asset_type": "api",
+          "title": "get_product_detail"
+        },
+        {
+          "artifact_id": "ART-API-00749",
+          "asset_type": "api",
+          "title": "save_product"
+        },
+        {
+          "artifact_id": "ART-API-00750",
+          "asset_type": "api",
+          "title": "delete_product"
+        },
+        {
+          "artifact_id": "ART-API-00751",
+          "asset_type": "api",
+          "title": "get_catalog_metadata"
+        },
+        {
+          "artifact_id": "ART-API-00755",
+          "asset_type": "api",
+          "title": "get_item_for_label"
+        },
+        {
+          "artifact_id": "ART-API-00799",
+          "asset_type": "api",
+          "title": "search_items"
+        },
+        {
+          "artifact_id": "ART-API-00808",
+          "asset_type": "api",
+          "title": "get_items_for_grn"
+        },
+        {
+          "artifact_id": "ART-API-00815",
+          "asset_type": "api",
+          "title": "resolve_variant_item"
+        },
+        {
+          "artifact_id": "ART-API-00825",
+          "asset_type": "api",
+          "title": "resolve_variant_item"
         },
         {
           "artifact_id": "ART-SCREEN-ITEM_MASTER",

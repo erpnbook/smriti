@@ -26,7 +26,7 @@
 from smriti_retail_os.core.platform.registry import resolve
 
 
-def get(model_name: str, name, fields, as_dict: bool = True):
+def get(model_name: str, name, fields="name", as_dict: bool = False, **kwargs):
     """
     Fetch one or more field values from a document.
 
@@ -35,6 +35,7 @@ def get(model_name: str, name, fields, as_dict: bool = True):
         name (str|dict): Document name or filter dict
         fields (str|list): Single field name or list of field names
         as_dict (bool): If True and multiple fields, returns a dict
+        **kwargs: Additional keyword arguments forwarded to the database layer (e.g. order_by, cache)
 
     Returns:
         Field value (single field) or dict (multiple fields)
@@ -44,7 +45,7 @@ def get(model_name: str, name, fields, as_dict: bool = True):
         info = db.get("Customer", "CUST-001", ["customer_name", "credit_limit"])
     """
     import frappe
-    return smriti.db.get(resolve(model_name), name, fields, as_dict=as_dict)
+    return frappe.db.get_value(resolve(model_name), name, fields, as_dict=as_dict, **kwargs)
 
 
 def get_single(model_name: str, fieldname: str):
@@ -59,11 +60,11 @@ def get_single(model_name: str, fieldname: str):
         Field value
     """
     import frappe
-    return smriti.db.get_single(resolve(model_name), fieldname)
+    return frappe.db.get_single_value(resolve(model_name), fieldname)
 
 
 def get_list(model_name: str, filters=None, fields=None, order_by: str = None,
-             limit: int = None, as_dict: bool = True):
+             limit: int = None, as_dict: bool = True, **kwargs):
     """
     Fetch multiple records from a document type.
 
@@ -74,6 +75,7 @@ def get_list(model_name: str, filters=None, fields=None, order_by: str = None,
         order_by (str): Order clause, e.g. "creation desc"
         limit (int): Maximum number of records
         as_dict (bool): Return as list of dicts
+        **kwargs: Additional keyword arguments forwarded to the database layer (e.g. pluck)
 
     Returns:
         list[dict]: Matching records
@@ -86,37 +88,43 @@ def get_list(model_name: str, filters=None, fields=None, order_by: str = None,
         )
     """
     import frappe
-    kwargs = {}
+    kwargs_merged = {}
     if filters is not None:
-        kwargs["filters"] = filters
+        kwargs_merged["filters"] = filters
     if fields is not None:
-        kwargs["fields"] = fields
+        kwargs_merged["fields"] = fields
     if order_by is not None:
-        kwargs["order_by"] = order_by
+        kwargs_merged["order_by"] = order_by
     if limit is not None:
-        kwargs["limit"] = limit
-    return frappe.db.get_list(resolve(model_name), as_dict=as_dict, **kwargs)
+        kwargs_merged["limit"] = limit
+    if not as_dict:
+        kwargs_merged["as_list"] = True
+    kwargs_merged.update(kwargs)
+    return frappe.db.get_list(resolve(model_name), **kwargs_merged)
 
 
-def set(model_name: str, name: str, field, value=None):
+def set(model_name: str, name: str, field, value=None, **kwargs):
     """
-    Update a field value directly in the database (without loading the full document).
+    Update a single field value of a document in the database.
 
     Args:
         model_name (str): SMRITI model name
         name (str): Document name
-        field (str|dict): Field name or dict of {field: value}
-        value: Value to set (if field is a string)
+        field (str): Field name to update
+        value: New value
+        **kwargs: Additional keyword arguments forwarded to the database layer (e.g. update_modified)
 
     Example:
-        db.set("Customer", "CUST-001", "credit_limit", 75000)
-        db.set("Customer", "CUST-001", {"credit_limit": 75000, "territory": "North"})
+        db.set("Customer", "CUST-001", "credit_limit", 150000)
     """
     import frappe
-    smriti.db.set_value(resolve(model_name), name, field, value)
+    frappe.db.set_value(resolve(model_name), name, field, value, **kwargs)
 
 
-def exists(model_name: str, filters) -> bool:
+set_value = set
+
+
+def exists(model_name: str, filters):
     """
     Check whether a document matching the given filters exists.
 
@@ -125,14 +133,30 @@ def exists(model_name: str, filters) -> bool:
         filters (str|dict): Document name or filter dict
 
     Returns:
-        bool: True if a matching document exists
+        str|None: Document name if exists, else None
 
     Example:
         if db.exists("Customer", {"mobile_no": "9876543210"}):
             ...
     """
     import frappe
-    return bool(smriti.db.exists(resolve(model_name), filters))
+    return frappe.db.exists(resolve(model_name), filters)
+
+
+def count(model_name: str, filters=None, cache: bool = False) -> int:
+    """
+    Count documents matching the given filters.
+
+    Args:
+        model_name (str): SMRITI model name
+        filters (dict|list): Filter conditions
+        cache (bool): Use database cache
+
+    Returns:
+        int: Count of matching documents
+    """
+    import frappe
+    return frappe.db.count(resolve(model_name), filters, cache=cache)
 
 
 def delete(model_name: str, filters: dict):
@@ -148,10 +172,10 @@ def delete(model_name: str, filters: dict):
         db.delete("StockTransfer", {"status": "Draft", "owner": "old-user@example.com"})
     """
     import frappe
-    smriti.db.delete(resolve(model_name), filters)
+    frappe.db.delete(resolve(model_name), filters)
 
 
-def sql(query: str, values=None, as_dict: bool = True) -> list:
+def sql(query: str, values=None, as_dict: bool = False) -> list:
     """
     Execute a raw SQL query.
 
@@ -177,7 +201,7 @@ def sql(query: str, values=None, as_dict: bool = True) -> list:
         )
     """
     import frappe
-    return smriti.db.sql(query, values or {}, as_dict=as_dict)
+    return frappe.db.sql(query, values or {}, as_dict=as_dict)
 
 
 def commit():
@@ -186,10 +210,10 @@ def commit():
     Use only when you need an explicit commit outside the normal request lifecycle.
     """
     import frappe
-    smriti.db.commit()
+    frappe.db.commit()
 
 
 def rollback():
     """Roll back the current database transaction."""
     import frappe
-    smriti.db.rollback()
+    frappe.db.rollback()

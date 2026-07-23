@@ -4,8 +4,8 @@
   "generated_by": "SDC 1.1.2-GA",
   "schema_version": "1.2",
   "artifact_type": "screen_inventory",
-  "generated_at": "2026-06-27T23:29:13Z",
-  "repository_commit": "43ea253a377f502e17d3006e1b2f6b179a785fa4",
+  "generated_at": "2026-07-09T19:56:39Z",
+  "repository_commit": "eb664a781445f8d59c2fc5ace72c700e75bfbbeb",
   "provenance": {
     "artifact_id": "ART-SCREEN-INV-00001",
     "produced_by": "Phase0_Discovery",
@@ -39,40 +39,7 @@
         "custom_heel_type",
         "custom_style_code"
       ],
-      "apis": [
-        "smriti_retail_os.barcode_api.expand_item_variants",
-        "smriti_retail_os.barcode_api.get_transaction_items_checklist",
-        "smriti_retail_os.barcode_api.generate_prn",
-        "smriti_retail_os.billing_api.add_item_by_barcode",
-        "smriti_retail_os.inventory_api.scan_item_for_inventory",
-        "smriti_retail_os.inventory_api.create_grn",
-        "smriti_retail_os.inventory_api.create_stock_transfer",
-        "smriti_retail_os.inventory_api.create_stock_adjustment",
-        "smriti_retail_os.inventory_api.create_stock_audit",
-        "smriti_retail_os.inventory_api.get_stock_summary",
-        "smriti_retail_os.item_master_api.import_item_master",
-        "smriti_retail_os.item_master_api.generate_ean13_barcode",
-        "smriti_retail_os.item_master_api.get_style_details",
-        "smriti_retail_os.item_master_api.create_style_with_variants",
-        "smriti_retail_os.item_master_api.delete_size_variant",
-        "smriti_retail_os.item_master_api.delete_style_and_variants",
-        "smriti_retail_os.item_master_api.import_pivot_item_master",
-        "smriti_retail_os.master_api.quick_create_item",
-        "smriti_retail_os.psv_snapshot_service.generate_snapshots",
-        "smriti_retail_os.purchase_api.get_po_details",
-        "smriti_retail_os.purchase_api.create_purchase_order",
-        "smriti_retail_os.reports_api.get_stock_report",
-        "smriti_retail_os.sales_order_api.create_sales_order",
-        "smriti_retail_os.sizewise_invoice_api.search_items",
-        "smriti_retail_os.sizewise_invoice_api.get_item_details_by_article",
-        "smriti_retail_os.transaction_kernel.resolve_identifiers",
-        "smriti_retail_os.api.brand_api.delete_brand",
-        "smriti_retail_os.api.category_api.delete_category",
-        "smriti_retail_os.api.scheme_api.create_scheme",
-        "smriti_retail_os.api.scheme_api.update_scheme",
-        "smriti_retail_os.cge.service.cge_service.validate_checkout_rules",
-        "smriti_retail_os.utils.opening_balance.parse_opening_excel"
-      ],
+      "apis": [],
       "reports": [
         "Item Catalog Report"
       ],
@@ -98,15 +65,15 @@
       "coverage_rules": {
         "BUSINESS": "PASS",
         "TECHNICAL": "PASS",
-        "API": "PASS",
+        "API": "FAIL",
         "SCREEN": "PASS",
         "MANUAL": "PASS"
       },
-      "coverage_score": 100.0,
+      "coverage_score": 80.0,
       "freshness": {
-        "last_scanned_commit": "43ea253a377f502e17d3006e1b2f6b179a785fa4",
-        "last_scan_timestamp": "2026-06-27T23:29:13Z",
-        "last_validated_timestamp": "2026-06-27T23:29:13Z"
+        "last_scanned_commit": "eb664a781445f8d59c2fc5ace72c700e75bfbbeb",
+        "last_scan_timestamp": "2026-07-09T19:56:39Z",
+        "last_validated_timestamp": "2026-07-09T19:56:39Z"
       },
       "related_assets": [],
       "evidence": {
@@ -132,22 +99,7 @@
         "custom_sales_person",
         "custom_discount_reason"
       ],
-      "apis": [
-        "smriti_retail_os.billing_api.submit_bill",
-        "smriti_retail_os.billing_api.generate_mock_eway_bill",
-        "smriti_retail_os.billing_api.create_return_invoice",
-        "smriti_retail_os.billing_api.create_custom_sales_return",
-        "smriti_retail_os.billing_api.update_sales_return",
-        "smriti_retail_os.billing_api.delete_sales_return",
-        "smriti_retail_os.reports_api.get_outstanding_report",
-        "smriti_retail_os.sizewise_invoice_api.save_sizewise_invoice",
-        "smriti_retail_os.sizewise_invoice_api.submit_sizewise_invoice",
-        "smriti_retail_os.sizewise_invoice_api.get_sizewise_invoice",
-        "smriti_retail_os.sizewise_invoice_api.list_sizewise_invoices",
-        "smriti_retail_os.sizewise_invoice_api.cancel_sizewise_invoice",
-        "smriti_retail_os.cge.service.cge_service.validate_checkout_rules",
-        "smriti_retail_os.smriti_retail_os.api.tally_api.sync_to_tally"
-      ],
+      "apis": [],
       "reports": [
         "Sales Register",
         "Payment Summary"
@@ -174,15 +126,15 @@
       "coverage_rules": {
         "BUSINESS": "PASS",
         "TECHNICAL": "PASS",
-        "API": "PASS",
+        "API": "FAIL",
         "SCREEN": "PASS",
         "MANUAL": "PASS"
       },
-      "coverage_score": 100.0,
+      "coverage_score": 80.0,
       "freshness": {
-        "last_scanned_commit": "43ea253a377f502e17d3006e1b2f6b179a785fa4",
-        "last_scan_timestamp": "2026-06-27T23:29:13Z",
-        "last_validated_timestamp": "2026-06-27T23:29:13Z"
+        "last_scanned_commit": "eb664a781445f8d59c2fc5ace72c700e75bfbbeb",
+        "last_scan_timestamp": "2026-07-09T19:56:39Z",
+        "last_validated_timestamp": "2026-07-09T19:56:39Z"
       },
       "related_assets": [],
       "evidence": {
@@ -198,12 +150,7 @@
       "route": "/purchase",
       "doctype": "Purchase Order",
       "fields": [],
-      "apis": [
-        "smriti_retail_os.purchase_api.get_open_purchase_orders",
-        "smriti_retail_os.purchase_api.get_po_details",
-        "smriti_retail_os.purchase_api.create_purchase_order",
-        "smriti_retail_os.purchase_api.create_purchase_receipt"
-      ],
+      "apis": [],
       "reports": [
         "Purchase Order Registry"
       ],
@@ -227,15 +174,15 @@
       "coverage_rules": {
         "BUSINESS": "PASS",
         "TECHNICAL": "PASS",
-        "API": "PASS",
+        "API": "FAIL",
         "SCREEN": "FAIL",
         "MANUAL": "PASS"
       },
-      "coverage_score": 80.0,
+      "coverage_score": 60.0,
       "freshness": {
-        "last_scanned_commit": "43ea253a377f502e17d3006e1b2f6b179a785fa4",
-        "last_scan_timestamp": "2026-06-27T23:29:13Z",
-        "last_validated_timestamp": "2026-06-27T23:29:13Z"
+        "last_scanned_commit": "eb664a781445f8d59c2fc5ace72c700e75bfbbeb",
+        "last_scan_timestamp": "2026-07-09T19:56:39Z",
+        "last_validated_timestamp": "2026-07-09T19:56:39Z"
       },
       "related_assets": [],
       "evidence": {
@@ -254,9 +201,6 @@
         "custom_party_stock_account"
       ],
       "apis": [
-        "smriti_retail_os.barcode_api.get_items_for_printing",
-        "smriti_retail_os.inventory_api.create_stock_transfer",
-        "smriti_retail_os.inventory_api.create_stock_adjustment",
         "smriti_retail_os.psv_api.get_psv_health"
       ],
       "reports": [
@@ -288,9 +232,9 @@
       },
       "coverage_score": 100.0,
       "freshness": {
-        "last_scanned_commit": "43ea253a377f502e17d3006e1b2f6b179a785fa4",
-        "last_scan_timestamp": "2026-06-27T23:29:13Z",
-        "last_validated_timestamp": "2026-06-27T23:29:13Z"
+        "last_scanned_commit": "eb664a781445f8d59c2fc5ace72c700e75bfbbeb",
+        "last_scan_timestamp": "2026-07-09T19:56:39Z",
+        "last_validated_timestamp": "2026-07-09T19:56:39Z"
       },
       "related_assets": [],
       "evidence": {

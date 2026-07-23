@@ -1,0 +1,12 @@
+{
+  "id": "minimalist",
+  "name": "Enterprise Pure White",
+  "version": "2.2.0",
+  "author": "SMRITI Engineering",
+  "dark": false,
+  "default": false,
+  "description": "Ultra-clean high-contrast white layout with zero shadows and maximum readability.",
+  "accent_color": "#18181b",
+  "supported_modules": ["all"],
+  "css": ["variables.css"]
+}

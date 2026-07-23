@@ -20,7 +20,8 @@
     "use strict";
 
     // ── Namespace Bootstrap ────────────────────────────────────────────────────
-    window.smriti = window.smriti || {};
+    window.smriti = window.smriti || window.SMRITI || {};
+    window.SMRITI = window.smriti;
 
     // ── API Adapter ────────────────────────────────────────────────────────────
     /**

@@ -4,8 +4,8 @@
   "generated_by": "SDC 1.1.2-GA",
   "schema_version": "1.2",
   "artifact_type": "search_index",
-  "generated_at": "2026-06-27T23:29:13Z",
-  "repository_commit": "43ea253a377f502e17d3006e1b2f6b179a785fa4",
+  "generated_at": "2026-07-09T19:56:39Z",
+  "repository_commit": "eb664a781445f8d59c2fc5ace72c700e75bfbbeb",
   "provenance": {
     "artifact_id": "ART-SEARCH-INDEX-00001",
     "produced_by": "Phase0_Discovery",
@@ -54,6 +54,10 @@
       "ART-FIELD-00184",
       "ART-FIELD-00187",
       "ART-DOCTYPE-00005",
+      "ART-DOCTYPE-00683",
+      "ART-DOCTYPE-00684",
+      "ART-DOCTYPE-00685",
+      "ART-DOCTYPE-00686",
       "ART-DOCTYPE-00063",
       "ART-DOCTYPE-00064",
       "ART-SCREEN-INVENTORY",
@@ -461,7 +465,8 @@
       "ART-TERM-00536"
     ],
     "supplier": [
-      "ART-TERM-00536"
+      "ART-TERM-00536",
+      "ART-DOCTYPE-00692"
     ],
     "lead": [
       "ART-TERM-00536",
@@ -559,6 +564,7 @@
       "ART-DOCTYPE-00059",
       "ART-DOCTYPE-00061",
       "ART-DOCTYPE-00076",
+      "ART-DOCTYPE-00690",
       "ART-SCREEN-ITEM_MASTER"
     ],
     "custom_allow_item_sales_person_override": [
@@ -575,6 +581,7 @@
     ],
     "override": [
       "ART-FIELD-00629",
+      "ART-FIELD-00693",
       "ART-FIELD-00165",
       "ART-DOCTYPE-00676"
     ],
@@ -595,7 +602,8 @@
       "ART-FIELD-00635",
       "ART-FIELD-00638",
       "ART-FIELD-00640",
-      "ART-FIELD-00642"
+      "ART-FIELD-00642",
+      "ART-DOCTYPE-00685"
     ],
     "custom_discount_approval_limit": [
       "ART-FIELD-00631"
@@ -780,6 +788,8 @@
       "ART-DOCTYPE-00053",
       "ART-DOCTYPE-00054",
       "ART-DOCTYPE-00055",
+      "ART-DOCTYPE-00681",
+      "ART-DOCTYPE-00682",
       "ART-DOCTYPE-00056",
       "ART-DOCTYPE-00057",
       "ART-DOCTYPE-00675",
@@ -788,6 +798,11 @@
       "ART-DOCTYPE-00678",
       "ART-DOCTYPE-00679",
       "ART-DOCTYPE-00680",
+      "ART-DOCTYPE-00683",
+      "ART-DOCTYPE-00684",
+      "ART-DOCTYPE-00685",
+      "ART-DOCTYPE-00686",
+      "ART-DOCTYPE-00687",
       "ART-DOCTYPE-00058",
       "ART-DOCTYPE-00059",
       "ART-DOCTYPE-00060",
@@ -807,7 +822,11 @@
       "ART-DOCTYPE-00074",
       "ART-DOCTYPE-00075",
       "ART-DOCTYPE-00076",
+      "ART-DOCTYPE-00688",
       "ART-DOCTYPE-00077",
+      "ART-DOCTYPE-00689",
+      "ART-DOCTYPE-00690",
+      "ART-DOCTYPE-00691",
       "ART-DOCTYPE-00078",
       "ART-DOCTYPE-00079",
       "ART-DOCTYPE-00080",
@@ -820,6 +839,7 @@
       "ART-DOCTYPE-00087",
       "ART-DOCTYPE-00088",
       "ART-DOCTYPE-00089",
+      "ART-DOCTYPE-00692",
       "ART-DOCTYPE-00660",
       "ART-DOCTYPE-00661",
       "ART-DOCTYPE-00659",
@@ -852,10 +872,21 @@
     ],
     "pos": [
       "ART-FIELD-00141",
+      "ART-FIELD-00693",
       "ART-SCREEN-BILLING"
     ],
     "pin": [
-      "ART-FIELD-00141"
+      "ART-FIELD-00141",
+      "ART-FIELD-00693"
+    ],
+    "custom_pos_override_pin": [
+      "ART-FIELD-00693"
+    ],
+    "pos_override_pin": [
+      "ART-FIELD-00693"
+    ],
+    "pos override pin": [
+      "ART-FIELD-00693"
     ],
     "remaining_points": [
       "ART-FIELD-00142"
@@ -1139,7 +1170,11 @@
     ],
     "purchase": [
       "ART-FIELD-00155",
+      "ART-DOCTYPE-00688",
       "ART-DOCTYPE-00077",
+      "ART-DOCTYPE-00689",
+      "ART-DOCTYPE-00690",
+      "ART-DOCTYPE-00691",
       "ART-SCREEN-PURCHASE"
     ],
     "class": [
@@ -1532,7 +1567,9 @@
       "ART-FIELD-00185"
     ],
     "matrix": [
-      "ART-FIELD-00185"
+      "ART-FIELD-00185",
+      "ART-DOCTYPE-00681",
+      "ART-DOCTYPE-00682"
     ],
     "custom_smriti_store_type": [
       "ART-FIELD-00191"
@@ -1580,6 +1617,7 @@
       "ART-DOCTYPE-00028",
       "ART-DOCTYPE-00030",
       "ART-DOCTYPE-00074",
+      "ART-DOCTYPE-00691",
       "ART-DOCTYPE-00086",
       "ART-DOCTYPE-00660",
       "ART-DOCTYPE-00093"
@@ -1654,15 +1692,18 @@
     "audit": [
       "ART-DOCTYPE-00007",
       "ART-DOCTYPE-00011",
-      "ART-DOCTYPE-00041"
+      "ART-DOCTYPE-00041",
+      "ART-DOCTYPE-00688"
     ],
     "log": [
       "ART-DOCTYPE-00007",
       "ART-DOCTYPE-00011",
       "ART-DOCTYPE-00613",
       "ART-DOCTYPE-00050",
+      "ART-DOCTYPE-00687",
       "ART-DOCTYPE-00069",
       "ART-DOCTYPE-00070",
+      "ART-DOCTYPE-00688",
       "ART-DOCTYPE-00082",
       "ART-DOCTYPE-00661",
       "ART-DOCTYPE-00673"
@@ -1721,7 +1762,8 @@
       "ART-DOCTYPE-00017"
     ],
     "policy": [
-      "ART-DOCTYPE-00016"
+      "ART-DOCTYPE-00016",
+      "ART-DOCTYPE-00684"
     ],
     "smriti benefit resolution sequence detail": [
       "ART-DOCTYPE-00017"
@@ -1884,6 +1926,7 @@
     ],
     "definition": [
       "ART-DOCTYPE-00042",
+      "ART-DOCTYPE-00682",
       "ART-DOCTYPE-00659"
     ],
     "smriti gender": [
@@ -1974,6 +2017,15 @@
       "ART-DOCTYPE-00055",
       "ART-DOCTYPE-00056"
     ],
+    "smriti matrix axis": [
+      "ART-DOCTYPE-00681"
+    ],
+    "axis": [
+      "ART-DOCTYPE-00681"
+    ],
+    "smriti matrix definition": [
+      "ART-DOCTYPE-00682"
+    ],
     "smriti membership tier": [
       "ART-DOCTYPE-00056"
     ],
@@ -2017,7 +2069,39 @@
     ],
     "order": [
       "ART-DOCTYPE-00680",
+      "ART-DOCTYPE-00689",
+      "ART-DOCTYPE-00690",
       "ART-SCREEN-PURCHASE"
+    ],
+    "smriti negative stock case": [
+      "ART-DOCTYPE-00683"
+    ],
+    "negative": [
+      "ART-DOCTYPE-00683",
+      "ART-DOCTYPE-00684",
+      "ART-DOCTYPE-00685",
+      "ART-DOCTYPE-00686"
+    ],
+    "case": [
+      "ART-DOCTYPE-00683"
+    ],
+    "smriti negative stock policy": [
+      "ART-DOCTYPE-00684"
+    ],
+    "smriti negative stock reason": [
+      "ART-DOCTYPE-00685"
+    ],
+    "smriti negative stock recovery": [
+      "ART-DOCTYPE-00686"
+    ],
+    "recovery": [
+      "ART-DOCTYPE-00686"
+    ],
+    "smriti notification log": [
+      "ART-DOCTYPE-00687"
+    ],
+    "notification": [
+      "ART-DOCTYPE-00687"
     ],
     "smriti outsole": [
       "ART-DOCTYPE-00058"
@@ -2109,8 +2193,20 @@
     "smriti psv transaction item": [
       "ART-DOCTYPE-00076"
     ],
+    "smriti purchase audit log": [
+      "ART-DOCTYPE-00688"
+    ],
     "smriti purchase class": [
       "ART-DOCTYPE-00077"
+    ],
+    "smriti purchase order": [
+      "ART-DOCTYPE-00689"
+    ],
+    "smriti purchase order item": [
+      "ART-DOCTYPE-00690"
+    ],
+    "smriti purchase settings": [
+      "ART-DOCTYPE-00691"
     ],
     "smriti related formula": [
       "ART-DOCTYPE-00078"
@@ -2179,6 +2275,9 @@
     ],
     "smriti sub category": [
       "ART-DOCTYPE-00089"
+    ],
+    "smriti supplier": [
+      "ART-DOCTYPE-00692"
     ],
     "smriti tally settings": [
       "ART-DOCTYPE-00660"
@@ -2504,6 +2603,18 @@
     "search_barcode_items": [
       "ART-API-00121"
     ],
+    "smriti_retail_os.barcode_api.get_print_template_versions": [
+      "ART-API-00127"
+    ],
+    "get_print_template_versions": [
+      "ART-API-00127"
+    ],
+    "smriti_retail_os.barcode_api.restore_print_template_version": [
+      "ART-API-00128"
+    ],
+    "restore_print_template_version": [
+      "ART-API-00128"
+    ],
     "smriti_retail_os.barcode_api.enqueue_print_job": [
       "ART-API-00122"
     ],
@@ -2534,47 +2645,32 @@
     "get_recent_print_jobs": [
       "ART-API-00126"
     ],
-    "smriti_retail_os.barcode_api.get_print_template_versions": [
-      "ART-API-00127"
-    ],
-    "get_print_template_versions": [
-      "ART-API-00127"
-    ],
-    "smriti_retail_os.barcode_api.restore_print_template_version": [
-      "ART-API-00128"
-    ],
-    "restore_print_template_version": [
-      "ART-API-00128"
-    ],
     "smriti_retail_os.barcode_api.validate_layout_diagnostics": [
       "ART-API-00129"
     ],
     "validate_layout_diagnostics": [
       "ART-API-00129"
     ],
-    "smriti_retail_os.barcode_api.cleanup_old_print_jobs": [
-      "ART-API-00130"
-    ],
-    "cleanup_old_print_jobs": [
-      "ART-API-00130"
-    ],
     "smriti_retail_os.barcode_api.get_barcode_feature_flags": [
       "ART-API-00131"
     ],
     "get_barcode_feature_flags": [
-      "ART-API-00131"
+      "ART-API-00131",
+      "ART-API-00729"
     ],
     "smriti_retail_os.barcode_api.log_barcode_scan_event": [
       "ART-API-00132"
     ],
     "log_barcode_scan_event": [
-      "ART-API-00132"
+      "ART-API-00132",
+      "ART-API-00730"
     ],
     "smriti_retail_os.barcode_api.aggregate_scan_telemetry": [
       "ART-API-00133"
     ],
     "aggregate_scan_telemetry": [
-      "ART-API-00133"
+      "ART-API-00133",
+      "ART-API-00731"
     ],
     "smriti_retail_os.billing_api.add_item_by_barcode": [
       "ART-API-00208"
@@ -2611,7 +2707,8 @@
     ],
     "search_items": [
       "ART-API-00213",
-      "ART-API-00378"
+      "ART-API-00378",
+      "ART-API-00799"
     ],
     "smriti_retail_os.billing_api.load_held_invoice": [
       "ART-API-00214"
@@ -2755,7 +2852,8 @@
       "ART-API-00237"
     ],
     "create_grn": [
-      "ART-API-00237"
+      "ART-API-00237",
+      "ART-API-00789"
     ],
     "smriti_retail_os.inventory_api.create_stock_transfer": [
       "ART-API-00238"
@@ -2929,7 +3027,8 @@
       "ART-API-00266"
     ],
     "get_customer_detail": [
-      "ART-API-00266"
+      "ART-API-00266",
+      "ART-API-00744"
     ],
     "smriti_retail_os.master_api.get_supplier_detail": [
       "ART-API-00267"
@@ -3165,6 +3264,54 @@
     "get_psv_health": [
       "ART-API-00305"
     ],
+    "smriti_retail_os.psv_api.list_physical_audits": [
+      "ART-API-00694"
+    ],
+    "list_physical_audits": [
+      "ART-API-00694"
+    ],
+    "smriti_retail_os.psv_api.list_party_stock_accounts_for_audit": [
+      "ART-API-00695"
+    ],
+    "list_party_stock_accounts_for_audit": [
+      "ART-API-00695"
+    ],
+    "smriti_retail_os.psv_api.create_physical_audit": [
+      "ART-API-00696"
+    ],
+    "create_physical_audit": [
+      "ART-API-00696"
+    ],
+    "smriti_retail_os.psv_api.submit_physical_audit": [
+      "ART-API-00697"
+    ],
+    "submit_physical_audit": [
+      "ART-API-00697"
+    ],
+    "smriti_retail_os.psv_api.get_physical_audit": [
+      "ART-API-00698"
+    ],
+    "get_physical_audit": [
+      "ART-API-00698"
+    ],
+    "smriti_retail_os.psv_api.list_sales_uploads": [
+      "ART-API-00699"
+    ],
+    "list_sales_uploads": [
+      "ART-API-00699"
+    ],
+    "smriti_retail_os.psv_api.create_sales_upload": [
+      "ART-API-00700"
+    ],
+    "create_sales_upload": [
+      "ART-API-00700"
+    ],
+    "smriti_retail_os.psv_api.submit_sales_upload": [
+      "ART-API-00701"
+    ],
+    "submit_sales_upload": [
+      "ART-API-00701"
+    ],
     "smriti_retail_os.psv_migration_service.create_reversal_entry": [
       "ART-API-00306"
     ],
@@ -3194,36 +3341,6 @@
     ],
     "generate_snapshots": [
       "ART-API-00310"
-    ],
-    "smriti_retail_os.purchase_api.get_open_purchase_orders": [
-      "ART-API-00311"
-    ],
-    "get_open_purchase_orders": [
-      "ART-API-00311"
-    ],
-    "smriti_retail_os.purchase_api.get_po_details": [
-      "ART-API-00312"
-    ],
-    "get_po_details": [
-      "ART-API-00312"
-    ],
-    "smriti_retail_os.purchase_api.create_purchase_order": [
-      "ART-API-00313"
-    ],
-    "create_purchase_order": [
-      "ART-API-00313"
-    ],
-    "smriti_retail_os.purchase_api.create_purchase_receipt": [
-      "ART-API-00314"
-    ],
-    "create_purchase_receipt": [
-      "ART-API-00314"
-    ],
-    "smriti_retail_os.purchase_api.create_purchase_return": [
-      "ART-API-00315"
-    ],
-    "create_purchase_return": [
-      "ART-API-00315"
     ],
     "smriti_retail_os.reports_api.get_sales_report": [
       "ART-API-00316"
@@ -3355,7 +3472,8 @@
       "ART-API-00337"
     ],
     "get_open_sales_orders": [
-      "ART-API-00337"
+      "ART-API-00337",
+      "ART-API-00817"
     ],
     "smriti_retail_os.sales_order_api.get_so_details": [
       "ART-API-00338"
@@ -3367,7 +3485,8 @@
       "ART-API-00339"
     ],
     "create_sales_order": [
-      "ART-API-00339"
+      "ART-API-00339",
+      "ART-API-00821"
     ],
     "smriti_retail_os.security_api.list_users": [
       "ART-API-00340"
@@ -3524,6 +3643,12 @@
     ],
     "get_managers_list": [
       "ART-API-00365"
+    ],
+    "smriti_retail_os.security_api.check_page_access": [
+      "ART-API-00702"
+    ],
+    "check_page_access": [
+      "ART-API-00702"
     ],
     "smriti_retail_os.setup_wizard_api.get_setup_wizard_initial_data": [
       "ART-API-00366"
@@ -3689,6 +3814,72 @@
     ],
     "get_doctype_schema": [
       "ART-API-00393"
+    ],
+    "smriti_retail_os.analytics_studio.sas_api.sas_get_datasets": [
+      "ART-API-00703"
+    ],
+    "sas_get_datasets": [
+      "ART-API-00703"
+    ],
+    "smriti_retail_os.analytics_studio.sas_api.sas_get_categories": [
+      "ART-API-00704"
+    ],
+    "sas_get_categories": [
+      "ART-API-00704"
+    ],
+    "smriti_retail_os.analytics_studio.sas_api.sas_get_report_metadata": [
+      "ART-API-00705"
+    ],
+    "sas_get_report_metadata": [
+      "ART-API-00705"
+    ],
+    "smriti_retail_os.analytics_studio.sas_api.sas_fetch_data": [
+      "ART-API-00706"
+    ],
+    "sas_fetch_data": [
+      "ART-API-00706"
+    ],
+    "smriti_retail_os.analytics_studio.sas_api.sas_get_grand_totals": [
+      "ART-API-00707"
+    ],
+    "sas_get_grand_totals": [
+      "ART-API-00707"
+    ],
+    "smriti_retail_os.analytics_studio.sas_api.sas_get_kpi_summary": [
+      "ART-API-00708"
+    ],
+    "sas_get_kpi_summary": [
+      "ART-API-00708"
+    ],
+    "smriti_retail_os.analytics_studio.sas_api.sas_save_view": [
+      "ART-API-00709"
+    ],
+    "sas_save_view": [
+      "ART-API-00709"
+    ],
+    "smriti_retail_os.analytics_studio.sas_api.sas_get_views": [
+      "ART-API-00710"
+    ],
+    "sas_get_views": [
+      "ART-API-00710"
+    ],
+    "smriti_retail_os.analytics_studio.sas_api.sas_delete_view": [
+      "ART-API-00711"
+    ],
+    "sas_delete_view": [
+      "ART-API-00711"
+    ],
+    "smriti_retail_os.analytics_studio.sas_api.sas_export_excel": [
+      "ART-API-00712"
+    ],
+    "sas_export_excel": [
+      "ART-API-00712"
+    ],
+    "smriti_retail_os.analytics_studio.sas_api.sas_get_formula_explain": [
+      "ART-API-00713"
+    ],
+    "sas_get_formula_explain": [
+      "ART-API-00713"
     ],
     "smriti_retail_os.api.ai_integration_api.get_ai_context": [
       "ART-API-00611"
@@ -4079,6 +4270,55 @@
     "generate_test_key": [
       "ART-API-00441"
     ],
+    "smriti_retail_os.api.lookup_api.search": [
+      "ART-API-00714"
+    ],
+    "search": [
+      "ART-API-00714"
+    ],
+    "smriti_retail_os.api.lookup_api.recent": [
+      "ART-API-00715"
+    ],
+    "recent": [
+      "ART-API-00715"
+    ],
+    "smriti_retail_os.api.lookup_api.create": [
+      "ART-API-00716"
+    ],
+    "create": [
+      "ART-API-00716"
+    ],
+    "smriti_retail_os.api.lookup_api.validate": [
+      "ART-API-00717"
+    ],
+    "validate": [
+      "ART-API-00717"
+    ],
+    "smriti_retail_os.api.masters_api.get_suppliers": [
+      "ART-API-00718"
+    ],
+    "get_suppliers": [
+      "ART-API-00718",
+      "ART-API-00812"
+    ],
+    "smriti_retail_os.api.masters_api.get_supplier_groups": [
+      "ART-API-00719"
+    ],
+    "get_supplier_groups": [
+      "ART-API-00719"
+    ],
+    "smriti_retail_os.api.masters_api.get_supplier_form_options": [
+      "ART-API-00720"
+    ],
+    "get_supplier_form_options": [
+      "ART-API-00720"
+    ],
+    "smriti_retail_os.api.masters_api.get_party_stock_accounts": [
+      "ART-API-00721"
+    ],
+    "get_party_stock_accounts": [
+      "ART-API-00721"
+    ],
     "smriti_retail_os.api.payment_api.get_payments": [
       "ART-API-00442"
     ],
@@ -4138,6 +4378,48 @@
     ],
     "get_pdt_dashboard_list": [
       "ART-API-00451"
+    ],
+    "smriti_retail_os.api.platform_data_api.get_records": [
+      "ART-API-00722"
+    ],
+    "get_records": [
+      "ART-API-00722"
+    ],
+    "smriti_retail_os.api.platform_data_api.get_value": [
+      "ART-API-00723"
+    ],
+    "get_value": [
+      "ART-API-00723"
+    ],
+    "smriti_retail_os.api.platform_data_api.get_count": [
+      "ART-API-00724"
+    ],
+    "get_count": [
+      "ART-API-00724"
+    ],
+    "smriti_retail_os.api.platform_data_api.set_value": [
+      "ART-API-00725"
+    ],
+    "set_value": [
+      "ART-API-00725"
+    ],
+    "smriti_retail_os.api.platform_data_api.delete_record": [
+      "ART-API-00726"
+    ],
+    "delete_record": [
+      "ART-API-00726"
+    ],
+    "smriti_retail_os.api.platform_data_api.cancel_record": [
+      "ART-API-00727"
+    ],
+    "cancel_record": [
+      "ART-API-00727"
+    ],
+    "smriti_retail_os.api.platform_data_api.get_all": [
+      "ART-API-00728"
+    ],
+    "get_all": [
+      "ART-API-00728"
     ],
     "smriti_retail_os.api.pos_profile_api.get_profiles": [
       "ART-API-00452"
@@ -4359,13 +4641,23 @@
       "ART-API-00649"
     ],
     "get_dashboard_metrics": [
-      "ART-API-00649"
+      "ART-API-00649",
+      "ART-API-00769"
     ],
     "smriti_retail_os.api.__init__.get_item_stock": [
       "ART-API-00482"
     ],
     "get_item_stock": [
       "ART-API-00482"
+    ],
+    "smriti_retail_os.barcode.telemetry_service.get_barcode_feature_flags": [
+      "ART-API-00729"
+    ],
+    "smriti_retail_os.barcode.telemetry_service.log_barcode_scan_event": [
+      "ART-API-00730"
+    ],
+    "smriti_retail_os.barcode.telemetry_service.aggregate_scan_telemetry": [
+      "ART-API-00731"
     ],
     "smriti_retail_os.cge.api.cge_api.validate_checkout_rules": [
       "ART-API-00483"
@@ -4404,6 +4696,12 @@
     ],
     "get_cge_liability_metrics": [
       "ART-API-00488"
+    ],
+    "smriti_retail_os.cge.api.cge_api.get_dashboard_data": [
+      "ART-API-00732"
+    ],
+    "get_dashboard_data": [
+      "ART-API-00732"
     ],
     "smriti_retail_os.cge.api.cge_api.get_campaigns_with_utilization": [
       "ART-API-00489"
@@ -4501,6 +4799,547 @@
     "log_explain_audit": [
       "ART-API-00505"
     ],
+    "smriti_retail_os.core.api.get": [
+      "ART-API-00733"
+    ],
+    "get": [
+      "ART-API-00733"
+    ],
+    "smriti_retail_os.core.api.get_field": [
+      "ART-API-00734"
+    ],
+    "get_field": [
+      "ART-API-00734"
+    ],
+    "smriti_retail_os.core.api.get_list": [
+      "ART-API-00735"
+    ],
+    "get_list": [
+      "ART-API-00735"
+    ],
+    "smriti_retail_os.core.api.exists": [
+      "ART-API-00736"
+    ],
+    "exists": [
+      "ART-API-00736"
+    ],
+    "smriti_retail_os.core.api.save": [
+      "ART-API-00737"
+    ],
+    "save": [
+      "ART-API-00737"
+    ],
+    "smriti_retail_os.core.api.submit": [
+      "ART-API-00738"
+    ],
+    "submit": [
+      "ART-API-00738"
+    ],
+    "smriti_retail_os.core.api.delete": [
+      "ART-API-00739"
+    ],
+    "delete": [
+      "ART-API-00739"
+    ],
+    "smriti_retail_os.core.api.schema": [
+      "ART-API-00740"
+    ],
+    "schema": [
+      "ART-API-00740"
+    ],
+    "smriti_retail_os.core.api.lookup": [
+      "ART-API-00741"
+    ],
+    "lookup": [
+      "ART-API-00741"
+    ],
+    "smriti_retail_os.core.api.on_change": [
+      "ART-API-00742"
+    ],
+    "on_change": [
+      "ART-API-00742"
+    ],
+    "smriti_retail_os.customer_studio.api.customer_api.get_customers": [
+      "ART-API-00743"
+    ],
+    "get_customers": [
+      "ART-API-00743"
+    ],
+    "smriti_retail_os.customer_studio.api.customer_api.get_customer_detail": [
+      "ART-API-00744"
+    ],
+    "smriti_retail_os.customer_studio.api.customer_api.save_customer": [
+      "ART-API-00745"
+    ],
+    "save_customer": [
+      "ART-API-00745"
+    ],
+    "smriti_retail_os.customer_studio.api.customer_api.delete_customer": [
+      "ART-API-00746"
+    ],
+    "delete_customer": [
+      "ART-API-00746"
+    ],
+    "smriti_retail_os.item_studio.api.product_api.get_products": [
+      "ART-API-00747"
+    ],
+    "get_products": [
+      "ART-API-00747"
+    ],
+    "smriti_retail_os.item_studio.api.product_api.get_product_detail": [
+      "ART-API-00748"
+    ],
+    "get_product_detail": [
+      "ART-API-00748"
+    ],
+    "smriti_retail_os.item_studio.api.product_api.save_product": [
+      "ART-API-00749"
+    ],
+    "save_product": [
+      "ART-API-00749"
+    ],
+    "smriti_retail_os.item_studio.api.product_api.delete_product": [
+      "ART-API-00750"
+    ],
+    "delete_product": [
+      "ART-API-00750"
+    ],
+    "smriti_retail_os.item_studio.api.product_api.get_catalog_metadata": [
+      "ART-API-00751"
+    ],
+    "get_catalog_metadata": [
+      "ART-API-00751"
+    ],
+    "smriti_retail_os.label_studio.api.label_api.get_label_templates": [
+      "ART-API-00752"
+    ],
+    "get_label_templates": [
+      "ART-API-00752"
+    ],
+    "smriti_retail_os.label_studio.api.label_api.generate_preview_canvas": [
+      "ART-API-00753"
+    ],
+    "generate_preview_canvas": [
+      "ART-API-00753"
+    ],
+    "smriti_retail_os.label_studio.api.label_api.print_label": [
+      "ART-API-00754"
+    ],
+    "print_label": [
+      "ART-API-00754"
+    ],
+    "smriti_retail_os.label_studio.api.label_api.get_item_for_label": [
+      "ART-API-00755"
+    ],
+    "get_item_for_label": [
+      "ART-API-00755"
+    ],
+    "smriti_retail_os.label_studio.api.label_api.get_printers_list": [
+      "ART-API-00756"
+    ],
+    "get_printers_list": [
+      "ART-API-00756"
+    ],
+    "smriti_retail_os.layout_engine.layout_service.get_layout_preferences": [
+      "ART-API-00757"
+    ],
+    "get_layout_preferences": [
+      "ART-API-00757"
+    ],
+    "smriti_retail_os.layout_engine.layout_service.save_layout_preferences": [
+      "ART-API-00758"
+    ],
+    "save_layout_preferences": [
+      "ART-API-00758"
+    ],
+    "smriti_retail_os.matrix_engine.api.matrix_api.get_matrix_session": [
+      "ART-API-00759"
+    ],
+    "get_matrix_session": [
+      "ART-API-00759",
+      "ART-API-00800",
+      "ART-API-00823"
+    ],
+    "smriti_retail_os.matrix_engine.api.matrix_api.resolve_or_create_variant": [
+      "ART-API-00760"
+    ],
+    "resolve_or_create_variant": [
+      "ART-API-00760",
+      "ART-API-00801",
+      "ART-API-00824"
+    ],
+    "smriti_retail_os.matrix_engine.api.matrix_api.create_article_template": [
+      "ART-API-00761"
+    ],
+    "create_article_template": [
+      "ART-API-00761",
+      "ART-API-00802"
+    ],
+    "smriti_retail_os.matrix_engine.api.matrix_api.parse_pasted_grid": [
+      "ART-API-00762"
+    ],
+    "parse_pasted_grid": [
+      "ART-API-00762"
+    ],
+    "smriti_retail_os.navigation.navigation_service.get_user_navigation": [
+      "ART-API-00763"
+    ],
+    "get_user_navigation": [
+      "ART-API-00763"
+    ],
+    "smriti_retail_os.navigation.navigation_service.run_navigation_health_check": [
+      "ART-API-00764"
+    ],
+    "run_navigation_health_check": [
+      "ART-API-00764"
+    ],
+    "smriti_retail_os.navigation.navigation_service.get_navigation_health_history": [
+      "ART-API-00765"
+    ],
+    "get_navigation_health_history": [
+      "ART-API-00765"
+    ],
+    "smriti_retail_os.negative_stock.api.negative_stock_api.validate_negative_stock": [
+      "ART-API-00766"
+    ],
+    "validate_negative_stock": [
+      "ART-API-00766"
+    ],
+    "smriti_retail_os.negative_stock.api.negative_stock_api.approve_case": [
+      "ART-API-00767"
+    ],
+    "approve_case": [
+      "ART-API-00767"
+    ],
+    "smriti_retail_os.negative_stock.api.negative_stock_api.reject_case": [
+      "ART-API-00768"
+    ],
+    "reject_case": [
+      "ART-API-00768"
+    ],
+    "smriti_retail_os.negative_stock.api.negative_stock_api.get_dashboard_metrics": [
+      "ART-API-00769"
+    ],
+    "smriti_retail_os.notification_studio.api.notifications.get_notifications": [
+      "ART-API-00770"
+    ],
+    "get_notifications": [
+      "ART-API-00770"
+    ],
+    "smriti_retail_os.notification_studio.api.notifications.get_unread_count": [
+      "ART-API-00771"
+    ],
+    "get_unread_count": [
+      "ART-API-00771"
+    ],
+    "smriti_retail_os.notification_studio.api.notifications.get_my_notifications": [
+      "ART-API-00772"
+    ],
+    "get_my_notifications": [
+      "ART-API-00772"
+    ],
+    "smriti_retail_os.notification_studio.api.notifications.get_unread_badge": [
+      "ART-API-00773"
+    ],
+    "get_unread_badge": [
+      "ART-API-00773"
+    ],
+    "smriti_retail_os.notification_studio.api.notifications.mark_notification_read": [
+      "ART-API-00774"
+    ],
+    "mark_notification_read": [
+      "ART-API-00774"
+    ],
+    "smriti_retail_os.notification_studio.api.notifications.mark_all_notifications_read": [
+      "ART-API-00775"
+    ],
+    "mark_all_notifications_read": [
+      "ART-API-00775"
+    ],
+    "smriti_retail_os.notification_studio.api.notifications.get_notification_summary": [
+      "ART-API-00776"
+    ],
+    "get_notification_summary": [
+      "ART-API-00776"
+    ],
+    "smriti_retail_os.notification_studio.api.notifications.delete_notification": [
+      "ART-API-00777"
+    ],
+    "delete_notification": [
+      "ART-API-00777"
+    ],
+    "smriti_retail_os.notification_studio.api.notifications.mark_as_read": [
+      "ART-API-00778"
+    ],
+    "mark_as_read": [
+      "ART-API-00778"
+    ],
+    "smriti_retail_os.notification_studio.api.notifications.mark_all_read": [
+      "ART-API-00779"
+    ],
+    "mark_all_read": [
+      "ART-API-00779"
+    ],
+    "smriti_retail_os.print_framework.api.print_api.get_registered_printers": [
+      "ART-API-00780"
+    ],
+    "get_registered_printers": [
+      "ART-API-00780"
+    ],
+    "smriti_retail_os.print_framework.api.print_api.dispatch_print_job": [
+      "ART-API-00781"
+    ],
+    "dispatch_print_job": [
+      "ART-API-00781"
+    ],
+    "smriti_retail_os.purchase_studio.api.purchase_api.get_purchase_dashboard": [
+      "ART-API-00782"
+    ],
+    "get_purchase_dashboard": [
+      "ART-API-00782"
+    ],
+    "smriti_retail_os.purchase_studio.api.purchase_api.get_purchase_orders": [
+      "ART-API-00783"
+    ],
+    "get_purchase_orders": [
+      "ART-API-00783"
+    ],
+    "smriti_retail_os.purchase_studio.api.purchase_api.get_purchase_order_detail": [
+      "ART-API-00784"
+    ],
+    "get_purchase_order_detail": [
+      "ART-API-00784"
+    ],
+    "smriti_retail_os.purchase_studio.api.purchase_api.create_purchase_order": [
+      "ART-API-00785"
+    ],
+    "create_purchase_order": [
+      "ART-API-00785"
+    ],
+    "smriti_retail_os.purchase_studio.api.purchase_api.resolve_po_approval": [
+      "ART-API-00786"
+    ],
+    "resolve_po_approval": [
+      "ART-API-00786"
+    ],
+    "smriti_retail_os.purchase_studio.api.purchase_api.get_grns": [
+      "ART-API-00787"
+    ],
+    "get_grns": [
+      "ART-API-00787"
+    ],
+    "smriti_retail_os.purchase_studio.api.purchase_api.get_grn_detail": [
+      "ART-API-00788"
+    ],
+    "get_grn_detail": [
+      "ART-API-00788"
+    ],
+    "smriti_retail_os.purchase_studio.api.purchase_api.create_grn": [
+      "ART-API-00789"
+    ],
+    "smriti_retail_os.purchase_studio.api.purchase_api.create_invoice": [
+      "ART-API-00790"
+    ],
+    "create_invoice": [
+      "ART-API-00790"
+    ],
+    "smriti_retail_os.purchase_studio.api.purchase_api.get_invoices": [
+      "ART-API-00791"
+    ],
+    "get_invoices": [
+      "ART-API-00791"
+    ],
+    "smriti_retail_os.purchase_studio.api.purchase_api.get_invoice_detail": [
+      "ART-API-00792"
+    ],
+    "get_invoice_detail": [
+      "ART-API-00792"
+    ],
+    "smriti_retail_os.purchase_studio.api.purchase_api.get_returns": [
+      "ART-API-00793"
+    ],
+    "get_returns": [
+      "ART-API-00793"
+    ],
+    "smriti_retail_os.purchase_studio.api.purchase_api.create_purchase_return": [
+      "ART-API-00794"
+    ],
+    "create_purchase_return": [
+      "ART-API-00794"
+    ],
+    "smriti_retail_os.purchase_studio.api.purchase_api.get_supplier_ledger": [
+      "ART-API-00795"
+    ],
+    "get_supplier_ledger": [
+      "ART-API-00795"
+    ],
+    "smriti_retail_os.purchase_studio.api.purchase_api.get_purchase_settings": [
+      "ART-API-00796"
+    ],
+    "get_purchase_settings": [
+      "ART-API-00796"
+    ],
+    "smriti_retail_os.purchase_studio.api.purchase_api.save_purchase_settings": [
+      "ART-API-00797"
+    ],
+    "save_purchase_settings": [
+      "ART-API-00797"
+    ],
+    "smriti_retail_os.purchase_studio.api.purchase_api.search_suppliers": [
+      "ART-API-00798"
+    ],
+    "search_suppliers": [
+      "ART-API-00798"
+    ],
+    "smriti_retail_os.purchase_studio.api.purchase_api.search_items": [
+      "ART-API-00799"
+    ],
+    "smriti_retail_os.purchase_studio.api.purchase_api.get_matrix_session": [
+      "ART-API-00800"
+    ],
+    "smriti_retail_os.purchase_studio.api.purchase_api.resolve_or_create_variant": [
+      "ART-API-00801"
+    ],
+    "smriti_retail_os.purchase_studio.api.purchase_api.create_article_template": [
+      "ART-API-00802"
+    ],
+    "smriti_retail_os.purchase_studio.api.purchase_api.get_open_purchase_orders": [
+      "ART-API-00803"
+    ],
+    "get_open_purchase_orders": [
+      "ART-API-00803"
+    ],
+    "smriti_retail_os.purchase_studio.api.purchase_api.get_po_details": [
+      "ART-API-00804"
+    ],
+    "get_po_details": [
+      "ART-API-00804"
+    ],
+    "smriti_retail_os.purchase_studio.api.purchase_api.get_warehouses": [
+      "ART-API-00805"
+    ],
+    "get_warehouses": [
+      "ART-API-00805"
+    ],
+    "smriti_retail_os.purchase_studio.api.purchase_api.get_purchase_analytics": [
+      "ART-API-00806"
+    ],
+    "get_purchase_analytics": [
+      "ART-API-00806"
+    ],
+    "smriti_retail_os.purchase_studio.api.purchase_api.get_supplier_performance": [
+      "ART-API-00807"
+    ],
+    "get_supplier_performance": [
+      "ART-API-00807"
+    ],
+    "smriti_retail_os.purchase_studio.api.purchase_api.get_items_for_grn": [
+      "ART-API-00808"
+    ],
+    "get_items_for_grn": [
+      "ART-API-00808"
+    ],
+    "smriti_retail_os.purchase_studio.api.purchase_api.get_landed_cost_vouchers": [
+      "ART-API-00809"
+    ],
+    "get_landed_cost_vouchers": [
+      "ART-API-00809"
+    ],
+    "smriti_retail_os.purchase_studio.api.purchase_api.create_landed_cost_voucher": [
+      "ART-API-00810"
+    ],
+    "create_landed_cost_voucher": [
+      "ART-API-00810"
+    ],
+    "smriti_retail_os.purchase_studio.api.purchase_api.get_return_detail": [
+      "ART-API-00811"
+    ],
+    "get_return_detail": [
+      "ART-API-00811"
+    ],
+    "smriti_retail_os.purchase_studio.api.purchase_api.get_suppliers": [
+      "ART-API-00812"
+    ],
+    "smriti_retail_os.purchase_studio.api.purchase_api.get_po_matrix_print_data": [
+      "ART-API-00813"
+    ],
+    "get_po_matrix_print_data": [
+      "ART-API-00813"
+    ],
+    "smriti_retail_os.purchase_studio.api.purchase_api.get_size_presets": [
+      "ART-API-00814"
+    ],
+    "get_size_presets": [
+      "ART-API-00814",
+      "ART-API-00826"
+    ],
+    "smriti_retail_os.purchase_studio.api.purchase_api.resolve_variant_item": [
+      "ART-API-00815"
+    ],
+    "resolve_variant_item": [
+      "ART-API-00815",
+      "ART-API-00825"
+    ],
+    "smriti_retail_os.sales_studio.api.sales_api.get_open_quotations": [
+      "ART-API-00816"
+    ],
+    "get_open_quotations": [
+      "ART-API-00816"
+    ],
+    "smriti_retail_os.sales_studio.api.sales_api.get_open_sales_orders": [
+      "ART-API-00817"
+    ],
+    "smriti_retail_os.sales_studio.api.sales_api.get_quotation_details": [
+      "ART-API-00818"
+    ],
+    "get_quotation_details": [
+      "ART-API-00818"
+    ],
+    "smriti_retail_os.sales_studio.api.sales_api.get_sales_order_details": [
+      "ART-API-00819"
+    ],
+    "get_sales_order_details": [
+      "ART-API-00819"
+    ],
+    "smriti_retail_os.sales_studio.api.sales_api.create_quotation": [
+      "ART-API-00820"
+    ],
+    "create_quotation": [
+      "ART-API-00820"
+    ],
+    "smriti_retail_os.sales_studio.api.sales_api.create_sales_order": [
+      "ART-API-00821"
+    ],
+    "smriti_retail_os.sales_studio.api.sales_api.convert_quotation_to_sales_order": [
+      "ART-API-00822"
+    ],
+    "convert_quotation_to_sales_order": [
+      "ART-API-00822"
+    ],
+    "smriti_retail_os.sales_studio.api.sales_api.get_matrix_session": [
+      "ART-API-00823"
+    ],
+    "smriti_retail_os.sales_studio.api.sales_api.resolve_or_create_variant": [
+      "ART-API-00824"
+    ],
+    "smriti_retail_os.sales_studio.api.sales_api.resolve_variant_item": [
+      "ART-API-00825"
+    ],
+    "smriti_retail_os.sales_studio.api.sales_api.get_size_presets": [
+      "ART-API-00826"
+    ],
+    "smriti_retail_os.search_studio.api.smriti_search_api.global_search": [
+      "ART-API-00827"
+    ],
+    "global_search": [
+      "ART-API-00827"
+    ],
+    "smriti_retail_os.search_studio.api.smriti_search_api.get_recent_docs": [
+      "ART-API-00828"
+    ],
+    "get_recent_docs": [
+      "ART-API-00828"
+    ],
     "smriti_retail_os.services.approval_service.validate_approval_override": [
       "ART-API-00650"
     ],
@@ -4567,6 +5406,18 @@
     "get_monthly_commissions": [
       "ART-API-00512"
     ],
+    "smriti_retail_os.sfm.api.sfc_api.save_commission_settlement": [
+      "ART-API-00829"
+    ],
+    "save_commission_settlement": [
+      "ART-API-00829"
+    ],
+    "smriti_retail_os.sfm.api.sfc_api.save_commission_rule": [
+      "ART-API-00830"
+    ],
+    "save_commission_rule": [
+      "ART-API-00830"
+    ],
     "smriti_retail_os.sfm.api.sfm_api.get_sfm_leaderboard": [
       "ART-API-00513"
     ],
@@ -4584,6 +5435,36 @@
     ],
     "get_store_performance_center": [
       "ART-API-00515"
+    ],
+    "smriti_retail_os.sfm.api.sfm_api.save_sales_target": [
+      "ART-API-00831"
+    ],
+    "save_sales_target": [
+      "ART-API-00831"
+    ],
+    "smriti_retail_os.sfm.api.sfm_api.save_customer_ownership": [
+      "ART-API-00832"
+    ],
+    "save_customer_ownership": [
+      "ART-API-00832"
+    ],
+    "smriti_retail_os.sfm.api.sfm_api.get_sfm_settings": [
+      "ART-API-00833"
+    ],
+    "get_sfm_settings": [
+      "ART-API-00833"
+    ],
+    "smriti_retail_os.sfm.api.sfm_api.save_sfm_settings": [
+      "ART-API-00834"
+    ],
+    "save_sfm_settings": [
+      "ART-API-00834"
+    ],
+    "smriti_retail_os.sfm.api.sfm_api.get_attribution_ledger": [
+      "ART-API-00835"
+    ],
+    "get_attribution_ledger": [
+      "ART-API-00835"
     ],
     "smriti_retail_os.smriti_retail_os.api.tally_api.get_settings": [
       "ART-API-00662"
@@ -4621,11 +5502,71 @@
     "compare_sync_status": [
       "ART-API-00669"
     ],
+    "smriti_retail_os.user_studio.api.smriti_user_api.get_my_profile": [
+      "ART-API-00836"
+    ],
+    "get_my_profile": [
+      "ART-API-00836"
+    ],
+    "smriti_retail_os.user_studio.api.smriti_user_api.update_my_profile": [
+      "ART-API-00837"
+    ],
+    "update_my_profile": [
+      "ART-API-00837"
+    ],
+    "smriti_retail_os.user_studio.api.smriti_user_api.change_password": [
+      "ART-API-00838"
+    ],
+    "change_password": [
+      "ART-API-00838"
+    ],
+    "smriti_retail_os.user_studio.api.smriti_user_api.get_my_activity": [
+      "ART-API-00839"
+    ],
+    "get_my_activity": [
+      "ART-API-00839"
+    ],
+    "smriti_retail_os.user_studio.api.smriti_user_api.logout": [
+      "ART-API-00840"
+    ],
+    "logout": [
+      "ART-API-00840"
+    ],
+    "smriti_retail_os.user_studio.api.smriti_user_api.get_smriti_preferences": [
+      "ART-API-00841"
+    ],
+    "get_smriti_preferences": [
+      "ART-API-00841"
+    ],
+    "smriti_retail_os.user_studio.api.smriti_user_api.save_smriti_preferences": [
+      "ART-API-00842"
+    ],
+    "save_smriti_preferences": [
+      "ART-API-00842"
+    ],
     "smriti_retail_os.utils.opening_balance.parse_opening_excel": [
       "ART-API-00516"
     ],
     "parse_opening_excel": [
       "ART-API-00516"
+    ],
+    "smriti_retail_os.www.connect.get_recent_queue": [
+      "ART-API-00843"
+    ],
+    "get_recent_queue": [
+      "ART-API-00843"
+    ],
+    "smriti_retail_os.www.connect.trigger_manual_retry": [
+      "ART-API-00844"
+    ],
+    "trigger_manual_retry": [
+      "ART-API-00844"
+    ],
+    "smriti_retail_os.www.connect.run_health_checks": [
+      "ART-API-00845"
+    ],
+    "run_health_checks": [
+      "ART-API-00845"
     ],
     "item_master": [
       "ART-SCREEN-ITEM_MASTER"

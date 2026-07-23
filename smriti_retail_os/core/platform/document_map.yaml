@@ -99,6 +99,10 @@ Brand:
   platform: Brand
   description: A product brand
 
+Category:
+  platform: Item Group
+  description: ERPNext Item Group mapping for SMRITI Category model
+
 UOM:
   platform: UOM
   description: A unit of measure
@@ -133,6 +137,18 @@ ShiftClose:
 POSProfile:
   platform: POS Profile
   description: A POS terminal configuration profile
+
+POS Profile:
+  platform: POS Profile
+  description: A POS terminal configuration profile
+
+Print Format:
+  platform: Print Format
+  description: Frappe Print Format definition
+
+PrintFormat:
+  platform: Print Format
+  description: Frappe Print Format definition
 
 # ── Company & Location ────────────────────────────────────────────────────────
 Company:
@@ -186,3 +202,1221 @@ AccountingEntry:
 JournalEntry:
   platform: Journal Entry
   description: A manual accounting journal entry
+
+# ── Platform Internals & Child Tables ──
+POSSettings:
+  platform: POS Settings
+  description: POS module configurations
+
+POSOpeningEntryDetail:
+  platform: POS Opening Entry Detail
+  description: Cashier opening balance detail row
+
+SalesInvoicePayment:
+  platform: Sales Invoice Payment
+  description: Payment row for a sales invoice
+
+POSProfileUser:
+  platform: POS Profile User
+  description: Allowed users for a POS profile
+
+HasRole:
+  platform: Has Role
+  description: User role assignment
+
+Comment:
+  platform: Comment
+  description: System comment or audit log note
+
+SMRITI Company Settings:
+  platform: SMRITI Company Settings
+  description: Company-specific SMRITI branding and settings
+
+SMRITI Navigation Profile:
+  platform: SMRITI Navigation Profile
+  description: Sidebar navigation structure definitions
+
+WarehouseType:
+  platform: Warehouse Type
+  description: A warehouse category type
+
+Warehouse Type:
+  platform: Warehouse Type
+  description: A warehouse category type
+
+CustomerGroup:
+  platform: Customer Group
+  description: A group of customers
+
+Customer Group:
+  platform: Customer Group
+  description: A group of customers
+
+Territory:
+  platform: Territory
+  description: A geographical sales territory
+
+Address:
+  platform: Address
+  description: A mailing or physical address
+
+Account:
+  platform: Account
+  description: A general ledger account
+
+CostCenter:
+  platform: Cost Center
+  description: An accounting cost center
+
+Cost Center:
+  platform: Cost Center
+  description: An accounting cost center
+
+Bin:
+  platform: Bin
+  description: Warehouse-item stock balance tracking table
+
+Mode of Payment:
+  platform: Mode of Payment
+  description: Mode of payment mappings
+
+Sales Taxes and Charges Template:
+  platform: Sales Taxes and Charges Template
+  description: Tax templates
+
+DocType:
+  platform: DocType
+  description: Frappe schema definition metadata
+
+Custom Field:
+  platform: Custom Field
+  description: Custom field added to a DocType
+
+BusinessTerm:
+  platform: SMRITI Business Term
+  description: SMRITI Business dictionary term
+
+SMRITI Business Term:
+  platform: SMRITI Business Term
+  description: SMRITI Business dictionary term
+
+SMRITI Formula Definition:
+  platform: SMRITI Formula Definition
+  description: SMRITI business formula definition
+
+SMRITI Related Formula:
+  platform: SMRITI Related Formula
+  description: Child table linking formula definitions
+
+RelatedFormula:
+  platform: SMRITI Related Formula
+  description: Child table linking formula definitions
+
+SMRITI Related Term:
+  platform: SMRITI Related Term
+  description: Child table linking related dictionary terms
+
+RelatedTerm:
+  platform: SMRITI Related Term
+  description: Child table linking related dictionary terms
+
+KnowledgeRelation:
+  platform: SMRITI Knowledge Relation
+  description: SMRITI knowledge relations
+
+SMRITI Knowledge Relation:
+  platform: SMRITI Knowledge Relation
+  description: SMRITI knowledge relations
+
+FormulaDef:
+  platform: SMRITI Formula Definition
+  description: SMRITI business formula definition
+
+FormulaDefinition:
+  platform: SMRITI Formula Definition
+  description: SMRITI business formula definition
+
+KnowledgeAsset:
+  platform: SMRITI Knowledge Asset
+  description: SMRITI knowledge asset metadata
+
+SMRITI Knowledge Asset:
+  platform: SMRITI Knowledge Asset
+  description: SMRITI knowledge asset metadata
+
+SMRITI Telemetry Event Definition:
+  platform: SMRITI Telemetry Event Definition
+  description: SMRITI telemetry event definitions
+
+TelemetryEvent:
+  platform: SMRITI Telemetry Event Definition
+  description: SMRITI telemetry event definitions
+
+SMRITI Report Template:
+  platform: SMRITI Report Template
+  description: SMRITI custom report templates
+
+ReportTemplate:
+  platform: SMRITI Report Template
+  description: SMRITI custom report templates
+
+SMRITI Audit Event:
+  platform: SMRITI Audit Event
+  description: SMRITI audit trail log entry
+
+AuditEvent:
+  platform: SMRITI Audit Event
+  description: SMRITI audit trail log entry
+
+Item Group:
+  platform: Item Group
+  description: ERPNext Item Group
+
+ItemGroup:
+  platform: Item Group
+  description: ERPNext Item Group
+
+SMRITI Gender:
+  platform: SMRITI Gender
+  description: SMRITI custom Gender master attribute
+
+Gender:
+  platform: SMRITI Gender
+  description: SMRITI custom Gender master attribute
+
+SMRITI Purchase Class:
+  platform: SMRITI Purchase Class
+  description: SMRITI custom Purchase Class master attribute
+
+PurchaseClass:
+  platform: SMRITI Purchase Class
+  description: SMRITI custom Purchase Class master attribute
+
+SMRITI Heel Type:
+  platform: SMRITI Heel Type
+  description: SMRITI custom Heel Type master attribute
+
+HeelType:
+  platform: SMRITI Heel Type
+  description: SMRITI custom Heel Type master attribute
+
+SMRITI Outsole:
+  platform: SMRITI Outsole
+  description: SMRITI custom Outsole master attribute
+
+Outsole:
+  platform: SMRITI Outsole
+  description: SMRITI custom Outsole master attribute
+
+SMRITI Upper Material:
+  platform: SMRITI Upper Material
+  description: SMRITI custom Upper Material master attribute
+
+UpperMaterial:
+  platform: SMRITI Upper Material
+  description: SMRITI custom Upper Material master attribute
+
+SMRITI Print Template:
+  platform: SMRITI Print Template
+  description: SMRITI custom Print Template
+
+PrintTemplate:
+  platform: SMRITI Print Template
+  description: SMRITI custom Print Template
+
+SMRITI Merchandise Category:
+  platform: SMRITI Merchandise Category
+  description: SMRITI custom Merchandise Category master attribute
+
+MerchandiseCategory:
+  platform: SMRITI Merchandise Category
+  description: SMRITI custom Merchandise Category master attribute
+
+Workspace:
+  platform: Workspace
+  description: Frappe Workspace Definition
+
+Custom DocPerm:
+  platform: Custom DocPerm
+  description: Frappe Custom Document Permissions
+
+CustomDocPerm:
+  platform: Custom DocPerm
+  description: Frappe Custom Document Permissions
+
+Module Profile:
+  platform: Module Profile
+  description: Frappe Module Profile Definition
+
+ModuleProfile:
+  platform: Module Profile
+  description: Frappe Module Profile Definition
+
+Role Profile:
+  platform: Role Profile
+  description: Frappe Role Profile Definition
+
+RoleProfile:
+  platform: Role Profile
+  description: Frappe Role Profile Definition
+
+TelemetryEventDefinition:
+  platform: SMRITI Telemetry Event Definition
+  description: SMRITI telemetry event definitions
+
+BarcodeSettings:
+  platform: Barcode Settings
+  description: Frappe Barcode Settings singleton
+
+Barcode Settings:
+  platform: Barcode Settings
+  description: Frappe Barcode Settings singleton
+
+Property Setter:
+  platform: Property Setter
+  description: Frappe DocType property override
+
+PropertySetter:
+  platform: Property Setter
+  description: Frappe DocType property override
+
+# ── Decoupled / Dynamic Mappings ────────────────────────────────────────────────
+Activity Log:
+  platform: Activity Log
+  description: Frappe Activity Log
+
+ActivityLog:
+  platform: Activity Log
+  description: Frappe Activity Log
+
+Bank Account:
+  platform: Bank Account
+  description: Frappe Bank Account
+
+Batch:
+  platform: Batch
+  description: ERPNext Batch master for batch tracking
+
+BenefitInstrument:
+  platform: SMRITI Benefit Instrument
+  description: SMRITI Benefit Instrument
+
+BenefitInstrumentType:
+  platform: SMRITI Benefit Instrument Type
+  description: SMRITI Benefit Instrument Type
+
+BenefitWallet:
+  platform: SMRITI Benefit Wallet
+  description: SMRITI Benefit Wallet
+
+CGESettings:
+  platform: SMRITI CGE Settings
+  description: SMRITI CGE Settings
+
+CommissionRule:
+  platform: SMRITI Commission Rule
+  description: SMRITI Commission Rule
+
+CommissionSettings:
+  platform: SMRITI Commission Settings
+  description: SMRITI Commission Settings
+
+CommissionSettlement:
+  platform: SMRITI Commission Settlement
+  description: SMRITI Commission Settlement
+
+CompanySettings:
+  platform: SMRITI Company Settings
+  description: SMRITI Company Settings
+
+Contact:
+  platform: Contact
+  description: Frappe Contact record
+
+Coupon Code:
+  platform: Coupon Code
+  description: ERPNext Coupon Code
+
+CustomField:
+  platform: Custom Field
+  description: Frappe Custom Field definition
+
+CustomerOwnership:
+  platform: SMRITI Customer Ownership
+  description: SMRITI Customer Ownership
+
+Delivery Note:
+  platform: Delivery Note
+  description: ERPNext Delivery Note
+
+Department:
+  platform: Department
+  description: ERPNext Department master
+
+DocField:
+  platform: DocField
+  description: Frappe DocField system metadata
+
+Dynamic Link:
+  platform: Dynamic Link
+  description: Frappe Dynamic Link reference
+
+Email Account:
+  platform: Email Account
+  description: Frappe Email Account
+
+Error Log:
+  platform: Error Log
+  description: Frappe Error Log
+
+ErrorLog:
+  platform: Error Log
+  description: Frappe Error Log
+
+File:
+  platform: File
+  description: Frappe File attachment reference
+
+Fiscal Year:
+  platform: Fiscal Year
+  description: ERPNext Fiscal Year
+
+GL Entry:
+  platform: GL Entry
+  description: ERPNext General Ledger Entry
+
+GST HSN Code:
+  platform: GST HSN Code
+  description: ERPNext GST HSN Code
+
+GSTHSNCode:
+  platform: GST HSN Code
+  description: ERPNext GST HSN Code
+
+Global Defaults:
+  platform: Global Defaults
+  description: Frappe Global Defaults singleton
+
+GlobalDefaults:
+  platform: Global Defaults
+  description: Frappe Global Defaults singleton
+
+Has Role:
+  platform: Has Role
+  description: Frappe User-Role mapping
+
+Item:
+  platform: Item
+  description: ERPNext Item master
+
+Item Attribute:
+  platform: Item Attribute
+  description: ERPNext Item Attribute
+
+Item Attribute Value:
+  platform: Item Attribute Value
+  description: ERPNext Item Attribute Value
+
+Item Barcode:
+  platform: Item Barcode
+  description: ERPNext Item Barcode mapping
+
+Item Default:
+  platform: Item Default
+  description: ERPNext Item Default settings
+
+Item Price:
+  platform: Item Price
+  description: ERPNext Item Price record
+
+Item Reorder:
+  platform: Item Reorder
+  description: ERPNext Item Reorder rule
+
+Item Supplier:
+  platform: Item Supplier
+  description: ERPNext Item Supplier mapping
+
+Item Tax:
+  platform: Item Tax
+  description: ERPNext Item Tax detail
+
+Item Tax Template:
+  platform: Item Tax Template
+  description: ERPNext Item Tax Template
+
+Item Tax Template Detail:
+  platform: Item Tax Template Detail
+  description: ERPNext Item Tax Template Detail
+
+Item Variant Attribute:
+  platform: Item Variant Attribute
+  description: ERPNext Item Variant Attribute
+
+ItemBarcode:
+  platform: Item Barcode
+  description: ERPNext Item Barcode mapping
+
+ItemPrice:
+  platform: Item Price
+  description: ERPNext Item Price record
+
+ItemTaxTemplate:
+  platform: Item Tax Template
+  description: ERPNext Item Tax Template
+
+ItemVariantAttribute:
+  platform: Item Variant Attribute
+  description: ERPNext Item Variant Attribute
+
+Journal Entry:
+  platform: Journal Entry
+  description: ERPNext Journal Entry
+
+KeyCustodian:
+  platform: SMRITI Key Custodian
+  description: SMRITI Key Custodian
+
+KnowledgeUsageLog:
+  platform: SMRITI Knowledge Usage Log
+  description: SMRITI Knowledge Usage Log
+
+Landed Cost Voucher:
+  platform: Landed Cost Voucher
+  description: ERPNext Landed Cost Voucher
+
+LiabilitySnapshot:
+  platform: SMRITI Liability Snapshot
+  description: SMRITI Liability Snapshot
+
+LicenseActivityLog:
+  platform: SMRITI License Activity Log
+  description: SMRITI License Activity Log
+
+LicenseFeatures:
+  platform: SMRITI License Features
+  description: SMRITI License Features
+
+LicenseValidationHistory:
+  platform: SMRITI License Validation History
+  description: SMRITI License Validation History
+
+Loyalty Point Entry:
+  platform: Loyalty Point Entry
+  description: ERPNext Loyalty Point Entry
+
+Loyalty Program:
+  platform: Loyalty Program
+  description: ERPNext Loyalty Program
+
+Loyalty Program Collection:
+  platform: Loyalty Program Collection
+  description: ERPNext Loyalty Program Collection
+
+LoyaltyPointEntry:
+  platform: Loyalty Point Entry
+  description: ERPNext Loyalty Point Entry
+
+Mode of Payment Account:
+  platform: Mode of Payment Account
+  description: ERPNext Mode of Payment Account link
+
+NavigationAssignment:
+  platform: SMRITI Navigation Assignment
+  description: SMRITI Navigation Assignment
+
+NavigationOverride:
+  platform: SMRITI Navigation Override
+  description: SMRITI Navigation Override
+
+NavigationProfile:
+  platform: SMRITI Navigation Profile
+  description: SMRITI Navigation Profile
+
+NotificationLog:
+  platform: Notification Log
+  description: Frappe Notification Log
+
+POS Invoice:
+  platform: POS Invoice
+  description: ERPNext POS Invoice
+
+POS Invoice Item:
+  platform: POS Invoice Item
+  description: ERPNext POS Invoice Item
+
+POS Opening Entry:
+  platform: POS Opening Entry
+  description: ERPNext POS Opening Entry
+
+POS Opening Entry Detail:
+  platform: POS Opening Entry Detail
+  description: ERPNext POS Opening Entry Detail
+
+POS Payment Method:
+  platform: POS Payment Method
+  description: ERPNext POS Payment Method
+
+POS Profile User:
+  platform: POS Profile User
+  description: ERPNext POS Profile User
+
+POS Settings:
+  platform: POS Settings
+  description: ERPNext POS Settings
+
+POSOpeningEntry:
+  platform: POS Opening Entry
+  description: ERPNext POS Opening Entry
+
+PSV Channel Partner:
+  platform: PSV Channel Partner
+  description: PSV Channel Partner
+
+PSV Channel Partner Brand:
+  platform: PSV Channel Partner Brand
+  description: PSV Channel Partner Brand
+
+PSV Ledger Entry:
+  platform: PSV Ledger Entry
+  description: PSV Ledger Entry
+
+PSV Reorder Rule:
+  platform: PSV Reorder Rule
+  description: PSV Reorder Rule
+
+PSV Stock Aging Snapshot:
+  platform: PSV Stock Aging Snapshot
+  description: PSV Stock Aging Snapshot
+
+PSV System Settings:
+  platform: PSV System Settings
+  description: PSV System Settings
+
+PSVChannelPartner:
+  platform: PSV Channel Partner
+  description: PSV Channel Partner
+
+PSVLedgerEntry:
+  platform: PSV Ledger Entry
+  description: PSV Ledger Entry
+
+PSVStockAgingSnapshot:
+  platform: PSV Stock Aging Snapshot
+  description: PSV Stock Aging Snapshot
+
+Page:
+  platform: Page
+  description: Frappe Page view component
+
+Party Account:
+  platform: Party Account
+  description: ERPNext Party Account settings
+
+Party Type:
+  platform: Party Type
+  description: ERPNext Party Type definition
+
+PartyPhysicalSnapshot:
+  platform: SMRITI Party Physical Snapshot
+  description: SMRITI Party Physical Snapshot
+
+PartySalesUpload:
+  platform: SMRITI Party Sales Upload
+  description: SMRITI Party Sales Upload
+
+PartyStockAccount:
+  platform: SMRITI Party Stock Account
+  description: SMRITI Party Stock Account
+
+PartyStockLedgerEntry:
+  platform: SMRITI Party Stock Ledger Entry
+  description: SMRITI Party Stock Ledger Entry
+
+Patch Log:
+  platform: Patch Log
+  description: Frappe Patch Log
+
+Payment Entry:
+  platform: Payment Entry
+  description: ERPNext Payment Entry
+
+Payment Entry Reference:
+  platform: Payment Entry Reference
+  description: ERPNext Payment Entry Reference
+
+Payment Ledger Entry:
+  platform: Payment Ledger Entry
+  description: ERPNext Payment Ledger Entry
+
+Payment Terms Template:
+  platform: Payment Terms Template
+  description: ERPNext Payment Terms Template
+
+PaymentEntry:
+  platform: Payment Entry
+  description: ERPNext Payment Entry
+
+PhysicalSnapshot:
+  platform: SMRITI Party Physical Snapshot
+  description: SMRITI Party Physical Snapshot
+
+Price List:
+  platform: Price List
+  description: ERPNext Price List
+
+Pricing Rule:
+  platform: Pricing Rule
+  description: ERPNext Pricing Rule
+
+PricingRule:
+  platform: Pricing Rule
+  description: ERPNext Pricing Rule
+
+ProvisionLog:
+  platform: SMRITI Provision Log
+  description: SMRITI Provision Log
+
+Purchase Invoice:
+  platform: Purchase Invoice
+  description: ERPNext Purchase Invoice
+
+Purchase Invoice Item:
+  platform: Purchase Invoice Item
+  description: ERPNext Purchase Invoice Item
+
+Purchase Order:
+  platform: Purchase Order
+  description: ERPNext Purchase Order
+
+Purchase Order Item:
+  platform: Purchase Order Item
+  description: ERPNext Purchase Order Item
+
+Purchase Receipt:
+  platform: Purchase Receipt
+  description: ERPNext Purchase Receipt
+
+Purchase Receipt Item:
+  platform: Purchase Receipt Item
+  description: ERPNext Purchase Receipt Item
+
+Purchase Taxes and Charges:
+  platform: Purchase Taxes and Charges
+  description: ERPNext Purchase Taxes and Charges
+
+PurchaseOrder:
+  platform: Purchase Order
+  description: ERPNext Purchase Order
+
+Quotation:
+  platform: Quotation
+  description: ERPNext Quotation
+
+ReorderRule:
+  platform: SMRITI PSV Reorder Rule
+  description: SMRITI PSV Reorder Rule
+
+RuleEvaluationLog:
+  platform: SMRITI Rule Evaluation Log
+  description: SMRITI Rule Evaluation Log
+
+SFMSettings:
+  platform: SMRITI SFM Settings
+  description: SMRITI SFM Settings
+
+SKUTwin:
+  platform: SMRITI SKU Twin
+  description: SMRITI SKU Twin
+
+SMRITI Address Audit Log:
+  platform: SMRITI Address Audit Log
+  description: SMRITI Address Audit Log
+
+SMRITI Attribute Layout:
+  platform: SMRITI Attribute Layout
+  description: SMRITI Attribute Layout
+
+SMRITI Attribution Event:
+  platform: SMRITI Attribution Event
+  description: SMRITI Attribution Event
+
+SMRITI Attribution Ledger:
+  platform: SMRITI Attribution Ledger
+  description: SMRITI Attribution Ledger
+
+SMRITI Barcode Scan Event:
+  platform: SMRITI Barcode Scan Event
+  description: SMRITI Barcode Scan Event
+
+SMRITI Barcode Settings:
+  platform: SMRITI Barcode Settings
+  description: SMRITI Barcode Settings
+
+SMRITI Barcode Telemetry Snapshot:
+  platform: SMRITI Barcode Telemetry Snapshot
+  description: SMRITI Barcode Telemetry Snapshot
+
+SMRITI Benefit Instrument:
+  platform: SMRITI Benefit Instrument
+  description: SMRITI Benefit Instrument
+
+SMRITI Benefit Instrument Type:
+  platform: SMRITI Benefit Instrument Type
+  description: SMRITI Benefit Instrument Type
+
+SMRITI Benefit Ledger:
+  platform: SMRITI Benefit Ledger
+  description: SMRITI Benefit Ledger
+
+SMRITI Benefit Resolution Policy:
+  platform: SMRITI Benefit Resolution Policy
+  description: SMRITI Benefit Resolution Policy
+
+SMRITI Benefit Wallet:
+  platform: SMRITI Benefit Wallet
+  description: SMRITI Benefit Wallet
+
+SMRITI CGE Settings:
+  platform: SMRITI CGE Settings
+  description: SMRITI CGE Settings
+
+SMRITI Certification Exam:
+  platform: SMRITI Certification Exam
+  description: SMRITI Certification Exam
+
+SMRITI Commission Adjustment Detail:
+  platform: SMRITI Commission Adjustment Detail
+  description: SMRITI Commission Adjustment Detail
+
+SMRITI Commission Event:
+  platform: SMRITI Commission Event
+  description: SMRITI Commission Event
+
+SMRITI Commission Ledger:
+  platform: SMRITI Commission Ledger
+  description: SMRITI Commission Ledger
+
+SMRITI Commission Rule:
+  platform: SMRITI Commission Rule
+  description: SMRITI Commission Rule
+
+SMRITI Commission Settings:
+  platform: SMRITI Commission Settings
+  description: SMRITI Commission Settings
+
+SMRITI Commission Settlement:
+  platform: SMRITI Commission Settlement
+  description: SMRITI Commission Settlement
+
+SMRITI Coupon Campaign:
+  platform: SMRITI Coupon Campaign
+  description: SMRITI Coupon Campaign
+
+SMRITI Custom Attribute:
+  platform: SMRITI Custom Attribute
+  description: SMRITI Custom Attribute
+
+SMRITI Customer Graph:
+  platform: SMRITI Customer Graph
+  description: SMRITI Customer Graph
+
+SMRITI Customer Intelligence Graph:
+  platform: SMRITI Customer Intelligence Graph
+  description: SMRITI Customer Intelligence Graph
+
+SMRITI Customer Interaction:
+  platform: SMRITI Customer Interaction
+  description: SMRITI Customer Interaction
+
+SMRITI Customer Ownership:
+  platform: SMRITI Customer Ownership
+  description: SMRITI Customer Ownership
+
+SMRITI Customer Profile:
+  platform: SMRITI Customer Profile
+  description: SMRITI Customer Profile
+
+SMRITI Entity Attribute Value:
+  platform: SMRITI Entity Attribute Value
+  description: SMRITI Entity Attribute Value
+
+SMRITI Explain Audit Event:
+  platform: SMRITI Explain Audit Event
+  description: SMRITI Explain Audit Event
+
+SMRITI Key Custodian:
+  platform: SMRITI Key Custodian
+  description: SMRITI Key Custodian
+
+SMRITI Knowledge Usage Log:
+  platform: SMRITI Knowledge Usage Log
+  description: SMRITI Knowledge Usage Log
+
+SMRITI Liability Snapshot:
+  platform: SMRITI Liability Snapshot
+  description: SMRITI Liability Snapshot
+
+SMRITI License:
+  platform: SMRITI License
+  description: SMRITI License
+
+SMRITI License Activity Log:
+  platform: SMRITI License Activity Log
+  description: SMRITI License Activity Log
+
+SMRITI License Validation History:
+  platform: SMRITI License Validation History
+  description: SMRITI License Validation History
+
+SMRITI Loyalty Rule:
+  platform: SMRITI Loyalty Rule
+  description: SMRITI Loyalty Rule
+
+SMRITI Loyalty Tier:
+  platform: SMRITI Loyalty Tier
+  description: SMRITI Loyalty Tier
+
+SMRITI Matrix Definition:
+  platform: SMRITI Matrix Definition
+  description: SMRITI Matrix Definition
+
+SMRITI Navigation Assignment:
+  platform: SMRITI Navigation Assignment
+  description: SMRITI Navigation Assignment
+
+SMRITI Navigation Override:
+  platform: SMRITI Navigation Override
+  description: SMRITI Navigation Override
+
+SMRITI Negative Stock Case:
+  platform: SMRITI Negative Stock Case
+  description: SMRITI Negative Stock Case
+
+SMRITI Negative Stock Policy:
+  platform: SMRITI Negative Stock Policy
+  description: SMRITI Negative Stock Policy
+
+SMRITI Negative Stock Recovery:
+  platform: SMRITI Negative Stock Recovery
+  description: SMRITI Negative Stock Recovery
+
+SMRITI Notification Log:
+  platform: SMRITI Notification Log
+  description: SMRITI Notification Log
+
+SMRITI Numbering Audit Log:
+  platform: SMRITI Numbering Audit Log
+  description: SMRITI Numbering Audit Log
+
+SMRITI Numbering Counter:
+  platform: SMRITI Numbering Counter
+  description: SMRITI Numbering Counter
+
+SMRITI Numbering Reserved Range:
+  platform: SMRITI Numbering Reserved Range
+  description: SMRITI Numbering Reserved Range
+
+SMRITI Numbering Rule:
+  platform: SMRITI Numbering Rule
+  description: SMRITI Numbering Rule
+
+SMRITI PSV Activity Log:
+  platform: SMRITI PSV Activity Log
+  description: SMRITI PSV Activity Log
+
+SMRITI PSV Exam Attempt:
+  platform: SMRITI PSV Exam Attempt
+  description: SMRITI PSV Exam Attempt
+
+SMRITI PSV Exception Record:
+  platform: SMRITI PSV Exception Record
+  description: SMRITI PSV Exception Record
+
+SMRITI PSV Reorder Rule:
+  platform: SMRITI PSV Reorder Rule
+  description: SMRITI PSV Reorder Rule
+
+SMRITI PSV Settings:
+  platform: SMRITI PSV Settings
+  description: SMRITI PSV Settings
+
+SMRITI PSV Transaction:
+  platform: SMRITI PSV Transaction
+  description: SMRITI PSV Transaction
+
+SMRITI Party Physical Item:
+  platform: SMRITI Party Physical Item
+  description: SMRITI Party Physical Item
+
+SMRITI Party Physical Snapshot:
+  platform: SMRITI Party Physical Snapshot
+  description: SMRITI Party Physical Snapshot
+
+SMRITI Party Sales Item:
+  platform: SMRITI Party Sales Item
+  description: SMRITI Party Sales Item
+
+SMRITI Party Sales Upload:
+  platform: SMRITI Party Sales Upload
+  description: SMRITI Party Sales Upload
+
+SMRITI Party Stock Account:
+  platform: SMRITI Party Stock Account
+  description: SMRITI Party Stock Account
+
+SMRITI Party Stock Ledger Entry:
+  platform: SMRITI Party Stock Ledger Entry
+  description: SMRITI Party Stock Ledger Entry
+
+SMRITI Print Job:
+  platform: SMRITI Print Job
+  description: SMRITI Print Job
+
+SMRITI Print Template Version:
+  platform: SMRITI Print Template Version
+  description: SMRITI Print Template Version
+
+SMRITI Purchase Audit Log:
+  platform: SMRITI Purchase Audit Log
+  description: SMRITI Purchase Audit Log
+
+SMRITI Purchase Order:
+  platform: SMRITI Purchase Order
+  description: SMRITI Purchase Order
+
+SMRITI Purchase Order Item:
+  platform: SMRITI Purchase Order Item
+  description: SMRITI Purchase Order Item
+
+SMRITI Report Role:
+  platform: SMRITI Report Role
+  description: SMRITI Report Role
+
+SMRITI Rule Evaluation Log:
+  platform: SMRITI Rule Evaluation Log
+  description: SMRITI Rule Evaluation Log
+
+SMRITI SFM Settings:
+  platform: SMRITI SFM Settings
+  description: SMRITI SFM Settings
+
+SMRITI SKU Twin:
+  platform: SMRITI SKU Twin
+  description: SMRITI SKU Twin
+
+SMRITI Sales KPI Snapshot:
+  platform: SMRITI Sales KPI Snapshot
+  description: SMRITI Sales KPI Snapshot
+
+SMRITI Sales Target:
+  platform: SMRITI Sales Target
+  description: SMRITI Sales Target
+
+SMRITI Saved View:
+  platform: SMRITI Saved View
+  description: SMRITI Saved View
+
+SMRITI Settings:
+  platform: SMRITI Settings
+  description: SMRITI Settings
+
+SMRITI Store:
+  platform: SMRITI Store
+  description: SMRITI Store
+
+SMRITI Sub Category:
+  platform: SMRITI Sub Category
+  description: SMRITI Sub Category
+
+SMRITI Supplier:
+  platform: SMRITI Supplier
+  description: SMRITI Supplier
+
+SMRITI Tally Sync Log:
+  platform: SMRITI Tally Sync Log
+  description: SMRITI Tally Sync Log
+
+SMRITI Trial Activation:
+  platform: SMRITI Trial Activation
+  description: SMRITI Trial Activation
+
+SMRITI Trial Health Snapshot:
+  platform: SMRITI Trial Health Snapshot
+  description: SMRITI Trial Health Snapshot
+
+SMRITI Trial Lead:
+  platform: SMRITI Trial Lead
+  description: SMRITI Trial Lead
+
+SMRITI UIE Credential:
+  platform: SMRITI UIE Credential
+  description: SMRITI UIE Credential
+
+SMRITI UIE Endpoint:
+  platform: SMRITI UIE Endpoint
+  description: SMRITI UIE Endpoint
+
+SMRITI UIE Integration:
+  platform: SMRITI UIE Integration
+  description: SMRITI UIE Integration
+
+SMRITI UIE Sync Log:
+  platform: SMRITI UIE Sync Log
+  description: SMRITI UIE Sync Log
+
+SMRITI UIE Sync Queue:
+  platform: SMRITI UIE Sync Queue
+  description: SMRITI UIE Sync Queue
+
+SMRITI Walk In Analytics:
+  platform: SMRITI Walk In Analytics
+  description: SMRITI Walk In Analytics
+
+SMRITI Walk In Visit:
+  platform: SMRITI Walk In Visit
+  description: SMRITI Walk In Visit
+
+SMRITI Wallet Ledger:
+  platform: SMRITI Wallet Ledger
+  description: SMRITI Wallet Ledger
+
+SMRITI Wallet Reconciliation Snapshot:
+  platform: SMRITI Wallet Reconciliation Snapshot
+  description: SMRITI Wallet Reconciliation Snapshot
+
+SMRITISettings:
+  platform: SMRITI Settings
+  description: SMRITI Settings
+
+Sales Invoice:
+  platform: Sales Invoice
+  description: ERPNext Sales Invoice
+
+Sales Invoice Item:
+  platform: Sales Invoice Item
+  description: ERPNext Sales Invoice Item
+
+Sales Invoice Payment:
+  platform: Sales Invoice Payment
+  description: ERPNext Sales Invoice Payment
+
+Sales Order:
+  platform: Sales Order
+  description: ERPNext Sales Order
+
+Sales Person:
+  platform: Sales Person
+  description: ERPNext Sales Person
+
+Sales Taxes and Charges:
+  platform: Sales Taxes and Charges
+  description: ERPNext Sales Taxes and Charges
+
+SalesPerson:
+  platform: Sales Person
+  description: ERPNext Sales Person
+
+SalesTarget:
+  platform: SMRITI Sales Target
+  description: SMRITI Sales Target
+
+SalesUpload:
+  platform: SMRITI Party Sales Upload
+  description: SMRITI Party Sales Upload
+
+SellingSettings:
+  platform: Selling Settings
+  description: ERPNext Selling Settings
+
+Stock Entry:
+  platform: Stock Entry
+  description: ERPNext Stock Entry
+
+Stock Entry Type:
+  platform: Stock Entry Type
+  description: ERPNext Stock Entry Type
+
+Stock Ledger Entry:
+  platform: Stock Ledger Entry
+  description: ERPNext Stock Ledger Entry
+
+Stock Reconciliation:
+  platform: Stock Reconciliation
+  description: ERPNext Stock Reconciliation
+
+StockEntry:
+  platform: Stock Entry
+  description: ERPNext Stock Entry
+
+Supplier Group:
+  platform: Supplier Group
+  description: ERPNext Supplier Group
+
+SupplierGroup:
+  platform: Supplier Group
+  description: ERPNext Supplier Group
+
+System Settings:
+  platform: System Settings
+  description: Frappe System Settings
+
+TallySettings:
+  platform: SMRITI Tally Settings
+  description: SMRITI Tally Settings
+
+TallySyncLog:
+  platform: SMRITI Tally Sync Log
+  description: SMRITI Tally Sync Log
+
+Tax Withholding Category:
+  platform: Tax Withholding Category
+  description: ERPNext Tax Withholding Category
+
+TrialActivation:
+  platform: SMRITI Trial Activation
+  description: SMRITI Trial Activation
+
+TrialHealthSnapshot:
+  platform: SMRITI Trial Health Snapshot
+  description: SMRITI Trial Health Snapshot
+
+TrialLead:
+  platform: SMRITI Trial Lead
+  description: SMRITI Trial Lead
+
+TrialSettings:
+  platform: SMRITI Trial Settings
+  description: SMRITI Trial Settings
+
+UDNRule:
+  platform: SMRITI Numbering Rule
+  description: SMRITI Numbering Rule
+
+UIESyncLog:
+  platform: SMRITI UIE Sync Log
+  description: SMRITI UIE Sync Log
+
+UIESyncQueue:
+  platform: SMRITI UIE Sync Queue
+  description: SMRITI UIE Sync Queue
+
+User Permission:
+  platform: User Permission
+  description: Frappe User Permission
+
+WalletLedger:
+  platform: SMRITI Wallet Ledger
+  description: SMRITI Wallet Ledger
+
+WalletReconciliationSnapshot:
+  platform: SMRITI Wallet Reconciliation Snapshot
+  description: SMRITI Wallet Reconciliation Snapshot
+
+Workflow:
+  platform: Workflow
+  description: Frappe Workflow definition
+
+Workflow State:
+  platform: Workflow State
+  description: Frappe Workflow State

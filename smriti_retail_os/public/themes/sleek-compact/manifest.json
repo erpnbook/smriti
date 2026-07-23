@@ -1,0 +1,12 @@
+{
+  "id": "sleek-compact",
+  "name": "SMRITI Midnight Edition",
+  "version": "2.2.0",
+  "author": "SMRITI Engineering",
+  "dark": true,
+  "default": true,
+  "description": "High-density flat navy modern theme optimized for inventory, POS, reports, and fast operational throughput.",
+  "accent_color": "#2563EB",
+  "supported_modules": ["all"],
+  "css": ["variables.css"]
+}

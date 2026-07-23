@@ -379,15 +379,33 @@ window.SMRITI = window.SMRITI || {};
                 });
             }
 
-            // 3. Theme switching pills click
+            // 3. Theme switching pills click & active state sync
+            var updateActiveThemePills = function(currentTheme) {
+                var themeKey = currentTheme || (window.SMRITI && window.SMRITI.getCurrentTheme ? window.SMRITI.getCurrentTheme() : "sleek-compact");
+                var pills = target.querySelectorAll(".smriti-standalone-theme-pill");
+                pills.forEach(function (p) {
+                    if (p.getAttribute("data-theme") === themeKey) {
+                        p.classList.add("active");
+                    } else {
+                        p.classList.remove("active");
+                    }
+                });
+            };
+
             var themePills = target.querySelectorAll(".smriti-standalone-theme-pill");
             themePills.forEach(function (pill) {
                 pill.addEventListener("click", function () {
                     var themeKey = pill.getAttribute("data-theme");
-                    if (window.SMRITI.switchTheme) {
+                    if (window.SMRITI && window.SMRITI.switchTheme) {
                         window.SMRITI.switchTheme(themeKey);
+                        updateActiveThemePills(themeKey);
                     }
                 });
+            });
+
+            updateActiveThemePills();
+            document.addEventListener("smriti-theme-changed", function(e) {
+                if (e.detail && e.detail.theme) updateActiveThemePills(e.detail.theme);
             });
 
             // 4. Handle explain button injection if relevant
@@ -446,6 +464,9 @@ window.SMRITI = window.SMRITI || {};
                             } else {
                                 badge.style.display = "none";
                             }
+                        },
+                        error: function() {
+                            if (badge) badge.style.display = "none";
                         }
                     });
                 } catch(e) {}
@@ -620,5 +641,704 @@ window.SMRITI = window.SMRITI || {};
             return;
         }
     });
+
+    // ── Voucher Sharing Observer & Actions ──
+    function hijackDetailLoaders() {
+        const loaders = {
+            loadInvoiceDetails: "activeInvoiceName",
+            loadPaymentDetails: "activePaymentName",
+            loadChallanDetails: "activeChallanName",
+            loadSODetails: "activeSOName",
+            loadQuotationDetails: "activeQuotationName",
+            loadReturnDetails: "activeReturnName"
+        };
+        for (const [funcName, winKey] of Object.entries(loaders)) {
+            if (typeof window[funcName] === "function" && !window[funcName].hijacked) {
+                const original = window[funcName];
+                window[funcName] = function(id) {
+                    window[winKey] = id;
+                    return original.apply(this, arguments);
+                };
+                window[funcName].hijacked = true;
+            }
+        }
+    }
+    hijackDetailLoaders();
+    document.addEventListener("DOMContentLoaded", hijackDetailLoaders);
+
+    function getActiveDocInfo() {
+        const path = window.location.pathname;
+        if (path.includes("/sales_invoices")) {
+            return { doctype: "Sales Invoice", name: window.activeInvoiceName || (window.activeInvoiceDoc ? window.activeInvoiceDoc.name : null) };
+        } else if (path.includes("/purchase_invoice")) {
+            return { doctype: "Purchase Invoice", name: window.activeInvoiceName || (window.activeInvoiceDoc ? window.activeInvoiceDoc.name : null) };
+        } else if (path.includes("/payments")) {
+            return { doctype: "Payment Entry", name: window.activePaymentName || (window.activePaymentDoc ? window.activePaymentDoc.name : null) };
+        } else if (path.includes("/sales_orders")) {
+            return { doctype: "Sales Order", name: window.activeSOName || (window.S && window.S.activeSO ? window.S.activeSO.name : null) };
+        } else if (path.includes("/sales_return")) {
+            return { doctype: "Sales Invoice", name: window.activeReturnName || (window.activeReturnDoc ? window.activeReturnDoc.name : null) };
+        } else if (path.includes("/supplier_returns")) {
+            return { doctype: "Purchase Receipt", name: window.activeReturnName || (window.activeReturnDoc ? window.activeReturnDoc.name : null) };
+        } else if (path.includes("/delivery_challan")) {
+            return { doctype: "Delivery Note", name: window.activeChallanName || (window.activeChallanDoc ? window.activeChallanDoc.name : null) };
+        } else if (path.includes("/eway_bill")) {
+            return { doctype: "Sales Invoice", name: window.activeInvoiceName || (window.activeInvoiceDoc ? window.activeInvoiceDoc.name : null) };
+        } else if (path.includes("/smriti-quotation")) {
+            return { doctype: "Quotation", name: window.activeQuotationName || (window.S && window.S.activeQ ? window.S.activeQ.name : null) };
+        }
+        return null;
+    }
+
+    // ── Print Guard Helpers ──
+
+    /** Show a branded SMRITI modal instead of alert/confirm */
+    function _showPrintGuardModal({ heading, reason, detail, doctype, docname, onSave, onClose }) {
+        const existing = document.getElementById("smriti-print-guard-modal");
+        if (existing) existing.remove();
+
+        const overlay = document.createElement("div");
+        overlay.id = "smriti-print-guard-modal";
+        overlay.style.cssText = [
+            "position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;",
+            "background:rgba(10,15,30,0.85);backdrop-filter:blur(8px);",
+            "animation:smriti-fadein 0.2s ease;"
+        ].join("");
+
+        overlay.innerHTML = `
+            <style>
+                @keyframes smriti-fadein{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+                #smriti-print-guard-modal .spg-card{
+                    background:linear-gradient(135deg,#111827,#0f172a);
+                    border:1px solid rgba(239,68,68,0.25);
+                    border-radius:16px;padding:40px 36px;max-width:480px;width:90%;
+                    box-shadow:0 24px 64px rgba(0,0,0,0.6),0 0 80px rgba(239,68,68,0.06);
+                    font-family:'Inter',sans-serif;color:#e2e8f0;
+                }
+                #smriti-print-guard-modal .spg-icon{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);margin:0 auto 20px;}
+                #smriti-print-guard-modal .spg-icon .material-symbols-outlined{font-size:32px;color:#ef4444;}
+                #smriti-print-guard-modal .spg-title{font-size:20px;font-weight:700;color:#f1f5f9;text-align:center;margin-bottom:6px;}
+                #smriti-print-guard-modal .spg-reason{font-size:13px;color:#ef4444;font-weight:600;text-align:center;margin-bottom:16px;}
+                #smriti-print-guard-modal .spg-divider{height:1px;background:rgba(255,255,255,0.07);margin:12px 0;}
+                #smriti-print-guard-modal .spg-detail{font-size:13px;color:#94a3b8;line-height:1.6;text-align:center;margin-bottom:24px;}
+                #smriti-print-guard-modal .spg-actions{display:flex;gap:10px;}
+                #smriti-print-guard-modal .spg-btn{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .15s;}
+                #smriti-print-guard-modal .spg-btn-primary{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;box-shadow:0 4px 12px rgba(37,99,235,.3);}
+                #smriti-print-guard-modal .spg-btn-primary:hover{background:linear-gradient(135deg,#1d4ed8,#1e40af);transform:translateY(-1px);}
+                #smriti-print-guard-modal .spg-btn-ghost{background:rgba(255,255,255,.07);color:#94a3b8;border:1px solid rgba(255,255,255,.1);}
+                #smriti-print-guard-modal .spg-btn-ghost:hover{background:rgba(255,255,255,.12);color:#e2e8f0;}
+                #smriti-print-guard-modal .spg-offline{display:none;background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.3);border-radius:8px;padding:12px;font-size:12px;color:#fbbf24;text-align:center;margin-bottom:16px;}
+                #smriti-print-guard-modal .spg-offline.show{display:block;}
+                #smriti-print-guard-modal .spg-log-tag{text-align:center;margin-top:20px;font-size:11px;color:#475569;}
+            </style>
+            <div class="spg-card">
+                <div class="spg-icon"><span class="material-symbols-outlined">print_disabled</span></div>
+                <div class="spg-title">${heading || 'Unable to print'}</div>
+                <div class="spg-reason">${reason || ''}</div>
+                <div class="spg-divider"></div>
+                <div class="spg-offline ${!navigator.onLine ? 'show' : ''}" id="spg-offline-note">
+                    ⚠️ You appear to be <strong>offline</strong>. The voucher may exist locally but cannot be verified or printed right now.
+                </div>
+                <div class="spg-detail">${detail || ''}</div>
+                <div class="spg-actions">
+                    <button class="spg-btn spg-btn-primary" id="spg-btn-save">
+                        <span class="material-symbols-outlined" style="font-size:15px">save</span> Save Voucher
+                    </button>
+                    <button class="spg-btn spg-btn-ghost" id="spg-btn-close">
+                        <span class="material-symbols-outlined" style="font-size:15px">close</span> Close
+                    </button>
+                </div>
+                <div class="spg-log-tag">🔒 This attempt has been logged for diagnostics</div>
+            </div>`;
+
+        document.body.appendChild(overlay);
+
+        overlay.querySelector("#spg-btn-save").addEventListener("click", () => {
+            overlay.remove();
+            if (typeof onSave === "function") onSave();
+        });
+        overlay.querySelector("#spg-btn-close").addEventListener("click", () => {
+            overlay.remove();
+            if (typeof onClose === "function") onClose();
+        });
+        overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
+
+        window.addEventListener("offline", () => {
+            const note = overlay.querySelector("#spg-offline-note");
+            if (note) note.classList.add("show");
+        });
+    }
+
+    /** Async: verify doc exists via API, log the attempt, then open /printview */
+    async function handleSharePrint(doctype, name) {
+        if (!doctype || !name) return;
+
+        // Guard: offline detection
+        if (!navigator.onLine) {
+            _showPrintGuardModal({
+                heading: "Print Preview Unavailable",
+                reason: "You are currently offline.",
+                detail: "Please reconnect to the network and try again, or sync the voucher first.",
+                doctype, docname: name
+            });
+            return;
+        }
+
+        try {
+            const check = await smriti.api.call(
+                "smriti_retail_os.print_framework.api.print_api.check_doc_exists",
+                { doctype, docname: name }
+            );
+
+            if (!check || !check.exists) {
+                // Log the failed attempt
+                smriti.api.call(
+                    "smriti_retail_os.print_framework.api.print_api.log_print_attempt",
+                    { doctype, docname: name, exists: 0, action: "PRINT" }
+                ).catch(() => {});
+
+                _showPrintGuardModal({
+                    heading: "Unable to open document",
+                    reason: "The requested voucher could not be found.",
+                    detail: "This usually happens when the voucher has not yet been saved to the database. Please save the voucher and try again.",
+                    doctype, docname: name
+                });
+                return;
+            }
+
+            // Log successful attempt
+            smriti.api.call(
+                "smriti_retail_os.print_framework.api.print_api.log_print_attempt",
+                { doctype, docname: name, exists: 1, action: "PRINT" }
+            ).catch(() => {});
+
+            const url = `/printview?doctype=${encodeURIComponent(doctype)}&name=${encodeURIComponent(name)}`;
+            window.open(url, "_blank");
+
+        } catch (err) {
+            console.warn("[SMRITI Print Guard] check_doc_exists failed:", err);
+            // Fallback: open anyway (don't block if API itself is unavailable)
+            const url = `/printview?doctype=${encodeURIComponent(doctype)}&name=${encodeURIComponent(name)}`;
+            window.open(url, "_blank");
+        }
+    }
+
+    async function handleShareWhatsApp(doctype, name) {
+        if (!doctype || !name) return;
+
+        // Guard: offline
+        if (!navigator.onLine) {
+            _showPrintGuardModal({
+                heading: "WhatsApp Share Unavailable",
+                reason: "You are currently offline.",
+                detail: "WhatsApp sharing requires an active internet connection. Please reconnect and try again.",
+                doctype, docname: name
+            });
+            return;
+        }
+
+        // Guard: document must exist
+        try {
+            const check = await smriti.api.call(
+                "smriti_retail_os.print_framework.api.print_api.check_doc_exists",
+                { doctype, docname: name }
+            );
+            if (!check || !check.exists) {
+                smriti.api.call("smriti_retail_os.print_framework.api.print_api.log_print_attempt",
+                    { doctype, docname: name, exists: 0, action: "WHATSAPP" }).catch(() => {});
+                _showPrintGuardModal({
+                    heading: "Unable to share via WhatsApp",
+                    reason: "The requested voucher could not be found.",
+                    detail: "Please save the voucher first, then try sharing again.",
+                    doctype, docname: name
+                });
+                return;
+            }
+        } catch (e) { /* proceed if API unavailable */ }
+
+        const phone = prompt("Enter recipient WhatsApp number (with country code, e.g. 919876543210):");
+        if (!phone) return;
+
+        try {
+            const res = await smriti.api.call("smriti_retail_os.print_framework.api.print_api.share_via_whatsapp", {
+                doctype: doctype,
+                docname: name,
+                phone: phone
+            });
+            smriti.api.call("smriti_retail_os.print_framework.api.print_api.log_print_attempt",
+                { doctype, docname: name, exists: 1, action: "WHATSAPP" }).catch(() => {});
+            if (res && res.file_url) {
+                const message = encodeURIComponent(`Please find your ${doctype} (${name}) here: ${res.file_url}`);
+                const waUrl = `https://api.whatsapp.com/send?phone=${phone}&text=${message}`;
+                window.open(waUrl, "_blank");
+            } else {
+                alert("Failed to generate share link.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Error sharing: " + err.message);
+        }
+    }
+
+    async function handleShareEmail(doctype, name) {
+        if (!doctype || !name) return;
+
+        // Guard: offline
+        if (!navigator.onLine) {
+            _showPrintGuardModal({
+                heading: "Email Share Unavailable",
+                reason: "You are currently offline.",
+                detail: "Sending email requires an active internet connection. Please reconnect and try again.",
+                doctype, docname: name
+            });
+            return;
+        }
+
+        // Guard: document must exist
+        try {
+            const check = await smriti.api.call(
+                "smriti_retail_os.print_framework.api.print_api.check_doc_exists",
+                { doctype, docname: name }
+            );
+            if (!check || !check.exists) {
+                smriti.api.call("smriti_retail_os.print_framework.api.print_api.log_print_attempt",
+                    { doctype, docname: name, exists: 0, action: "EMAIL" }).catch(() => {});
+                _showPrintGuardModal({
+                    heading: "Unable to send Email",
+                    reason: "The requested voucher could not be found.",
+                    detail: "Please save the voucher first, then try emailing again.",
+                    doctype, docname: name
+                });
+                return;
+            }
+        } catch (e) { /* proceed if API unavailable */ }
+
+        const email = prompt("Enter recipient email address:");
+        if (!email) return;
+
+        try {
+            const res = await smriti.api.call("smriti_retail_os.print_framework.api.print_api.share_via_email", {
+                doctype: doctype,
+                docname: name,
+                email: email
+            });
+            smriti.api.call("smriti_retail_os.print_framework.api.print_api.log_print_attempt",
+                { doctype, docname: name, exists: 1, action: "EMAIL" }).catch(() => {});
+            if (res && res.success) {
+                alert("Email sent successfully.");
+            } else {
+                alert("Failed to send email.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Error sending email: " + err.message);
+        }
+    }
+
+    /**
+     * Show a "Save Required" toast in the sharing button instead of
+     * navigating when the document is client-side only.
+     */
+    function _markSharingButtonSaveRequired(btn, originalHTML) {
+        btn.disabled = true;
+        btn.title = "Save the voucher first";
+        btn.style.opacity = "0.55";
+        btn.style.cursor = "not-allowed";
+        btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:15px;">lock</span> Save Required';
+        btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            _showPrintGuardModal({
+                heading: "Save Voucher First",
+                reason: "This voucher has not yet been saved.",
+                detail: "Please save the voucher before printing, sharing via WhatsApp, or sending via email."
+            });
+        }, { once: false });
+    }
+
+    function injectVoucherActions(backdropEl) {
+        const footer = backdropEl.querySelector(".drawer-footer, #drawer-footer-actions, #modal-footer");
+        if (!footer) return;
+        if (footer.querySelector(".smriti-voucher-sharing")) return;
+
+        const shareContainer = document.createElement("div");
+        shareContainer.className = "smriti-voucher-sharing";
+        shareContainer.style = "display:flex; gap:8px; margin-top:8px; width:100%; border-top: 1px solid var(--border); padding-top: 12px;";
+
+        const btnPrint = document.createElement("button");
+        btnPrint.className = "btn btn-secondary flex-1";
+        btnPrint.style = "display:flex; align-items:center; justify-content:center; gap:6px; background:#475569; color:white; padding:8px 12px; border:none; border-radius:6px; cursor:pointer;";
+        btnPrint.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px;">print</span> Print';
+        btnPrint.addEventListener("click", () => {
+            const info = getActiveDocInfo();
+            if (info && info.name) {
+                handleSharePrint(info.doctype, info.name);
+            } else {
+                _showPrintGuardModal({
+                    heading: "Save Voucher First",
+                    reason: "This voucher has not yet been saved.",
+                    detail: "Please save the voucher before opening Print Preview."
+                });
+            }
+        });
+
+        const btnWA = document.createElement("button");
+        btnWA.className = "btn btn-success flex-1";
+        btnWA.style = "display:flex; align-items:center; justify-content:center; gap:6px; background:#10b981; color:white; padding:8px 12px; border:none; border-radius:6px; cursor:pointer;";
+        btnWA.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px;">chat</span> WhatsApp';
+        btnWA.addEventListener("click", () => {
+            const info = getActiveDocInfo();
+            if (info && info.name) {
+                handleShareWhatsApp(info.doctype, info.name);
+            } else {
+                _showPrintGuardModal({
+                    heading: "Save Voucher First",
+                    reason: "This voucher has not yet been saved.",
+                    detail: "Please save the voucher before sharing via WhatsApp."
+                });
+            }
+        });
+
+        const btnEmail = document.createElement("button");
+        btnEmail.className = "btn btn-primary flex-1";
+        btnEmail.style = "display:flex; align-items:center; justify-content:center; gap:6px; background:#3b82f6; color:white; padding:8px 12px; border:none; border-radius:6px; cursor:pointer;";
+        btnEmail.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px;">mail</span> Email';
+        btnEmail.addEventListener("click", () => {
+            const info = getActiveDocInfo();
+            if (info && info.name) {
+                handleShareEmail(info.doctype, info.name);
+            } else {
+                _showPrintGuardModal({
+                    heading: "Save Voucher First",
+                    reason: "This voucher has not yet been saved.",
+                    detail: "Please save the voucher before sending via email."
+                });
+            }
+        });
+
+        shareContainer.appendChild(btnPrint);
+        shareContainer.appendChild(btnWA);
+        shareContainer.appendChild(btnEmail);
+
+        footer.appendChild(shareContainer);
+    }
+
+    function initReportsSharing() {
+        const printBtn = document.querySelector('button[onclick="printReport()"]');
+        if (!printBtn) return;
+        const parent = printBtn.parentElement;
+        if (!parent || parent.querySelector(".smriti-report-share")) return;
+
+        const shareWrapper = document.createElement("div");
+        shareWrapper.className = "smriti-report-share";
+        shareWrapper.style = "display:inline-flex; gap:8px;";
+
+        const btnWA = document.createElement("button");
+        btnWA.className = "btn-export";
+        btnWA.title = "WhatsApp Report";
+        btnWA.style = "background:#10b981; border:none; color:white; border-radius:4px; padding:4px 8px; cursor:pointer; display:inline-flex; align-items:center; gap:4px; font-size:13px; font-weight:600;";
+        btnWA.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;">chat</span> WhatsApp';
+        btnWA.addEventListener("click", () => shareReport("whatsapp"));
+
+        const btnEmail = document.createElement("button");
+        btnEmail.className = "btn-export";
+        btnEmail.title = "Email Report";
+        btnEmail.style = "background:#3b82f6; border:none; color:white; border-radius:4px; padding:4px 8px; cursor:pointer; display:inline-flex; align-items:center; gap:4px; font-size:13px; font-weight:600;";
+        btnEmail.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;">mail</span> Email';
+        btnEmail.addEventListener("click", () => shareReport("email"));
+
+        shareWrapper.appendChild(btnWA);
+        shareWrapper.appendChild(btnEmail);
+        parent.insertBefore(shareWrapper, printBtn.nextSibling);
+    }
+
+    async function loadHtml2Pdf() {
+        if (window.html2pdf) return window.html2pdf;
+        return new Promise((resolve) => {
+            const script = document.createElement("script");
+            script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+            script.onload = () => resolve(window.html2pdf);
+            document.head.appendChild(script);
+        });
+    }
+
+    async function shareReport(mode) {
+        if (!window.activeReportKey) {
+            alert("No report data loaded.");
+            return;
+        }
+
+        const targetEl = document.getElementById("report-table-wrapper") || document.querySelector(".table-wrap");
+        if (!targetEl) {
+            alert("Report element not found.");
+            return;
+        }
+
+        let inputVal = "";
+        if (mode === "whatsapp") {
+            inputVal = prompt("Enter recipient WhatsApp number (with country code, e.g. 919876543210):");
+        } else {
+            inputVal = prompt("Enter recipient email address:");
+        }
+        if (!inputVal) return;
+
+        const toast = window.toast || ((msg) => alert(msg));
+        toast("Generating report PDF...", "info");
+
+        const html2pdf = await loadHtml2Pdf();
+        const opt = {
+            margin: 10,
+            filename: `${window.activeReportKey}_report.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+        };
+
+        try {
+            const pdfBlob = await html2pdf().from(targetEl).set(opt).outputPdf('blob');
+            const reader = new FileReader();
+            reader.readAsDataURL(pdfBlob);
+            reader.onloadend = async function() {
+                const base64data = reader.result.split(',')[1];
+                const fileName = `${window.activeReportKey}_report.pdf`;
+
+                if (mode === "whatsapp") {
+                    const res = await smriti.api.call("smriti_retail_os.print_framework.api.print_api.save_pdf_public", {
+                        pdf_base64: base64data,
+                        file_name: fileName
+                    });
+                    if (res && res.file_url) {
+                        const message = encodeURIComponent(`Please find your Report here: ${res.file_url}`);
+                        const waUrl = `https://api.whatsapp.com/send?phone=${inputVal}&text=${message}`;
+                        window.open(waUrl, "_blank");
+                    } else {
+                        alert("Failed to generate WhatsApp link.");
+                    }
+                } else {
+                    const res = await smriti.api.call("smriti_retail_os.print_framework.api.print_api.send_pdf_email", {
+                        email_address: inputVal,
+                        pdf_base64: base64data,
+                        file_name: fileName,
+                        subject: `SMRITI Report - ${window.activeReportKey.toUpperCase()}`
+                    });
+                    if (res && res.success) {
+                        alert("Report emailed successfully.");
+                    } else {
+                        alert("Failed to email report.");
+                    }
+                }
+            };
+        } catch (err) {
+            console.error(err);
+            alert("Error rendering PDF: " + err.message);
+        }
+    }
+
+    // ── Global Shortcuts FAB Menu ──
+    function initGlobalShortcutsMenu() {
+        if (document.getElementById("smriti-shortcuts-root")) return;
+
+        const rootDiv = document.createElement("div");
+        rootDiv.id = "smriti-shortcuts-root";
+        document.body.appendChild(rootDiv);
+
+        const scripts = [
+            "https://unpkg.com/react@18/umd/react.production.min.js",
+            "https://unpkg.com/react-dom@18/umd/react-dom.production.min.js",
+            "https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"
+        ];
+
+        function loadScriptSeries(urls, callback) {
+            if (urls.length === 0) return callback();
+            const url = urls.shift();
+            if ((url.includes("react.production") && window.React) || 
+                (url.includes("react-dom.production") && window.ReactDOM) ||
+                (url.includes("framer-motion") && (window.Motion || window.framerMotion))) {
+                return loadScriptSeries(urls, callback);
+            }
+            const script = document.createElement("script");
+            script.src = url;
+            script.crossOrigin = "anonymous";
+            script.onload = () => loadScriptSeries(urls, callback);
+            document.head.appendChild(script);
+        }
+
+        loadScriptSeries(scripts, () => {
+            renderShortcutsReact(rootDiv);
+        });
+    }
+
+    function renderShortcutsReact(container) {
+        const React = window.React;
+        const ReactDOM = window.ReactDOM;
+        const motion = (window.Motion || window.framerMotion || {}).motion;
+
+        if (!React || !ReactDOM || !motion) {
+            console.error("Shortcuts Menu: Failed to load UI dependencies.");
+            return;
+        }
+
+        function App() {
+            const [isOpen, setIsOpen] = React.useState(false);
+
+            const shortcuts = [
+                { id: "sale", label: "Quick Sale", icon: "point_of_sale", route: "/billing" },
+                { id: "prod", label: "New Product", icon: "add_box", route: "/item_master" },
+                { id: "cust", label: "Add Customer", icon: "person_add", route: "/customers" },
+                { id: "quote", label: "Create Quote", icon: "request_quote", route: "/smriti-quotation" }
+            ];
+
+            const toggleMenu = () => setIsOpen(!isOpen);
+
+            const navigateTo = (route) => {
+                setIsOpen(false);
+                if (window.smriti && window.smriti.navigation && typeof window.smriti.navigation.go === "function") {
+                    window.smriti.navigation.go(route);
+                } else {
+                    window.location.href = route;
+                }
+            };
+
+            return React.createElement(
+                React.Fragment,
+                null,
+                isOpen && React.createElement(
+                    motion.div,
+                    {
+                        initial: { opacity: 0 },
+                        animate: { opacity: 1 },
+                        exit: { opacity: 0 },
+                        onClick: toggleMenu,
+                        style: {
+                            position: "fixed",
+                            inset: 0,
+                            zIndex: 9998,
+                            background: "rgba(3, 7, 18, 0.4)",
+                            backdropFilter: "blur(2px)"
+                        }
+                    }
+                ),
+                React.createElement(
+                    motion.div,
+                    {
+                        initial: { opacity: 0, scale: 0.85, y: 20 },
+                        animate: isOpen ? { opacity: 1, scale: 1, y: 0 } : { opacity: 0, scale: 0.85, y: 20 },
+                        transition: { duration: 0.2 },
+                        style: {
+                            position: "fixed",
+                            bottom: "80px",
+                            right: "24px",
+                            zIndex: 9999,
+                            display: isOpen ? "flex" : "none",
+                            flexDirection: "column",
+                            gap: "8px",
+                            pointerEvents: isOpen ? "auto" : "none"
+                        }
+                    },
+                    shortcuts.map((s) =>
+                        React.createElement(
+                            motion.div,
+                            {
+                                key: s.id,
+                                whileHover: { scale: 1.05, x: -4 },
+                                whileTap: { scale: 0.95 },
+                                onClick: () => navigateTo(s.route),
+                                style: {
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "10px",
+                                    background: "var(--smriti-color-bg-primary, #1e293b)",
+                                    border: "1px solid var(--smriti-color-border-strong, #334155)",
+                                    borderRadius: "8px",
+                                    padding: "10px 16px",
+                                    color: "var(--smriti-color-text-primary, #f8fafc)",
+                                    cursor: "pointer",
+                                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                                    userSelect: "none"
+                                }
+                            },
+                            React.createElement(
+                                "span",
+                                {
+                                    className: "material-symbols-outlined",
+                                    style: { color: "var(--smriti-color-brand-light, #a78bfa)", fontSize: "20px" }
+                                },
+                                s.icon
+                            ),
+                            React.createElement(
+                                "span",
+                                { style: { fontSize: "14px", fontWeight: "600" } },
+                                s.label
+                            )
+                        )
+                    )
+                ),
+                React.createElement(
+                    motion.button,
+                    {
+                        whileHover: { scale: 1.1, rotate: isOpen ? -90 : 0 },
+                        whileTap: { scale: 0.9 },
+                        onClick: toggleMenu,
+                        style: {
+                            position: "fixed",
+                            bottom: "20px",
+                            right: "24px",
+                            zIndex: 9999,
+                            width: "52px",
+                            height: "52px",
+                            borderRadius: "50%",
+                            background: "var(--smriti-color-brand-light, #a78bfa)",
+                            border: "none",
+                            color: "var(--smriti-color-bg-primary, #0f172a)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            cursor: "pointer",
+                            boxShadow: "0 4px 16px rgba(167, 139, 250, 0.4)",
+                            outline: "none"
+                        }
+                    },
+                    React.createElement(
+                        "span",
+                        {
+                            className: "material-symbols-outlined",
+                            style: { fontSize: "26px", fontWeight: "bold" }
+                        },
+                        isOpen ? "close" : "bolt"
+                    )
+                )
+            );
+        }
+
+        const root = ReactDOM.createRoot(container);
+        root.render(React.createElement(App));
+    }
+
+    function runSetup() {
+        initGlobalShortcutsMenu();
+
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach(mutation => {
+                if (mutation.type === "attributes" && mutation.attributeName === "class") {
+                    const el = mutation.target;
+                    if (el.classList.contains("drawer-backdrop") && el.classList.contains("open")) {
+                        injectVoucherActions(el);
+                    }
+                }
+            });
+        });
+        observer.observe(document.body, {
+            attributes: true,
+            subtree: true,
+            attributeFilter: ["class"]
+        });
+
+        initReportsSharing();
+    }
+
+    if (document.readyState === "complete" || document.readyState === "interactive") {
+        runSetup();
+    } else {
+        document.addEventListener("DOMContentLoaded", runSetup);
+    }
 
 }(window.SMRITI));

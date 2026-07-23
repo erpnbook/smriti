@@ -4,13 +4,13 @@
   "generated_by": "SDC 1.1.2-GA",
   "schema_version": "1.2",
   "artifact_type": "business_dictionary",
-  "generated_at": "2026-06-27T23:29:13Z",
-  "repository_commit": "43ea253a377f502e17d3006e1b2f6b179a785fa4",
+  "generated_at": "2026-07-09T19:56:39Z",
+  "repository_commit": "eb664a781445f8d59c2fc5ace72c700e75bfbbeb",
   "provenance": {
     "artifact_id": "ART-GLOSSARY-INV-00001",
     "produced_by": "Phase0_Discovery",
     "consumes": [
-      "apps/smriti_retail_os/smriti_retail_os/patches/seed_default_terms.py"
+      "smriti_retail_os/smriti_retail_os/patches/seed_default_terms.py"
     ],
     "used_by": [
       "docs_renderers",
@@ -61,9 +61,9 @@
       },
       "coverage_score": 100.0,
       "freshness": {
-        "last_scanned_commit": "43ea253a377f502e17d3006e1b2f6b179a785fa4",
-        "last_scan_timestamp": "2026-06-27T23:29:13Z",
-        "last_validated_timestamp": "2026-06-27T23:29:13Z"
+        "last_scanned_commit": "eb664a781445f8d59c2fc5ace72c700e75bfbbeb",
+        "last_scan_timestamp": "2026-07-09T19:56:39Z",
+        "last_validated_timestamp": "2026-07-09T19:56:39Z"
       },
       "related_assets": [
         "PSV",
@@ -71,7 +71,7 @@
       ],
       "evidence": {
         "type": "seeder",
-        "path": "apps/smriti_retail_os/smriti_retail_os/patches/seed_default_terms.py",
+        "path": "smriti_retail_os/patches/seed_default_terms.py",
         "checksum": ""
       },
       "owner": "AITDL"
@@ -121,9 +121,9 @@
       },
       "coverage_score": 100.0,
       "freshness": {
-        "last_scanned_commit": "43ea253a377f502e17d3006e1b2f6b179a785fa4",
-        "last_scan_timestamp": "2026-06-27T23:29:13Z",
-        "last_validated_timestamp": "2026-06-27T23:29:13Z"
+        "last_scanned_commit": "eb664a781445f8d59c2fc5ace72c700e75bfbbeb",
+        "last_scan_timestamp": "2026-07-09T19:56:39Z",
+        "last_validated_timestamp": "2026-07-09T19:56:39Z"
       },
       "related_assets": [
         "PSA",
@@ -131,7 +131,7 @@
       ],
       "evidence": {
         "type": "seeder",
-        "path": "apps/smriti_retail_os/smriti_retail_os/patches/seed_default_terms.py",
+        "path": "smriti_retail_os/patches/seed_default_terms.py",
         "checksum": ""
       },
       "owner": "AITDL"
@@ -182,9 +182,9 @@
       },
       "coverage_score": 100.0,
       "freshness": {
-        "last_scanned_commit": "43ea253a377f502e17d3006e1b2f6b179a785fa4",
-        "last_scan_timestamp": "2026-06-27T23:29:13Z",
-        "last_validated_timestamp": "2026-06-27T23:29:13Z"
+        "last_scanned_commit": "eb664a781445f8d59c2fc5ace72c700e75bfbbeb",
+        "last_scan_timestamp": "2026-07-09T19:56:39Z",
+        "last_validated_timestamp": "2026-07-09T19:56:39Z"
       },
       "related_assets": [
         "WOC",
@@ -192,7 +192,7 @@
       ],
       "evidence": {
         "type": "seeder",
-        "path": "apps/smriti_retail_os/smriti_retail_os/patches/seed_default_terms.py",
+        "path": "smriti_retail_os/patches/seed_default_terms.py",
         "checksum": ""
       },
       "owner": "AITDL"
@@ -243,9 +243,9 @@
       },
       "coverage_score": 100.0,
       "freshness": {
-        "last_scanned_commit": "43ea253a377f502e17d3006e1b2f6b179a785fa4",
-        "last_scan_timestamp": "2026-06-27T23:29:13Z",
-        "last_validated_timestamp": "2026-06-27T23:29:13Z"
+        "last_scanned_commit": "eb664a781445f8d59c2fc5ace72c700e75bfbbeb",
+        "last_scan_timestamp": "2026-07-09T19:56:39Z",
+        "last_validated_timestamp": "2026-07-09T19:56:39Z"
       },
       "related_assets": [
         "Sales Velocity",
@@ -253,7 +253,7 @@
       ],
       "evidence": {
         "type": "seeder",
-        "path": "apps/smriti_retail_os/smriti_retail_os/patches/seed_default_terms.py",
+        "path": "smriti_retail_os/patches/seed_default_terms.py",
         "checksum": ""
       },
       "owner": "AITDL"
@@ -302,16 +302,16 @@
       },
       "coverage_score": 100.0,
       "freshness": {
-        "last_scanned_commit": "43ea253a377f502e17d3006e1b2f6b179a785fa4",
-        "last_scan_timestamp": "2026-06-27T23:29:13Z",
-        "last_validated_timestamp": "2026-06-27T23:29:13Z"
+        "last_scanned_commit": "eb664a781445f8d59c2fc5ace72c700e75bfbbeb",
+        "last_scan_timestamp": "2026-07-09T19:56:39Z",
+        "last_validated_timestamp": "2026-07-09T19:56:39Z"
       },
       "related_assets": [
         "WOC"
       ],
       "evidence": {
         "type": "seeder",
-        "path": "apps/smriti_retail_os/smriti_retail_os/patches/seed_default_terms.py",
+        "path": "smriti_retail_os/patches/seed_default_terms.py",
         "checksum": ""
       },
       "owner": "AITDL"
@@ -361,9 +361,9 @@
       },
       "coverage_score": 100.0,
       "freshness": {
-        "last_scanned_commit": "43ea253a377f502e17d3006e1b2f6b179a785fa4",
-        "last_scan_timestamp": "2026-06-27T23:29:13Z",
-        "last_validated_timestamp": "2026-06-27T23:29:13Z"
+        "last_scanned_commit": "eb664a781445f8d59c2fc5ace72c700e75bfbbeb",
+        "last_scan_timestamp": "2026-07-09T19:56:39Z",
+        "last_validated_timestamp": "2026-07-09T19:56:39Z"
       },
       "related_assets": [
         "PDT",
@@ -371,7 +371,7 @@
       ],
       "evidence": {
         "type": "seeder",
-        "path": "apps/smriti_retail_os/smriti_retail_os/patches/seed_default_terms.py",
+        "path": "smriti_retail_os/patches/seed_default_terms.py",
         "checksum": ""
       },
       "owner": "AITDL"
@@ -420,16 +420,16 @@
       },
       "coverage_score": 100.0,
       "freshness": {
-        "last_scanned_commit": "43ea253a377f502e17d3006e1b2f6b179a785fa4",
-        "last_scan_timestamp": "2026-06-27T23:29:13Z",
-        "last_validated_timestamp": "2026-06-27T23:29:13Z"
+        "last_scanned_commit": "eb664a781445f8d59c2fc5ace72c700e75bfbbeb",
+        "last_scan_timestamp": "2026-07-09T19:56:39Z",
+        "last_validated_timestamp": "2026-07-09T19:56:39Z"
       },
       "related_assets": [
         "WOC"
       ],
       "evidence": {
         "type": "seeder",
-        "path": "apps/smriti_retail_os/smriti_retail_os/patches/seed_default_terms.py",
+        "path": "smriti_retail_os/patches/seed_default_terms.py",
         "checksum": ""
       },
       "owner": "AITDL"
@@ -478,16 +478,16 @@
       },
       "coverage_score": 100.0,
       "freshness": {
-        "last_scanned_commit": "43ea253a377f502e17d3006e1b2f6b179a785fa4",
-        "last_scan_timestamp": "2026-06-27T23:29:13Z",
-        "last_validated_timestamp": "2026-06-27T23:29:13Z"
+        "last_scanned_commit": "eb664a781445f8d59c2fc5ace72c700e75bfbbeb",
+        "last_scan_timestamp": "2026-07-09T19:56:39Z",
+        "last_validated_timestamp": "2026-07-09T19:56:39Z"
       },
       "related_assets": [
         "Sales Velocity"
       ],
       "evidence": {
         "type": "seeder",
-        "path": "apps/smriti_retail_os/smriti_retail_os/patches/seed_default_terms.py",
+        "path": "smriti_retail_os/patches/seed_default_terms.py",
         "checksum": ""
       },
       "owner": "AITDL"
@@ -536,16 +536,16 @@
       },
       "coverage_score": 100.0,
       "freshness": {
-        "last_scanned_commit": "43ea253a377f502e17d3006e1b2f6b179a785fa4",
-        "last_scan_timestamp": "2026-06-27T23:29:13Z",
-        "last_validated_timestamp": "2026-06-27T23:29:13Z"
+        "last_scanned_commit": "eb664a781445f8d59c2fc5ace72c700e75bfbbeb",
+        "last_scan_timestamp": "2026-07-09T19:56:39Z",
+        "last_validated_timestamp": "2026-07-09T19:56:39Z"
       },
       "related_assets": [
         "Physical Snapshot"
       ],
       "evidence": {
         "type": "seeder",
-        "path": "apps/smriti_retail_os/smriti_retail_os/patches/seed_default_terms.py",
+        "path": "smriti_retail_os/patches/seed_default_terms.py",
         "checksum": ""
       },
       "owner": "AITDL"
@@ -595,9 +595,9 @@
       },
       "coverage_score": 100.0,
       "freshness": {
-        "last_scanned_commit": "43ea253a377f502e17d3006e1b2f6b179a785fa4",
-        "last_scan_timestamp": "2026-06-27T23:29:13Z",
-        "last_validated_timestamp": "2026-06-27T23:29:13Z"
+        "last_scanned_commit": "eb664a781445f8d59c2fc5ace72c700e75bfbbeb",
+        "last_scan_timestamp": "2026-07-09T19:56:39Z",
+        "last_validated_timestamp": "2026-07-09T19:56:39Z"
       },
       "related_assets": [
         "WOC",
@@ -605,7 +605,7 @@
       ],
       "evidence": {
         "type": "seeder",
-        "path": "apps/smriti_retail_os/smriti_retail_os/patches/seed_default_terms.py",
+        "path": "smriti_retail_os/patches/seed_default_terms.py",
         "checksum": ""
       },
       "owner": "AITDL"
@@ -654,16 +654,16 @@
       },
       "coverage_score": 100.0,
       "freshness": {
-        "last_scanned_commit": "43ea253a377f502e17d3006e1b2f6b179a785fa4",
-        "last_scan_timestamp": "2026-06-27T23:29:13Z",
-        "last_validated_timestamp": "2026-06-27T23:29:13Z"
+        "last_scanned_commit": "eb664a781445f8d59c2fc5ace72c700e75bfbbeb",
+        "last_scan_timestamp": "2026-07-09T19:56:39Z",
+        "last_validated_timestamp": "2026-07-09T19:56:39Z"
       },
       "related_assets": [
         "Stock Accuracy"
       ],
       "evidence": {
         "type": "seeder",
-        "path": "apps/smriti_retail_os/smriti_retail_os/patches/seed_default_terms.py",
+        "path": "smriti_retail_os/patches/seed_default_terms.py",
         "checksum": ""
       },
       "owner": "AITDL"
@@ -713,9 +713,9 @@
       },
       "coverage_score": 100.0,
       "freshness": {
-        "last_scanned_commit": "43ea253a377f502e17d3006e1b2f6b179a785fa4",
-        "last_scan_timestamp": "2026-06-27T23:29:13Z",
-        "last_validated_timestamp": "2026-06-27T23:29:13Z"
+        "last_scanned_commit": "eb664a781445f8d59c2fc5ace72c700e75bfbbeb",
+        "last_scan_timestamp": "2026-07-09T19:56:39Z",
+        "last_validated_timestamp": "2026-07-09T19:56:39Z"
       },
       "related_assets": [
         "PDT",
@@ -723,7 +723,7 @@
       ],
       "evidence": {
         "type": "seeder",
-        "path": "apps/smriti_retail_os/smriti_retail_os/patches/seed_default_terms.py",
+        "path": "smriti_retail_os/patches/seed_default_terms.py",
         "checksum": ""
       },
       "owner": "AITDL"
@@ -772,16 +772,16 @@
       },
       "coverage_score": 100.0,
       "freshness": {
-        "last_scanned_commit": "43ea253a377f502e17d3006e1b2f6b179a785fa4",
-        "last_scan_timestamp": "2026-06-27T23:29:13Z",
-        "last_validated_timestamp": "2026-06-27T23:29:13Z"
+        "last_scanned_commit": "eb664a781445f8d59c2fc5ace72c700e75bfbbeb",
+        "last_scan_timestamp": "2026-07-09T19:56:39Z",
+        "last_validated_timestamp": "2026-07-09T19:56:39Z"
       },
       "related_assets": [
         "Stock Accuracy"
       ],
       "evidence": {
         "type": "seeder",
-        "path": "apps/smriti_retail_os/smriti_retail_os/patches/seed_default_terms.py",
+        "path": "smriti_retail_os/patches/seed_default_terms.py",
         "checksum": ""
       },
       "owner": "AITDL"
@@ -829,9 +829,9 @@
       },
       "coverage_score": 100.0,
       "freshness": {
-        "last_scanned_commit": "43ea253a377f502e17d3006e1b2f6b179a785fa4",
-        "last_scan_timestamp": "2026-06-27T23:29:13Z",
-        "last_validated_timestamp": "2026-06-27T23:29:13Z"
+        "last_scanned_commit": "eb664a781445f8d59c2fc5ace72c700e75bfbbeb",
+        "last_scan_timestamp": "2026-07-09T19:56:39Z",
+        "last_validated_timestamp": "2026-07-09T19:56:39Z"
       },
       "related_assets": [
         "PSA",
@@ -839,7 +839,7 @@
       ],
       "evidence": {
         "type": "seeder",
-        "path": "apps/smriti_retail_os/smriti_retail_os/patches/seed_default_terms.py",
+        "path": "smriti_retail_os/patches/seed_default_terms.py",
         "checksum": ""
       },
       "owner": "AITDL"
@@ -890,9 +890,9 @@
       },
       "coverage_score": 100.0,
       "freshness": {
-        "last_scanned_commit": "43ea253a377f502e17d3006e1b2f6b179a785fa4",
-        "last_scan_timestamp": "2026-06-27T23:29:13Z",
-        "last_validated_timestamp": "2026-06-27T23:29:13Z"
+        "last_scanned_commit": "eb664a781445f8d59c2fc5ace72c700e75bfbbeb",
+        "last_scan_timestamp": "2026-07-09T19:56:39Z",
+        "last_validated_timestamp": "2026-07-09T19:56:39Z"
       },
       "related_assets": [
         "PDT",
@@ -900,7 +900,7 @@
       ],
       "evidence": {
         "type": "seeder",
-        "path": "apps/smriti_retail_os/smriti_retail_os/patches/seed_default_terms.py",
+        "path": "smriti_retail_os/patches/seed_default_terms.py",
         "checksum": ""
       },
       "owner": "AITDL"
@@ -950,9 +950,9 @@
       },
       "coverage_score": 100.0,
       "freshness": {
-        "last_scanned_commit": "43ea253a377f502e17d3006e1b2f6b179a785fa4",
-        "last_scan_timestamp": "2026-06-27T23:29:13Z",
-        "last_validated_timestamp": "2026-06-27T23:29:13Z"
+        "last_scanned_commit": "eb664a781445f8d59c2fc5ace72c700e75bfbbeb",
+        "last_scan_timestamp": "2026-07-09T19:56:39Z",
+        "last_validated_timestamp": "2026-07-09T19:56:39Z"
       },
       "related_assets": [
         "WOC",
@@ -960,7 +960,7 @@
       ],
       "evidence": {
         "type": "seeder",
-        "path": "apps/smriti_retail_os/smriti_retail_os/patches/seed_default_terms.py",
+        "path": "smriti_retail_os/patches/seed_default_terms.py",
         "checksum": ""
       },
       "owner": "AITDL"
@@ -1009,16 +1009,16 @@
       },
       "coverage_score": 100.0,
       "freshness": {
-        "last_scanned_commit": "43ea253a377f502e17d3006e1b2f6b179a785fa4",
-        "last_scan_timestamp": "2026-06-27T23:29:13Z",
-        "last_validated_timestamp": "2026-06-27T23:29:13Z"
+        "last_scanned_commit": "eb664a781445f8d59c2fc5ace72c700e75bfbbeb",
+        "last_scan_timestamp": "2026-07-09T19:56:39Z",
+        "last_validated_timestamp": "2026-07-09T19:56:39Z"
       },
       "related_assets": [
         "Inventory Turnover"
       ],
       "evidence": {
         "type": "seeder",
-        "path": "apps/smriti_retail_os/smriti_retail_os/patches/seed_default_terms.py",
+        "path": "smriti_retail_os/patches/seed_default_terms.py",
         "checksum": ""
       },
       "owner": "AITDL"
@@ -1068,9 +1068,9 @@
       },
       "coverage_score": 100.0,
       "freshness": {
-        "last_scanned_commit": "43ea253a377f502e17d3006e1b2f6b179a785fa4",
-        "last_scan_timestamp": "2026-06-27T23:29:13Z",
-        "last_validated_timestamp": "2026-06-27T23:29:13Z"
+        "last_scanned_commit": "eb664a781445f8d59c2fc5ace72c700e75bfbbeb",
+        "last_scan_timestamp": "2026-07-09T19:56:39Z",
+        "last_validated_timestamp": "2026-07-09T19:56:39Z"
       },
       "related_assets": [
         "Sales Velocity",
@@ -1078,7 +1078,7 @@
       ],
       "evidence": {
         "type": "seeder",
-        "path": "apps/smriti_retail_os/smriti_retail_os/patches/seed_default_terms.py",
+        "path": "smriti_retail_os/patches/seed_default_terms.py",
         "checksum": ""
       },
       "owner": "AITDL"
@@ -1125,16 +1125,16 @@
       },
       "coverage_score": 100.0,
       "freshness": {
-        "last_scanned_commit": "43ea253a377f502e17d3006e1b2f6b179a785fa4",
-        "last_scan_timestamp": "2026-06-27T23:29:13Z",
-        "last_validated_timestamp": "2026-06-27T23:29:13Z"
+        "last_scanned_commit": "eb664a781445f8d59c2fc5ace72c700e75bfbbeb",
+        "last_scan_timestamp": "2026-07-09T19:56:39Z",
+        "last_validated_timestamp": "2026-07-09T19:56:39Z"
       },
       "related_assets": [
         "EMA"
       ],
       "evidence": {
         "type": "seeder",
-        "path": "apps/smriti_retail_os/smriti_retail_os/patches/seed_default_terms.py",
+        "path": "smriti_retail_os/patches/seed_default_terms.py",
         "checksum": ""
       },
       "owner": "AITDL"
@@ -1182,9 +1182,9 @@
       },
       "coverage_score": 100.0,
       "freshness": {
-        "last_scanned_commit": "43ea253a377f502e17d3006e1b2f6b179a785fa4",
-        "last_scan_timestamp": "2026-06-27T23:29:13Z",
-        "last_validated_timestamp": "2026-06-27T23:29:13Z"
+        "last_scanned_commit": "eb664a781445f8d59c2fc5ace72c700e75bfbbeb",
+        "last_scan_timestamp": "2026-07-09T19:56:39Z",
+        "last_validated_timestamp": "2026-07-09T19:56:39Z"
       },
       "related_assets": [
         "Stockout Risk",
@@ -1192,7 +1192,7 @@
       ],
       "evidence": {
         "type": "seeder",
-        "path": "apps/smriti_retail_os/smriti_retail_os/patches/seed_default_terms.py",
+        "path": "smriti_retail_os/patches/seed_default_terms.py",
         "checksum": ""
       },
       "owner": "AITDL"

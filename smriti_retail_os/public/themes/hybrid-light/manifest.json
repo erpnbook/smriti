@@ -1,0 +1,12 @@
+{
+  "id": "hybrid-light",
+  "name": "Neumorphic Clay Light",
+  "version": "2.2.0",
+  "author": "SMRITI Engineering",
+  "dark": false,
+  "default": false,
+  "description": "Soft neumorphic clay surfaces with purple brand accents. Ideal for executive dashboards.",
+  "accent_color": "#6941c6",
+  "supported_modules": ["all"],
+  "css": ["variables.css"]
+}

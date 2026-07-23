@@ -1,0 +1,195 @@
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+<html lang="en">
+<head>
+  {%- include "smriti_retail_os/templates/includes/smriti_token_loader.html" -%}
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CRM & Customer Insights — SMRITI Retail OS</title>
+  <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@31.0.1/styles/ag-grid.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@31.0.1/styles/ag-theme-alpine.css"/>
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --accent-pink: #ec4899;
+      --accent-blue: #3b82f6;
+      --accent-green: #10b981;
+      --accent-yellow: #f59e0b;
+    }
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg-gradient);
+      color: #f8fafc;
+      min-height: 100vh;
+    }
+    .crm-container {
+      padding: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .crm-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 1.5rem;
+    }
+    .crm-title h1 {
+      margin: 0;
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, #f472b6, #a78bfa, #38bdf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .crm-title p {
+      margin: 0.5rem 0 0 0;
+      color: #94a3b8;
+      font-size: 0.95rem;
+    }
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-top: 0.25rem;
+    }
+    .stat-label {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .ag-theme-alpine-dark {
+      --ag-background-color: rgba(15, 23, 42, 0.8);
+      --ag-header-background-color: rgba(30, 41, 59, 0.9);
+      --ag-odd-row-background-color: rgba(30, 41, 59, 0.4);
+      --ag-header-foreground-color: #94a3b8;
+      --ag-foreground-color: #f8fafc;
+      --ag-border-color: rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <div id="smriti-sidebar-container"></div>
+  <div class="crm-container">
+    <div class="crm-header">
+      <div class="crm-title">
+        <h1>👥 CRM & Customer Insights</h1>
+        <p>RFM Segmentation, Customer Lifetime Value (LTV), Loyalty Tiers & Retention Analytics.</p>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total Customers</div>
+        <div class="stat-value" id="stat-total" style="color: #38bdf8;">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Lifetime Revenue</div>
+        <div class="stat-value" id="stat-ltv" style="color: #34d399;">₹0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Average Order Value</div>
+        <div class="stat-value" id="stat-aov" style="color: #a78bfa;">₹0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">VIP Accounts</div>
+        <div class="stat-value" id="stat-vip" style="color: #f472b6;">0</div>
+      </div>
+    </div>
+
+    <div id="crmGrid" class="ag-theme-alpine-dark" style="height: 620px; width: 100%;"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@31.0.1/dist/ag-grid-community.min.js"></script>
+  <script src="/assets/smriti_retail_os/js/smriti_nav_config.js"></script>
+  <script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js"></script>
+  <script>
+    let gridApi = null;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      if (window.SmritiSidebar) {
+        window.SmritiSidebar.init({ active_id: "customers" });
+      }
+      initGrid();
+      loadCRMData();
+    });
+
+    function initGrid() {
+      const gridOptions = {
+        columnDefs: [
+          { field: "name", headerName: "Customer ID", width: 150 },
+          { field: "customer_name", headerName: "Customer Name", width: 220 },
+          { field: "customer_group", headerName: "Group", width: 140 },
+          { field: "territory", headerName: "Territory", width: 140 },
+          { field: "total_spent", headerName: "Total Spent (LTV)", width: 170, valueFormatter: p => "₹" + (p.value || 0).toLocaleString('en-IN') },
+          { field: "orders_count", headerName: "Orders", width: 110 },
+          { field: "avg_order_value", headerName: "AOV", width: 140, valueFormatter: p => "₹" + (p.value || 0).toLocaleString('en-IN') },
+          {
+            field: "tier",
+            headerName: "RFM Tier",
+            width: 140,
+            cellRenderer: p => {
+              const colors = {
+                "VIP": "#ec4899",
+                "Loyal": "#8b5cf6",
+                "Regular": "#3b82f6",
+                "At-Risk": "#ef4444",
+                "New": "#10b981"
+              };
+              const c = colors[p.value] || "#64748b";
+              return `<span style="background:${c}22; color:${c}; border:1px solid ${c}55; padding:2px 8px; border-radius:12px; font-weight:600; font-size:12px;">${p.value}</span>`;
+            }
+          },
+          { field: "loyalty_points", headerName: "Loyalty Points", width: 140 }
+        ],
+        defaultColDef: { resizable: true, sortable: true, filter: true },
+        rowData: []
+      };
+
+      const gridDiv = document.getElementById('crmGrid');
+      gridApi = agGrid.createGrid(gridDiv, gridOptions);
+    }
+
+    async function loadCRMData() {
+      try {
+        const resp = await fetch('/api/method/smriti_retail_os.api.crm_api.get_crm_insights');
+        const res = await resp.json();
+        const data = res.message || {};
+
+        if (data.summary) {
+          document.getElementById('stat-total').innerText = data.summary.total_customers || 0;
+          document.getElementById('stat-ltv').innerText = "₹" + (data.summary.total_ltv || 0).toLocaleString('en-IN');
+          document.getElementById('stat-aov').innerText = "₹" + (data.summary.avg_ltv || 0).toLocaleString('en-IN');
+          document.getElementById('stat-vip').innerText = (data.summary.segments && data.summary.segments.VIP) || 0;
+        }
+
+        if (gridApi && data.customers) {
+          gridApi.setGridOption('rowData', data.customers);
+        }
+      } catch (err) {
+        console.error("CRM data fetch failed:", err);
+      }
+    }
+  </script>
+</body>
+</html>
+{% endblock %}

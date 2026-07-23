@@ -24,7 +24,7 @@
 from smriti_retail_os.core.platform.registry import resolve
 
 
-def get(model_name: str, name: str, **kwargs):
+def get(model_name: str, name: str = None, **kwargs):
     """
     Fetch a single document by model name and document name.
 
@@ -41,6 +41,8 @@ def get(model_name: str, name: str, **kwargs):
         print(doc.customer_name)
     """
     import frappe
+    if name is None:
+        return frappe.get_doc(resolve(model_name), **kwargs)
     return frappe.get_doc(resolve(model_name), name, **kwargs)  # smriti-platform-core
 
 
@@ -70,7 +72,7 @@ def get_all(model_name: str, filters=None, fields=None, **kwargs):
     if fields is not None:
         kwargs_merged["fields"] = fields
     kwargs_merged.update(kwargs)
-    return smriti.db.get_list(resolve(model_name), **kwargs_merged)
+    return frappe.get_all(resolve(model_name), **kwargs_merged)
 
 
 def get_list(model_name: str, filters=None, fields=None, **kwargs):
@@ -104,7 +106,24 @@ def new(model_name: str):
         po.save()
     """
     import frappe
-    return smriti.documents.new(resolve(model_name))
+    return frappe.new_doc(resolve(model_name))
+
+
+def new_from_dict(doc_dict: dict, **kwargs):
+    """
+    Create a new, unsaved document from a dictionary of fields.
+
+    Args:
+        doc_dict (dict): Document dict containing fields and 'doctype'
+
+    Returns:
+        frappe.Document: Document object
+    """
+    import frappe
+    if "doctype" in doc_dict:
+        doc_dict = doc_dict.copy()
+        doc_dict["doctype"] = resolve(doc_dict["doctype"])
+    return frappe.get_doc(doc_dict)
 
 
 def save(doc) -> object:
@@ -229,4 +248,4 @@ def get_value(model_name: str, name: str, fieldname: str):
         credit_limit = documents.get_value("Customer", "CUST-001", "credit_limit")
     """
     import frappe
-    return smriti.db.get(resolve(model_name), name, fieldname)
+    return frappe.db.get_value(resolve(model_name), name, fieldname)

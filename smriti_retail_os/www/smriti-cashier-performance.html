@@ -1,0 +1,189 @@
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+<html lang="en">
+<head>
+  {%- include "smriti_retail_os/templates/includes/smriti_token_loader.html" -%}
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cashier Performance — SMRITI Retail OS</title>
+  <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@31.0.1/styles/ag-grid.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@31.0.1/styles/ag-theme-alpine.css"/>
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --accent-yellow: #f59e0b;
+      --accent-blue: #3b82f6;
+      --accent-green: #10b981;
+      --accent-purple: #8b5cf6;
+    }
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg-gradient);
+      color: #f8fafc;
+      min-height: 100vh;
+    }
+    .cashier-container {
+      padding: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .cashier-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 1.5rem;
+    }
+    .cashier-title h1 {
+      margin: 0;
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, #fbbf24, #f472b6, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .cashier-title p {
+      margin: 0.5rem 0 0 0;
+      color: #94a3b8;
+      font-size: 0.95rem;
+    }
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-top: 0.25rem;
+    }
+    .stat-label {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .ag-theme-alpine-dark {
+      --ag-background-color: rgba(15, 23, 42, 0.8);
+      --ag-header-background-color: rgba(30, 41, 59, 0.9);
+      --ag-odd-row-background-color: rgba(30, 41, 59, 0.4);
+      --ag-header-foreground-color: #94a3b8;
+      --ag-foreground-color: #f8fafc;
+      --ag-border-color: rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <div id="smriti-sidebar-container"></div>
+  <div class="cashier-container">
+    <div class="cashier-header">
+      <div class="cashier-title">
+        <h1>🧾 Cashier & Register Performance</h1>
+        <p>POS Billing Speed (Items/Min), Average Transaction Value (ATV), Void Ratios & Efficiency Score.</p>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Active Cashiers</div>
+        <div class="stat-value" id="stat-count" style="color: #60a5fa;">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Bills Processed</div>
+        <div class="stat-value" id="stat-bills" style="color: #fbbf24;">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Sales Volume</div>
+        <div class="stat-value" id="stat-sales" style="color: #34d399;">₹0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Average ATV</div>
+        <div class="stat-value" id="stat-atv" style="color: #f472b6;">₹0</div>
+      </div>
+    </div>
+
+    <div id="cashierGrid" class="ag-theme-alpine-dark" style="height: 620px; width: 100%;"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@31.0.1/dist/ag-grid-community.min.js"></script>
+  <script src="/assets/smriti_retail_os/js/smriti_nav_config.js"></script>
+  <script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js"></script>
+  <script>
+    let gridApi = null;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      if (window.SmritiSidebar) {
+        window.SmritiSidebar.init({ active_id: "billing_metrics" });
+      }
+      initGrid();
+      loadCashierData();
+    });
+
+    function initGrid() {
+      const gridOptions = {
+        columnDefs: [
+          { field: "cashier_name", headerName: "Cashier Name", width: 200 },
+          { field: "user", headerName: "System User ID", width: 180 },
+          { field: "bills_processed", headerName: "Bills Billed", width: 130 },
+          { field: "items_sold", headerName: "Items Sold", width: 120 },
+          { field: "total_revenue", headerName: "Total Revenue", width: 160, valueFormatter: p => "₹" + (p.value || 0).toLocaleString('en-IN') },
+          { field: "atv", headerName: "ATV (₹)", width: 130, valueFormatter: p => "₹" + (p.value || 0).toLocaleString('en-IN') },
+          { field: "scan_speed_ipm", headerName: "Scan Speed", width: 140, valueFormatter: p => (p.value || 0) + " items/min" },
+          { field: "void_count", headerName: "Voids/Overrides", width: 140 },
+          {
+            field: "efficiency_score",
+            headerName: "Efficiency Score",
+            width: 150,
+            cellRenderer: p => {
+              const val = p.value || 0;
+              const color = val >= 90 ? "#10b981" : (val >= 75 ? "#3b82f6" : "#f59e0b");
+              return `<span style="background:${color}22; color:${color}; border:1px solid ${color}55; padding:2px 8px; border-radius:12px; font-weight:700; font-size:12px;">${val}%</span>`;
+            }
+          }
+        ],
+        defaultColDef: { resizable: true, sortable: true, filter: true },
+        rowData: []
+      };
+
+      const gridDiv = document.getElementById('cashierGrid');
+      gridApi = agGrid.createGrid(gridDiv, gridOptions);
+    }
+
+    async function loadCashierData() {
+      try {
+        const resp = await fetch('/api/method/smriti_retail_os.api.cashier_api.get_cashier_performance');
+        const res = await resp.json();
+        const data = res.message || {};
+
+        if (data.summary) {
+          document.getElementById('stat-count').innerText = data.summary.total_cashiers || 0;
+          document.getElementById('stat-bills').innerText = data.summary.total_bills_processed || 0;
+          document.getElementById('stat-sales').innerText = "₹" + (data.summary.total_sales_volume || 0).toLocaleString('en-IN');
+          document.getElementById('stat-atv').innerText = "₹" + (data.summary.avg_atv || 0).toLocaleString('en-IN');
+        }
+
+        if (gridApi && data.cashiers) {
+          gridApi.setGridOption('rowData', data.cashiers);
+        }
+      } catch (err) {
+        console.error("Cashier data fetch failed:", err);
+      }
+    }
+  </script>
+</body>
+</html>
+{% endblock %}

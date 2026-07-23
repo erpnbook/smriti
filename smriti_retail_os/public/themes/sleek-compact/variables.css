@@ -1,0 +1,19 @@
+:root {
+  --smriti-color-bg-page:              #080e1c;
+  --smriti-color-bg-primary:           #0f1729;
+  --smriti-color-bg-secondary:         #131e35;
+  --smriti-color-bg-elevated:          #1a2847;
+  --smriti-color-bg-overlay:           rgba(0,0,0,0.72);
+  --smriti-color-text-primary:         #e2e8f0;
+  --smriti-color-text-muted:           #94a3b8;
+  --smriti-color-text-subtle:          #64748b;
+  --smriti-color-brand-primary:        #2563EB;
+  --smriti-color-brand-light:          #3b74f7;
+  --smriti-color-brand-dark:           #1A2B5C;
+  --smriti-color-border-default:       rgba(255,255,255,0.07);
+  --smriti-color-border-strong:        rgba(255,255,255,0.12);
+  --smriti-color-status-success:       #10b981;
+  --smriti-color-status-danger:        #f87171;
+  --smriti-color-status-warning:       #fbbf24;
+  --smriti-color-status-info:          #14B8A6;
+}

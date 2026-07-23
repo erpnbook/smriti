@@ -319,6 +319,14 @@
       z-index: 1000;
       font-weight: 500;
     }
+    #total-row {
+      background: var(--smriti-bg, #f8fafc);
+      font-weight: bold;
+    }
+    .size-preset-link {
+      color: var(--smriti-color-brand-light, #a78bfa);
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -402,7 +410,7 @@
           <!-- Dynamic rows inserted here -->
         </tbody>
         <tfoot>
-          <tr id="total-row" style="background:#f8fafc; font-weight:bold;">
+          <tr id="total-row">
             <td colspan="2" style="text-align:right;">TOTAL</td>
             <!-- Dynamic size column totals -->
             <td id="grand-total-qty">0</td>
@@ -510,7 +518,7 @@
             '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">',
             '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line>',
             '<line x1="12" y1="16" x2="12.01" y2="16"></line></svg>',
-            '<span>Using default size groups. <a href="/smriti-purchase#settings" style="color:#a78bfa;text-decoration:underline;">Configure size groups</a> to match your product range.</span>'
+            '<span>Using default size groups. <a href="/smriti-purchase#settings" class="size-preset-link">Configure size groups</a> to match your product range.</span>'
           ].join('');
           select.parentNode.insertBefore(banner, select);
         }

@@ -93,7 +93,7 @@ def get_active_shift(cashier, pos_profile=None):
         filters["pos_profile"] = pos_profile
 
     opening = smriti.db.get_list(
-        "POS Opening Entry",
+        "Shift",
         filters=filters,
         fields=["name", "pos_profile", "period_start_date", "posting_date", "company"],
         order_by="period_start_date desc",
@@ -106,7 +106,7 @@ def get_active_shift(cashier, pos_profile=None):
     oe = opening[0]
     # Fetch opening balance details
     balance_details = smriti.db.get_list(
-        "POS Opening Entry Detail",
+        "POSOpeningEntryDetail",
         filters={"parent": oe.name},
         fields=["mode_of_payment", "opening_amount"]
     )
@@ -121,14 +121,14 @@ def get_shift_summary(opening_entry_name):
     Calculates shift totals from submitted POS Invoices linked to the opening entry.
     Returns breakdown by payment mode + total expected closing balances.
     """
-    if not smriti.db.exists("POS Opening Entry", opening_entry_name):
+    if not smriti.db.exists("Shift", opening_entry_name):
         frappe.throw(_("POS Opening Entry {0} not found.").format(opening_entry_name))
 
-    oe = smriti.documents.get("POS Opening Entry", opening_entry_name)
+    oe = smriti.documents.get("Shift", opening_entry_name)
 
     # Get all submitted POS Invoices for this shift
     invoices = smriti.db.get_list(
-        "POS Invoice",
+        "Sale",
         filters={
             "pos_profile": oe.pos_profile,
             "owner": oe.user,
@@ -146,7 +146,7 @@ def get_shift_summary(opening_entry_name):
     mode_totals = {}
     if invoice_names:
         payments = smriti.db.get_list(
-            "Sales Invoice Payment",
+            "SalesInvoicePayment",
             filters={"parent": ["in", invoice_names]},
             fields=["mode_of_payment", "amount"]
         )
@@ -194,10 +194,10 @@ def close_shift(opening_entry_name, closing_entries, manager_pin=None, notes=Non
         manager_pin        : Optional manager password for override on large variance
         notes              : Optional closing remarks
     """
-    if not smriti.db.exists("POS Opening Entry", opening_entry_name):
+    if not smriti.db.exists("Shift", opening_entry_name):
         frappe.throw(_("POS Opening Entry {0} not found.").format(opening_entry_name))
 
-    oe = smriti.documents.get("POS Opening Entry", opening_entry_name)
+    oe = smriti.documents.get("Shift", opening_entry_name)
 
     if oe.status != "Open":
         frappe.throw(_("This shift is already closed."))
@@ -210,7 +210,7 @@ def close_shift(opening_entry_name, closing_entries, manager_pin=None, notes=Non
 
     # Validate cash difference if manager_pin provided threshold check
     DIFFERENCE_THRESHOLD = flt(
-        smriti.db.get_single("POS Settings", "pos_closing_entry_validation_amount") or 500
+        smriti.db.get_single("POSSettings", "pos_closing_entry_validation_amount") or 500
     )
 
     closing_map = {e.get("mode_of_payment"): flt(e.get("closing_amount", 0)) for e in entries}
@@ -230,7 +230,7 @@ def close_shift(opening_entry_name, closing_entries, manager_pin=None, notes=Non
             frappe.throw(_("Manager authorization failed. Invalid PIN."))
 
     # Build and submit POS Closing Entry
-    closing = smriti.documents.new("POS Closing Entry")
+    closing = smriti.documents.new("ShiftClose")
     closing.pos_profile = oe.pos_profile
     closing.user = oe.user
     closing.company = oe.company
@@ -258,7 +258,7 @@ def close_shift(opening_entry_name, closing_entries, manager_pin=None, notes=Non
 
     # Add invoice references
     invoices = smriti.db.get_list(
-        "POS Invoice",
+        "Sale",
         filters={
             "pos_profile": oe.pos_profile,
             "owner": oe.user,
@@ -305,17 +305,17 @@ def get_pos_profiles():
     Returns available POS Profiles for the current user.
     """
     user_profiles = smriti.db.get_list(
-        "POS Profile User",
+        "POSProfileUser",
         filters={"user": frappe.session.user, "default": 1},
         fields=["parent"]
     )
     if user_profiles:
-        return [smriti.db.get("POS Profile", p.parent, ["name", "company", "currency"], as_dict=True)
+        return [smriti.db.get("POSProfile", p.parent, ["name", "company", "currency"], as_dict=True)
                 for p in user_profiles]
 
     # Fallback: return all active profiles
     return smriti.db.get_list(
-        "POS Profile",
+        "POSProfile",
         filters={"disabled": 0},
         fields=["name", "company", "currency"],
         limit=10
@@ -328,7 +328,7 @@ def get_payment_modes():
     Returns active modes of payment for shift opening/closing entry.
     """
     modes = smriti.db.get_list(
-        "Mode of Payment",
+        "PaymentMode",
         filters={"enabled": 1},
         fields=["name", "type"],
         order_by="name asc"
@@ -342,7 +342,7 @@ def get_payment_modes():
 
 def _get_open_shift(cashier, pos_profile):
     result = smriti.db.get(
-        "POS Opening Entry",
+        "Shift",
         {"user": cashier, "pos_profile": pos_profile, "status": "Open", "docstatus": 1},
         "name"
     )
@@ -363,7 +363,7 @@ def _validate_manager_pin(pin, action_type, reference_name=None):
     from frappe.utils.password import check_password as check_smriti_pin
 
     managers = smriti.db.get_list(
-        "Has Role",
+        "HasRole",
         filters={"role": ["in", ["SMRITI Store Manager", "System Manager"]]},
         pluck="parent"
     )
@@ -395,7 +395,7 @@ def _validate_manager_pin(pin, action_type, reference_name=None):
         if reference_name:
             smriti.documents.new("Comment").update({
                 "comment_type": "Comment",
-                "reference_doctype": "POS Opening Entry",
+                "reference_doctype": smriti.resolve("Shift"),
                 "reference_name": reference_name,
                 "content": f"Manager Override approved by {auth_manager} for: {action_type}",
                 "comment_email": frappe.session.user,

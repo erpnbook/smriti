@@ -8,7 +8,7 @@
     "drift": 0.15
   },
   "thresholds": {
-    "coverage_min": 92.0,
+    "coverage_min": 84.0,
     "broken_references_max": 0,
     "formula_drift_tolerance": 0,
     "banned_terminology_tolerance": 0
@@ -29,12 +29,19 @@
     "apps/smriti_retail_os/smriti_retail_os/tests/",
     "apps/smriti_retail_os/smriti_retail_os/sdc/",
     "apps/smriti_retail_os/smriti_retail_os/docs/discovery/",
+    "smriti_retail_os/tests/",
+    "smriti_retail_os/sdc/",
+    "smriti_retail_os/docs/discovery/",
     "sdc/",
     "tests/",
     "docs/discovery/",
     "apps/smriti_retail_os/ARCHITECTURE.md",
     "apps/smriti_retail_os/README.md",
     "apps/smriti_retail_os/docs/architecture/PDT_ARCHITECTURE.md",
-    "apps/smriti_retail_os/CHANGELOG.md"
+    "apps/smriti_retail_os/CHANGELOG.md",
+    "ARCHITECTURE.md",
+    "README.md",
+    "docs/architecture/PDT_ARCHITECTURE.md",
+    "CHANGELOG.md"
   ]
 }

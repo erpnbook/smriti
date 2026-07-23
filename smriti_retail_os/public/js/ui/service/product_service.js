@@ -33,6 +33,11 @@ SMRITI.Service.ProductService = (function() {
 
         deleteProduct: async function(itemCode) {
             return await repo.deleteProduct(itemCode);
+        },
+
+        bulkDeleteProducts: async function(itemCodes) {
+            if (!itemCodes || !itemCodes.length) throw new Error("No items selected for deletion.");
+            return await repo.bulkDeleteProducts(itemCodes);
         }
     };
 })();

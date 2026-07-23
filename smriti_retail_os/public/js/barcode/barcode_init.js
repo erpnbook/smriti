@@ -112,6 +112,26 @@ async function init() {
             });
         }
 
+        // Helper to populate generic select
+        const populateSel = (id, list) => {
+            const sel = document.getElementById(id);
+            if (sel && list && Array.isArray(list)) {
+                list.forEach(val => {
+                    const opt = document.createElement('option');
+                    opt.value = val;
+                    opt.textContent = val;
+                    sel.appendChild(opt);
+                });
+            }
+        };
+
+        populateSel('flt-purchase-class', filters.purchase_classes);
+        populateSel('flt-merchandise-cat', filters.merchandise_categories);
+        populateSel('flt-sub-cat', filters.sub_categories);
+        populateSel('flt-upper-material', filters.upper_materials);
+        populateSel('flt-outsole', filters.outsoles);
+        populateSel('flt-heel-type', filters.heel_types);
+
         // Render Templates dropdown
         window.BarcodeStudioState.printTemplatesList = filters.print_templates || [];
         populateTemplatesDropdown();

@@ -172,6 +172,13 @@
         #ls-toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
         #ls-toast.success { border-color: var(--ls-success); color: var(--ls-success); }
         #ls-toast.error   { border-color: var(--ls-danger);  color: var(--ls-danger);  }
+
+        /* Design System Token Compliance & Linter Fixes */
+        #lsCanvasDims { font-size: 11px; color: var(--smriti-color-text-muted, #64748b); }
+        #userBadge { font-size: 11px; color: var(--smriti-color-text-subtle, #94a3b8); font-weight: 400; }
+        .ls-canvas-label-help { color: var(--smriti-color-text-muted, #475569); }
+        #elementList { font-size: 11px; color: var(--smriti-color-text-subtle, #94a3b8); }
+        #lsElemCount { color: var(--smriti-color-text-muted, #475569); }
     </style>
 </head>
 <body class="smriti-theme-navy">
@@ -185,8 +192,8 @@
             <span class="ls-title">Label Studio</span>
         </div>
         <div style="display:flex;align-items:center;gap:10px;">
-            <span id="lsCanvasDims" style="font-size:11px;color:#64748b;">100×50 mm</span>
-            <span class="ls-brand" id="userBadge" style="font-size:11px;color:#94a3b8;font-weight:400;"></span>
+            <span id="lsCanvasDims">100×50 mm</span>
+            <span class="ls-brand" id="userBadge"></span>
         </div>
     </div>
 
@@ -328,7 +335,7 @@
             <div class="ls-canvas-wrap">
                 <span class="ls-canvas-label" id="canvasInfo">100 mm × 50 mm · 0 elements</span>
                 <canvas id="labelCanvas" width="378" height="189"></canvas>
-                <span class="ls-canvas-label" style="color:#475569;">Click canvas to select · Drag to move · Bottom-right corner to resize</span>
+                <span class="ls-canvas-label ls-canvas-label-help">Click canvas to select · Drag to move · Bottom-right corner to resize</span>
             </div>
         </div>
 
@@ -365,7 +372,7 @@
 
             <div class="ls-card">
                 <div class="ls-card-title">Element List</div>
-                <div id="elementList" style="font-size:11px;color:#94a3b8;">No elements</div>
+                <div id="elementList">No elements</div>
             </div>
         </div>
     </div><!-- end .ls-main -->
@@ -373,7 +380,7 @@
     <!-- Status Bar -->
     <div class="ls-statusbar">
         <span class="ls-status-msg" id="lsStatusMsg">Ready</span>
-        <span id="lsElemCount" style="color:#475569;">0 elements</span>
+        <span id="lsElemCount">0 elements</span>
     </div>
 </div><!-- end .studio-layout -->
 

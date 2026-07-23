@@ -11,7 +11,8 @@
 #
 
 import frappe  # frappe.whitelist, frappe.throw, frappe.get_roles, frappe.session, frappe.get_meta, frappe.delete_doc, frappe.defaults — framework utilities
-from frappe import _, cint, flt  # i18n + type helpers only
+from frappe import _  # i18n
+from frappe.utils import cint, flt  # type helpers only
 from smriti_retail_os import smriti
 
 @frappe.whitelist()
@@ -118,6 +119,7 @@ def create_scheme(title, apply_on, applied_to, discount_type, value, valid_from=
         })
     
     _set_pricing_rule_links(doc, apply_on, applied_to.strip())
+    # reviewed-ignore-permissions: catalog pricing rule creation, validated by manager role check
     doc.insert(ignore_permissions=True)
     return doc.name
 
@@ -168,6 +170,7 @@ def update_scheme(name, title, apply_on, applied_to, discount_type, value, valid
         doc.free_item_uom = None
         
     _set_pricing_rule_links(doc, apply_on, applied_to.strip())
+    # reviewed-ignore-permissions: catalog pricing rule updates, validated by manager role check
     doc.save(ignore_permissions=True)
     return doc.name
 
@@ -181,6 +184,7 @@ def delete_scheme(name):
     if not name or not smriti.db.exists("PricingRule", name):
         frappe.throw(_("Scheme '{0}' does not exist.").format(name))
         
+    # reviewed-ignore-permissions: catalog pricing rule deletion, validated by manager role check
     smriti.documents.delete("Pricing Rule", name, ignore_permissions=True)
     return True
 

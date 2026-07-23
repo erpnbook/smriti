@@ -103,3 +103,16 @@ except Exception as e:
     logging.getLogger("frappe").warning(f"Failed to apply SMRITI Round-off patch: {e}")
 
 
+# Whitelisted Studio API Modules Pre-loader for Frappe Endpoint Registration
+try:
+    import smriti_retail_os.item_studio.api.product_api
+    import smriti_retail_os.user_studio.api.smriti_user_api
+    import smriti_retail_os.purchase_studio.api.purchase_api
+    import smriti_retail_os.sales_studio.api.sales_api
+    import smriti_retail_os.matrix_engine.api.matrix_api
+    import smriti_retail_os.customer_studio.api.customer_api
+except Exception as e:
+    import logging
+    logging.getLogger("frappe").warning(f"Failed to pre-load studio APIs: {e}")
+
+
