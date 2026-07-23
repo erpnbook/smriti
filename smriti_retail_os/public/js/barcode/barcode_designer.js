@@ -616,7 +616,11 @@ function compileVisualToPRN() {
             } else if (elem.type === 'bar') {
                 prn += `^FO${dx},${dy}^GB${dw},${dh},${dh}^FS\n`;
             } else if (elem.type === 'image') {
-                prn += `^FO${dx},${dy}^XG${elem.image_ref},1,1^FS\n`;
+                if (elem.image_hex) {
+                    prn += `^FO${dx},${dy}^GFA,${elem.image_bytes},${elem.image_bytes},${elem.image_row_bytes},${elem.image_hex}^FS\n`;
+                } else {
+                    prn += `^FO${dx},${dy}^XG${elem.image_ref || 'LOGO.GRF'},1,1^FS\n`;
+                }
             }
         });
         prn += '^XZ';
@@ -646,7 +650,11 @@ function compileVisualToPRN() {
             } else if (elem.type === 'bar') {
                 prn += `BAR ${dx},${dy},${dw},${dh}\n`;
             } else if (elem.type === 'image') {
-                prn += `PUTBMP ${dx},${dy},"${elem.image_ref}"\n`;
+                if (elem.image_hex) {
+                    prn += `BITMAP ${dx},${dy},${elem.image_row_bytes},${dh},0,${elem.image_hex}\n`;
+                } else {
+                    prn += `PUTBMP ${dx},${dy},"${elem.image_ref || 'LOGO.BMP'}"\n`;
+                }
             }
         });
         prn += 'PRINT 1,1';
