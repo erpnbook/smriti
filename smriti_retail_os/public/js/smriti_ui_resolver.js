@@ -104,7 +104,7 @@
                     headers['Content-Type'] = 'application/json';
                     var csrfCookie = (document.cookie.match(/(?:^|;\s*)csrf_token=([^;]+)/) || [])[1] ||
                                      (document.cookie.match(/(?:^|;\s*)system_csrf_token=([^;]+)/) || [])[1];
-                    var csrfToken = (opts.headers && opts.headers['X-Frappe-CSRF-Token']) || global.frappe.csrf_token || global.csrf_token || global.CSRF_TOKEN || (typeof CSRF_TOKEN !== "undefined" ? CSRF_TOKEN : "") || (csrfCookie ? decodeURIComponent(csrfCookie) : "") || "";
+                    var csrfToken = (opts.headers && opts.headers['X-Frappe-CSRF-Token']) || global.frappe.csrf_token || global.csrf_token || global.CSRF_TOKEN || (csrfCookie ? decodeURIComponent(csrfCookie) : "") || "";
                     if (csrfToken) {
                         headers['X-Frappe-CSRF-Token'] = csrfToken;
                     }

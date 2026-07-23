@@ -303,7 +303,7 @@
 
     async apiCall(method, args) {
       if (!frappe.csrf_token) {
-        frappe.csrf_token = window.csrf_token || window.CSRF_TOKEN || (typeof CSRF_TOKEN !== "undefined" ? CSRF_TOKEN : "");
+        frappe.csrf_token = window.csrf_token || window.CSRF_TOKEN || (window.frappe && window.frappe.csrf_token) || "";
       }
       return new Promise((resolve, reject) => {
         const callArgs = {

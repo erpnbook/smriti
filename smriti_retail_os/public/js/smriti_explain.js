@@ -36,7 +36,7 @@
             let headers = {
                 'Content-Type': 'application/json'
             };
-            let csrf = typeof CSRF_TOKEN !== "undefined" ? CSRF_TOKEN : (typeof window.csrf_token !== "undefined" ? window.csrf_token : null);
+            let csrf = window.CSRF_TOKEN || window.csrf_token || (window.frappe && window.frappe.csrf_token) || null;
             if (csrf) {
                 headers['X-Frappe-CSRF-Token'] = csrf;
             }
