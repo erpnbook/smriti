@@ -108,3 +108,10 @@ def flush_prefix(prefix: str):
     """
     import frappe
     frappe.cache().delete_keys(prefix)
+
+
+# Explicit method aliases for frappe.cache() compatibility
+get_value = get
+set_value = set
+delete_value = delete
+
