@@ -1255,7 +1255,8 @@ class SmritiItemMasterController {
                       <td>${f.row}</td>
                       <td>${_esc(f.barcode)}</td>
                       <td>${_esc(f.style_code)}</td>
-                      <td class="err-msg">❌ ${_esc((f.error || '').substring(0, 120))}</td>
+                      <td class="err-msg">❌ ${_esc((f.error || '').substring(0, 300))}</td>
+
                     </tr>`);
                 });
             }

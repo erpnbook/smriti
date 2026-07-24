@@ -178,8 +178,9 @@ async function networkFirst(request) {
 
 // ── Strategy: Stale While Revalidate ─────────────────────────
 async function staleWhileRevalidate(request) {
-    const cache       = await caches.open(DYNAMIC_CACHE);
-    const cached      = await cache.match(request);
+    const cache  = await caches.open(DYNAMIC_CACHE);
+    const cached = await cache.match(request);
+
     const fetchPromise = fetch(request)
         .then(response => {
             if (response && response.status === 200) {
@@ -187,9 +188,20 @@ async function staleWhileRevalidate(request) {
             }
             return response;
         })
-        .catch(() => cached);
-    return cached || fetchPromise;
+        .catch(async () => {
+            if (cached) return cached;
+            const offlineFallback = await caches.match(OFFLINE_URL);
+            if (offlineFallback) return offlineFallback;
+            return new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } });
+        });
+
+    if (cached) {
+        fetchPromise.catch(() => {});
+        return cached;
+    }
+    return fetchPromise;
 }
+
 
 // ── BACKGROUND SYNC — offline invoice queue ──────────────────
 self.addEventListener('sync', event => {

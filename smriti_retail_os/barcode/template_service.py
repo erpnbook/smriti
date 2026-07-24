@@ -287,13 +287,19 @@ def save_print_template(template_name, label_size, printer_language, raw_templat
 
 
 def delete_print_template(name_id):
-    """Deletes a SMRITI Print Template record."""
+    """Deletes a SMRITI Print Template record and its version history."""
     if not smriti.db.exists("DocType", "SMRITI Print Template"):
         frappe.throw(_("DocType SMRITI Print Template not found."))
-    if smriti.db.exists("SMRITI Print Template", name_id):
-        smriti.documents.delete("SMRITI Print Template", name_id, ignore_permissions=True)
+    
+    matched_name = smriti.db.get("SMRITI Print Template", {"template_title": name_id}, "name")
+    target_name = matched_name or name_id
+
+    if smriti.db.exists("SMRITI Print Template", target_name):
+        smriti.db.delete("SMRITI Print Template Version", {"template": target_name})
+        frappe.delete_doc("SMRITI Print Template", target_name, ignore_permissions=True)
         smriti.db.commit()
     return get_print_templates()
+
 
 
 def search_barcode_items(txt):

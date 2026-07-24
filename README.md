@@ -93,38 +93,40 @@ ERPNext handles the transaction engine — accounting, inventory, GST, complianc
 
 ## 4. Quick Start
 
-### Docker (Recommended)
+### One-Command Auto Install (Recommended)
 
-```bash
-# 1. Clone and start
+**Windows (PowerShell Master Command):**
+```powershell
 git clone https://github.com/erpnbook/smriti-docker.git Smriti9
 cd Smriti9
-docker compose up -d
-
-# 2. Install app
-docker compose exec smriti9-backend-1 \
-  bench --site frontend install-app smriti_retail_os
-
-# 3. Build assets
-docker compose exec smriti9-backend-1 \
-  bench build --app smriti_retail_os
-
-# 4. Open in browser
-http://localhost:8765
+PowerShell -ExecutionPolicy Bypass -File .\install.ps1
 ```
+
+**Linux / macOS / WSL (Bash):**
+```bash
+git clone https://github.com/erpnbook/smriti-docker.git Smriti9
+cd Smriti9
+bash install.sh
+```
+
+> Once finished, open **http://localhost:8765** in your browser.
+
 
 → Full setup guide: **[INSTALL.md](../../INSTALL.md)** · **[DEPLOYMENT.md](../../DEPLOYMENT.md)**
 
-### Post-Install Checklist
+### Operational Utilities
 
-```
-□ Configure POS Profile      → http://localhost:8765/smriti-pos-profiles
-□ Assign user roles          → http://localhost:8765/security
-□ Open first shift           → http://localhost:8765/shift
-□ Run smoke tests            → see Testing section below
-```
+| Utility | Command | Description |
+|---|---|---|
+| **Master Installer** | `PowerShell -ExecutionPolicy Bypass -File .\install.ps1` | System diagnostics (RAM, Disk, Port checks), Docker spin-up, site monitoring & desktop shortcut launcher |
+| **One-Click Updater** | `.\update.ps1` | Automated backup, git pull, database migrations, asset build & service reload |
+| **Site Backup** | `.\backup.ps1` | One-click site database and file backup to `./backups/` |
+| **Site Restore** | `.\restore.ps1 -SqlFile <path>` | Restores a database dump file into the site |
+| **Diagnostics Bundle** | `.\support_bundle.ps1` | Exports container logs, system state, and SDC discovery output to a `.zip` archive |
 
 ---
+
+
 
 ## 5. Project Structure
 
