@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="50%" stop-color="#092540" />
+      <stop offset="100%" stop-color="#030712" />
+    </linearGradient>
+
+    <!-- Glowing Electric Accent Gradients -->
+    <linearGradient id="cyan-azure" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00F2FE" />
+      <stop offset="100%" stop-color="#4FACFE" />
+    </linearGradient>
+
+    <linearGradient id="purple-pink" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8B5CF6" />
+      <stop offset="100%" stop-color="#EC4899" />
+    </linearGradient>
+
+    <linearGradient id="silver-white" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#CBD5E1" />
+    </linearGradient>
+
+    <!-- Outer Glow Filter -->
+    <filter id="glow-cyan" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="12" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Squircle Outer Container -->
+  <rect x="24" y="24" width="464" height="464" rx="112" fill="url(#bg-grad)" stroke="rgba(255,255,255,0.12)" stroke-width="3" />
+
+  <!-- Background Decorative System Grid Circuit Lines -->
+  <path d="M 120 180 H 392 M 120 332 H 392 M 180 120 V 392 M 332 120 V 392" stroke="rgba(255,255,255,0.03)" stroke-width="2" stroke-dasharray="6 6" />
+
+  <!-- Futuristic "S" Monogram Vector Ribbon -->
+  <g filter="url(#glow-cyan)">
+    <!-- Top Arc ribbon -->
+    <path d="M 340 184 C 340 136, 172 136, 172 208 C 172 284, 340 228, 340 304 C 340 376, 172 376, 172 328" 
+          fill="none" stroke="url(#cyan-azure)" stroke-width="44" stroke-linecap="round" stroke-linejoin="round" />
+
+    <!-- Overlaid Accent Core Stripe -->
+    <path d="M 340 184 C 340 136, 172 136, 172 208 C 172 284, 340 228, 340 304 C 340 376, 172 376, 172 328" 
+          fill="none" stroke="url(#purple-pink)" stroke-width="12" stroke-linecap="round" opacity="0.85" />
+  </g>
+
+  <!-- Connected Interleaved System Nodes (smritiSYS indicator dots) -->
+  <circle cx="340" cy="184" r="22" fill="#00F2FE" />
+  <circle cx="340" cy="184" r="10" fill="#FFFFFF" />
+
+  <circle cx="172" cy="328" r="22" fill="#EC4899" />
+  <circle cx="172" cy="328" r="10" fill="#FFFFFF" />
+
+  <circle cx="256" cy="256" r="14" fill="#8B5CF6" />
+
+  <!-- Modern Brand Text Tag "smritiSYS" at the bottom -->
+  <text x="256" y="440" text-anchor="middle" font-family="'Outfit', 'Inter', sans-serif" font-weight="800" font-size="34" letter-spacing="4">
+    <tspan fill="url(#silver-white)">smriti</tspan>
+    <tspan fill="url(#cyan-azure)" font-weight="900">SYS</tspan>
+  </text>
+</svg>
