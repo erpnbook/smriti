@@ -81,13 +81,26 @@ def get_value(doctype: str, filters: dict = None, fieldname=None, name: str = No
 
     if name:
         filters = {"name": name}
+
+    if not fieldname:
+        if name:
+            if frappe.db.exists(doctype, name):
+                return frappe.get_doc(doctype, name).as_dict()
+            return {}
+        else:
+            name_match = frappe.db.get_value(doctype, filters=filters or {}, fieldname="name")
+            if name_match:
+                return frappe.get_doc(doctype, name_match).as_dict()
+            return {}
+
     val = frappe.db.get_value(
         doctype,
         filters=filters or {},
-        fieldname=fieldname or "name",
+        fieldname=fieldname,
         as_dict=True,
     )
     return val or {}
+
 
 
 @frappe.whitelist()
