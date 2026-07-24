@@ -198,23 +198,48 @@ def cancel_record(doctype: str, name: str) -> dict:
 
 
 @frappe.whitelist()
-def get_all(doctype: str, fields=None, filters=None,
-            order_by: str = None, limit: int = 20) -> list:
+def insert_record(doc=None, **kwargs) -> dict:
     """
-    Fetch all records (alias for get_records).
-
-    Guard 6-compliant replacement for ``frappe.client.get_all``.
-
-    Args:
-        doctype:  The DocType name.
-        fields:   Fields to return.
-        filters:  Filter conditions.
-        order_by: Sort expression.
-        limit:    Max records.
-
-    Returns:
-        list[dict]: Matching records.
+    Guard 6-compliant replacement for frappe.client.insert.
     """
+    import json
+    if isinstance(doc, str):
+        try:
+            doc = json.loads(doc)
+        except Exception:
+            doc = {}
+    if not doc and kwargs:
+        doc = kwargs
+
+    if not doc or not doc.get("doctype"):
+        frappe.throw("DocType and document data are required for insert.")
+
+    new_doc = frappe.get_doc(doc)
+    new_doc.insert(ignore_permissions=False)
+    return new_doc.as_dict()
+
+
+@frappe.whitelist()
+def update_record(doc=None, **kwargs) -> dict:
+    """
+    Guard 6-compliant replacement for frappe.client.save.
+    """
+    import json
+    if isinstance(doc, str):
+        try:
+            doc = json.loads(doc)
+        except Exception:
+            doc = {}
+    if not doc and kwargs:
+        doc = kwargs
+
+    if not doc or not doc.get("doctype") or not doc.get("name"):
+        frappe.throw("DocType, document name, and data are required for update.")
+
+    existing_doc = frappe.get_doc(doc.get("doctype"), doc.get("name"))
+    existing_doc.update(doc)
+    existing_doc.save(ignore_permissions=False)
+    return existing_doc.as_dict()
 @frappe.whitelist()
 def create_terms_and_conditions(title: str, terms: str) -> dict:
     """
