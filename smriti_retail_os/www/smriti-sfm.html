@@ -1,4 +1,4 @@
-﻿{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
 <!--
   @file: smriti_retail_os/www/smriti-sfm.html
   @description: SMRITI Sales Force Management (SFM) Studio — Standalone UI
@@ -292,6 +292,7 @@
     ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
   </style>
   <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css">
+  <script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js"></script>
 </head>
 <body>
 
@@ -1121,8 +1122,8 @@
   // --- Page Boot ---
   window.onload = function() {
     // Injects the standard SMRITI standalone sidebar
-    if (window.SMRITI && typeof SMRITI.injectSidebar === 'function') {
-      SMRITI.injectSidebar('smriti-sidebar-target', 'leaderboard');
+    if (window.SMRITI && typeof SMRITI.renderFlexibleSidebar === 'function') {
+      SMRITI.renderFlexibleSidebar('smriti-sfm');
     }
     loadSelectDropdowns();
   };
