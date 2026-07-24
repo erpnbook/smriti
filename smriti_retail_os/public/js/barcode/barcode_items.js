@@ -160,6 +160,21 @@ function toggleAdvancedFilters() {
     }
 }
 
+function resetAllFilters() {
+    const filterIds = [
+        'flt-search', 'flt-brand', 'flt-category', 'flt-size',
+        'flt-supplier', 'flt-department', 'flt-gender', 'flt-purchase-class',
+        'flt-merchandise-cat', 'flt-sub-cat', 'flt-upper-material',
+        'flt-outsole', 'flt-heel-type', 'flt-season', 'flt-collection',
+        'flt-from-article', 'flt-to-article', 'flt-from-barcode', 'flt-to-barcode', 'tx-name'
+    ];
+    filterIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    toast('All search filters reset to default', 'info');
+}
+
 // Load manual search filters
 async function loadManualItems() {
     const brand = document.getElementById('flt-brand').value;
