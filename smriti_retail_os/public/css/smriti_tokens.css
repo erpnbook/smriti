@@ -328,3 +328,35 @@ body[data-theme="dark"], body.dark-mode {
   --smriti-shadow-lg:  0 12px 28px rgba(0,0,0,.7);
   --smriti-shadow-xl:  0 24px 48px rgba(0,0,0,.8);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   HIGH CONTRAST THEME OVERRIDES (WCAG AAA Compliance)
+   ═══════════════════════════════════════════════════════════════════════ */
+body[data-theme="high-contrast"] {
+  --smriti-color-bg-page:              #000000;
+  --smriti-color-bg-primary:           #000000;
+  --smriti-color-bg-secondary:         #111111;
+  --smriti-color-border-default:       #ffffff;
+  --smriti-color-border-strong:        #ffffff;
+  --smriti-color-text-primary:         #ffffff;
+  --smriti-color-text-muted:           #ffff00;
+  --smriti-color-text-subtle:          #00ffff;
+  --smriti-color-brand-primary:        #ffff00;
+  --smriti-color-status-success:       #00ff00;
+  --smriti-color-status-danger:        #ff0000;
+  --smriti-color-status-warning:       #ffff00;
+  --smriti-color-status-info:          #00ffff;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   DISPLAY DENSITY MODES (Compact vs. Comfortable)
+   ═══════════════════════════════════════════════════════════════════════ */
+body[data-density="compact"] {
+  --smriti-spacing-padding-y:          4px;
+  --smriti-spacing-padding-x:          8px;
+  --smriti-spacing-gap:                6px;
+  --smriti-spacing-card:               10px;
+  --smriti-table-row-height:           32px;
+  --smriti-form-field-height:          30px;
+  --smriti-font-size-base:             0.85rem;
+}
