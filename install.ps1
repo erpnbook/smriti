@@ -1,5 +1,5 @@
 # ==============================================================================
-# SMRITI Retail OS™ — Master PowerShell Auto-Installer
+# SMRITI Retail OS™ — Master PowerShell Auto-Installer & Diagnostics
 # Enterprise Retail Operations Platform
 # Copyright © 2026 AITDL NETWORK & ERPNbook.com
 # ==============================================================================
@@ -7,7 +7,8 @@
 [CmdletBinding()]
 param (
     [string]$Port = "8765",
-    [switch]$SkipClone = $false
+    [switch]$SkipClone = $false,
+    [switch]$CreateDesktopShortcut = $true
 )
 
 $ErrorActionPreference = "Stop"
@@ -40,10 +41,11 @@ function Write-Err ([string]$msg) {
 Write-Banner
 
 # ------------------------------------------------------------------------------
-# 1. Prerequisite Checks
+# 1. System Diagnostics & Pre-flight Checks
 # ------------------------------------------------------------------------------
-Write-Step "Checking prerequisites (Git, Docker)..."
+Write-Step "Running system diagnostics and pre-flight checks..."
 
+# A. Git check
 try {
     $gitVer = git --version 2>&1
     Write-Host "  ✔ Git detected: $gitVer" -ForegroundColor Gray
@@ -52,6 +54,7 @@ try {
     exit 1
 }
 
+# B. Docker check
 try {
     $dockerVer = docker --version 2>&1
     Write-Host "  ✔ Docker detected: $dockerVer" -ForegroundColor Gray
@@ -60,6 +63,7 @@ try {
     exit 1
 }
 
+# C. Docker engine running state
 Write-Step "Verifying Docker engine state..."
 $dockerInfo = docker info 2>&1
 if ($LASTEXITCODE -ne 0) {
@@ -67,6 +71,48 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 Write-Host "  ✔ Docker engine is active and responsive." -ForegroundColor Gray
+
+# D. RAM Check
+try {
+    $sysRam = Get-CimInstance Win32_OperatingSystem
+    $totalRamGB = [math]::Round($sysRam.TotalVisibleMemorySize / 1MB, 1)
+    $freeRamGB  = [math]::Round($sysRam.FreePhysicalMemory / 1MB, 1)
+    Write-Host "  ✔ System RAM: Total ${totalRamGB} GB (Free: ${freeRamGB} GB)" -ForegroundColor Gray
+    if ($totalRamGB -lt 4.0) {
+        Write-Warn "System total RAM is under 4 GB. Docker performance may be constrained."
+    }
+} catch {
+    # Non-critical OS probe
+}
+
+# E. Disk Space Check
+try {
+    $drive = (Get-Location).Drive.Name
+    $disk = Get-CimInstance Win32_LogicalDisk -Filter "DeviceID='${drive}:'"
+    if ($disk) {
+        $freeDiskGB = [math]::Round($disk.FreeSpace / 1GB, 1)
+        Write-Host "  ✔ Disk Space on Drive ${drive}: ${freeDiskGB} GB free" -ForegroundColor Gray
+        if ($freeDiskGB -lt 10.0) {
+            Write-Warn "Free disk space is below 10 GB. Image pulls and container builds require sufficient space."
+        }
+    }
+} catch {
+    # Non-critical disk probe
+}
+
+# F. Port Collision Check
+Write-Step "Checking port $Port availability..."
+try {
+    $conn = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
+    if ($conn) {
+        Write-Warn "Port $Port is currently listening by Process ID $($conn.OwningProcess)."
+        Write-Warn "If this is not SMRITI frontend, please specify a different port e.g. .\install.ps1 -Port 8766"
+    } else {
+        Write-Host "  ✔ Port $Port is free and available." -ForegroundColor Gray
+    }
+} catch {
+    # Fallback if Get-NetTCPConnection not available
+}
 
 # ------------------------------------------------------------------------------
 # 2. Workspace & Directory Preparation
@@ -100,7 +146,7 @@ if (-not (Test-Path $icPath) -and -not $SkipClone) {
 }
 
 # ------------------------------------------------------------------------------
-# 3. Windows Folder Icon Branding (Optional)
+# 3. Windows Folder Icon Branding
 # ------------------------------------------------------------------------------
 $icoPath = Join-Path $rootPath "smriti.ico"
 if (Test-Path $icoPath) {
@@ -111,7 +157,7 @@ if (Test-Path $icoPath) {
         (Get-Item $rootPath).Attributes = [System.IO.FileAttributes]::ReadOnly
         Write-Host "  ✔ Configured Windows folder branding icon." -ForegroundColor Gray
     } catch {
-        # Non-critical, ignore if permissions restrict ini write
+        # Non-critical ini write
     }
 }
 
@@ -129,7 +175,7 @@ if ($LASTEXITCODE -ne 0) {
 # 5. Monitor Provisioning Sentinel
 # ------------------------------------------------------------------------------
 Write-Step "Waiting for site provisioning and database setup to complete..."
-Write-Host "  (This initial site creation usually takes 2–4 minutes)..." -ForegroundColor Yellow
+Write-Host "  (Initial site creation takes ~2–4 minutes on fresh deployments)..." -ForegroundColor Yellow
 
 $timeoutSeconds = 600
 $elapsed = 0
@@ -162,7 +208,7 @@ if (-not $siteDone) {
 }
 
 # ------------------------------------------------------------------------------
-# 6. Monitor Backend & Web Health Check
+# 6. Monitor Backend & Web Health Check (Smoke Test)
 # ------------------------------------------------------------------------------
 Write-Step "Verifying HTTP Web Service availability at http://localhost:$Port..."
 $webOk = $false
@@ -186,7 +232,23 @@ while ($elapsed -lt 120) {
 Write-Host ""
 
 # ------------------------------------------------------------------------------
-# 7. Final Success Banner
+# 7. Create Desktop Shortcut Launcher
+# ------------------------------------------------------------------------------
+if ($CreateDesktopShortcut) {
+    try {
+        $userDesktop = [Environment]::GetFolderPath("Desktop")
+        if (Test-Path $userDesktop) {
+            $shortcutPath = Join-Path $userDesktop "SMRITI Retail OS.url"
+            "[InternetShortcut]`r`nURL=http://localhost:$Port/" | Out-File -FilePath $shortcutPath -Encoding ascii -Force
+            Write-Host "  ✔ Created Desktop Shortcut: 'SMRITI Retail OS.url'" -ForegroundColor Gray
+        }
+    } catch {
+        # Non-critical shortcut creation
+    }
+}
+
+# ------------------------------------------------------------------------------
+# 8. Final Success Banner
 # ------------------------------------------------------------------------------
 if ($webOk) {
     Write-Host ""
@@ -197,11 +259,14 @@ if ($webOk) {
     Write-Host "  🌐 Open Web Terminal : http://localhost:$Port" -ForegroundColor Yellow
     Write-Host "  🔑 POS Profile Setup : http://localhost:$Port/smriti-pos-profiles" -ForegroundColor Cyan
     Write-Host "  🔍 Field Explorer    : http://localhost:$Port/smriti-field-explorer" -ForegroundColor Cyan
+    Write-Host "  📑 Formula Registry  : http://localhost:$Port/smriti-formula-registry" -ForegroundColor Cyan
     Write-Host ""
-    Write-Host "Useful Commands:" -ForegroundColor Gray
-    Write-Host "  • Stop Stack   : docker compose -f pwd.yml down" -ForegroundColor Gray
-    Write-Host "  • View Logs    : docker compose -f pwd.yml logs -f" -ForegroundColor Gray
-    Write-Host "  • Check Status : docker compose -f pwd.yml ps" -ForegroundColor Gray
+    Write-Host "Operational Tools & Utilities:" -ForegroundColor Gray
+    Write-Host "  • One-Click Backup   : .\backup.ps1" -ForegroundColor Gray
+    Write-Host "  • Database Restore   : .\restore.ps1 -BackupFile <file>" -ForegroundColor Gray
+    Write-Host "  • Diagnostics Bundle : .\support_bundle.ps1" -ForegroundColor Gray
+    Write-Host "  • Stop Stack         : docker compose -f pwd.yml down" -ForegroundColor Gray
+    Write-Host "  • View Logs          : docker compose -f pwd.yml logs -f" -ForegroundColor Gray
     Write-Host ""
 } else {
     Write-Warn "Services started, but port $Port is still initializing."

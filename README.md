@@ -114,16 +114,17 @@ bash install.sh
 
 → Full setup guide: **[INSTALL.md](../../INSTALL.md)** · **[DEPLOYMENT.md](../../DEPLOYMENT.md)**
 
-### Post-Install Checklist
+### Operational Utilities
 
-```
-□ Configure POS Profile      → http://localhost:8765/smriti-pos-profiles
-□ Assign user roles          → http://localhost:8765/security
-□ Open first shift           → http://localhost:8765/shift
-□ Run smoke tests            → see Testing section below
-```
+| Utility | Command | Description |
+|---|---|---|
+| **Master Installer** | `PowerShell -ExecutionPolicy Bypass -File .\install.ps1` | System diagnostics (RAM, Disk, Port checks), Docker spin-up, site monitoring & desktop shortcut launcher |
+| **Site Backup** | `.\backup.ps1` | One-click site database and file backup to `./backups/` |
+| **Site Restore** | `.\restore.ps1 -SqlFile <path>` | Restores a database dump file into the site |
+| **Diagnostics Bundle** | `.\support_bundle.ps1` | Exports container logs, system state, and SDC discovery output to a `.zip` archive |
 
 ---
+
 
 ## 5. Project Structure
 
