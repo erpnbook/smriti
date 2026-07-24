@@ -353,20 +353,7 @@
         </div>
 
         <!-- Selection Action Bar -->
-        <div id="selection-action-bar">
-            <span class="sel-count" id="sel-count-badge">0 selected</span>
-            <span style="opacity:0.7;">items selected</span>
-            <span class="sel-spacer"></span>
-            <button id="btn-sel-clear" class="sel-btn sel-btn-clear" onclick="window.clearCatalogSelection && window.clearCatalogSelection();">
-                <span class="material-symbols-outlined" style="font-size:15px; pointer-events:none;">close</span> Clear
-            </button>
-            <button id="btn-sel-all" class="sel-btn sel-btn-clear" onclick="window.selectAllVisible && window.selectAllVisible();">
-                <span class="material-symbols-outlined" style="font-size:15px; pointer-events:none;">select_all</span> Select All Visible
-            </button>
-            <button id="btn-sel-delete" class="sel-btn sel-btn-danger" onclick="window.openBulkDeleteModal && window.openBulkDeleteModal();">
-                <span class="material-symbols-outlined" style="font-size:15px; pointer-events:none;">delete_sweep</span> Delete Selected
-            </button>
-        </div>
+        {%- include "smriti_retail_os/templates/includes/smriti_selection_bar.html" -%}
 
         <!-- Catalog Grid -->
         <div class="table-wrap" style="padding: 20px 24px;">

@@ -117,6 +117,55 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 .toast { padding:12px 18px; border-radius:var(--radius); font-size:0.88rem; font-weight:600; color:white; min-width:220px; display:flex; align-items:center; gap:10px; animation:toast-in 0.3s ease; box-shadow:0 8px 24px rgba(0,0,0,0.4); }
 .toast.success { background:#065f46; border:1px solid rgba(16,185,129,0.3); }
 .toast.error   { background:#7f1d1d; border:1px solid rgba(239,68,68,0.3); }
+
+/* Selection Action Bar */
+#selection-action-bar {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    background: var(--smriti-color-brand-primary, #5e5ce6);
+    color: #fff;
+    padding: 10px 24px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 8px;
+    margin: 12px 24px 0 24px;
+    box-shadow: 0 4px 16px rgba(94,92,230,0.35);
+    animation: slideDown 0.2s ease;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 100;
+    pointer-events: auto;
+}
+#selection-action-bar.visible { display: flex !important; }
+@keyframes slideDown {
+    from { opacity:0; transform:translateY(-8px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+#selection-action-bar .sel-count {
+    background: rgba(255,255,255,0.2);
+    border-radius: 20px;
+    padding: 3px 12px;
+    font-size: 12px;
+}
+#selection-action-bar .sel-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 6px 14px; border-radius: 6px; font-size: 12px;
+    font-weight: 700; cursor: pointer; border: none;
+    transition: all 0.15s ease;
+    position: relative;
+    z-index: 101;
+    pointer-events: auto;
+}
+#selection-action-bar .sel-btn-danger {
+    background: #ef4444; color: #fff;
+}
+#selection-action-bar .sel-btn-danger:hover { background: #dc2626; }
+#selection-action-bar .sel-btn-clear {
+    background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3);
+}
+#selection-action-bar .sel-btn-clear:hover { background: rgba(255,255,255,0.25); }
+#selection-action-bar .sel-spacer { flex:1; }
 .toast.info    { background:#1e1b4b; border:1px solid rgba(99,102,241,0.3); }
 .toast span { font-size:20px; }
 @keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
@@ -165,11 +214,15 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
             </select>
         </div>
 
+        <!-- Selection Action Bar -->
+        {%- include "smriti_retail_os/templates/includes/smriti_selection_bar.html" -%}
+
         <!-- Directory Table -->
         <div class="table-wrap">
             <table class="smriti-table">
                 <thead>
                     <tr>
+                        <th style="width:40px;"><input type="checkbox" id="chk-select-all" onchange="window.toggleSelectAllRows && window.toggleSelectAllRows(this.checked)" style="accent-color:var(--primary); cursor:pointer;"></th>
                         <th>Customer Details</th>
                         <th>Mobile Number</th>
                         <th>Customer Group</th>
@@ -179,7 +232,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                     </tr>
                 </thead>
                 <tbody id="customers-tbody">
-                    <tr><td colspan="6" style="text-align:center;color:var(--text-sub);padding:40px 0;">Loading customers...</td></tr>
+                    <tr><td colspan="7" style="text-align:center;color:var(--text-sub);padding:40px 0;">Loading customers...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -476,14 +529,75 @@ async function loadDropdownOptions() {
     }
 }
 
+function updateSelectedCount() {
+    const checked = document.querySelectorAll('.row-chk:checked');
+    const count = checked.length;
+    const bar = document.getElementById("selection-action-bar");
+    const badge = document.getElementById("sel-count-badge");
+    const mainChk = document.getElementById("chk-select-all");
+    
+    if (badge) badge.textContent = count + " selected";
+    if (bar) {
+        if (count > 0) bar.classList.add("visible");
+        else bar.classList.remove("visible");
+    }
+    
+    const all = document.querySelectorAll('.row-chk');
+    if (mainChk) {
+        mainChk.checked = all.length > 0 && count === all.length;
+    }
+}
+window.updateSelectedCount = updateSelectedCount;
+
+function toggleSelectAllRows(checked) {
+    const chks = document.querySelectorAll('.row-chk');
+    chks.forEach(c => c.checked = checked);
+    updateSelectedCount();
+}
+window.toggleSelectAllRows = toggleSelectAllRows;
+
+function clearSelectedRows() {
+    toggleSelectAllRows(false);
+}
+window.clearSelectedRows = clearSelectedRows;
+
+function selectAllRows() {
+    toggleSelectAllRows(true);
+}
+window.selectAllRows = selectAllRows;
+
+async function deleteSelectedRows() {
+    const checked = Array.from(document.querySelectorAll('.row-chk:checked')).map(c => c.value);
+    if (!checked.length) {
+        toast("No customer records selected.", "error");
+        return;
+    }
+    if (!confirm(`Are you sure you want to delete ${checked.length} selected customer(s)?`)) return;
+
+    try {
+        for (const name of checked) {
+            await api('smriti_retail_os.api.platform_data_api.delete_record', { doctype: 'Customer', name });
+        }
+        toast(`Successfully deleted ${checked.length} customer(s)!`, "success");
+        clearSelectedRows();
+        await loadCustomers();
+    } catch(e) {
+        toast("Failed to delete selected customers: " + e.message, "error");
+    }
+}
+window.deleteSelectedRows = deleteSelectedRows;
+
 function renderTable(list) {
     const tbody = document.getElementById('customers-tbody');
     if (!list.length) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-sub);padding:40px 0;">No customers found.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-sub);padding:40px 0;">No customers found.</td></tr>';
         return;
     }
     tbody.innerHTML = list.map(c => `
         <tr>
+            <td style="width:40px;">
+                <input type="checkbox" class="row-chk" value="${c.name}" onchange="window.updateSelectedCount && window.updateSelectedCount()" style="accent-color:var(--primary); cursor:pointer;">
+            </td>
             <td>
                 <div style="font-weight:600; color:var(--text);">${c.customer_name}</div>
             </td>
@@ -498,6 +612,7 @@ function renderTable(list) {
             </td>
         </tr>
     `).join('');
+    updateSelectedCount();
 }
 
 function handleSearch(q) {

@@ -1,0 +1,101 @@
+<!--
+  @file: smriti_retail_os/templates/includes/smriti_selection_bar.html
+  @description: Reusable Floating Selection Action Bar Component for SMRITI Master Pages
+  @usage: {%- include "smriti_retail_os/templates/includes/smriti_selection_bar.html" -%}
+-->
+<style>
+#selection-action-bar {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    background: var(--smriti-color-brand-primary, #5e5ce6);
+    color: #fff;
+    padding: 10px 24px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 8px;
+    margin: 12px 24px 0 24px;
+    box-shadow: 0 4px 16px rgba(94,92,230,0.35);
+    animation: slideDown 0.2s ease;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 100;
+    pointer-events: auto;
+}
+#selection-action-bar.visible { display: flex !important; }
+@keyframes slideDown {
+    from { opacity:0; transform:translateY(-8px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+#selection-action-bar .sel-count {
+    background: rgba(255,255,255,0.2);
+    border-radius: 20px;
+    padding: 3px 12px;
+    font-size: 12px;
+}
+#selection-action-bar .sel-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 6px 14px; border-radius: 6px; font-size: 12px;
+    font-weight: 700; cursor: pointer; border: none;
+    transition: all 0.15s ease;
+    position: relative;
+    z-index: 101;
+    pointer-events: auto;
+}
+#selection-action-bar .sel-btn-danger {
+    background: #ef4444; color: #fff;
+}
+#selection-action-bar .sel-btn-danger:hover { background: #dc2626; }
+#selection-action-bar .sel-btn-clear {
+    background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3);
+}
+#selection-action-bar .sel-btn-clear:hover { background: rgba(255,255,255,0.25); }
+#selection-action-bar .sel-spacer { flex:1; }
+</style>
+
+<!-- Selection Action Bar -->
+<div id="selection-action-bar">
+    <span class="sel-count" id="sel-count-badge">0 selected</span>
+    <span style="opacity:0.7;">items selected</span>
+    <span class="sel-spacer"></span>
+    <button id="btn-sel-clear" class="sel-btn sel-btn-clear" onclick="window.clearCatalogSelection ? window.clearCatalogSelection() : (window.clearSelectedRows && window.clearSelectedRows());">
+        <span class="material-symbols-outlined" style="font-size:15px; pointer-events:none;">close</span> Clear
+    </button>
+    <button id="btn-sel-all" class="sel-btn sel-btn-clear" onclick="window.selectAllVisible ? window.selectAllVisible() : (window.selectAllRows && window.selectAllRows());">
+        <span class="material-symbols-outlined" style="font-size:15px; pointer-events:none;">select_all</span> Select All Visible
+    </button>
+    <button id="btn-sel-delete" class="sel-btn sel-btn-danger" onclick="window.openBulkDeleteModal ? window.openBulkDeleteModal() : (window.deleteSelectedRows && window.deleteSelectedRows());">
+        <span class="material-symbols-outlined" style="font-size:15px; pointer-events:none;">delete_sweep</span> Delete Selected
+    </button>
+</div>
+
+<script>
+(function() {
+    window.SMRITI = window.SMRITI || {};
+    window.SMRITI.SelectionBar = {
+        update: function(count) {
+            const bar = document.getElementById("selection-action-bar");
+            const badge = document.getElementById("sel-count-badge");
+            if (!bar) return;
+            if (count > 0) {
+                bar.classList.add("visible");
+                if (badge) badge.textContent = count + " selected";
+            } else {
+                bar.classList.remove("visible");
+            }
+        },
+        clear: function() {
+            if (window.clearCatalogSelection) window.clearCatalogSelection();
+            else if (window.clearSelectedRows) window.clearSelectedRows();
+        },
+        selectAll: function() {
+            if (window.selectAllVisible) window.selectAllVisible();
+            else if (window.selectAllRows) window.selectAllRows();
+        },
+        deleteSelected: function() {
+            if (window.openBulkDeleteModal) window.openBulkDeleteModal();
+            else if (window.deleteSelectedRows) window.deleteSelectedRows();
+        }
+    };
+})();
+</script>
