@@ -212,6 +212,7 @@
     @keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
   </style>
   <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css">
+  <script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js"></script>
 </head>
 <body>
 
@@ -1318,8 +1319,8 @@
 
   // --- Page Boot ---
   window.onload = function() {
-    if (window.SMRITI && typeof SMRITI.injectSidebar === 'function') {
-      SMRITI.injectSidebar('smriti-sidebar-target', 'clienteling');
+    if (window.SMRITI && typeof SMRITI.renderFlexibleSidebar === 'function') {
+      SMRITI.renderFlexibleSidebar('smriti-clienteling');
     }
     loadDirectory();
   };
@@ -1327,4 +1328,3 @@
 
 </body>
 </html>
-{% endblock %}
