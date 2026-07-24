@@ -18,7 +18,7 @@ import frappe
 
 @frappe.whitelist()
 def get_records(doctype: str, fields=None, filters=None,
-                order_by: str = None, limit: int = 20, start: int = 0) -> list:
+                order_by: str = None, limit=20, start=0, **kwargs) -> list:
     """
     Fetch a list of records from a DocType.
 
@@ -37,6 +37,9 @@ def get_records(doctype: str, fields=None, filters=None,
             filters = json.loads(filters)
         except Exception:
             filters = {}
+
+    if "limit_page_length" in kwargs:
+        limit = kwargs.get("limit_page_length")
 
     limit = min(int(limit or 20), 500)
     return frappe.get_list(
