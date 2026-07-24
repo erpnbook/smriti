@@ -46,12 +46,8 @@ SMRITI Retail OS provides automated installation scripts. Choose the correct opt
 git clone https://github.com/erpnbook/smriti-docker.git Smriti9
 cd Smriti9
 
-# Option A: Run Docker Compose directly (Recommended)
+# Launch Docker Compose stack
 docker compose -f pwd.yml up -d
-
-# Option B: Run PowerShell script directly if available in the repo
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-.\install.ps1
 ```
 
 > [!TIP]
