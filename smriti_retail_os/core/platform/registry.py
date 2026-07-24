@@ -47,25 +47,29 @@ def resolve(smriti_model: str) -> str:
         resolve("Purchase")   # → "Purchase Order"
         resolve("Product")    # → "Item"
         resolve("Customer")   # → "Customer"
-
-    Raises:
-        KeyError  — if the model name is not registered in document_map.yaml
-        FileNotFoundError — if document_map.yaml is missing
     """
     registry = _load_registry()
     entry = registry.get(smriti_model)
-    if not entry:
-        raise KeyError(
-            f"SMRITI Platform Registry: unknown model '{smriti_model}'.\n"
-            f"Register it in core/platform/document_map.yaml."
-        )
-    platform_doctype = entry.get("platform")
-    if not platform_doctype:
-        raise KeyError(
-            f"SMRITI Platform Registry: model '{smriti_model}' is missing "
-            f"a 'platform' key in document_map.yaml."
-        )
-    return platform_doctype
+    if entry and entry.get("platform"):
+        return entry.get("platform")
+
+    # If model is already a registered platform target (e.g. "Item", "Customer", "Purchase Order")
+    for k, v in registry.items():
+        if isinstance(v, dict) and v.get("platform") == smriti_model:
+            return smriti_model
+
+    # Check if smriti_model is a valid DocType in ERPNext / Frappe database
+    import frappe
+    try:
+        if frappe.db.exists("DocType", smriti_model):
+            return smriti_model
+    except Exception:
+        pass
+
+    raise KeyError(
+        f"SMRITI Platform Registry: unknown model '{smriti_model}'.\n"
+        f"Register it in core/platform/document_map.yaml."
+    )
 
 
 def resolve_or_passthrough(model_name: str) -> str:

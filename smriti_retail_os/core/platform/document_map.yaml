@@ -1420,3 +1420,11 @@ Workflow:
 Workflow State:
   platform: Workflow State
   description: Frappe Workflow State
+
+MembershipTier:
+  platform: SMRITI Membership Tier
+  description: SMRITI Membership Tier definition
+
+SMRITI Membership Tier:
+  platform: SMRITI Membership Tier
+  description: SMRITI Membership Tier definition
