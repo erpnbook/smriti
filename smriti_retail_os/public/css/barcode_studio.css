@@ -209,9 +209,9 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 .bulk-btn:hover { background:var(--barcode-overlay-md); }
 .bulk-btn span { font-size:16px; }
 
-.table-wrap { flex:1; overflow:auto; padding:12px 20px; }
+.table-wrap { flex:1; overflow-y:auto; overflow-x:auto; padding:12px 20px; max-height:100%; min-height:0; scrollbar-width:thin; }
 .smriti-table { width:100%; border-collapse:collapse; text-align:left; }
-.smriti-table th { padding:8px 12px; background:var(--card2); color:var(--text-muted); font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:1; }
+.smriti-table th { padding:8px 12px; background:var(--card2); color:var(--text-muted); font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:10; box-shadow:0 2px 4px var(--barcode-shadow-sm); }
 .smriti-table td { padding:10px 12px; border-bottom:1px solid var(--border); font-size:0.85rem; vertical-align:middle; }
 .smriti-table tbody tr.selected td { background:var(--barcode-brand-sm); }
 .smriti-table tbody tr:hover td { background:var(--barcode-overlay-md); }

@@ -199,7 +199,8 @@ window.SMRITI = window.SMRITI || {};
                     var itemClasses = "smriti-sidebar-item" + (isItemActive ? " active" : "") + (isComingSoon ? " coming-soon" : "");
                     var titleAttr = isComingSoon ? (item.eta ? " title=\"Coming " + item.eta + "\"" : " title=\"Coming Soon\"") : "";
 
-                    html.push('<a class="' + itemClasses + '" href="' + itemRoute + '" role="treeitem" tabindex="' + (isComingSoon ? '-1' : '0') + '"' + (isItemActive ? ' aria-current="page"' : '') + titleAttr + '>');
+                    var activeClickHandler = isItemActive ? ' onclick="if(this.classList.contains(\'active\')){event.preventDefault();return false;}"' : '';
+                    html.push('<a class="' + itemClasses + '" href="' + itemRoute + '" role="treeitem" tabindex="' + (isComingSoon ? '-1' : '0') + '"' + (isItemActive ? ' aria-current="page"' : '') + activeClickHandler + titleAttr + '>');
                     html.push('  <div class="smriti-sidebar-item-icon">' + iconHtml + '</div>');
                     html.push('  <span class="smriti-sidebar-item-label">' + item.label + '</span>');
                     if (item.badge) {
