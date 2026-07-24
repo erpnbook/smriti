@@ -149,6 +149,24 @@ def exists(model_name: str, filters):
     return frappe.db.exists(resolve(model_name), filters)
 
 
+def table_exists(model_name: str) -> bool:
+    """
+    Check whether a document table exists in the database.
+
+    Args:
+        model_name (str): SMRITI model name or table name
+
+    Returns:
+        bool: True if table exists, False otherwise
+    """
+    import frappe
+    try:
+        resolved = resolve(model_name)
+        return bool(frappe.db.table_exists(resolved) or frappe.db.table_exists(f"tab{resolved}") or frappe.db.table_exists(model_name))
+    except Exception:
+        return False
+
+
 def count(model_name: str, filters=None, cache: bool = False) -> int:
     """
     Count documents matching the given filters.

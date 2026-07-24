@@ -59,7 +59,13 @@ class ProductRepository:
             item_names = [name for name in item_names if name]
 
             barcode_map = {}
-            if item_names and smriti.db.table_exists("Item Barcode"):
+            has_barcode_table = False
+            try:
+                has_barcode_table = bool(frappe.db.table_exists("Item Barcode") or frappe.db.table_exists("tabItem Barcode"))
+            except Exception:
+                has_barcode_table = False
+
+            if item_names and has_barcode_table:
                 try:
                     barcodes = smriti.db.get_list(
                         "Item Barcode",
