@@ -141,6 +141,9 @@
             box-shadow: 0 4px 16px rgba(94,92,230,0.35);
             animation: slideDown 0.2s ease;
             flex-shrink: 0;
+            position: relative;
+            z-index: 100;
+            pointer-events: auto;
         }
         #selection-action-bar.visible { display: flex !important; }
         @keyframes slideDown {
@@ -158,6 +161,9 @@
             padding: 6px 14px; border-radius: 6px; font-size: 12px;
             font-weight: 700; cursor: pointer; border: none;
             transition: all 0.15s ease;
+            position: relative;
+            z-index: 101;
+            pointer-events: auto;
         }
         #selection-action-bar .sel-btn-danger {
             background: #ef4444; color: #fff;
@@ -351,14 +357,14 @@
             <span class="sel-count" id="sel-count-badge">0 selected</span>
             <span style="opacity:0.7;">items selected</span>
             <span class="sel-spacer"></span>
-            <button class="sel-btn sel-btn-clear" onclick="catalogGrid && catalogGrid.clearSelection()">
-                <span class="material-symbols-outlined" style="font-size:15px;">close</span> Clear
+            <button id="btn-sel-clear" class="sel-btn sel-btn-clear" onclick="window.clearCatalogSelection && window.clearCatalogSelection();">
+                <span class="material-symbols-outlined" style="font-size:15px; pointer-events:none;">close</span> Clear
             </button>
-            <button class="sel-btn sel-btn-clear" onclick="selectAllVisible()">
-                <span class="material-symbols-outlined" style="font-size:15px;">select_all</span> Select All Visible
+            <button id="btn-sel-all" class="sel-btn sel-btn-clear" onclick="window.selectAllVisible && window.selectAllVisible();">
+                <span class="material-symbols-outlined" style="font-size:15px; pointer-events:none;">select_all</span> Select All Visible
             </button>
-            <button class="sel-btn sel-btn-danger" onclick="openBulkDeleteModal()">
-                <span class="material-symbols-outlined" style="font-size:15px;">delete_sweep</span> Delete Selected
+            <button id="btn-sel-delete" class="sel-btn sel-btn-danger" onclick="window.openBulkDeleteModal && window.openBulkDeleteModal();">
+                <span class="material-symbols-outlined" style="font-size:15px; pointer-events:none;">delete_sweep</span> Delete Selected
             </button>
         </div>
 
@@ -740,17 +746,31 @@ function updateSelectionBar(count) {
         bar.classList.remove("visible");
     }
 }
+window.updateSelectionBar = updateSelectionBar;
+
+function clearCatalogSelection() {
+    const grid = window.catalogGrid || catalogGrid;
+    if (grid && typeof grid.clearSelection === "function") {
+        grid.clearSelection();
+    }
+}
+window.clearCatalogSelection = clearCatalogSelection;
 
 function selectAllVisible() {
-    if (catalogGrid) catalogGrid.selectAll(true);
+    const grid = window.catalogGrid || catalogGrid;
+    if (grid && typeof grid.selectAll === "function") {
+        grid.selectAll(true);
+    }
 }
+window.selectAllVisible = selectAllVisible;
 
 // ── Bulk-delete: selected items ───────────────────────────────────────────────
 let _bulkDeleteTarget = []; // item codes to delete
 
 function openBulkDeleteModal() {
-    if (!catalogGrid) return;
-    const keys = catalogGrid.getSelectedKeys();
+    const grid = window.catalogGrid || catalogGrid;
+    if (!grid) return;
+    const keys = typeof grid.getSelectedKeys === "function" ? grid.getSelectedKeys() : [];
     if (!keys.length) { SMRITI.toast.error("No items selected."); return; }
     _bulkDeleteTarget = keys;
     _showBulkDeleteModal(
@@ -758,6 +778,22 @@ function openBulkDeleteModal() {
         keys
     );
 }
+window.openBulkDeleteModal = openBulkDeleteModal;
+
+document.addEventListener("DOMContentLoaded", function() {
+    document.getElementById("btn-sel-clear")?.addEventListener("click", function(e) {
+        e.preventDefault();
+        clearCatalogSelection();
+    });
+    document.getElementById("btn-sel-all")?.addEventListener("click", function(e) {
+        e.preventDefault();
+        selectAllVisible();
+    });
+    document.getElementById("btn-sel-delete")?.addEventListener("click", function(e) {
+        e.preventDefault();
+        openBulkDeleteModal();
+    });
+});
 
 // ── Bulk-delete: filtered items ───────────────────────────────────────────────
 function openDeleteFilteredModal() {
