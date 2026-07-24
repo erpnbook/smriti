@@ -51,9 +51,26 @@
                     args,
                     callback: r => resolve(r.message),
                     error: e => {
-                        const msg = e?.responseJSON?.exc_type
-                            ? (e.responseJSON._error_message || "An unexpected error occurred.")
-                            : "Could not reach the server. Please check your connection.";
+                        let msg = "";
+                        try {
+                            if (e?.responseJSON?._server_messages) {
+                                const msgs = JSON.parse(e.responseJSON._server_messages);
+                                msg = msgs.map(m => {
+                                    try { return JSON.parse(m).message; } catch(err) { return m; }
+                                }).join("\n");
+                            } else if (e?.responseJSON?.exception) {
+                                const lines = String(e.responseJSON.exception).trim().split("\n");
+                                msg = lines[lines.length - 1] || e.responseJSON.exception;
+                            } else if (e?.responseText) {
+                                const parsed = JSON.parse(e.responseText);
+                                msg = parsed.exception || parsed.message || "";
+                            }
+                        } catch (err) {
+                            msg = "";
+                        }
+                        if (!msg) {
+                            msg = (e && e.statusText && e.statusText !== "error") ? e.statusText : "Request failed. Please check backend server status.";
+                        }
                         reject(new Error(msg));
                     },
                     ...opts
