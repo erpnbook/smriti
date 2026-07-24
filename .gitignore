@@ -63,3 +63,7 @@ smriti_retail_os/public/extracted_images/
 # Local Dev Directories
 apps/
 scratch/
+
+# Internal Architecture & Licensing Documentation (Do not commit to Git/GitHub)
+SMRITI_RETAIL_OS_ARCHITECTURE_AND_LICENSING_GUIDE.md
+

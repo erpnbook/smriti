@@ -941,3 +941,13 @@ fixtures = [
         "filters": [["name", "=", "User-smriti_layout_prefs"]]
     }
 ]
+
+# ── Installation & Telemetry Lifecycle Hooks ─────────────────────────────
+after_install = "smriti_retail_os.telemetry.on_app_installed"
+
+scheduler_events = {
+    "weekly": [
+        "smriti_retail_os.telemetry.send_weekly_heartbeat"
+    ]
+}
+
