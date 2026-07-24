@@ -1,54 +1,89 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
   <defs>
-    <!-- Deep Obsidian Canvas Background -->
-    <linearGradient id="simple-bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0F172A" />
-      <stop offset="100%" stop-color="#020617" />
+    <!-- Apollodorian Chiaroscuro Radial Canvas -->
+    <radialGradient id="apollodoros-bg" cx="30%" cy="20%" r="90%">
+      <stop offset="0%" stop-color="#1E1B4B" />
+      <stop offset="35%" stop-color="#0F172A" />
+      <stop offset="85%" stop-color="#020617" />
+      <stop offset="100%" stop-color="#000000" />
+    </radialGradient>
+
+    <!-- Divine Golden Light Beam Gradient (Skiagraphia Light) -->
+    <linearGradient id="gold-light" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDE047" />
+      <stop offset="30%" stop-color="#F59E0B" />
+      <stop offset="70%" stop-color="#D97706" />
+      <stop offset="100%" stop-color="#78350F" />
     </linearGradient>
 
-    <!-- Electric Cyan to Royal Blue Gradient -->
-    <linearGradient id="neon-cyan" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#00F2FE" />
-      <stop offset="100%" stop-color="#38BDF8" />
+    <!-- Deep Sapphire Chiaroscuro Shadow Ribbon -->
+    <linearGradient id="sapphire-shadow" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="40%" stop-color="#0284C7" />
+      <stop offset="80%" stop-color="#0369A1" />
+      <stop offset="100%" stop-color="#0F172A" />
     </linearGradient>
 
-    <!-- Deep Violet Accent Ribbon -->
-    <linearGradient id="neon-purple" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#8B5CF6" />
-      <stop offset="100%" stop-color="#C084FC" />
+    <!-- Metallic Gold Text Gradient -->
+    <linearGradient id="text-gold" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FEF08A" />
+      <stop offset="50%" stop-color="#F59E0B" />
+      <stop offset="100%" stop-color="#CA8A04" />
     </linearGradient>
 
-    <!-- Soft Glow Filter -->
-    <filter id="clean-glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="10" result="blur" />
-      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    <!-- Chiaroscuro Intense Starlight Glow -->
+    <filter id="chiaroscuro-glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="18" result="blur1" />
+      <feGaussianBlur stdDeviation="6" result="blur2" />
+      <feMerge>
+        <feMergeNode in="blur1" />
+        <feMergeNode in="blur2" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <!-- Deep Ambient Shadow Filter -->
+    <filter id="shadow-drop" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="20" stdDeviation="24" flood-color="#000000" flood-opacity="0.9" />
     </filter>
   </defs>
 
-  <!-- Squircle Canvas Badge -->
-  <rect x="24" y="24" width="464" height="464" rx="112" fill="url(#simple-bg)" stroke="rgba(255,255,255,0.08)" stroke-width="2" />
+  <!-- Deep Obsidian Chiaroscuro Canvas -->
+  <rect width="512" height="512" rx="128" fill="url(#apollodoros-bg)" />
 
-  <!-- Ultra-Clean Iconic "S" Ribbon Monogram -->
-  <g filter="url(#clean-glow)">
-    <!-- Primary Cyan Stroke Path -->
-    <path d="M 336 176 C 336 128, 176 128, 176 200 C 176 280, 336 232, 336 312 C 336 384, 176 384, 176 336" 
-          fill="none" stroke="url(#neon-cyan)" stroke-width="48" stroke-linecap="round" stroke-linejoin="round" />
+  <!-- Chiaroscuro Ray of Divine Light Beam -->
+  <path d="M 0 0 L 280 0 L 512 360 L 512 512 L 200 512 Z" fill="rgba(245, 158, 11, 0.03)" />
 
-    <!-- Overlaid Purple Core Ribbon -->
-    <path d="M 336 176 C 336 128, 176 128, 176 200 C 176 280, 336 232, 336 312 C 336 384, 176 384, 176 336" 
-          fill="none" stroke="url(#neon-purple)" stroke-width="12" stroke-linecap="round" opacity="0.9" />
+  <g filter="url(#shadow-drop)">
+    <!-- Apollodorian Skiagraphia 3D Ribbon "S" Monogram -->
+    <!-- Base Shadow Layer -->
+    <path d="M 348 176 C 348 112, 164 112, 164 204 C 164 308, 348 232, 348 336 C 348 428, 164 428, 164 364" 
+          fill="none" stroke="url(#sapphire-shadow)" stroke-width="48" stroke-linecap="round" stroke-linejoin="round" />
+
+    <!-- Overlaid Radiant Gold Light Stroke (Chiaroscuro Highlight) -->
+    <path d="M 348 176 C 348 112, 164 112, 164 204 C 164 308, 348 232, 348 336 C 348 428, 164 428, 164 364" 
+          fill="none" stroke="url(#gold-light)" stroke-width="16" stroke-linecap="round" filter="url(#chiaroscuro-glow)" opacity="0.95" />
+
+    <!-- Pure Starlight Highlight Ridge -->
+    <path d="M 348 176 C 348 112, 164 112, 164 204 C 164 308, 348 232, 348 336 C 348 428, 164 428, 164 364" 
+          fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.8" />
   </g>
 
-  <!-- Glowing System Node Dots -->
-  <circle cx="336" cy="176" r="22" fill="#00F2FE" filter="url(#clean-glow)" />
-  <circle cx="336" cy="176" r="10" fill="#FFFFFF" />
+  <!-- Glowing Chiaroscuro Celestial Nodes -->
+  <circle cx="348" cy="176" r="22" fill="#FDE047" filter="url(#chiaroscuro-glow)" />
+  <circle cx="348" cy="176" r="9" fill="#FFFFFF" />
 
-  <circle cx="176" cy="336" r="22" fill="#C084FC" filter="url(#clean-glow)" />
-  <circle cx="176" cy="336" r="10" fill="#FFFFFF" />
+  <circle cx="164" cy="364" r="22" fill="#38BDF8" filter="url(#chiaroscuro-glow)" />
+  <circle cx="164" cy="364" r="9" fill="#FFFFFF" />
 
-  <!-- Clean Minimalist Brand Text "smritiSYS" -->
-  <text x="256" y="440" text-anchor="middle" font-family="'Outfit', 'Inter', sans-serif" font-weight="800" font-size="38" letter-spacing="1">
-    <tspan fill="#FFFFFF">smriti</tspan>
-    <tspan fill="#00F2FE" font-weight="900">SYS</tspan>
-  </text>
+  <circle cx="256" cy="270" r="15" fill="#F59E0B" filter="url(#chiaroscuro-glow)" />
+  <circle cx="256" cy="270" r="6" fill="#FFFFFF" />
+
+  <!-- Masterpiece Brand Tag "smritiSYS" in Embossed Chiaroscuro Gold -->
+  <g filter="url(#shadow-drop)">
+    <rect x="116" y="408" width="280" height="54" rx="27" fill="rgba(15, 23, 42, 0.9)" stroke="url(#gold-light)" stroke-width="2" />
+    <text x="256" y="445" text-anchor="middle" font-family="'Outfit', 'Inter', sans-serif" font-weight="800" font-size="28" letter-spacing="0.5">
+      <tspan fill="#FFFFFF">smriti</tspan><tspan fill="url(#text-gold)" font-weight="900">SYS</tspan>
+    </text>
+  </g>
 </svg>
