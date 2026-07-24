@@ -319,16 +319,32 @@ def get_item_print_details(item_code, default_print_qty):
     """
     item_doc = smriti.documents.get("Item", item_code)
 
-    # 1. Barcode — primary flag first, then first, then item_code
+    # 1. Barcode — primary flag first, then first, then auto-generate EAN-13
     barcodes_list = smriti.db.get_list(
         "Item Barcode",
         filters={"parent": item_code},
         fields=["barcode", "custom_is_primary"],
         order_by="custom_is_primary desc, creation asc"
     )
-    barcode = item_code
-    if barcodes_list:
-        barcode = barcodes_list[0].barcode
+    barcode = None
+    if barcodes_list and barcodes_list[0].get("barcode"):
+        barcode = barcodes_list[0].get("barcode")
+
+    if not barcode:
+        from smriti_retail_os.item_master_api import generate_ean13_barcode
+        try:
+            gen_barcode = generate_ean13_barcode()
+            item_doc.append("barcodes", {
+                "barcode": gen_barcode,
+                "uom": "Nos",
+                "custom_is_primary": 1
+            })
+            item_doc.save(ignore_permissions=True)
+            smriti.db.commit()
+            barcode = gen_barcode
+        except Exception:
+            barcode = item_code
+
 
     # 2. MRP — custom_mrp > MRP price list > Standard Selling > valuation_rate
     mrp = (
