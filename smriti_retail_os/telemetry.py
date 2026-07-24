@@ -19,14 +19,30 @@ from smriti_retail_os import smriti
 def _get_installation_id():
     """Returns or generates a stable anonymized installation ID hash for this site."""
     try:
-        doc = frappe.get_single("SMRITI License")
-        if doc.get("installation_id"):
-            return doc.installation_id
+        cached_id = frappe.cache().get_value("smriti_installation_id")
+        if cached_id:
+            return cached_id
     except Exception:
         pass
 
-    site_name = getattr(frappe.local, "site", "smriti-default-site")
-    return hashlib.sha256(site_name.encode("utf-8")).hexdigest()[:16].upper()
+    install_id = None
+    try:
+        doc = frappe.get_single("SMRITI License")
+        if doc.get("installation_id"):
+            install_id = doc.installation_id
+    except Exception:
+        pass
+
+    if not install_id:
+        site_name = getattr(frappe.local, "site", "smriti-default-site")
+        install_id = hashlib.sha256(site_name.encode("utf-8")).hexdigest()[:16].upper()
+
+    try:
+        frappe.cache().set_value("smriti_installation_id", install_id, expires_in_sec=86400)
+    except Exception:
+        pass
+
+    return install_id
 
 
 def _is_telemetry_enabled():

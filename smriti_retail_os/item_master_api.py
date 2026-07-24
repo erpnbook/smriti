@@ -621,6 +621,11 @@ def import_item_master(rows_json):
             if ":" in err_str and any(p in err_str for p in ("ValidationError", "DoesNotExistError", "DuplicateEntryError", "PermissionError")):
                 err_str = err_str.split(":", 1)[1].strip()
 
+            # Ensure clean single-line error string for UI data tables
+            if "\n" in err_str:
+                lines = [l.strip() for l in err_str.splitlines() if l.strip()]
+                err_str = lines[0] if lines else err_str
+
             failed.append({
                 "row": idx + 1,
                 "barcode": row.get("BARCODE NO", ""),
