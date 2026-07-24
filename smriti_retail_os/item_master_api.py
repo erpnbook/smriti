@@ -610,12 +610,22 @@ def import_item_master(rows_json):
 
             created += 1
 
-        except Exception:
+        except Exception as e:
+            # Extract clean, human-readable error message instead of raw Python traceback
+            err_str = str(e).strip()
+            if not err_str or err_str.startswith("Traceback"):
+                tb_lines = [line.strip() for line in frappe.get_traceback().splitlines() if line.strip()]
+                err_str = tb_lines[-1] if tb_lines else "Item import failed due to validation error."
+            
+            # Clean up redundant exception class names if present
+            if ":" in err_str and any(p in err_str for p in ("ValidationError", "DoesNotExistError", "DuplicateEntryError", "PermissionError")):
+                err_str = err_str.split(":", 1)[1].strip()
+
             failed.append({
                 "row": idx + 1,
                 "barcode": row.get("BARCODE NO", ""),
                 "style_code": row.get("PRODUCT STYLE CODE", ""),
-                "error": frappe.get_traceback()
+                "error": err_str
             })
             smriti.errors.log_error(
                 title=f"SMRITI Item Import — Row {idx + 1}",
