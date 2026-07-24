@@ -334,6 +334,9 @@ def get_item_print_details(item_code, default_print_qty):
         from smriti_retail_os.item_master_api import generate_ean13_barcode
         try:
             gen_barcode = generate_ean13_barcode()
+            for b in item_doc.barcodes:
+                b.custom_is_primary = 0
+
             item_doc.append("barcodes", {
                 "barcode": gen_barcode,
                 "uom": "Nos",
@@ -344,6 +347,7 @@ def get_item_print_details(item_code, default_print_qty):
             barcode = gen_barcode
         except Exception:
             barcode = item_code
+
 
 
     # 2. MRP — custom_mrp > MRP price list > Standard Selling > valuation_rate
