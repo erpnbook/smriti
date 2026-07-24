@@ -1298,6 +1298,21 @@
       window.open(`/smriti-po-print?name=${encodeURIComponent(val)}`, '_blank');
     } else if (fieldname === 'name' || fieldname === 'invoice' || fieldname === 'pos_invoice') {
       window.open(`/printview?doctype=POS%20Invoice&name=${encodeURIComponent(val)}`, '_blank');
+    } else if (['item_group', 'brand', 'vendor_code', 'custom_style_code', 'department', 'purchase_class', 'merchandise_category'].includes(fieldname)) {
+      const nextFilters = Object.assign({}, currentFilters);
+      nextFilters[fieldname] = val;
+      const cleanFieldLabel = fieldname.replace('custom_', '').replace(/_/g, ' ').toUpperCase();
+      drillDownPath.push({
+        report_key: 'item_wise_sales',
+        filters: nextFilters,
+        label: `${cleanFieldLabel}: ${val}`
+      });
+      loadReportByKey('item_wise_sales');
+      setTimeout(() => {
+        const input = document.getElementById(`filter-${fieldname}`);
+        if (input) input.value = val;
+        runReport();
+      }, 300);
     }
     
     renderDrillDownBreadcrumbs();
