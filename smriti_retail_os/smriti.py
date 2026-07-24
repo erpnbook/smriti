@@ -33,12 +33,25 @@
 #
 
 from smriti_retail_os.core.platform import documents    # noqa: F401 — smriti.documents
-from smriti_retail_os.core.platform import db           # noqa: F401 — smriti.db
+from smriti_retail_os.core.platform import db as _db_module
 from smriti_retail_os.core.platform import cache as _cache_module
 from smriti_retail_os.core.platform import events       # noqa: F401 — smriti.events
 from smriti_retail_os.core.platform import jobs         # noqa: F401 — smriti.jobs
 from smriti_retail_os.core.platform import permissions  # noqa: F401 — smriti.permissions
 from smriti_retail_os.core.platform import errors       # noqa: F401 — smriti.errors
+
+
+class ResilientDB:
+    def __init__(self, module):
+        self._module = module
+
+    def __getattr__(self, name):
+        if hasattr(self._module, name):
+            return getattr(self._module, name)
+        import frappe
+        if hasattr(frappe.db, name):
+            return getattr(frappe.db, name)
+        raise AttributeError(f"module 'smriti_retail_os.core.platform.db' has no attribute '{name}'")
 
 
 class ResilientCache:
@@ -58,6 +71,7 @@ class ResilientCache:
         return cache_fn()
 
 
+db = ResilientDB(_db_module)
 cache = ResilientCache(_cache_module)
 tasks = jobs
 
