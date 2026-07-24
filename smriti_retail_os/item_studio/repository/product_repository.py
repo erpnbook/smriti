@@ -31,7 +31,7 @@ class ProductRepository:
                 "name", "item_name", "brand", "item_group", "custom_mrp",
                 "valuation_rate", "custom_gst_percentage", "stock_uom",
                 "custom_style_code", "variant_of", "custom_sub_category",
-                "custom_gender", "custom_purchase_class",
+                "custom_gender", "default_supplier", "custom_purchase_class",
                 "custom_department", "custom_heels", "custom_upper_material",
                 "custom_outsole", "gst_hsn_code"
             ]
