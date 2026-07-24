@@ -56,9 +56,6 @@
 
   <circle cx="256" cy="256" r="14" fill="#8B5CF6" />
 
-  <!-- Modern Brand Text Tag "smritiSYS" at the bottom -->
-  <text x="256" y="440" text-anchor="middle" font-family="'Outfit', 'Inter', sans-serif" font-weight="800" font-size="34" letter-spacing="4">
-    <tspan fill="url(#silver-white)">smriti</tspan>
-    <tspan fill="url(#cyan-azure)" font-weight="900">SYS</tspan>
-  </text>
+  <!-- Seamless Brand Text Tag "smritiSYS" (No space) -->
+  <text x="256" y="438" text-anchor="middle" font-family="'Outfit', 'Inter', sans-serif" font-weight="800" font-size="38" letter-spacing="0.5"><tspan fill="url(#silver-white)">smriti</tspan><tspan fill="url(#cyan-azure)" font-weight="900">SYS</tspan></text>
 </svg>
