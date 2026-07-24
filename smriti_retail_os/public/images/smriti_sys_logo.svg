@@ -1,15 +1,99 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
-  <!-- Minimalist Monochrome Squircle Badge -->
-  <rect x="24" y="24" width="464" height="464" rx="112" fill="#092540" />
+  <defs>
+    <!-- Background Gradients -->
+    <radialGradient id="wow-bg-glow" cx="50%" cy="30%" r="75%">
+      <stop offset="0%" stop-color="#1E1B4B" />
+      <stop offset="40%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#030712" />
+    </radialGradient>
 
-  <!-- Clean Minimalist Monogram "S" Vector Path -->
-  <path d="M 336 180 C 336 140, 176 140, 176 204 C 176 276, 336 236, 336 308 C 336 372, 176 372, 176 332" 
-        fill="none" stroke="#FFFFFF" stroke-width="38" stroke-linecap="round" stroke-linejoin="round" />
+    <!-- Metallic Glass Shield Stroke -->
+    <linearGradient id="shield-stroke" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.8" />
+      <stop offset="50%" stop-color="#8B5CF6" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="#EC4899" stop-opacity="0.8" />
+    </linearGradient>
 
-  <!-- Minimal Node Accent Dots (Monochrome Pure White) -->
-  <circle cx="336" cy="180" r="19" fill="#FFFFFF" />
-  <circle cx="176" cy="332" r="19" fill="#FFFFFF" />
+    <!-- 3D Electric Ribbon Gradient 1 -->
+    <linearGradient id="ribbon-cyan-emerald" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00F2FE" />
+      <stop offset="50%" stop-color="#38BDF8" />
+      <stop offset="100%" stop-color="#10B981" />
+    </linearGradient>
 
-  <!-- Crisp Minimal Text Tag "smritiSYS" -->
-  <text x="256" y="436" text-anchor="middle" font-family="'Outfit', 'Inter', sans-serif" font-weight="800" font-size="38" fill="#FFFFFF" letter-spacing="0">smriti<tspan font-weight="900" fill="#00D2FF">SYS</tspan></text>
+    <!-- 3D Electric Ribbon Gradient 2 -->
+    <linearGradient id="ribbon-purple-pink" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366F1" />
+      <stop offset="50%" stop-color="#8B5CF6" />
+      <stop offset="100%" stop-color="#F43F5E" />
+    </linearGradient>
+
+    <!-- Text Tag Metallic Silver -->
+    <linearGradient id="text-metallic" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#94A3B8" />
+    </linearGradient>
+
+    <!-- Multi-Layer Neon Glow Filter -->
+    <filter id="ultra-glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="16" result="blur1" />
+      <feGaussianBlur stdDeviation="6" result="blur2" />
+      <feMerge>
+        <feMergeNode in="blur1" />
+        <feMergeNode in="blur2" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <!-- Glass Refraction Drop Shadow -->
+    <filter id="glass-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#00F2FE" flood-opacity="0.25" />
+    </filter>
+  </defs>
+
+  <!-- Dark Obsidian Background Container -->
+  <rect width="512" height="512" rx="128" fill="url(#wow-bg-glow)" />
+
+  <!-- Glassmorphic Hexagonal 3D Shield Frame -->
+  <g filter="url(#glass-shadow)">
+    <path d="M 256 44 L 432 144 V 344 L 256 444 L 80 344 V 144 Z" 
+          fill="rgba(15, 23, 42, 0.65)" stroke="url(#shield-stroke)" stroke-width="4" />
+  </g>
+
+  <!-- Ambient Internal Grid Constellation Lines -->
+  <path d="M 256 44 V 444 M 80 144 L 432 344 M 80 344 L 432 144" stroke="rgba(255,255,255,0.03)" stroke-width="2" />
+
+  <!-- Masterpiece 3D Intertwined Ribbon "S" Monogram -->
+  <g filter="url(#ultra-glow)">
+    <!-- Back Outer Glow Ribbon Layer -->
+    <path d="M 352 176 C 352 116, 160 116, 160 208 C 160 308, 352 236, 352 336 C 352 424, 160 424, 160 364" 
+          fill="none" stroke="url(#ribbon-cyan-emerald)" stroke-width="42" stroke-linecap="round" stroke-linejoin="round" />
+
+    <!-- Front Overlaid Core Ribbon Layer -->
+    <path d="M 352 176 C 352 116, 160 116, 160 208 C 160 308, 352 236, 352 336 C 352 424, 160 424, 160 364" 
+          fill="none" stroke="url(#ribbon-purple-pink)" stroke-width="14" stroke-linecap="round" opacity="0.9" />
+
+    <!-- Radiant Center Core Light Path -->
+    <path d="M 352 176 C 352 116, 160 116, 160 208 C 160 308, 352 236, 352 336 C 352 424, 160 424, 160 364" 
+          fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.6" stroke-dasharray="12 12" />
+  </g>
+
+  <!-- Glowing System Node Pulse Circles (smritiSYS) -->
+  <circle cx="352" cy="176" r="22" fill="#00F2FE" filter="url(#ultra-glow)" />
+  <circle cx="352" cy="176" r="10" fill="#FFFFFF" />
+
+  <circle cx="160" cy="364" r="22" fill="#F43F5E" filter="url(#ultra-glow)" />
+  <circle cx="160" cy="364" r="10" fill="#FFFFFF" />
+
+  <circle cx="256" cy="272" r="16" fill="#10B981" filter="url(#ultra-glow)" />
+  <circle cx="256" cy="272" r="7" fill="#FFFFFF" />
+
+  <!-- Bottom Metallic Brand Badge "smritiSYS" -->
+  <g filter="url(#glass-shadow)">
+    <rect x="116" y="408" width="280" height="54" rx="27" fill="rgba(15, 23, 42, 0.85)" stroke="url(#cyan-emerald)" stroke-width="2" />
+    <text x="256" y="445" text-anchor="middle" font-family="'Outfit', 'Inter', sans-serif" font-weight="800" font-size="28" letter-spacing="1">
+      <tspan fill="url(#text-metallic)">smriti</tspan>
+      <tspan fill="#00F2FE" font-weight="900">SYS</tspan>
+    </text>
+  </g>
 </svg>
