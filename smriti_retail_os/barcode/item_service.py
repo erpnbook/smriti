@@ -29,7 +29,9 @@ def expand_item_variants(item_code, default_print_qty=1):
         )
         res = []
         for v in variants:
-            res.append(get_item_print_details(v.name, default_print_qty))
+            v_name = v.get("name") if hasattr(v, "get") else getattr(v, "name", "")
+            if v_name:
+                res.append(get_item_print_details(v_name, default_print_qty))
         return res
     else:
         return [get_item_print_details(item_code, default_print_qty)]
@@ -101,7 +103,9 @@ def get_items_by_range(from_article, to_article):
             fields=["name"]
         )
         for item in items:
-            code = item.name
+            code = item.get("name") if hasattr(item, "get") else getattr(item, "name", "")
+            if not code:
+                continue
             suffix = code[len(prefix_from):]
             if suffix.isdigit():
                 val = int(suffix)
@@ -115,8 +119,9 @@ def get_items_by_range(from_article, to_article):
             order_by="item_code asc"
         )
         for item in items:
-            if item.name <= to_article:
-                item_codes.append(item.name)
+            code = item.get("name") if hasattr(item, "get") else getattr(item, "name", "")
+            if code and code <= to_article:
+                item_codes.append(code)
             else:
                 break
 
@@ -159,11 +164,14 @@ def get_items_by_barcode_range(from_barcode, to_barcode):
             fields=["barcode", "parent"]
         )
         for b in barcodes:
-            suffix = b.barcode[len(p_from):]
+            b_val = b.get("barcode", "") if hasattr(b, "get") else getattr(b, "barcode", "")
+            parent_code = b.get("parent", "") if hasattr(b, "get") else getattr(b, "parent", "")
+            suffix = b_val[len(p_from):]
             if suffix.isdigit():
                 val = int(suffix)
                 if lower <= val <= upper:
-                    matching_parents.add(b.parent)
+                    if parent_code:
+                        matching_parents.add(parent_code)
     else:
         barcodes = smriti.db.get_list(
             "Item Barcode",
@@ -172,8 +180,11 @@ def get_items_by_barcode_range(from_barcode, to_barcode):
             order_by="barcode asc"
         )
         for b in barcodes:
-            if b.barcode <= to_barcode:
-                matching_parents.add(b.parent)
+            b_val = b.get("barcode", "") if hasattr(b, "get") else getattr(b, "barcode", "")
+            parent_code = b.get("parent", "") if hasattr(b, "get") else getattr(b, "parent", "")
+            if b_val and b_val <= to_barcode:
+                if parent_code:
+                    matching_parents.add(parent_code)
             else:
                 break
 

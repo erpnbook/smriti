@@ -102,7 +102,10 @@ def get_list(model_name: str, filters=None, fields=None, order_by: str = None,
     kwargs_merged.update(kwargs)
     if "ignore_permissions" not in kwargs_merged:
         kwargs_merged["ignore_permissions"] = True
-    return frappe.db.get_all(resolve(model_name), **kwargs_merged)
+    res = frappe.db.get_all(resolve(model_name), **kwargs_merged)
+    if res and isinstance(res, list):
+        return [frappe._dict(d) if isinstance(d, dict) and not isinstance(d, frappe._dict) else d for d in res]
+    return res
 
 
 
