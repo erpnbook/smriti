@@ -1,4 +1,4 @@
-﻿<!--
+<!--
   @file: smriti_retail_os/www/psv-dashboard.html
   @author: Jawahar R. Mallah
 -->
@@ -339,25 +339,19 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 
             <!-- Widgets Grid -->
             <div class="widgets-grid">
-                <!-- Widget 9: Channel Health Score -->
+                <!-- Widget 9: Channel Health Analytics -->
                 <div class="widget-card" id="widget-health">
                     <div class="widget-card-handle">⠿ Health Score</div>
                     <div class="widget-title">
-                        <span class="material-symbols-outlined icon">health_and_safety</span> Widget 9: Channel Health Score
+                        <span class="material-symbols-outlined icon">health_and_safety</span> Channel Health Analytics
                     </div>
-                    <!-- Overlay if disabled -->
-                    <div class="widget-disabled-overlay" id="health-overlay" style="display:none;">
-                        <div class="coming-soon-badge">Coming in Phase 1.2</div>
-                        <div class="coming-soon-title">Channel Health Analytics</div>
-                        <div class="coming-soon-desc">This widget will calculate overall partner compliance scores based on upload frequency and stock variance.</div>
-                    </div>
-                    <!-- Health score content -->
+                    <!-- Live Health score content -->
                     <div class="health-score-container" id="health-content">
                         <div class="health-score-radial" id="health-radial">
-                            <span class="health-score-val" id="health-val">0%</span>
+                            <span class="health-score-val" id="health-val">100%</span>
                         </div>
                         <div class="health-score-label" id="health-label">HEALTHY</div>
-                        <div class="health-status-desc" id="health-desc">Excellent upload frequency and no negative balance alerts.</div>
+                        <div class="health-status-desc" id="health-desc">Overall partner compliance score based on upload frequency and stock variance.</div>
                     </div>
                 </div>
 
