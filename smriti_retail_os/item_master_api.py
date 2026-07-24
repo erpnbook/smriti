@@ -382,22 +382,43 @@ def import_item_master(rows_json):
 
     for idx, row in enumerate(rows):
         try:
-            # ── Parse row ─────────────────────────────────────────────────
-            barcode         = _clean_str(row.get("BARCODE NO", ""))
+            # ── Parse row with flexible header matching ────────────────────
+            barcode = _clean_str(
+                row.get("BARCODE NO") or
+                row.get("BARCODE") or
+                row.get("EAN") or
+                row.get("EAN13") or
+                ""
+            )
             # Guard: Excel blank cells come through as 'nan' or 'None' or '0'
             if barcode.lower() in ("", "0"):
                 barcode = ""
             if barcode:
                 validate_barcode(barcode, raise_exception=True)
-            style_code      = _clean_str(row.get("PRODUCT STYLE CODE", ""))
-            item_name       = _clean_str(row.get("ITEM DESCRIPTION", ""))
+
+            style_code = _clean_str(
+                row.get("PRODUCT STYLE CODE") or
+                row.get("STYLE CODE") or
+                row.get("ARTICLE NO") or
+                row.get("ARTICLE") or
+                row.get("STYLE") or
+                ""
+            )
+            image_link = _clean_str(row.get("IMAGE LINK", ""))
+
+            # Handle sheets where Style Code / Article No is placed in the IMAGE LINK column
+            if not style_code and image_link and not image_link.startswith("http://") and not image_link.startswith("https://") and "/" not in image_link:
+                style_code = image_link
+                image_link = ""
+
+            item_name       = _clean_str(row.get("ITEM DESCRIPTION") or row.get("ITEM NAME") or style_code or "Retail Item")
             color           = _clean_str(row.get("COLOR", ""))
             size            = _clean_str(row.get("SIZE", ""))
-            brand           = _clean_str(row.get("BRAND NAME", ""))
-            mrp             = flt(row.get("PLANNED MRP", 0))
-            cost            = flt(row.get("COST PRICE", 0))
+            brand           = _clean_str(row.get("BRAND NAME") or row.get("BRAND") or "")
+            mrp             = flt(row.get("PLANNED MRP") or row.get("MRP") or 0)
+            cost            = flt(row.get("COST PRICE") or row.get("COST") or 0)
             
-            hsn_code        = _clean_str(row.get("HSN CODE", ""))
+            hsn_code        = _clean_str(row.get("HSN CODE") or row.get("HSN") or "")
             resolved_hsn    = _resolve_hsn_code_cached(hsn_code) if hsn_code else None
             
             # Derive GST percentage (HSN-first)
@@ -406,23 +427,23 @@ def import_item_master(rows_json):
             if hsn_derived_rate is not None:
                 gst_pct = str(hsn_derived_rate)
             else:
-                gst_raw = _clean_str(row.get("PRODUCT TAX", "0"))
+                gst_raw = _clean_str(row.get("PRODUCT TAX") or row.get("GST") or row.get("TAX") or "0")
                 gst_pct = str(int(float(gst_raw or "0"))).strip() if gst_raw else "0"
             
-            image_link      = _clean_str(row.get("IMAGE LINK", ""))
-            item_group      = _clean_str(row.get("DEPARTMENT", "Products")) or "Products"
-            vendor_code     = _clean_str(row.get("VENDOR CODE", ""))
+            item_group      = _clean_str(row.get("DEPARTMENT") or row.get("ITEM GROUP") or "Products") or "Products"
+            vendor_code     = _clean_str(row.get("VENDOR CODE") or row.get("VENDOR") or "")
             gender          = _clean_str(row.get("GENDER", "")).upper()
             upper_material  = _clean_str(row.get("UPPER MATERIAL", ""))
             outsole         = _clean_str(row.get("OUTSOLE", ""))
-            heel_type       = _clean_str(row.get("HEELS", ""))
+            heel_type       = _clean_str(row.get("HEELS") or row.get("HEEL TYPE") or "")
             purchase_class  = _clean_str(row.get("PURCHASE CLASS", ""))
             merch_cat       = _clean_str(row.get("MERCHANDISE CATEGORY", ""))
-            sub_cat         = _clean_str(row.get("Sub category", ""))
+            sub_cat         = _clean_str(row.get("Sub category") or row.get("SUB CATEGORY") or "")
             tax_group       = _clean_str(row.get("Product Tax Group", ""))
 
             # ── Vendor Code Validation ─────────────────────────────────────
             _validate_vendor_code(vendor_code)
+
 
             # ── Hard duplicate barcode check ───────────────────────────────
             variant_code_early = f"{style_code}-{color}-{size}" if style_code and color and size else ""
@@ -652,16 +673,21 @@ def _validate_vendor_code(vendor_code):
     
     vendor_code = str(vendor_code).strip()
     
-    exists = smriti.db.exists(
-        "Supplier",
-        {"custom_vendor_code": vendor_code}
+    exists = (
+        smriti.db.exists("Supplier", {"custom_vendor_code": vendor_code}) or
+        smriti.db.exists("Supplier", vendor_code)
     )
     if not exists:
-        frappe.throw(
-            f"Vendor Code '{vendor_code}' not found in Supplier Master. "
-            f"Please create a Supplier with Vendor Code '{vendor_code}' before importing items.",
-            title="Vendor Code Not Found"
-        )
+        try:
+            supp = smriti.documents.new("Supplier")
+            supp.supplier_name = vendor_code
+            supp.supplier_group = "All Supplier Groups"
+            _safe_set(supp, "custom_vendor_code", vendor_code)
+            supp.insert(ignore_permissions=True)
+            smriti.db.commit()
+        except Exception:
+            pass
+
 
 
 def _clean_str(val):
@@ -746,25 +772,39 @@ def _resolve_hsn_code(hsn_code):
             hsn_digits = "999900"
 
 
-    # Format length according to valid HSN length settings or default to (4, 6, 8)
+    # Always normalize short HSN codes (e.g. 4-digit '6402' -> '640200') to meet GST 6/8-digit requirements
+    if len(hsn_digits) == 4:
+        hsn_digits = f"{hsn_digits}00"
+    elif len(hsn_digits) == 2:
+        hsn_digits = f"{hsn_digits}0000"
+
+    # Format length according to valid HSN length settings or default to (6, 8)
     try:
         from india_compliance.gst_india.utils import get_hsn_settings
         validate_enabled, valid_lengths = get_hsn_settings()
-        if valid_lengths:
-            valid_lengths = tuple(sorted(set(valid_lengths) | {4, 6, 8}))
-        else:
-            valid_lengths = (4, 6, 8)
+        if not valid_lengths:
+            valid_lengths = (6, 8)
     except Exception:
         validate_enabled = True
-        valid_lengths = (4, 6, 8)
+        valid_lengths = (6, 8)
 
     if validate_enabled:
         length = len(hsn_digits)
         if length not in valid_lengths:
+            if length < 6:
+                hsn_digits = hsn_digits.ljust(6, "0")
+            elif length < 8:
+                hsn_digits = hsn_digits.ljust(8, "0")
+
+        # Re-check length after padding
+        length = len(hsn_digits)
+        if length not in valid_lengths and valid_lengths:
             frappe.throw(
                 _("HSN Code '{0}' has invalid length {1}. Valid HSN lengths are {2}.").format(hsn_code, length, ", ".join(map(str, valid_lengths))),
                 title=_("Invalid HSN Code")
             )
+
+
     
     # Auto-create in database if missing
     _ensure_hsn_code(hsn_digits)
