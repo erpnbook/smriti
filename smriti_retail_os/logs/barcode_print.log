@@ -73,3 +73,6 @@
 2026-07-05 20:55:01 - User: Administrator - Template: None - IP: 192.168.1.180 - Count: 0 - Success: 0 - Error: Connection refused
 2026-07-05 20:55:02 - User: Administrator - Template: None - IP: 192.168.1.180 - Count: 0 - Success: 0 - Error: Network error
 2026-07-05 20:55:02 - User: Administrator - Template: None - IP: 192.168.1.180 - Count: 0 - Success: 1 - Error: None
+2026-07-24 12:31:02 - User: Administrator - Template: TATTLYTHREADS - IP: IMPACT by Honeywell IH-2 (ZPL) - Count: 1 - Success: 1 - Error: None
+2026-07-24 12:38:15 - User: Administrator - Template: A1 - IP: IMPACT by Honeywell IH-2 (ZPL) - Count: 1 - Success: 1 - Error: None
+2026-07-24 12:38:36 - User: Administrator - Template: A1 - IP: IMPACT by Honeywell IH-2 (ZPL) - Count: 2 - Success: 1 - Error: None
