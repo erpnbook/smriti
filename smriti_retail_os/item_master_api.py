@@ -610,17 +610,25 @@ def import_item_master(rows_json):
 
             created += 1
 
-        except Exception:
+        except Exception as e:
+            err_msg = str(e)
+            if hasattr(e, "args") and e.args and isinstance(e.args[0], str):
+                err_msg = e.args[0]
+            import re
+            clean_err = re.sub(r'<[^>]+>', '', str(err_msg)).strip()
+            if not clean_err:
+                clean_err = "An unexpected error occurred during item import."
             failed.append({
                 "row": idx + 1,
                 "barcode": row.get("BARCODE NO", ""),
                 "style_code": row.get("PRODUCT STYLE CODE", ""),
-                "error": frappe.get_traceback()
+                "error": clean_err
             })
             smriti.errors.log_error(
                 title=f"SMRITI Item Import — Row {idx + 1}",
                 message=frappe.get_traceback()
             )
+
 
     smriti.db.commit()
 
@@ -729,22 +737,14 @@ def _resolve_hsn_code(hsn_code):
     if hsn_code:
         hsn_digits = "".join(re.findall(r"\d+", str(hsn_code)))
 
-    # If empty or non-numeric — try configured default, never a domain-specific literal
+    # If empty or non-numeric — try configured default, fallback to general goods '999900' if not configured
     if not hsn_digits:
         configured_default = smriti.db.get_single("SMRITI Settings", "default_hsn_code") or ""
-        if not configured_default:
-            frappe.logger().warning(
-                "SMRITI _resolve_hsn_code: HSN code is missing and no default_hsn_code is "
-                "configured in SMRITI Settings. HSN will not be set for this item."
-            )
-            return None
-        hsn_digits = "".join(re.findall(r"\d+", str(configured_default)))
+        if configured_default:
+            hsn_digits = "".join(re.findall(r"\d+", str(configured_default)))
         if not hsn_digits:
-            frappe.logger().warning(
-                f"SMRITI _resolve_hsn_code: default_hsn_code '{configured_default}' in SMRITI Settings "
-                "contains no numeric digits. HSN will not be set for this item."
-            )
-            return None
+            hsn_digits = "999900"
+
 
     # Format length according to valid HSN length settings or default to (4, 6, 8)
     try:
