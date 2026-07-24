@@ -17,25 +17,27 @@ import frappe
 
 
 @frappe.whitelist()
-def get_records(doctype: str, fields: list = None, filters: dict = None,
+def get_records(doctype: str, fields=None, filters=None,
                 order_by: str = None, limit: int = 20, start: int = 0) -> list:
     """
     Fetch a list of records from a DocType.
 
     This is the Guard 6-compliant replacement for ``frappe.client.get_list``
     calls in www/ pages. Internally delegates to ``frappe.get_list``.
-
-    Args:
-        doctype:  The DocType name.
-        fields:   List of field names to return. Defaults to ["name"].
-        filters:  Dict of {field: value} filter conditions.
-        order_by: Sort expression, e.g. "creation desc".
-        limit:    Max records to return (capped at 500).
-        start:    Pagination offset.
-
-    Returns:
-        list[dict]: List of matching records.
     """
+    import json
+    if isinstance(fields, str):
+        try:
+            fields = json.loads(fields)
+        except Exception:
+            fields = [f.strip() for f in fields.split(",") if f.strip()]
+
+    if isinstance(filters, str):
+        try:
+            filters = json.loads(filters)
+        except Exception:
+            filters = {}
+
     limit = min(int(limit or 20), 500)
     return frappe.get_list(
         doctype,
@@ -49,7 +51,7 @@ def get_records(doctype: str, fields: list = None, filters: dict = None,
 
 
 @frappe.whitelist()
-def get_value(doctype: str, filters: dict = None, fieldname=None, name: str = None) -> dict:
+def get_value(doctype: str, filters=None, fieldname=None, name: str = None) -> dict:
     """
     Fetch a single value or set of values from a DocType or Single DocType.
 
@@ -64,6 +66,19 @@ def get_value(doctype: str, filters: dict = None, fieldname=None, name: str = No
     Returns:
         dict: The requested field values.
     """
+    import json
+    if isinstance(filters, str):
+        try:
+            filters = json.loads(filters)
+        except Exception:
+            filters = {"name": filters}
+
+    if isinstance(fieldname, str) and fieldname.startswith("["):
+        try:
+            fieldname = json.loads(fieldname)
+        except Exception:
+            pass
+
     is_single = False
     try:
         is_single = frappe.get_meta(doctype).issingle
@@ -102,9 +117,8 @@ def get_value(doctype: str, filters: dict = None, fieldname=None, name: str = No
     return val or {}
 
 
-
 @frappe.whitelist()
-def get_count(doctype: str, filters: dict = None) -> int:
+def get_count(doctype: str, filters=None) -> int:
     """
     Count records matching a filter.
 
@@ -117,6 +131,12 @@ def get_count(doctype: str, filters: dict = None) -> int:
     Returns:
         int: Count of matching records.
     """
+    import json
+    if isinstance(filters, str):
+        try:
+            filters = json.loads(filters)
+        except Exception:
+            filters = {}
     return frappe.db.count(doctype, filters=filters or {})
 
 
@@ -178,7 +198,7 @@ def cancel_record(doctype: str, name: str) -> dict:
 
 
 @frappe.whitelist()
-def get_all(doctype: str, fields: list = None, filters: dict = None,
+def get_all(doctype: str, fields=None, filters=None,
             order_by: str = None, limit: int = 20) -> list:
     """
     Fetch all records (alias for get_records).
