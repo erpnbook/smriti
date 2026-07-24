@@ -119,11 +119,13 @@ bash install.sh
 | Utility | Command | Description |
 |---|---|---|
 | **Master Installer** | `PowerShell -ExecutionPolicy Bypass -File .\install.ps1` | System diagnostics (RAM, Disk, Port checks), Docker spin-up, site monitoring & desktop shortcut launcher |
+| **One-Click Updater** | `.\update.ps1` | Automated backup, git pull, database migrations, asset build & service reload |
 | **Site Backup** | `.\backup.ps1` | One-click site database and file backup to `./backups/` |
 | **Site Restore** | `.\restore.ps1 -SqlFile <path>` | Restores a database dump file into the site |
 | **Diagnostics Bundle** | `.\support_bundle.ps1` | Exports container logs, system state, and SDC discovery output to a `.zip` archive |
 
 ---
+
 
 
 ## 5. Project Structure
