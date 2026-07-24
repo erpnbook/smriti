@@ -11,7 +11,7 @@
 // --- Live Autocomplete Audit Implementation ---
 let currentFocus = -1;
 
-document.addEventListener('DOMContentLoaded', () => {
+function initAutocompleteSearch() {
     const styleInput = document.getElementById('flt-search');
     const autoList = document.getElementById('autocomplete-list');
     if (!styleInput || !autoList) return;
@@ -137,7 +137,13 @@ document.addEventListener('DOMContentLoaded', () => {
             closeAutocomplete();
         }
     });
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAutocompleteSearch);
+} else {
+    initAutocompleteSearch();
+}
 
 // Toggle advanced filters drawer
 function toggleAdvancedFilters() {
