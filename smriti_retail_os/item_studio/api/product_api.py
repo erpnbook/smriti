@@ -75,9 +75,13 @@ def bulk_delete_products(item_codes):
 def get_catalog_metadata():
     """Retrieves list of brands and item groups for filters."""
     _check_access()
-    brands = [b.name for b in frappe.get_list("Brand", fields=["name"], limit_page_length=100)]
-    categories = [c.name for c in frappe.get_list("Item Group", fields=["name"], limit_page_length=100)]
+    raw_brands = frappe.get_list("Brand", fields=["name"], limit_page_length=100) or []
+    raw_cats = frappe.get_list("Item Group", fields=["name"], limit_page_length=100) or []
+    
+    brands = [b["name"] if (isinstance(b, dict) and "name" in b) else getattr(b, "name", "") for b in raw_brands]
+    categories = [c["name"] if (isinstance(c, dict) and "name" in c) else getattr(c, "name", "") for c in raw_cats]
+    
     return {
-        "brands": brands,
-        "categories": categories
+        "brands": [b for b in brands if b],
+        "categories": [c for c in categories if c]
     }
